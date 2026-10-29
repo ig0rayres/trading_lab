@@ -1,0 +1,72 @@
+{
+  "projeto": "trading-lab",
+  "descricao": "Laboratorio de pesquisa para day trade e swing trade (LONG e SHORT). Identifica, estuda e filtra oportunidades; paper antes de qualquer dinheiro real. Pacote importado: MVP v4 de pesquisa (29/10/2026), scheduler research-only, LIVE_TRADING desligado.",
+  "cenario": "LEGADO",
+  "ambiente": "DESENVOLVIMENTO",
+  "perfil": null,
+  "referencias": [
+    {
+      "tipo": "github",
+      "valor": "https://github.com/Jakeschincariol/day-trader-skill",
+      "proposito": "integracao",
+      "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
+    }
+  ],
+  "fase_atual": "0",
+  "beesy_version": "4.104.20",
+  "decisions_applied_until": 427,
+  "strategic_context_captured_at": null,
+  "fase_nome": "Triagem concluida",
+  "sprint_atual": null,
+  "sprint_pending_merge": null,
+  "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
+  "prazo": null,
+  "ultimo_update": "2026-10-29T18:41:00-03:00",
+  "modulos": [
+    {
+      "nome": "v4-research-scheduler",
+      "descricao": "Ciclo de pesquisa a cada 15 min sobre o universo de 7 simbolos. Nao envia ordens.",
+      "status": "concluido",
+      "api": []
+    },
+    {
+      "nome": "v4-market-decision-risk",
+      "descricao": "Feeds publicos, pipeline, ciclo de decisao, preview de risco e merge conservador de portfolio. Research/shadow.",
+      "status": "concluido",
+      "api": []
+    },
+    {
+      "nome": "paper-gateway-webhook",
+      "descricao": "Modulos de Alpaca paper, TradingView webhook, News First e copy existem no codigo e nao estao ligados ao ciclo do MVP.",
+      "status": "pendente",
+      "api": []
+    }
+  ],
+  "proximos_passos": [
+    "Em uma nova conversa, rodar /analista planejar para fechar requisitos em cima deste legado"
+  ],
+  "features_concluidas": [
+    "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
+    "Politica fail-closed: LIVE_TRADING_ENABLED=false no Dockerfile e recusa no run.sh",
+    "Scheduler research-only com invalidacao de manifesto obsoleto (presente no snapshot mais novo)",
+    "Dashboard somente leitura que nao promove manifesto adulterado a sucesso"
+  ],
+  "features_pendentes": [
+    "Reexecutar pytest neste ambiente (contagens 224 a 395 sao relato do pacote, nao evidencia desta sessao)",
+    "Vendor pinado de day-trader-skill ausente no ZIP",
+    "Ponte sinal, News First, risk gate, paper gateway, fill, ledger e reconciliacao nao homologada",
+    "Edge de estrategia nao validado (ORB intraday reportado com resultado negativo)",
+    "Export do que esta instalado no EasyPanel nao veio neste corte"
+  ],
+  "decisoes_tecnicas": [
+    "Nao reiniciar o projeto: a base e o snapshot trading-lab-v4-mvp-pesquisa-validado, mais novo que trading-lab-v4-mvp-implantavel",
+    "Paper de referencia: R$5000, risco R$50 por operacao, maximo 3 posicoes",
+    "LIVE_TRADING permanece desligado ate evidencia de execucao, conciliacao, seguranca e edge liquido de custos",
+    "Nao substituir os servicos EasyPanel trading-lab e trading-lab-webhook com este pacote",
+    "Nao tratar HTTP 200, PAPER_GATEWAY_QUEUE_ONLY ou OK_RESEARCH_ONLY como ordem executada",
+    "Collective2: nenhum provedor aprovado para paper-copy neste corte",
+    "baseline decisions_applied_until=427 (max em SETUP-DECISIONS na importacao)"
+  ],
+  "comandos_recentes": ["/pmo project"],
+  "contexto_rapido": "Sessao criada via /pmo project na importacao do ZIP v4 de pesquisa. Cenario LEGADO, fase 0, sem sprint_atual. Pytest ainda nao reexecutado. baseline=427."
+}

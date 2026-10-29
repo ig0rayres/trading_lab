@@ -1,0 +1,16 @@
+.context-snapshot.md
+.cursor/journal-*.jsonl
+*.zip
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+reports/v4/
+
+# Duplicate snapshot kept on disk; the newer tree is the repo root.
+trading-lab-v4-mvp-implantavel/
+
+# Original extract folder. Only an unreviewed env template remains there.
+trading-lab-v4-mvp-pesquisa-validado (1)/

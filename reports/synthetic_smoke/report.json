@@ -1,0 +1,94 @@
+{
+  "disclaimer": "Research only. No brokerage integration. CSV data quality and costs must be validated before financial conclusions.",
+  "source": "data/SYNTHETIC_SMOKE_ONLY.csv",
+  "sessions": 65,
+  "train_sessions": 45,
+  "test_sessions": 20,
+  "cost_assumptions": {
+    "fee_bps_per_side": 5,
+    "slippage_bps_per_side": 5
+  },
+  "strategies": {
+    "orb": {
+      "train": {
+        "n": 35,
+        "win_rate_pct": 37.14,
+        "mean_net_pct": -0.1424,
+        "profit_factor": 0.685,
+        "max_drawdown_pct": 8.394,
+        "total_net_pct_compounded": -4.974
+      },
+      "test": {
+        "n": 14,
+        "win_rate_pct": 42.86,
+        "mean_net_pct": -0.0965,
+        "profit_factor": 0.812,
+        "max_drawdown_pct": 2.675,
+        "total_net_pct_compounded": -1.401
+      },
+      "test_costs_x2": {
+        "n": 14,
+        "win_rate_pct": 42.86,
+        "mean_net_pct": -0.2465,
+        "profit_factor": 0.589,
+        "max_drawdown_pct": 4.243,
+        "total_net_pct_compounded": -3.454
+      },
+      "decision": "INSUFFICIENT_EVIDENCE"
+    },
+    "vwap": {
+      "train": {
+        "n": 42,
+        "win_rate_pct": 38.1,
+        "mean_net_pct": -0.1691,
+        "profit_factor": 0.687,
+        "max_drawdown_pct": 12.391,
+        "total_net_pct_compounded": -7.019
+      },
+      "test": {
+        "n": 18,
+        "win_rate_pct": 50.0,
+        "mean_net_pct": -0.068,
+        "profit_factor": 0.849,
+        "max_drawdown_pct": 3.254,
+        "total_net_pct_compounded": -1.286
+      },
+      "test_costs_x2": {
+        "n": 18,
+        "win_rate_pct": 38.89,
+        "mean_net_pct": -0.2236,
+        "profit_factor": 0.589,
+        "max_drawdown_pct": 5.578,
+        "total_net_pct_compounded": -4.016
+      },
+      "decision": "INSUFFICIENT_EVIDENCE"
+    },
+    "momentum": {
+      "train": {
+        "n": 44,
+        "win_rate_pct": 36.36,
+        "mean_net_pct": -0.2037,
+        "profit_factor": 0.627,
+        "max_drawdown_pct": 11.06,
+        "total_net_pct_compounded": -8.735
+      },
+      "test": {
+        "n": 20,
+        "win_rate_pct": 40.0,
+        "mean_net_pct": -0.172,
+        "profit_factor": 0.681,
+        "max_drawdown_pct": 4.582,
+        "total_net_pct_compounded": -3.462
+      },
+      "test_costs_x2": {
+        "n": 20,
+        "win_rate_pct": 40.0,
+        "mean_net_pct": -0.3245,
+        "profit_factor": 0.485,
+        "max_drawdown_pct": 7.134,
+        "total_net_pct_compounded": -6.369
+      },
+      "decision": "INSUFFICIENT_EVIDENCE"
+    }
+  }
+}

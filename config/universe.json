@@ -1,0 +1,9 @@
+[
+  {"market": "US_EQUITY", "symbol": "AAPL"},
+  {"market": "US_EQUITY", "symbol": "MSFT"},
+  {"market": "B3_EQUITY", "symbol": "BBAS3"},
+  {"market": "B3_EQUITY", "symbol": "BBDC4"},
+  {"market": "B3_EQUITY", "symbol": "ITUB4"},
+  {"market": "CRYPTO", "symbol": "BTCBRL"},
+  {"market": "CRYPTO", "symbol": "ETHBRL"}
+]

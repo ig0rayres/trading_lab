@@ -1,0 +1,13 @@
+services:
+  lab:
+    build: .
+    image: trading-lab:0.6
+    environment:
+      LIVE_TRADING_ENABLED: 'false'
+      ALLOW_GITHUB_FETCH: ${ALLOW_GITHUB_FETCH:-false}
+      UPSTREAM_COMMIT: ${UPSTREAM_COMMIT:-}
+      UPSTREAM_DIR: /app/vendor/day-trader-skill
+    volumes:
+      - ./reports:/app/reports
+      - ./vendor:/app/vendor
+    restart: 'no'

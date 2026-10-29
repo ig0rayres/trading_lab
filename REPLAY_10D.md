@@ -1,0 +1,1 @@
+Ten-session technical replay only. Run /app/scripts/run.sh replay-10d --days 10. Historical news/fundamentals not reconstructed. Zero orders, zero trades, descriptive returns only. Ten days do not validate an edge.

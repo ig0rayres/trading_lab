@@ -31,7 +31,8 @@
 | D4 | D | Gate B + fila paper sem fill | concluida | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
 | D5 | D | Paper reconciliado read-only; nenhum live | concluida* | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
 | N6 | N | Imagem com psycopg + vendor pinado; CI smoke | concluida | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
-| N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | planejada | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
+| N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | concluida | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
+| N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | planejada | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -52,6 +53,7 @@
 | D5 | comprehensive | Última sprint D — paper |
 | N6 | senior+qa | Deploy EasyPanel |
 | N7 | senior+qa | Catálogo + Gate B produto |
+| N8 | senior+qa | Seed no CLI migrate + runbook homologação |
 
 ---
 
@@ -64,10 +66,10 @@
                               │              │
                               └──────────────┴──► [D5 reconcile + dashboard auth]
                                                               │
-[N6 EasyPanel image] ──► [N7 strategy-catalog + Gate B phase]
+[N6 EasyPanel image] ──► [N7 strategy-catalog + Gate B phase] ──► [N8 seed on migrate]
 ```
 
-D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4. N7 depende de D2 (tabela) + D4 (Gate B) + N6 (deploy estável).
+D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4. N7 depende de D2 (tabela) + D4 (Gate B) + N6 (deploy estável). N8 depende de N7 (`ensure_strategy_defaults`) + D2 (`ledger_migrate`); não reabre Gate B.
 
 ---
 
@@ -182,7 +184,7 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4. N7 depen
 
 ## Sprint N7 — Catálogo de estratégias (MVP) + Gate B por fase
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Fase persistida trava paper; ORB fora do principal  
 > resumo_humano: Cada família passa a ter fase no Postgres (research, shadow, paper limitado, validado). O Gate B recusa paper se a fase for research ou shadow, e ORB não entra como estratégia principal. Sem inventar fórmula de momentum, Tá Barato ou Prodigy.  
 > Gate: pytest — research/shadow nunca paper_allowed; ORB rejeitado mesmo com fase paper_* no banco; linha ausente fail-closed; risk_decisions.strategy_key vem do sinal (não literal signal_copy); LIVE_TRADING_ENABLED false; nenhum limiar novo de scoring momentum/Tá Barato/Prodigy  
@@ -379,6 +381,97 @@ executor_prompt: |
 
 ---
 
+## Sprint N8 — Homologação + seed on migrate
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Migrate apply popula as 7 fases sem INSERT manual  
+> resumo_humano: Depois de aplicar o ledger, o Postgres já nasce com as sete famílias do catálogo. Reaplicar a migrate em base já migrada também preenche linhas que faltam, sem sobrescrever fase gravada à mão. O runbook de homologação/EasyPanel diz como conferir; sem rebuild de imagem nesta sprint.  
+> Gate: pytest — `ledger-migrate apply` (roundtrip ou `already_applied`) deixa 7 linhas em `strategy_states` quando `LEDGER_DATABASE_URL` está definido; seed insert-if-missing; rollback não semeia; `LIVE_TRADING_ENABLED` false; sem migration 002; sem reabrir Gate B nem limiar de scoring  
+> bom_ref: BOM-3  
+> review: senior+qa  
+> Generated via hub PMO (planning mode) on 2026-10-30. Source: ISS-003 + operador opção A pós-N7.  
+> Brief: `docs/.briefs/N8.brief.md`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N8.1 Hook `ensure_strategy_defaults` into `ledger-migrate apply` (including `already_applied`) | `/dev` | — |
+| [ ] | P | N8.2 Unit + optional ledger integration: apply roundtrip leaves 7 `strategy_states` rows | `/qa testes` | N8.1 |
+| [ ] | P | N8.3 Homologation runbook: verify 7 rows after migrate | docs | N8.2 |
+| [ ] | P | N8.4 EasyPanel/INFRASTRUCTURE note: re-apply seeds insert-if-missing | docs | N8.1 |
+
+P notes (no executor_prompt): **N8.2** extend `tests/test_ledger_migration.py` — unit without DSN: `apply()` still calls `ensure_strategy_defaults` on `already_applied` (mock status/connect as needed). Integration (`skipUnless LEDGER_DATABASE_URL`): after the existing apply/rollback/apply roundtrip, `strategy_states` has 7 rows whose keys match `DEFAULT_PHASE_BY_KEY`; a second apply does not clobber a hand-updated phase; optional subprocess `python3 src/ledger_migrate.py apply`. Do not add Gate B tests. **N8.3** add a checklist step after migrate: `SELECT strategy_key, phase FROM strategy_states WHERE deleted_at IS NULL` → 7 keys; INSERT manual deixa de ser o caminho feliz. **N8.4** EasyPanel § apply: re-run `ledger-migrate apply` is safe (insert-if-missing); no new service, no image rebuild.
+
+### Task N8.1 — Hook catalog seed into ledger-migrate apply
+
+**Estado atual**: `apply()` aplica `001_ledger_up.sql` ou retorna `already_applied` sem tocar `strategy_states`. Seed só corre em `fetch_strategy_phase` / testes N7. EasyPanel ficou vazio até INSERT manual.
+**Estado desejado**: todo `apply()` bem-sucedido (primeiro e `already_applied`) chama `ensure_strategy_defaults()` e falha de forma visível se as 7 chaves N7 não existirem; rollback não semeia; insert-if-missing.
+**Fonte(s)**: ISS-003
+**Módulo(s) afetado(s)**: `src/ledger_migrate.py`
+**Risco**: MEDIUM — CLI de migrate no Postgres de homologação; seed silencioso hoje é o bug.
+**Task size**: M (1 file; decisão: semear em `already_applied` e falhar se faltar chave)
+
+- **Arquivo(s)**: `src/ledger_migrate.py`
+
+**executor_prompt**:
+
+```yaml
+id: N8.1
+size: M
+bom_ref: BOM-3
+depends_on: []
+files:
+  - src/ledger_migrate.py
+reuse_targets:
+  - component: src/strategy_catalog.py
+    reuse_as: call
+    convergence_check: rg "ensure_strategy_defaults" src/ledger_migrate.py && ! rg "def ensure_strategy_defaults" src/ledger_migrate.py
+  - component: src/ledger_migrate.py
+    reuse_as: extend
+    convergence_check: rg "def apply" src/ledger_migrate.py && rg "already_applied" src/ledger_migrate.py
+guardrail_contract:
+  - class: secrets
+    id: n8-1-no-dsn-print
+    target: src/ledger_migrate.py
+    check: rg "LEDGER_DATABASE_URL" src/ledger_migrate.py && ! rg -n "print\\(.*PASSWORD" src/ledger_migrate.py
+    pass_condition: DSN stays in env; no password print
+  - class: subagent-safety
+    id: n8-1-live-lock
+    target: Dockerfile
+    check: rg "LIVE_TRADING_ENABLED=false" Dockerfile
+    pass_condition: image live lock unchanged
+  - class: caller-level
+    id: n8-1-cli-apply-seed
+    target: src/ledger_migrate.py
+    check: pytest -q tests/test_ledger_migration.py -k apply
+    convergence_check: pytest -q tests/test_ledger_migration.py -k apply
+    pass_condition: apply path seeds catalog when LEDGER_DATABASE_URL is set
+executor_prompt: |
+  ### Quality Brief (Sprint N8)
+  sprint: N8
+  Maintain: strategy_catalog.ensure_strategy_defaults() insert-if-missing for the seven N7 keys — call it; do not reimplement INSERT.
+  Maintain: ledger_migrate.apply / rollback / status CLI wired by scripts/run.sh ledger-migrate.
+  Maintain: LIVE_TRADING_ENABLED=false and original.py LAB_LOCK.
+  Avoid: migration 002, DDL edits, and a second persistence module.
+  Avoid: Gate B / scoring changes; do not promote strategy_states.phase from PnL, HTTP 200, or PAPER_GATEWAY_QUEUE_ONLY.
+  [ABORDAGEM] Call ensure_strategy_defaults() at the end of apply() on both first apply and already_applied; then SELECT the seven known keys and raise if any are missing (ops-visible). Do not seed on rollback.
+  [RISCO] ensure_strategy_defaults() swallows exceptions and no-ops without LEDGER_DATABASE_URL. A silent no-op after migrate is the EasyPanel empty-table failure mode — migrate must not treat that as success.
+  [OPORTUNIDADE] Extend LedgerMigrationIntegrationTest.test_apply_rollback_roundtrip (skipUnless LEDGER_DATABASE_URL) to assert seven strategy_states rows after the final apply.
+  EXPIRES at end of Sprint N8.
+
+  Melhoria: ledger-migrate apply seeds strategy_states.
+  Contexto: apply() runs 001_ledger_up.sql or returns already_applied without calling ensure_strategy_defaults(). EasyPanel had an empty strategy_states table until a manual INSERT or a worker fetch. ISS-002/N7 already defined the seven keys and insert-if-missing; do not reopen Gate B or invent scoring thresholds.
+  Objetivo: after a successful apply — including the already_applied early return — call strategy_catalog.ensure_strategy_defaults(). Then verify the seven KNOWN_STRATEGY_KEYS / DEFAULT_PHASE_BY_KEY rows exist (SELECT); raise a RuntimeError (or equivalent) if any key is missing so operators see the failure. Do not overwrite an existing phase. Do not seed inside rollback(). Do not add migrations/002_*.sql. Do not edit gate_b_risk.py. LIVE_TRADING stays false. scripts/run.sh ledger-migrate wiring stays as-is.
+  Arquivos: src/ledger_migrate.py.
+  Critério de pronto: rg shows ensure_strategy_defaults imported/called from ledger_migrate.py and not redefined there; apply() no longer returns already_applied without attempting seed; unit coverage exists or is added in N8.2; no DSN/password printed.
+  Cenários de teste (implemented in N8.2; this task must remain compatible):
+    1. Caso normal: empty DB + apply → seven strategy_states rows with N7 default phases.
+    2. Edge case: already_applied + empty table → seed still runs; seven rows appear.
+    3. Edge case: existing orb=paper_validated is left unchanged (overwrite forbidden).
+    4. Regressão: rollback still drops tables; apply after rollback still works; LIVE_TRADING_ENABLED false; no Gate B file edits.
+```
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -386,14 +479,13 @@ executor_prompt: |
 | Estratégias Ta Barato / Prodigy / momentum (fórmulas) | LEGACY-ANALYSIS | N7 cobre fases; **não** inventar limiares de scoring |
 | Walk-forward / Lean | RESEARCH_ROADMAP | Motor separado |
 | Collective2 paper-copy | Feature 4 | Fora de N7; `approved_for_paper_copy` permanece falso |
-| CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria |
+| CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria (fora de N8) |
 | Submodule pin vs clone raso | D1 | Preferir pin revisado, não `main` cego |
 
 ---
 
 ## Próximo passo operador
 
-1. **`/pmo sprint`** ou **`/rock executar N7`** — criar frente `front/n7-strategy-catalog` se usar worktree (#252).  
-2. Após VERIFY: homologação Gate B com fase `research`/`shadow` rejeitando e TV `signal_copy` em `paper_limited`.
-2. Homologação demo US: smoke pós-N6 (`/health`, ingest, worker) com imagem `6813fb5` / merge PR #1.  
-3. Opcional: `/git front finish n6-deploy` na mãe após merge.
+1. Parent Fable / plan-verifier no brief N8 (`docs/.briefs/N8.brief.md`).  
+2. **`/pmo sprint`** N8 em **frente nova** `front/n8-homolog-seed` (esta janela ainda é `front/n7-strategy-catalog`).  
+3. Sem docker/deploy nesta sprint; Feature 4 scoring continua fora (não inventar limiar).

@@ -22,16 +22,38 @@ def _connect():
     return psycopg.connect(dsn(), autocommit=False)
 
 
-def apply():
-    st = status()
-    if st['applied']:
-        return {'status': 'already_applied', 'version': VERSION}
-    sql = (MIGRATIONS_DIR / '001_ledger_up.sql').read_text(encoding='utf-8')
+def _seed_strategy_catalog() -> None:
+    from strategy_catalog import DEFAULT_PHASE_BY_KEY, ensure_strategy_defaults
+
+    ensure_strategy_defaults(_connect, strict=True)
+    expected = set(DEFAULT_PHASE_BY_KEY.keys())
     with _connect() as conn:
         with conn.cursor() as cur:
-            cur.execute(sql)
-        conn.commit()
-    return {'status': 'applied', 'version': VERSION}
+            cur.execute(
+                'SELECT strategy_key FROM strategy_states '
+                'WHERE deleted_at IS NULL AND strategy_key = ANY(%s)',
+                (list(expected),),
+            )
+            found = {row[0] for row in cur.fetchall()}
+    missing = expected - found
+    if missing:
+        raise RuntimeError(
+            'STRATEGY_SEED_INCOMPLETE: missing %s' % ','.join(sorted(missing))
+        )
+
+
+def apply():
+    st = status()
+    first_apply = not st['applied']
+    if first_apply:
+        sql = (MIGRATIONS_DIR / '001_ledger_up.sql').read_text(encoding='utf-8')
+        with _connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql)
+            conn.commit()
+    _seed_strategy_catalog()
+    status_label = 'applied' if first_apply else 'already_applied'
+    return {'status': status_label, 'version': VERSION, 'strategy_seed': 'ok'}
 
 
 def rollback():

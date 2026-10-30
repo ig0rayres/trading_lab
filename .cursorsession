@@ -16,12 +16,12 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Planejamento N7 (strategy-catalog) — plan_only",
-  "sprint_atual": "N7",
+  "fase_nome": "Planejamento N8 (seed on migrate) — plan_only",
+  "sprint_atual": "N8",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T11:50:00-03:00",
+  "ultimo_update": "2026-10-30T12:40:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -44,8 +44,8 @@
     },
     {
       "nome": "strategy-catalog",
-      "descricao": "Fase de cada familia. ORB em shadow. Formula ausente nao e inventada.",
-      "status": "pendente",
+      "descricao": "Fase de cada familia. ORB em shadow. Formula ausente nao e inventada. N8: seed no migrate apply.",
+      "status": "em_andamento",
       "api": []
     },
     {
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Operador confirma seed signal_copy=paper_limited",
-    "Parent Fable/plan-verifier no brief N7",
-    "/pmo sprint N7 em frente (não na mãe)"
+    "Parent Fable/plan-verifier no brief N8",
+    "/pmo sprint N8 em frente nova front/n8-homolog-seed (nao nesta N7)",
+    "Sem docker/deploy; nao reabrir Gate B nem Feature 4 scoring"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -113,92 +113,130 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo plan N7"
+    "/pmo plan N8"
   ],
-  "contexto_rapido": "N7 planejada (plan_only): strategy-catalog + Gate B por fase; sem limiares inventados; LIVE_TRADING false.",
+  "contexto_rapido": "N8 planejada (plan_only): seed on ledger-migrate apply + runbook homologacao; 7 strategy_states; LIVE_TRADING false.",
   "sprint_tasks": [
     {
-      "id": "N7.1",
-      "title": "Catalog module + ledger helpers + insert-if-missing seed",
+      "id": "N8.1",
+      "title": "Hook ensure_strategy_defaults into ledger-migrate apply (including already_applied)",
       "size": "M",
-      "status": "done",
+      "status": "todo",
       "depends_on": [],
       "files": [
-        "src/strategy_catalog.py",
-        "src/ledger_store.py",
-        "tests/test_strategy_catalog.py"
+        "src/ledger_migrate.py"
       ],
-      "bom_ref": "BOM-3"
+      "bom_ref": "BOM-3",
+      "reuse_targets": [
+        {
+          "component": "src/strategy_catalog.py",
+          "reuse_as": "call",
+          "convergence_check": "rg \"ensure_strategy_defaults\" src/ledger_migrate.py && ! rg \"def ensure_strategy_defaults\" src/ledger_migrate.py"
+        },
+        {
+          "component": "src/ledger_migrate.py",
+          "reuse_as": "extend",
+          "convergence_check": "rg \"def apply\" src/ledger_migrate.py && rg \"already_applied\" src/ledger_migrate.py"
+        }
+      ],
+      "guardrail_contract": [
+        {
+          "class": "secrets",
+          "id": "n8-1-no-dsn-print",
+          "target": "src/ledger_migrate.py",
+          "check": "rg \"LEDGER_DATABASE_URL\" src/ledger_migrate.py && ! rg -n \"print(.*PASSWORD\" src/ledger_migrate.py",
+          "pass_condition": "DSN stays in env; no password print"
+        },
+        {
+          "class": "subagent-safety",
+          "id": "n8-1-live-lock",
+          "target": "Dockerfile",
+          "check": "rg \"LIVE_TRADING_ENABLED=false\" Dockerfile",
+          "pass_condition": "image live lock unchanged"
+        },
+        {
+          "class": "caller-level",
+          "id": "n8-1-cli-apply-seed",
+          "target": "src/ledger_migrate.py",
+          "check": "pytest -q tests/test_ledger_migration.py -k apply",
+          "convergence_check": "pytest -q tests/test_ledger_migration.py -k apply",
+          "pass_condition": "apply path seeds catalog when LEDGER_DATABASE_URL is set"
+        }
+      ],
+      "executor_prompt": "### Quality Brief (Sprint N8)\nsprint: N8\nMaintain: strategy_catalog.ensure_strategy_defaults() insert-if-missing for the seven N7 keys — call it; do not reimplement INSERT.\nMaintain: ledger_migrate.apply / rollback / status CLI wired by scripts/run.sh ledger-migrate.\nMaintain: LIVE_TRADING_ENABLED=false and original.py LAB_LOCK.\nAvoid: migration 002, DDL edits, and a second persistence module.\nAvoid: Gate B / scoring changes; do not promote strategy_states.phase from PnL, HTTP 200, or PAPER_GATEWAY_QUEUE_ONLY.\n[ABORDAGEM] Call ensure_strategy_defaults() at the end of apply() on both first apply and already_applied; then SELECT the seven known keys and raise if any are missing (ops-visible). Do not seed on rollback.\n[RISCO] ensure_strategy_defaults() swallows exceptions and no-ops without LEDGER_DATABASE_URL. A silent no-op after migrate is the EasyPanel empty-table failure mode — migrate must not treat that as success.\n[OPORTUNIDADE] Extend LedgerMigrationIntegrationTest.test_apply_rollback_roundtrip (skipUnless LEDGER_DATABASE_URL) to assert seven strategy_states rows after the final apply.\nEXPIRES at end of Sprint N8.\n\nMelhoria: ledger-migrate apply seeds strategy_states.\nContexto: apply() runs 001_ledger_up.sql or returns already_applied without calling ensure_strategy_defaults(). EasyPanel had an empty strategy_states table until a manual INSERT or a worker fetch. ISS-002/N7 already defined the seven keys and insert-if-missing; do not reopen Gate B or invent scoring thresholds.\nObjetivo: after a successful apply — including the already_applied early return — call strategy_catalog.ensure_strategy_defaults(). Then verify the seven KNOWN_STRATEGY_KEYS / DEFAULT_PHASE_BY_KEY rows exist (SELECT); raise a RuntimeError (or equivalent) if any key is missing so operators see the failure. Do not overwrite an existing phase. Do not seed inside rollback(). Do not add migrations/002_*.sql. Do not edit gate_b_risk.py. LIVE_TRADING stays false. scripts/run.sh ledger-migrate wiring stays as-is.\nArquivos: src/ledger_migrate.py.\nCriterio de pronto: rg shows ensure_strategy_defaults imported/called from ledger_migrate.py and not redefined there; apply() no longer returns already_applied without attempting seed; unit coverage exists or is added in N8.2; no DSN/password printed.\nCenarios de teste (implemented in N8.2):\n1. empty DB + apply → seven strategy_states rows with N7 default phases.\n2. already_applied + empty table → seed still runs; seven rows appear.\n3. existing orb=paper_validated is left unchanged (overwrite forbidden).\n4. rollback still drops tables; apply after rollback still works; LIVE_TRADING_ENABLED false; no Gate B file edits."
     },
     {
-      "id": "N7.2",
-      "title": "Signal carries strategy_key (HMAC ALLOWED + worker attach)",
-      "size": "M",
-      "status": "done",
-      "depends_on": [],
-      "files": [
-        "src/signal_copy.py",
-        "src/tradingview_worker.py",
-        "tests/test_signal_copy.py"
-      ],
-      "bom_ref": "BOM-3"
-    },
-    {
-      "id": "N7.3",
-      "title": "Gate B reads strategy_states; shadow/research/ORB never paper_allowed",
-      "size": "M",
-      "status": "done",
-      "depends_on": ["N7.1", "N7.2"],
-      "files": [
-        "src/gate_b_risk.py",
-        "tests/test_gate_b_risk.py"
-      ],
-      "bom_ref": "BOM-3"
-    },
-    {
-      "id": "N7.4",
-      "title": "Persist risk_decisions.strategy_key from signal",
+      "id": "N8.2",
+      "title": "Unit + optional ledger integration: apply roundtrip leaves 7 strategy_states rows",
       "size": "P",
-      "status": "done",
-      "depends_on": ["N7.2"],
+      "status": "todo",
+      "depends_on": [
+        "N8.1"
+      ],
       "files": [
-        "src/paper_gateway_queue.py",
-        "tests/test_paper_gateway_queue.py"
+        "tests/test_ledger_migration.py"
       ],
       "bom_ref": "BOM-3"
     },
     {
-      "id": "N7.5",
-      "title": "Ledger integration tests catalog + Gate B + queue",
+      "id": "N8.3",
+      "title": "Homologation runbook: verify 7 rows after migrate",
       "size": "P",
-      "status": "done",
-      "depends_on": ["N7.1", "N7.3", "N7.4"],
+      "status": "todo",
+      "depends_on": [
+        "N8.2"
+      ],
       "files": [
-        "tests/test_strategy_catalog_gate_b.py"
+        "docs/HOMOLOGATION.md"
       ],
       "bom_ref": "BOM-3"
     },
     {
-      "id": "N7.6",
-      "title": "REQUIREMENTS Feature 4 checkboxes N7 can close",
+      "id": "N8.4",
+      "title": "EasyPanel/INFRASTRUCTURE note: re-apply seeds insert-if-missing",
       "size": "P",
-      "status": "done",
-      "depends_on": ["N7.5"],
-      "files": [
-        "docs/REQUIREMENTS.md",
-        "docs/ARCHITECTURE.md",
-        "docs/ISSUES.md"
+      "status": "todo",
+      "depends_on": [
+        "N8.1"
       ],
-      "bom_ref": "BOM-4"
+      "files": [
+        "docs/INFRASTRUCTURE.md",
+        "EASYPANEL.md"
+      ],
+      "bom_ref": "BOM-3"
     }
   ],
   "checkpoint": {
-    "sprint": "N7",
+    "sprint": "N8",
     "phase": "testing",
-    "branch": "front/n7-strategy-catalog",
-    "last_completed_task": "N7.1–N7.6 code+docs",
-    "current_task": "VALIDATE pytest CI + PR",
-    "timestamp": "2026-10-30T15:05:00-03:00"
+    "branch": "front/n8-homolog-seed",
+    "last_completed_task": "N8.1–N8.4",
+    "current_task": "PR → main → ledger-migrate apply no EasyPanel",
+    "timestamp": "2026-10-30T16:20:00-03:00",
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N8",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [
+        "ISS-003"
+      ],
+      "recorded_at": "2026-10-30T16:16:23Z",
+      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
+      "notes": "11 unittest escopo N8 OK; 3 integração skip sem DSN. Senior: delta seed pós-apply, strict verify, sem Gate B.",
+      "round": 1,
+      "full_suite_ran": false,
+      "first_pass": true,
+      "senior_status": "PASS",
+      "findings_found": 1,
+      "findings_disposition": [
+        {
+          "id": "ISS-003",
+          "status": "fixed",
+          "evidence": "ledger_migrate apply seeds 7 rows; tests + docs N8"
+        }
+      ]
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -217,17 +255,17 @@
   ],
   "anchor": {
     "persona": "planejador-tarefas",
-    "phase": "Planejamento N7 (strategy-catalog) — plan_only",
-    "intent": "Planejar Sprint N7: fases persistidas + Gate B; sem limiares inventados; LIVE_TRADING false.",
-    "changes_made": "ROADMAP Sprint N7, docs/.briefs/N7.brief.md, ISS-002, .cursorsession sprint_tasks N7.1–N7.6. Sem código em src/.",
-    "decisions": "signal_copy seed paper_limited confirmado (operador opção 1); strategy_key no worker; ORB hard-reject; trader-risk.check reusado.",
-    "next_steps": "/pmo sprint ou /rock executar N7; frente front/n7-strategy-catalog.",
-    "updated_at": "2026-10-30T11:50:00-03:00"
+    "phase": "Planejamento N8 (seed on migrate) — plan_only",
+    "intent": "Planejar Sprint N8: ledger-migrate apply dispara ensure_strategy_defaults; runbook; 7 strategy_states; LIVE_TRADING false.",
+    "changes_made": "ROADMAP Sprint N8, docs/.briefs/N8.brief.md, ISS-003, .cursorsession sprint_tasks N8.1–N8.4. Sem código em src/.",
+    "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
+    "next_steps": "Parent Fable/plan-verifier; /pmo sprint N8 em frente nova front/n8-homolog-seed (nao nesta N7).",
+    "updated_at": "2026-10-30T12:40:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T14:05:33Z",
-    "usage_percent": 90.6395,
-    "messages_lost": 275
+    "compacted_at": "2026-10-30T16:14:53Z",
+    "usage_percent": 91.0545,
+    "messages_lost": 363
   },
-  "compact_count": 4
+  "compact_count": 5
 }

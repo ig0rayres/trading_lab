@@ -11,11 +11,12 @@
 
 1. Rebuild **both** apps from the same Dockerfile tag/SHA after merge to `main`.
 2. Environment must contain `LIVE_TRADING_ENABLED=false`. Paper Alpaca keys only on webhook/worker as today.
-3. Deploy once.
-4. Shell: `/app/scripts/run.sh verify`. This executes 21 local offline tests, exercises the real original modules using a deterministic synthetic fixture, and runs the upstream repository's own tests. If the original repository has been updated, parity may fail; do not force it to pass without inspecting the upstream changes.
-5. Shell: `/app/scripts/run.sh history --days 30 --symbols TSLA,NVDA,AMD --output /app/reports/history/v06-first-run`.
-6. Shell: `cat /app/reports/history/v06-first-run/summary.json`.
-7. Optional offline comparator for v0.5: `/app/scripts/run.sh orb-parity --date 2026-10-26`. It will report mismatches if original rounding or entry logic differs.
+3. On webhook (ledger): `/app/scripts/run.sh ledger-migrate apply` with `LEDGER_DATABASE_URL` — seeds **7** rows in `strategy_states` (safe to re-run; does not overwrite existing phases).
+4. Deploy once.
+5. Shell: `/app/scripts/run.sh verify`. This executes 21 local offline tests, exercises the real original modules using a deterministic synthetic fixture, and runs the upstream repository's own tests. If the original repository has been updated, parity may fail; do not force it to pass without inspecting the upstream changes.
+6. Shell: `/app/scripts/run.sh history --days 30 --symbols TSLA,NVDA,AMD --output /app/reports/history/v06-first-run`.
+7. Shell: `cat /app/reports/history/v06-first-run/summary.json`.
+8. Optional offline comparator for v0.5: `/app/scripts/run.sh orb-parity --date 2026-10-26`. It will report mismatches if original rounding or entry logic differs.
 
 ### If `verify` says the original repository is missing
 

@@ -43,12 +43,14 @@ def normalize_strategy_key(raw) -> str | None:
     return key
 
 
-def ensure_strategy_defaults(conn_factory: Callable | None = None) -> None:
+def ensure_strategy_defaults(conn_factory: Callable | None = None, *, strict: bool = False) -> None:
     if conn_factory is None:
         from ledger_store import connect
 
         conn_factory = connect
     if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        if strict:
+            raise RuntimeError('LEDGER_DATABASE_URL is not set')
         return
     try:
         with conn_factory() as conn:
@@ -61,6 +63,8 @@ def ensure_strategy_defaults(conn_factory: Callable | None = None) -> None:
                     )
             conn.commit()
     except Exception:
+        if strict:
+            raise
         return
 
 

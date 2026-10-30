@@ -2,15 +2,25 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
+from gate_b_session import within_regular_session
 from paper_audit import amount
 
 PAPER_CAPITAL_BRL = Decimal('5000')
 PAPER_RISK_BRL = Decimal('50')
 PAPER_DAILY_LOSS_BRL = Decimal('200')
 MAX_CONCURRENT_TRADES = 3
+
+
+def open_positions_cap_reached(open_positions, cap=MAX_CONCURRENT_TRADES) -> str | None:
+    if open_positions is None:
+        return None
+    if len(open_positions) >= cap:
+        return 'MAX_POSITIONS'
+    return None
 
 
 def kill_switch_active(env: dict[str, str] | None = None, conn_factory=None) -> bool:
@@ -81,10 +91,22 @@ def evaluate_signed_signal(
     state=None,
     now=None,
     env: dict[str, str] | None = None,
+    open_positions=None,
 ) -> dict[str, Any]:
     """Return decision dict: paper_allowed | rejected with reject_code."""
     if kill_switch_active(env):
         return {'decision': 'rejected', 'reject_code': 'KILL_SWITCH', 'risk_amount_cents': 0}
+    if now is not None and now.tzinfo is None:
+        session_now = now.replace(tzinfo=timezone.utc)
+    elif now is not None:
+        session_now = now
+    else:
+        session_now = datetime.now(timezone.utc)
+    if not within_regular_session(session_now):
+        return {'decision': 'rejected', 'reject_code': 'OUTSIDE_SESSION', 'risk_amount_cents': 0}
+    cap_code = open_positions_cap_reached(open_positions)
+    if cap_code:
+        return {'decision': 'rejected', 'reject_code': cap_code, 'risk_amount_cents': 0}
     from original import load_original
 
     risk = load_original().risk
@@ -113,3 +135,14 @@ def evaluate_signed_signal(
     reason = (row.get('reasons') or ['RISK_BLOCK'])[0]
     code = reason.split(':', 1)[0].strip().replace(' ', '_').upper()[:64]
     return {'decision': 'rejected', 'reject_code': code or 'RISK_BLOCK', 'risk_amount_cents': 0}
+
+
+def broker_open_positions(broker_get, env):
+    """Read Alpaca paper positions for Gate B cap. Returns list or None if unavailable."""
+    if broker_get is None:
+        return None
+    try:
+        pos = broker_get('/v2/positions', env)
+        return pos if isinstance(pos, list) else None
+    except Exception:
+        return None

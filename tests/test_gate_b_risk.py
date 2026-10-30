@@ -41,6 +41,17 @@ class GateBRiskTest(unittest.TestCase):
         self.assertEqual(d['decision'], 'rejected')
         self.assertTrue(d['reject_code'])
 
+    def test_max_open_positions_blocked(self):
+        positions = [{'symbol': 'MSFT'}, {'symbol': 'GOOG'}, {'symbol': 'NVDA'}]
+        d = gb.evaluate_signed_signal(_signal(), fx=self.fx, now=self.now, open_positions=positions)
+        self.assertEqual(d['decision'], 'rejected')
+        self.assertEqual(d['reject_code'], 'MAX_POSITIONS')
+
+    def test_outside_session_blocked(self):
+        saturday = self.risk.parse_now('2026-11-01 10:15')
+        d = gb.evaluate_signed_signal(_signal(), fx=self.fx, now=saturday)
+        self.assertEqual(d['reject_code'], 'OUTSIDE_SESSION')
+
     def test_kill_switch_env(self):
         with patch.dict(os.environ, {'TRADING_LAB_KILL_SWITCH': 'true'}, clear=False):
             d = gb.evaluate_signed_signal(_signal(), fx=self.fx, now=self.now)

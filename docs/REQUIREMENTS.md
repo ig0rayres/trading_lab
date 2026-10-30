@@ -114,9 +114,11 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 - Calendário de NY e B3, feriado e horário de verão fazem parte do gate. O relato `NY weekdays, holidays not filtered` é bloqueio aberto, não detalhe cosmético.
 
 **Critérios de aceite:**
-- [ ] Ordem que estoura qualquer limite acima é recusada com motivo, sem ida à corretora.
-- [ ] Kill switch acionado impede ordem nova.
-- [ ] Fora da sessão ou em feriado não tratado, o sinal não vira ordem.
+- [x] Ordem que estoura qualquer limite acima é recusada com motivo, sem ida à corretora (`tests/test_gate_b_risk.py`, `tests/test_paper_gateway_queue.py`; worker `orders_sent: 0`).
+- [x] Kill switch acionado impede ordem nova (`TRADING_LAB_KILL_SWITCH` / `control_flags`; teste em `test_gate_b_risk.py`).
+- [x] Fora da sessão NYSE ou com 3+ posições abertas (Alpaca read), o sinal não vira fila paper (`OUTSIDE_SESSION`, `MAX_POSITIONS` em `gate_b_risk.py`).
+
+Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.py`** + Feature 3 acima — não duplicados em `ENGINEERING_RULES.md` (reuso upstream `trader-risk`).
 
 ### Feature 4: Catálogo de estratégias e promoção de estado
 

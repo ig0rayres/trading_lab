@@ -80,6 +80,35 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
         self.assertIsNotNone(row)
         self.assertEqual(row[0], 'queued_intent')
 
+    def test_reject_persists_risk_decision(self):
+        import ledger_store as store
+        from gate_a_signal import idempotency_key, record_signal_event
+
+        signal = _signal()
+        signal['signal_id'] = 'GATEB_REJ_001'
+        with store.connect() as conn:
+            record_signal_event(
+                conn,
+                payload=signal,
+                http_status=202,
+                body={'status': 'QUEUED', 'orders_sent': 0},
+            )
+            conn.commit()
+        decision = {'decision': 'rejected', 'reject_code': 'LOSS', 'risk_amount_cents': 0}
+        pgq.persist_risk_decision(signal, decision)
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT rd.decision, rd.reject_code FROM risk_decisions rd "
+                    "JOIN signal_events se ON se.id = rd.signal_event_id "
+                    'WHERE se.idempotency_key = %s',
+                    (idempotency_key('tradingview', 'GATEB_REJ_001'),),
+                )
+                row = cur.fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row[0], 'rejected')
+        self.assertEqual(row[1], 'LOSS')
+
 
 if __name__ == '__main__':
     unittest.main()

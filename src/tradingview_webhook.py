@@ -13,24 +13,10 @@ from urllib.parse import urlsplit
 
 QUEUE=Path(os.environ.get('TV_QUEUE_DIR','/app/reports/webhooks/pending'))
 FIELDS={'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry','stop','target','quantity','ttl_seconds'}
-_ENTRY = None
-
-def _entry_module():
-    global _ENTRY
-    if _ENTRY is None:
-        from original import load_original
-        _ENTRY = load_original().entry
-    return _ENTRY
 
 def _within_regular_session(now):
-    from zoneinfo import ZoneInfo
-    ny = now.astimezone(ZoneInfo('America/New_York'))
-    sess = _entry_module().session(ny.date())
-    if sess is None:
-        return False
-    open_t, close_t = sess
-    t = ny.time()
-    return open_t <= t <= close_t
+    from gate_b_session import within_regular_session
+    return within_regular_session(now)
 
 def _respond(payload, status, body):
     from gate_a_signal import maybe_persist

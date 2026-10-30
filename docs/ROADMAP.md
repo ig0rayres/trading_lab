@@ -28,6 +28,7 @@
 | D1 | D | CI verde + vendor pinado + pytest com nodeids | concluida | 6 | baseline, vendor | Evidência reprodutível | 80–115 |
 | D2 | D | Tabelas ledger no Postgres + rollback testado | concluida | 5 | ledger | Persistência paper | 117–145 |
 | D3 | D | Gate A rejeita sinal inválido sem broker | em execucao | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
+| D4 | D | Gate B + fila paper sem fill | em execucao | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
 | D4 | D | Gate B bloqueia ordem fora de limites | pendente | 6 | risk-gate-b, paper-gateway | Risco antes de fila | 180–212 |
 | D5 | D | Paper reconciliado read-only; nenhum live | pendente | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
 
@@ -123,12 +124,12 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | Gate B: reuso `trader-risk` + políticas REQUIREMENTS (capital paper) | skill `paper-order-gate` | D2, D3 |
-| [ ] | M | Paper gateway: só após A+B; stub de broker em testes | `/dev` | Gate B |
-| [ ] | P | Testes: HTTP 200 / queue ≠ fill documentados | `/qa testes` | gateway |
-| [ ] | M | Gravar intenção de ordem no ledger (pré-envio) | `/dev` | D2 |
-| [ ] | P | Kill switch operacional documentado | `docs/INFRASTRUCTURE.md` | — |
-| [ ] | P | Paridade de limites com `ENGINEERING_RULES.md` | `/qa validar` | Gate B |
+| [x] | M | Gate B: reuso `trader-risk` + políticas REQUIREMENTS (capital paper) | skill `paper-order-gate` | D2, D3 |
+| [x] | M | Paper gateway: só após A+B; stub de broker em testes | `/dev` | Gate B |
+| [x] | P | Testes: HTTP 200 / queue ≠ fill documentados | `/qa testes` | gateway |
+| [x] | M | Gravar intenção de ordem no ledger (pré-envio) | `/dev` | D2 |
+| [x] | P | Kill switch operacional documentado | `docs/INFRASTRUCTURE.md` | — |
+| [x] | P | Paridade de limites com `ENGINEERING_RULES.md` | `/qa validar` | Gate B |
 
 ---
 

@@ -60,7 +60,23 @@ O ZIP importado **não** incluiu `vendor/`; CI e Sprint D1 tratam de pin + evid�
 
 ## 5. Banco de dados (ledger paper)
 
-PostgreSQL da instância existente do operador (ver `docs/DATABASE.md`). Migrations **não** existem ainda — Sprint D2.
+PostgreSQL da instância existente do operador (ver `docs/DATABASE.md`). Migrations em `migrations/001_ledger_*.sql`; CLI `scripts/run.sh ledger-migrate`.
+
+### Kill switch (Gate B)
+
+Ordens paper não passam do Gate B quando:
+
+1. **`TRADING_LAB_KILL_SWITCH=true`** no ambiente do worker/gateway (fail-closed imediato), ou
+2. A linha mais recente em **`control_flags.kill_switch_on = true`** no Postgres (`LEDGER_DATABASE_URL`).
+
+O scheduler de pesquisa (`v4-scheduler`) não consulta o kill switch; só caminhos pós-Gate A (`tradingview_worker`, fila paper). Para ligar via SQL (operador):
+
+```sql
+INSERT INTO control_flags (kill_switch_on, max_risk_per_trade_cents, prodigy_risk_cents)
+VALUES (true, 5000, 2000);
+```
+
+Desligar: inserir nova linha com `kill_switch_on = false` (histórico append-only por linhas novas).
 
 ---
 

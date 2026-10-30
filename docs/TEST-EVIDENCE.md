@@ -101,3 +101,9 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 | CI workflow | `.github/workflows/docker-smoke.yml` (paralelo ao job `docker-build` em `ci.yml`) |
 
 **Nota:** validação local bloqueada neste agente (`local-runtime` ask); evidência pós-push na Action `Docker image smoke`.
+
+| Evidência | Valor |
+|-----------|--------|
+| PR | https://github.com/ig0rayres/trading_lab/pull/1 (merged 2026-10-30) |
+| `main` merge | `6813fb5` |
+| Operador | EasyPanel hashia — N6 no ar (dois apps) |

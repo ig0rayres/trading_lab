@@ -15,7 +15,7 @@ from pathlib import Path
 from paper_audit import amount
 
 ALLOWED = {'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry',
-           'stop','target','quantity','ttl_seconds','provider_signature'}
+           'stop','target','quantity','ttl_seconds','provider_signature','strategy_key'}
 DEFAULT_MAX_AGE=30
 
 def canonical_payload(signal):

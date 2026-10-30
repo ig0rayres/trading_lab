@@ -17,11 +17,11 @@
 | F-009 | D4 | P | Rejeição Gate B persiste `risk_decisions` | fechado |
 | F-010 | D4 | P | Limites paper em `gate_b_risk.py` + REQUIREMENTS Feature 3 | fechado |
 | F-011 | D5 | M | Reconcile→ledger + dashboard + homologação doc (fill real = operador) | fechado |
-| F-012 | N6 | M | Gate N6: diff não commitado; pytest/docker smoke/CI não reexecutados nesta rodada | pendente |
+| F-012 | N6 | M | Gate N6: diff não commitado; pytest/docker smoke/CI não reexecutados nesta rodada | fechado |
 
 ## Notas
 
 - **D3** fechada no ROADMAP após F-001, F-005, F-006 (CI pytest obrigatório).
 - **D4** fechada após F-007–F-010 e CI pytest.
 - **D5** fechada no escopo código/CI; fill Alpaca real continua checklist operador (Feature 5).
-- **D1** CI + vendor_verify ok; **F-003** (orb parity) permanece aberto.
+- **N6** fechada: PR #1 merge `6813fb5`; CI test + docker-smoke verdes; operador EasyPanel hashia (2026-10-30).

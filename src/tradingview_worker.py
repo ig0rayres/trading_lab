@@ -27,6 +27,10 @@ def process_one(path):
         if errs:
             result={'status':'BLOCKED','reasons':errs,'orders_sent':0}
         else:
+            if not obj.get('strategy_key'):
+                provider = str(obj.get('provider', '')).lower()
+                if provider == 'tradingview':
+                    obj['strategy_key'] = 'signal_copy'
             open_pos = broker_open_positions(get_json, os.environ)
             decision = evaluate_signed_signal(
                 obj, fx=fx, env=os.environ, open_positions=open_pos,

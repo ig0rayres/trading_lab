@@ -25,6 +25,8 @@ def record_signal_event(
     status = 'rejected' if http_status >= 400 or body.get('status') == 'REJECTED' else 'received'
     if http_status == 202 and body.get('status') == 'QUEUED':
         status = 'accepted'
+    if body.get('status') == 'received':
+        status = 'received'
     side = 'long' if payload.get('side') == 'buy' else 'short'
     reject_code = body.get('reason') if status == 'rejected' else None
     key = idempotency_key(str(payload.get('provider', '')), str(payload.get('signal_id', '')))
@@ -60,3 +62,48 @@ def maybe_persist(payload, http_status, body, conn_factory=None):
             conn.commit()
     except Exception:
         return
+
+
+def persist_news_first_report(report, conn_factory=None):
+    """Append one signal_events row per News First review signal (NO_TRADE audit)."""
+    if report.get('mode') != 'NEWS_FIRST_INTERNAL_SIMULATION':
+        return 0
+    count = 0
+    for sig in report.get('signals', []):
+        sid = str(sig.get('id', '')).strip()
+        sym = str(sig.get('symbol', 'UNKNOWN')).upper()[:32]
+        if not sid or not sym:
+            continue
+        payload = {
+            'provider': 'news_first',
+            'signal_id': sid,
+            'symbol': sym,
+            'side': 'buy',
+        }
+        reason = 'EVIDENCE_PENDING'
+        if sig.get('decision') != 'NO_TRADE' and sig.get('blocker_reasons'):
+            reason = str(sig['blocker_reasons'][0])[:64]
+        body = {'status': 'REJECTED', 'reason': reason, 'orders_sent': 0}
+        maybe_persist(payload, 422, body, conn_factory=conn_factory)
+        count += 1
+    return count
+
+
+def persist_signal_copy_preflight(signal, result, conn_factory=None):
+    """Audit signed copy preflight; never places orders."""
+    if not isinstance(signal, dict):
+        return
+    payload = {
+        'provider': str(signal.get('provider', 'signal_copy')),
+        'signal_id': str(signal.get('signal_id', '')),
+        'symbol': str(signal.get('symbol', 'UNKNOWN')),
+        'side': signal.get('side', 'buy'),
+    }
+    if not payload['signal_id']:
+        return
+    if result.get('status') == 'BLOCKED':
+        reasons = result.get('reasons') or ['BLOCKED']
+        body = {'status': 'REJECTED', 'reason': str(reasons[0])[:64], 'orders_sent': 0}
+        maybe_persist(payload, 422, body, conn_factory=conn_factory)
+    elif result.get('status') == 'SIGNAL_ACCEPTED_RISK_PREVIEW':
+        maybe_persist(payload, 200, {'status': 'received', 'orders_sent': 0}, conn_factory=conn_factory)

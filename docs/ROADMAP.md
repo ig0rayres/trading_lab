@@ -3,7 +3,7 @@
 > Gerado em: 2026-10-30  
 > Fase: 8 — Planejamento técnico (`/pmo plan`, categoria **D**)  
 > Baseado em: `docs/PROJECT-BRIEF.md`, `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/LEGACY-ANALYSIS.md`  
-> Status: **Em execução** (Sprint D2 próxima)  
+> Status: **Em execução** (D3 Gate A + D4 Gate B — nada marcado concluído sem critério fechado)
 > Gerado via: `/pmo plan` — Rock handoff 2026-10-30
 
 ---
@@ -26,11 +26,12 @@
 | Sprint | Categoria | Gate (resumo) | Status | Tasks | Módulos | Resumo | Linhas |
 |--------|-----------|---------------|--------|-------|---------|--------|--------|
 | D1 | D | CI verde + vendor pinado + pytest com nodeids | concluida | 6 | baseline, vendor | Evidência reprodutível | 80–115 |
-| D2 | D | Tabelas ledger no Postgres + rollback testado | concluida | 5 | ledger | Persistência paper | 117–145 |
-| D3 | D | Gate A rejeita sinal inválido sem broker | em execucao | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
-| D4 | D | Gate B + fila paper sem fill | concluida | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
-| D4 | D | Gate B bloqueia ordem fora de limites | pendente | 6 | risk-gate-b, paper-gateway | Risco antes de fila | 180–212 |
+| D2 | D | Tabelas ledger no Postgres + rollback testado | concluida* | 5 | ledger | Persistência paper | 117–145 |
+| D3 | D | Gate A rejeita sinal inválido sem broker | concluida | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
+| D4 | D | Gate B + fila paper sem fill | em execucao | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
 | D5 | D | Paper reconciliado read-only; nenhum live | pendente | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
+
+\* D2: migration/CI ok; `.env.example` alinhado (F-004 fechado).
 
 ---
 
@@ -74,7 +75,8 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 | [x] | P | Adicionar `vendor/day-trader-skill` (submodule ou cópia) e `docs/VENDOR-PIN.md` | `/git` + documentação | — |
 | [x] | P | Garantir CI (`.github/workflows/ci.yml`) e `requirements-dev.txt` | `/devops planejar` | — |
 | [~] | P | Configurar remote Git + branch `front/d1-baseline` | `/git` | — *(origin + `main`; CI #3 Success)* |
-| [x] | M | Rodar `vendor_verify` / `parity` offline contra pin | skill `paper-order-gate` refs | vendor |
+| [x] | M | Rodar `vendor_verify` offline contra pin | skill refs | vendor |
+| [ ] | M | Rodar `parity.py` quando artefatos orb existirem | `/qa validar` | vendor |
 | [x] | P | Reexecutar pytest local; arquivar saída (nodeids) em `docs/` ou artefato CI | `/qa testes` | CI |
 | [x] | P | Atualizar `docs/REQUIREMENTS.md` critério pytest quando verde | `/pmo` | pytest |
 
@@ -92,7 +94,7 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 | [x] | M | Alembic/SQL migration alinhada a `docs/db-schema.dbml` | `/arquiteto dados` | D1 |
 | [x] | P | Teste rollback da migration | `/qa testes` | migration |
 | [x] | M | Adapter de persistência (append-only; sem `deleted_at` como borracha) | `/dev` | migration |
-| [x] | P | `.env.example` só com **nomes** de variáveis (DSN) | `/devops` | — |
+| [x] | P | `.env.example` alinhado aos nomes reais do código | `/devops` | — |
 | [x] | P | Documentar runbook de apply na instância existente | `docs/INFRASTRUCTURE.md` | migration |
 
 ---
@@ -106,12 +108,13 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [x] | M | Extrair/contratar Gate A conforme `docs/api-spec.yaml` + skill `signal-ingest` | `/dev` | D1 |
+| [x] | P | Contrato Gate A = `api-spec.yaml` + skill (header + legacy EasyPanel) | `/dev` | D1 |
 | [x] | P | Testes: sinal inválido → código de motivo, zero ordem | `/qa testes` | Gate A |
-| [ ] | M | Integrar News First / copy apenas como **entrada** auditada (sem broker) | `/dev` | Gate A |
+| [x] | M | Integrar News First / copy apenas como **entrada** auditada (sem broker) | `/dev` | Gate A |
 | [x] | P | Calendário/sessão: recusar fora de horário (upstream `session`) | `/dev` | vendor |
 | [x] | P | Atualizar `docs/REQUIREMENTS.md` Feature 2 critérios | `/pmo` | testes |
-| [ ] | P | Registrar achados abertos em `docs/FINDINGS.md` se gap | `/pmo triar` | — |
+| [x] | P | Registrar achados abertos em `docs/FINDINGS.md` | `/pmo triar` | — |
+| [x] | P | Testes HTTP handler webhook | `/qa testes` | Gate A |
 
 ---
 
@@ -125,11 +128,11 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
 | [x] | M | Gate B: reuso `trader-risk` + políticas REQUIREMENTS (capital paper) | skill `paper-order-gate` | D2, D3 |
-| [x] | M | Paper gateway: só após A+B; stub de broker em testes | `/dev` | Gate B |
-| [x] | P | Testes: HTTP 200 / queue ≠ fill documentados | `/qa testes` | gateway |
+| [x] | M | Paper gateway: fila após B; stub de broker em testes | `/dev` | Gate B |
+| [~] | P | Testes + REQUIREMENTS Feature 3 fechados (F-007) | `/qa testes` | gateway |
 | [x] | M | Gravar intenção de ordem no ledger (pré-envio) | `/dev` | D2 |
-| [x] | P | Kill switch operacional documentado | `docs/INFRASTRUCTURE.md` | — |
-| [x] | P | Paridade de limites com `ENGINEERING_RULES.md` | `/qa validar` | Gate B |
+| [x] | P | Kill switch documentado (`INFRASTRUCTURE`) | `docs/INFRASTRUCTURE.md` | — |
+| [ ] | P | 3 posições + rejeição persistida + critérios Feature 3 (F-008, F-009) | `/dev` | Gate B |
 
 ---
 

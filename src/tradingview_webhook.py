@@ -80,6 +80,44 @@ def ingest(payload,secret,queue=QUEUE,now=None):
         tmp.unlink(missing_ok=True)
     return _respond(payload,202,{'status':'QUEUED','reference':digest[:16],'orders_sent':0})
 
+def _configured_webhook_token(env=None):
+    env = env or os.environ
+    token = env.get('TV_WEBHOOK_TOKEN', '').strip()
+    legacy = env.get('TV_WEBHOOK_SECRET', '').strip()
+    return token or legacy
+
+def dispatch_post(path, headers, body_bytes, env=None, now=None, queue=None):
+    """HTTP POST entry for tests and Handler. Returns (status_code, body_dict)."""
+    env = env or os.environ
+    configured = _configured_webhook_token(env)
+    path_only = urlsplit(path).path
+    hdrs = {k.lower(): v for k, v in (headers or {}).items()}
+    use_spec = path_only == '/webhooks/tradingview'
+    legacy = path_only.startswith('/webhook/') and not use_spec
+    if not use_spec and not legacy:
+        return 404, {'status': 'NOT_FOUND'}
+    if not configured or len(configured) < 32:
+        return (401, {'status': 'UNAUTHORIZED'}) if use_spec else (404, {'status': 'NOT_FOUND'})
+    if use_spec:
+        supplied = (hdrs.get('x-webhook-token') or '').strip()
+        if not supplied or not hmac.compare_digest(supplied, configured):
+            return 401, {'status': 'UNAUTHORIZED'}
+    else:
+        supplied = path_only.removeprefix('/webhook/')
+        if not supplied or not hmac.compare_digest(supplied, configured):
+            return 404, {'status': 'NOT_FOUND'}
+    try:
+        if not body_bytes or len(body_bytes) > 8192:
+            return 415, {'status': 'REJECTED', 'reason': 'INVALID_BODY'}
+        ctype = hdrs.get('content-type', '')
+        if 'application/json' not in ctype:
+            return 415, {'status': 'REJECTED', 'reason': 'INVALID_BODY'}
+        payload = json.loads(body_bytes.decode('utf-8'))
+        status, result = ingest(payload, configured, queue=queue or QUEUE, now=now)
+        return status, result
+    except (ValueError, TypeError, UnicodeError, json.JSONDecodeError):
+        return 400, {'status': 'REJECTED', 'reason': 'MALFORMED_JSON'}
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self,*args):pass # do not log path token
     def do_GET(self):
@@ -90,24 +128,19 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(body)))
         self.end_headers();self.wfile.write(body)
     def do_POST(self):
-        secret=os.getenv('TV_WEBHOOK_TOKEN','')
-        supplied=urlsplit(self.path).path.removeprefix('/webhook/')
-        if not secret or len(secret)<32 or not hmac.compare_digest(supplied,secret):
-            self.reply(404,{'status':'NOT_FOUND'});return
         try:
-            length=int(self.headers.get('Content-Length','0'))
-            if not 0<length<=8192 or 'application/json' not in self.headers.get('Content-Type',''):
-                self.reply(415,{'status':'REJECTED','reason':'INVALID_BODY'});return
-            payload=json.loads(self.rfile.read(length))
-            status,result=ingest(payload,secret)
-            self.reply(status,result)
-        except (ValueError,TypeError,UnicodeError,json.JSONDecodeError):
-            self.reply(400,{'status':'REJECTED','reason':'MALFORMED_JSON'})
+            length = int(self.headers.get('Content-Length', '0'))
+        except ValueError:
+            length = 0
+        body = self.rfile.read(length) if length else b''
+        hdr = {k: v for k, v in self.headers.items()}
+        status, result = dispatch_post(self.path, hdr, body)
+        self.reply(status, result)
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8080);a=p.parse_args()
     if os.getenv('LIVE_TRADING_ENABLED','false').lower()!='false':raise SystemExit('LIVE forbidden')
-    if len(os.getenv('TV_WEBHOOK_TOKEN',''))<32 or len(os.getenv('SIGNAL_COPY_SECRET',''))<24:
-        raise SystemExit('Set TV_WEBHOOK_TOKEN>=32 and SIGNAL_COPY_SECRET>=24')
+    if len(_configured_webhook_token())<32 or len(os.getenv('SIGNAL_COPY_SECRET',''))<24:
+        raise SystemExit('Set TV_WEBHOOK_TOKEN>=32 (or TV_WEBHOOK_SECRET) and SIGNAL_COPY_SECRET>=24')
     ThreadingHTTPServer(('0.0.0.0',a.port),Handler).serve_forever()
 if __name__=='__main__':main()

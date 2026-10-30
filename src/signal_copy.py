@@ -59,12 +59,19 @@ def validate(signal,secret,fx,now=None):
 def preflight(signal,secret,fx,now=None):
     errors=validate(signal,secret,fx,now)
     ref=hashlib.sha256(canonical_payload(signal) if isinstance(signal,dict) else b'invalid').hexdigest()[:24]
-    if errors: return {'status':'BLOCKED','reasons':errors,'fingerprint':ref,'orders_sent':0}
-    return {'status':'SIGNAL_ACCEPTED_RISK_PREVIEW','fingerprint':ref,
+    if errors:
+        result={'status':'BLOCKED','reasons':errors,'fingerprint':ref,'orders_sent':0}
+        from gate_a_signal import persist_signal_copy_preflight
+        persist_signal_copy_preflight(signal, result)
+        return result
+    result={'status':'SIGNAL_ACCEPTED_RISK_PREVIEW','fingerprint':ref,
             'provider':signal['provider'],'signal_id':signal['signal_id'],
             'symbol':signal['symbol'],'side':'buy','entry':signal['entry'],
             'stop':signal['stop'],'target':signal['target'], 'quantity':signal['quantity'],
             'orders_sent':0,'next_step':'Independent broker account and current-price checks required before execution'}
+    from gate_a_signal import persist_signal_copy_preflight
+    persist_signal_copy_preflight(signal, result)
+    return result
 
 def main():
     parser=argparse.ArgumentParser()

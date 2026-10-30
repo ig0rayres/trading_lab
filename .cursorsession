@@ -77,9 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Executar N9.1–N9.5 (docs) nesta frente",
-    "Operador N9.6 no hashia após N9.5",
-    "/qa validar N9 antes do merge"
+    "Operador: runbook HOMOLOGATION itens 3–7 no EasyPanel",
+    "Preencher TEST-EVIDENCE tabela N9",
+    "/qa validar N9 → PR → merge"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -120,7 +120,7 @@
       "id": "N9.1",
       "title": "Runbook Gate A: webhook → signal_events",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "files": [
         "docs/HOMOLOGATION.md"
@@ -131,7 +131,7 @@
       "id": "N9.2",
       "title": "Runbook Gate B: worker → risk_decisions + paper_orders queued_intent",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N9.1"
       ],
@@ -144,7 +144,7 @@
       "id": "N9.3",
       "title": "Runbook reconcile read-only (ledger_apply, não broker_reconciled)",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N9.2"
       ],
@@ -157,7 +157,7 @@
       "id": "N9.4",
       "title": "Runbook dashboard auth + kill switch",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N9.3"
       ],
@@ -171,7 +171,7 @@
       "id": "N9.5",
       "title": "Evidence sheet + optional Feature 5 operator note",
       "size": "M",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N9.4"
       ],
@@ -198,9 +198,9 @@
     "sprint": "N9",
     "phase": "implementation",
     "branch": "front/n9-easypanel-homolog",
-    "last_completed_task": null,
-    "current_task": "N9.1",
-    "timestamp": "2026-10-30T14:51:42-03:00",
+    "last_completed_task": "N9.5",
+    "current_task": "N9.6",
+    "timestamp": "2026-10-30T14:54:45-03:00",
     "relevant_paths": [
       "docs/HOMOLOGATION.md",
       "docs/TEST-EVIDENCE.md",
@@ -242,7 +242,7 @@
     "slug": "n9-easypanel-homolog",
     "kind": "agent",
     "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab.fronts/n9-easypanel-homolog",
+    "worktree": "/media/igor/windows_part/Cursor/trading lab",
     "branch": "front/n9-easypanel-homolog"
   },
   "sprint_atual": "N9",

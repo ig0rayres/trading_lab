@@ -1,11 +1,11 @@
 # .cursor/context-brief.yaml (auto-generated — do not edit)
-# Last update: 2026-10-30T10:27:26Z
+# Last update: 2026-10-30T10:45:09Z
 ---
 projeto: trading-lab
 versao: ?
 perfil: ?
 fase: 9
-sprint_atual: D1
+sprint_atual: ?
 findings_criticos_count: 0
 findings_criticos: []
 decisoes_recentes: []

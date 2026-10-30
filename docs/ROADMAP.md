@@ -3,7 +3,7 @@
 > Gerado em: 2026-10-30  
 > Fase: 8 — Planejamento técnico (`/pmo plan`, categoria **D**)  
 > Baseado em: `docs/PROJECT-BRIEF.md`, `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/LEGACY-ANALYSIS.md`  
-> Status: **Em execução** (Sprint D1 ativa em `sprint/D1`)  
+> Status: **Em execução** (Sprint D2 próxima)  
 > Gerado via: `/pmo plan` — Rock handoff 2026-10-30
 
 ---
@@ -25,7 +25,7 @@
 
 | Sprint | Categoria | Gate (resumo) | Status | Tasks | Módulos | Resumo | Linhas |
 |--------|-----------|---------------|--------|-------|---------|--------|--------|
-| D1 | D | CI verde + vendor pinado + pytest com nodeids | em execucao | 6 | baseline, vendor | Evidência reprodutível | 80–115 |
+| D1 | D | CI verde + vendor pinado + pytest com nodeids | concluida | 6 | baseline, vendor | Evidência reprodutível | 80–115 |
 | D2 | D | Tabelas ledger no Postgres + rollback testado | pendente | 5 | ledger | Persistência paper | 117–145 |
 | D3 | D | Gate A rejeita sinal inválido sem broker | pendente | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
 | D4 | D | Gate B bloqueia ordem fora de limites | pendente | 6 | risk-gate-b, paper-gateway | Risco antes de fila | 180–212 |
@@ -72,10 +72,10 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 |--------|---------|--------|---------------|------------|
 | [x] | P | Adicionar `vendor/day-trader-skill` (submodule ou cópia) e `docs/VENDOR-PIN.md` | `/git` + documentação | — |
 | [x] | P | Garantir CI (`.github/workflows/ci.yml`) e `requirements-dev.txt` | `/devops planejar` | — |
-| [~] | P | Configurar remote Git + branch `front/d1-baseline` | `/git` | — *(origin + push `sprint/D1`; PR/CI no GitHub)* |
+| [~] | P | Configurar remote Git + branch `front/d1-baseline` | `/git` | — *(origin + `main`; CI #3 Success)* |
 | [x] | M | Rodar `vendor_verify` / `parity` offline contra pin | skill `paper-order-gate` refs | vendor |
-| [ ] | P | Reexecutar pytest local; arquivar saída (nodeids) em `docs/` ou artefato CI | `/qa testes` | CI |
-| [ ] | P | Atualizar `docs/REQUIREMENTS.md` critério pytest quando verde | `/pmo` | pytest |
+| [x] | P | Reexecutar pytest local; arquivar saída (nodeids) em `docs/` ou artefato CI | `/qa testes` | CI |
+| [x] | P | Atualizar `docs/REQUIREMENTS.md` critério pytest quando verde | `/pmo` | pytest |
 
 ---
 

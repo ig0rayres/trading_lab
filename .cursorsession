@@ -17,8 +17,8 @@
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
   "fase_nome": "Sprint D1 — baseline verificavel (ativa)",
-  "sprint_atual": "D1",
-  "sprint_pending_merge": null,
+  "sprint_atual": null,
+  "sprint_pending_merge": "D1",
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
   "ultimo_update": "2026-10-30T10:25:00-03:00",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Operador: criar repo remoto, push branch sprint/D1, anexar URL do CI em TEST-EVIDENCE",
-    "Pytest: venv local ou primeira execucao do workflow CI",
-    "D1.6: atualizar REQUIREMENTS quando pytest verde"
+    "/qa validar na D1",
+    "Sprint D2 ledger Postgres",
+    "EasyPanel: 1 servico pesquisa se webhook inativo"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -94,8 +94,6 @@
     "docs/ROADMAP.md sprints D1-D5 proposta"
   ],
   "features_pendentes": [
-    "Reexecutar pytest neste ambiente (contagens 224 a 395 sao relato do pacote, nao evidencia desta sessao)",
-    "Vendor pinado de day-trader-skill (submodule D1; pytest suite ainda sem evidencia nesta maquina)",
     "Ponte sinal, News First, risk gate, paper gateway, fill, ledger e reconciliacao nao homologada",
     "Edge de estrategia nao validado (ORB intraday reportado com resultado negativo)",
     "Export do que esta instalado no EasyPanel nao veio neste corte"
@@ -115,9 +113,13 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo sprint D1"
+    "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "Sprint D1: vendor+CI+vendor_verify ok; pytest e PR aguardam repo remoto ou venv local.",
+  "contexto_rapido": "Sprint D1 concluida (VERIFY CI). Proximo: /pmo sprint D2.",
+  "proximos_passos": [
+    "/pmo sprint D2 ledger Postgres",
+    "EasyPanel: trading-lab + trading-lab-webhook (mesma imagem)"
+  ],
   "sprint_tasks": [
     {
       "id": "D1.1",
@@ -141,10 +143,10 @@
       "id": "D1.3",
       "title": "Remote Git e PR",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": ["D1.1", "D1.5"],
       "files": [],
-      "notes": "Aguarda operador criar repositorio remoto; CI na primeira push."
+      "notes": "origin + main; CI run 41041762290 Success. PR opcional."
     },
     {
       "id": "D1.4",
@@ -159,7 +161,7 @@
       "id": "D1.5",
       "title": "Pytest evidencia (nodeids)",
       "size": "P",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["D1.1"],
       "files": ["docs/TEST-EVIDENCE.md"]
     },
@@ -167,26 +169,20 @@
       "id": "D1.6",
       "title": "Atualizar REQUIREMENTS criterio pytest",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": ["D1.5"],
       "files": ["docs/REQUIREMENTS.md"]
     }
   ],
   "checkpoint": {
     "sprint": "D1",
-    "phase": "implementation",
+    "phase": "done",
     "branch": "sprint/D1",
-    "relevant_paths": [
-      "vendor/",
-      "docs/VENDOR-PIN.md",
-      ".github/workflows/",
-      "requirements-dev.txt",
-      "docs/REQUIREMENTS.md",
-      "docs/TEST-EVIDENCE.md"
-    ],
-    "last_completed_task": "D1.4",
-    "current_task": "D1.5",
-    "timestamp": "2026-10-30T10:25:00-03:00"
+    "relevant_paths": [],
+    "last_completed_task": "D1.6",
+    "current_task": null,
+    "timestamp": "2026-10-30T10:45:00-03:00",
+    "validation": "CI run 41041762290 Success on main @ f597f8b"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -204,13 +200,13 @@
     ".dockerignore"
   ],
   "anchor": {
-    "persona": "sprint-init",
-    "phase": "Sprint D1 implementation",
-    "intent": "Baseline verificavel: vendor pin, pytest real, CI verde.",
-    "changes_made": "Branch sprint/D1; sprint_atual D1; tasks D1.1-D1.6; D1.2 marcada done.",
-    "decisions": "Submodule vendor (nao reimplementar upstream). Sem live trading.",
-    "next_steps": "Concluir D1.1 vendor; D1.4-D1.5 evidencia; D1.3 PR.",
-    "updated_at": "2026-10-30T10:25:00-03:00"
+    "persona": "rock",
+    "phase": "Sprint D1 VERIFY done",
+    "intent": "Fechar baseline D1; preparar D2 ledger.",
+    "changes_made": "DIARY, ROADMAP D1 concluida, INFRA two EasyPanel apps.",
+    "decisions": "Dois apps EasyPanel; CI 41041762290 Success.",
+    "next_steps": "/pmo sprint D2",
+    "updated_at": "2026-10-30T10:45:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-10-30T10:10:15Z",

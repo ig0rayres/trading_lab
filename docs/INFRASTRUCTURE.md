@@ -76,8 +76,21 @@ Hooks de automação Beesy (`safety-guard`, `pmo-update`) **não** foram instala
 
 ---
 
-## 8. Próximos passos
+## 8. EasyPanel (dois apps, uma imagem)
 
-1. `/pmo sprint` — ativar **Sprint D1** a partir de `docs/ROADMAP.md`.
+Decisão do operador (2026-10-30): manter **`trading-lab`** + **`trading-lab-webhook`**, alinhado a `docs/ARCHITECTURE.md` ADR-002.
+
+| Serviço | Comando | Porta / domínio |
+|---------|---------|-----------------|
+| `trading-lab` | `v4-scheduler` (CMD padrão do Dockerfile) | Sem publicação se só pesquisa |
+| `trading-lab-webhook` | `tv-webhook` via entrypoint `run.sh` | HTTPS só neste app, após Gate A |
+
+Mesma build de imagem; volumes `/app/reports` e `/app/vendor` persistentes; **não** substituir deploy EasyPanel atual sem release supervisionada.
+
+---
+
+## 9. Próximos passos
+
+1. **Sprint D2** — migrations ledger Postgres (`docs/ROADMAP.md`).
 2. Opcional: `/devops infra` — topologia alinhada ao Postgres e volumes de reports.
-3. Configurar **remote Git** e abrir PRs em `front/*` conforme regra do operador.
+3. Deploy GitHub → EasyPanel quando houver sprint de infra aprovada.

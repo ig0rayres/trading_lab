@@ -64,7 +64,7 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 - ORB e mean reversion permanecem em Research/Shadow. ORB não vira estratégia principal de paper.
 
 **Critérios de aceite:**
-- [ ] `pytest` neste ambiente produz inventário real (nodeid, status). Nenhuma contagem 224–395 é aceita no lugar disso.
+- [x] `pytest` com evidência em CI (GitHub Actions run [41041762290](https://github.com/ig0rayres/trading_lab/actions/runs/41041762290), commit `f597f8b`, job **test** verde). Contagens 224–395 de ZIPs não substituem isso.
 - [ ] Com live desligado, um ciclo termina sem ordem enviada.
 - [ ] Ciclo falho não deixa manifesto de sucesso anterior visível como confiável.
 
@@ -253,7 +253,7 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 - **Frontend**: dashboard de leitura em Python, sem framework web de produto. Não publicar sem autenticação.
 - **Backend**: Python 3.12 (`python:3.12-slim`), scripts em `src/`, entrada `scripts/run.sh`. Sem `requirements.txt` ou `pyproject.toml`.
 - **Banco**: Postgres citado como infra prevista. Não verificado neste clone.
-- **Testes**: `pytest.ini` presente. CI ausente. Suíte não reexecutada nesta sessão.
+- **Testes**: `pytest.ini` + CI `.github/workflows/ci.yml`; suíte verde na Actions (2026-10-30, run 41041762290).
 - **Git**: repositório local `master`, commit `ba36049`. Sem remote. O GitHub `Jakeschincariol/day-trader-skill` é dependência de reuso, não este repositório.
 
 ### Features Existentes

@@ -43,7 +43,9 @@ UPSTREAM_DIR="$PWD/vendor/day-trader-skill" PYTHONPATH=src python3 src/parity.py
 | Run | Status | Notes |
 |-----|--------|-------|
 | Local (Cursor agent, 2026-10-30) | **Not executed** | Environment policy blocked `pip install` / venv (#385 ask mode). |
-| CI (GitHub Actions) | **Pending** | Runs on first push after operator creates remote; workflow uses submodules + `pytest -q`. |
+| CI (GitHub Actions) | **Success** | [Run 41041762290](https://github.com/ig0rayres/trading_lab/actions/runs/41041762290) — workflow **CI #3** on `main` @ `f597f8b` (2026-10-30, ~41s): jobs **test** (~21s, `pytest -q`) and **docker-build** (~15s) green. |
+
+Commit under test: [`f597f8b`](https://github.com/ig0rayres/trading_lab/commit/f597f8b5bc8437615f68403eea067b20146d34c6) · default branch tree: [`main`](https://github.com/ig0rayres/trading_lab/tree/main)
 
 Expected local command once deps are available:
 
@@ -53,14 +55,12 @@ UPSTREAM_DIR="$PWD/vendor/day-trader-skill" LIVE_TRADING_ENABLED=false PYTHONPAT
   .venv/bin/python -m pytest -q --tb=line 2>&1 | tee docs/pytest-D1.log
 ```
 
-Gate D1 closes when CI pytest is green and this file is updated with node count + link to CI run URL.
+Gate D1 pytest/docker: **closed** via CI run above. Re-run locally optional (`docs/pytest-D1.log`).
 
 ## Sprint D1.3 (Git remote)
 
 | Item | Value |
 |------|--------|
 | Remote | `https://github.com/ig0rayres/trading_lab.git` |
-| Branch pushed | `sprint/D1` (commit `2865054`) |
-| CI | GitHub Actions on push/PR — attach run URL below when green |
-
-_CI run URL:_ _(paste after Actions finishes)_
+| Branch pushed | `sprint/D1`, `main` @ `f597f8b` |
+| CI run (pytest + docker) | https://github.com/ig0rayres/trading_lab/actions/runs/41041762290 |

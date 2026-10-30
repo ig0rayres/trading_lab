@@ -33,6 +33,7 @@
 | N6 | N | Imagem com psycopg + vendor pinado; CI smoke | concluida | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
 | N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | concluida | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
 | N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | concluida | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
+| N9 | N | Itens 3–7 com evidência operador; sem fill e sem src | planejada | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 no EasyPanel | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -54,6 +55,7 @@
 | N6 | senior+qa | Deploy EasyPanel |
 | N7 | senior+qa | Catálogo + Gate B produto |
 | N8 | senior+qa | Seed no CLI migrate + runbook homologação |
+| N9 | senior+qa | Runbook itens 3–7 + evidência; sem reabrir Gate B |
 
 ---
 
@@ -472,6 +474,102 @@ executor_prompt: |
 
 ---
 
+## Sprint N9 — Homologação D5 no EasyPanel (itens 3–7)
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Checklist EasyPanel 3–7 com evidência, sem ordem live  
+> resumo_humano: O laboratório já grava sinal, risco e intenção de ordem paper. Esta sprint deixa o operador conferir isso no EasyPanel (webhook, worker, reconcile só leitura, dashboard e kill switch) e anotar a evidência sem segredo. Fila e HTTP 200 continuam sem ser fill; dinheiro real permanece desligado.  
+> Gate: `docs/HOMOLOGATION.md` itens 3–7 nomeiam comando `scripts/run.sh`, SQL ou campo JSON, e o que não conta como fill; `docs/TEST-EVIDENCE.md` tem linhas pendentes para o operador (sem segredo); nenhum diff em `src/`; `LIVE_TRADING_ENABLED` false; Feature 5 fill permanece `[ ]`; ISS-004 não aberto  
+> bom_ref: BOM-3  
+> review: senior+qa  
+> Gerado via: /pmo plan (planejador-melhorias)  
+> Brief: `docs/.briefs/N9.brief.md`  
+> plan_only: true (não define `sprint_atual`)
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N9.1 Runbook Gate A: webhook → `signal_events` | docs | — |
+| [ ] | P | N9.2 Runbook Gate B: worker → `risk_decisions` + `paper_orders` `queued_intent` | docs | N9.1 |
+| [ ] | P | N9.3 Runbook reconcile read-only (`ledger_apply`, não `broker_reconciled`) | docs | N9.2 |
+| [ ] | P | N9.4 Runbook dashboard auth + kill switch | docs | N9.3 |
+| [ ] | M | N9.5 Evidence sheet + optional Feature 5 operator note (no fill task) | docs | N9.4 |
+| [ ] | P | N9.6 Operador: executar itens 3–7 no EasyPanel e preencher evidência redigida | operador | N9.5 |
+
+P notes (no executor_prompt): **N9.1** expand item 3 in `docs/HOMOLOGATION.md`: `scripts/run.sh tv-webhook`, header `X-Webhook-Token` or legacy `/webhook/{token}`, then `SELECT` on `signal_events` (count / status). HTTP 202 `QUEUED` is not a fill. **N9.2** expand item 4: `scripts/run.sh tv-worker` after Gate A; rejection row in `risk_decisions`; accept row in `paper_orders.status = queued_intent`. Cite `PAPER_GATEWAY_QUEUE_ONLY` and `orders_sent = 0` as non-fills. Do not change `gate_b_risk.py` or catalog phases. **N9.3** expand item 5: `PAPER_RECONCILE_LEDGER_APPLY=true` and `scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile.json`; record `ledger_apply`; do not treat `broker_reconciled` as true. **N9.4** expand items 6–7: loopback or `DASHBOARD_ALLOW_REMOTE=true` plus `DASHBOARD_BEARER_TOKEN` length ≥32 via `scripts/run.sh v4-dashboard`; `/api/status` fields `kill_switch_on` and `shadow_vs_paper`; kill via `TRADING_LAB_KILL_SWITCH=true` or a new `control_flags` row (see `docs/INFRASTRUCTURE.md` § Kill switch). Confirm the worker blocks (`orders_sent` 0, no new `queued_intent`). **N9.6** is operator-only on the existing EasyPanel apps. The agent does not SSH, does not read secrets, and does not invent row counts. Paste redacted counts into the N9.5 table. `bom_ref: BOM-3`.
+
+### Task N9.5 — Evidence sheet for homologation items 3–7
+
+**Estado atual**: `docs/HOMOLOGATION.md` lista os itens 3–7 em uma linha cada. `docs/TEST-EVIDENCE.md` para em N6. CI cobre testes; o EasyPanel ainda não tem evidência colada para sinal, risco, fila, reconcile, dashboard e kill switch. Feature 5 fill real segue `[ ]`.
+**Estado desejado**: uma seção N9 em `docs/TEST-EVIDENCE.md` com uma linha por item 3–7, status `pendente`, comando e campo esperado, sem segredo e sem contagem inventada. `docs/HOMOLOGATION.md` aponta para essa seção. Um bloco separado, "Passo operador opcional — Feature 5", descreve fill real como passo só do operador e não entra no gate da N9. Nenhum arquivo em `src/`.
+**Fonte(s)**: operador trilha A 2026-10-30; `docs/HOMOLOGATION.md` checklist; `docs/REQUIREMENTS.md` Feature 5–6; `docs/ROADMAP.md` Sprint D5. ISS-004 não aberto (fiação já existe).
+**Módulo(s) afetado(s)**: `docs/TEST-EVIDENCE.md`, `docs/HOMOLOGATION.md`
+**Risco**: MEDIUM — marcar fila ou HTTP 200 como fill fecharia homologação sem evidência.
+**Task size**: M (2 files; decisão: o que prova cada item e o que fica fora)
+
+- **Arquivo(s)**: `docs/TEST-EVIDENCE.md`, `docs/HOMOLOGATION.md`
+
+**executor_prompt**:
+
+```yaml
+id: N9.5
+size: M
+bom_ref: BOM-3
+depends_on: [N9.4]
+files:
+  - docs/TEST-EVIDENCE.md
+  - docs/HOMOLOGATION.md
+reuse_targets:
+  - component: docs/HOMOLOGATION.md
+    reuse_as: extend
+    convergence_check: rg "tv-webhook" docs/HOMOLOGATION.md && rg "tv-worker" docs/HOMOLOGATION.md && rg "queued_intent" docs/HOMOLOGATION.md && rg "v4-alpaca-reconcile" docs/HOMOLOGATION.md && rg "v4-dashboard" docs/HOMOLOGATION.md && rg "Passo operador opcional" docs/HOMOLOGATION.md
+  - component: docs/TEST-EVIDENCE.md
+    reuse_as: extend
+    convergence_check: rg "Homologação D5 itens 3–7" docs/TEST-EVIDENCE.md && rg "pendente" docs/TEST-EVIDENCE.md
+guardrail_contract:
+  - class: secrets
+    id: n9-5-no-live-secrets
+    target: docs/TEST-EVIDENCE.md
+    check: rg "TV_WEBHOOK_TOKEN" docs/HOMOLOGATION.md && ! rg -n "APCA-API|BEGIN PRIVATE" docs/HOMOLOGATION.md docs/TEST-EVIDENCE.md
+    pass_condition: env names only; no broker key or private key pasted
+  - class: subagent-safety
+    id: n9-5-live-lock
+    target: Dockerfile
+    check: rg "LIVE_TRADING_ENABLED=false" Dockerfile
+    pass_condition: image live lock unchanged; no src/ edits in this task
+  - class: secrets
+    id: n9-5-feature5-open
+    target: docs/REQUIREMENTS.md
+    check: rg "Fill real Alpaca" docs/REQUIREMENTS.md
+    pass_condition: Feature 5 real-fill checkbox stays open
+executor_prompt: |
+  ### Quality Brief (Sprint N9)
+  sprint: N9
+  Maintain: LIVE_TRADING_ENABLED=false and src/original.py LAB_LOCK; no live broker host or order path.
+  Maintain: Gate A, Gate B, paper queue, reconcile, and dashboard stay as implemented; this task only documents them.
+  Maintain: HTTP 200, PAPER_GATEWAY_QUEUE_ONLY, and queued_intent are not fills; reconcile keeps broker_reconciled false.
+  Avoid: strategy threshold inventions and edits to gate_b_risk.py, strategy_catalog.py, or vendor/.
+  Avoid: checking Feature 5 real fill or PnL as done; that step stays a separate unchecked operator note.
+  [ABORDAGEM] Add a pending evidence table (redacted counts only) and point HOMOLOGATION items 3–7 at it. The operator runs EasyPanel; the agent does not.
+  [RISCO] persist_risk_decision returns without a row when LEDGER_DATABASE_URL is unset or signal_events has no matching id. HTTP 200 is not evidence.
+  [OPORTUNIDADE] CI already covers webhook, Gate B, and queue tests. Do not add src/ or tests: scripts/run.sh already exposes tv-webhook, tv-worker, v4-alpaca-reconcile, and v4-dashboard.
+  EXPIRES at end of Sprint N9.
+
+  Melhoria: record homologation evidence slots for checklist items 3–7.
+  Contexto: D5 and N8 left the checklist and the 7 strategy_states seed. Wiring already persists signal_events (gate_a_signal.maybe_persist), risk_decisions and paper_orders queued_intent (paper_gateway_queue.persist_risk_decision via tradingview_worker), reconcile ledger_apply (v4_alpaca_reconcile + ledger_reconcile.apply_from_report), dashboard bearer (v4_web_dashboard.main), and kill switch (gate_b_risk.kill_switch_active). Do not reopen Gate B or the strategy catalog. Do not invent scoring thresholds. Upstream trader-* stays behind src/original.py; do not call it from docs work and do not bump the vendor pin.
+  Objetivo: append a section headed "Homologação D5 itens 3–7" to docs/TEST-EVIDENCE.md with one pending row per item 3, 4, 5, 6, and 7 (command, expected table or JSON field, status pendente, result empty). In docs/HOMOLOGATION.md, after the checklist, add "Passo operador opcional — Feature 5" stating real Alpaca fill and PnL is operator-only, out of the N9 gate, and still the unchecked Feature 5 criterion. Do not place an order. Do not edit src/, tests/, Dockerfile, or .cursorsession. Do not paste tokens.
+  Arquivos: docs/TEST-EVIDENCE.md, docs/HOMOLOGATION.md.
+  Critério de pronto: both convergence_check commands exit 0; Dockerfile still has LIVE_TRADING_ENABLED=false; docs/REQUIREMENTS.md still contains the open Fill real Alpaca line; git diff shows no src/ file.
+  Cenários de teste:
+    1. Caso normal: each of items 3–7 has a pending evidence row naming signal_events, risk_decisions or queued_intent, ledger_apply, dashboard auth, or kill_switch_on.
+    2. Edge case: evidence cells are empty or "pendente"; no API key, DSN, or bearer value appears.
+    3. Regressão: Feature 5 fill checkbox in REQUIREMENTS stays open; LIVE_TRADING_ENABLED=false remains in the Dockerfile; Gate B source files are untouched.
+    4. Edge case: the optional Feature 5 section is present and labeled operator-only, and it is not a sprint task that submits an order.
+    5. Regressão: PAPER_GATEWAY_QUEUE_ONLY and broker_reconciled are still described as not a completed fill.
+```
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -487,5 +585,6 @@ executor_prompt: |
 ## Próximo passo operador
 
 1. N8 **concluída** (PR #4 → `main` `81e6e88`; homolog: 7 linhas `strategy_states` no EasyPanel).  
-2. **`/git front finish n8-homolog-seed`** (ou `gc --apply --safe`) e reconciliar na mãe.  
-3. **`/pmo`** — escolher próximo item (backlog N ou Feature 5 fill real); sem inventar limiar de scoring.
+2. **N9 planejada** (`plan_only`: sem `sprint_atual`). Review senior+qa antes de `/pmo sprint`.  
+3. Repo: tasks N9.1–N9.5 (runbook + folha de evidência). EasyPanel: task N9.6, nos apps já existentes, sem live.  
+4. Feature 5 (fill real) fica fora do gate N9. Sem inventar limiar de scoring.

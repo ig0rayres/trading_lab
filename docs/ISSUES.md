@@ -6,7 +6,7 @@
 |----|--------|--------|--------|
 | ISS-001 | fechado | N6 | Imagem EasyPanel sem psycopg e sem vendor pinado |
 | ISS-002 | fechado | N7 | Catálogo de estratégias sem persistência nem Gate B |
-| ISS-003 | em_validacao | N8 | `strategy_states` vazia após `ledger-migrate apply` |
+| ISS-003 | validado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
 
 ## ISS-001 — Imagem EasyPanel sem psycopg e sem vendor pinado
 

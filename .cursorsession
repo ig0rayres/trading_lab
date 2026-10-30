@@ -236,7 +236,30 @@
           "evidence": "ledger_migrate apply seeds 7 rows; tests + docs N8"
         }
       ]
-    }
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "PYTHONPATH=src python3 -m unittest tests.test_strategy_catalog tests.test_ledger_migration -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [],
+      "missing_backends": [],
+      "last_validated_sha": "e873645c51499a563bb1f36b21465c756075a034",
+      "stamped_at": "2026-10-30T16:18:04Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "patch_id": "53ec13b37e930120d23fd07a70dcb063e0bc1211",
+      "patch_id_version": 2
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N8"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

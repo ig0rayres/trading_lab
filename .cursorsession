@@ -205,7 +205,44 @@
       "docs/HOMOLOGATION.md",
       "docs/TEST-EVIDENCE.md",
       "docs/INFRASTRUCTURE.md"
-    ]
+    ],
+    "validation_gate_qa": {
+      "result": "COM_RESSALVAS",
+      "sprint": "N9",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS_WITH_NOTES",
+      "findings_registered": [],
+      "recorded_at": "2026-10-30T18:37:55Z",
+      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
+      "notes": "N9.1-N9.5: runbook+folha OK; diff sem src/. N9.6 operador EasyPanel pendente (evidência pendente esperado). Senior: docs claros non-fill; sem segredos colados.",
+      "round": 1,
+      "full_suite_ran": false,
+      "first_pass": true,
+      "senior_status": "PASS_WITH_NOTES"
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "rg -q \"Runbook detalhado\" docs/HOMOLOGATION.md && rg -q \"Homologação D5 itens 3\" docs/TEST-EVIDENCE.md",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [],
+      "missing_backends": [],
+      "last_validated_sha": "b3777b0f445134f6d3b0220626c5390bee7d1dbc",
+      "stamped_at": "2026-10-30T18:38:14Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "patch_id": "a245bf1a400a087b27e17ebbd1135aa84d8eae63",
+      "patch_id_version": 2
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N9"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

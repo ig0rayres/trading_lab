@@ -30,7 +30,8 @@
 | D3 | D | Gate A rejeita sinal inválido sem broker | concluida | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
 | D4 | D | Gate B + fila paper sem fill | concluida | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
 | D5 | D | Paper reconciliado read-only; nenhum live | concluida* | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
-| N6 | N | Imagem com psycopg + vendor pinado; CI smoke | planejada | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
+| N6 | N | Imagem com psycopg + vendor pinado; CI smoke | concluida | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
+| N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | planejada | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -49,6 +50,8 @@
 | D3 | senior+qa | Superfície webhook |
 | D4 | senior+qa | Gates de risco |
 | D5 | comprehensive | Última sprint D — paper |
+| N6 | senior+qa | Deploy EasyPanel |
+| N7 | senior+qa | Catálogo + Gate B produto |
 
 ---
 
@@ -60,9 +63,11 @@
 [D3 Gate A] ──────────────────┼──► [D4 Gate B + gateway queue]
                               │              │
                               └──────────────┴──► [D5 reconcile + dashboard auth]
+                                                              │
+[N6 EasyPanel image] ──► [N7 strategy-catalog + Gate B phase]
 ```
 
-D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
+D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4. N7 depende de D2 (tabela) + D4 (Gate B) + N6 (deploy estável).
 
 ---
 
@@ -158,6 +163,7 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 ## Sprint N6 — Deploy reprodutível EasyPanel
 > Categoria: N  
+> Status: concluida  
 > titulo_humano: Imagem EasyPanel sobe com Postgres e vendor pinado  
 > resumo_humano: Redeploy deixa de depender de clone manual do vendor e de pip install de psycopg. Mesma imagem para trading-lab e trading-lab-webhook; live permanece desligado.  
 > Gate: docker build ok; container importa psycopg; vendor @ SHA VENDOR-PIN; CI docker-build smoke; pytest inalterado + test_image_pin  
@@ -174,19 +180,220 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 ---
 
+## Sprint N7 — Catálogo de estratégias (MVP) + Gate B por fase
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Fase persistida trava paper; ORB fora do principal  
+> resumo_humano: Cada família passa a ter fase no Postgres (research, shadow, paper limitado, validado). O Gate B recusa paper se a fase for research ou shadow, e ORB não entra como estratégia principal. Sem inventar fórmula de momentum, Tá Barato ou Prodigy.  
+> Gate: pytest — research/shadow nunca paper_allowed; ORB rejeitado mesmo com fase paper_* no banco; linha ausente fail-closed; risk_decisions.strategy_key vem do sinal (não literal signal_copy); LIVE_TRADING_ENABLED false; nenhum limiar novo de scoring momentum/Tá Barato/Prodigy  
+> bom_ref: BOM-3, BOM-4  
+> review: senior+qa  
+> Generated via hub PMO (planning mode) on 2026-10-30. Source: Feature 4 REQUIREMENTS + ISS-002 + ARCHITECTURE strategy-catalog.  
+> Brief: `docs/.briefs/N7.brief.md`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | Catalog module + ledger helpers + insert-if-missing seed | `/dev` + `paper-order-gate` | — |
+| [ ] | M | Signal carries strategy_key (HMAC ALLOWED + worker attach) | `/dev` | — |
+| [ ] | M | Gate B reads strategy_states; shadow/research/ORB never paper_allowed | skill `paper-order-gate` | N7.1, N7.2 |
+| [ ] | P | Persist risk_decisions.strategy_key from signal (drop hardcoded signal_copy) | `/dev` | N7.2 |
+| [ ] | P | Ledger integration tests catalog + Gate B + queue (LEDGER_DATABASE_URL) | `/qa testes` | N7.1, N7.3, N7.4 |
+| [ ] | P | REQUIREMENTS Feature 4 checkboxes N7 can close; no-invented-threshold regression | `/pmo` | N7.5 |
+
+<details>
+<summary>N7.1 executor_prompt</summary>
+
+```yaml
+id: N7.1
+size: M
+bom_ref: BOM-3
+depends_on: []
+files:
+  - src/strategy_catalog.py
+  - src/ledger_store.py
+  - tests/test_strategy_catalog.py
+reuse_targets:
+  - component: src/ledger_store.py
+    reuse_as: extend
+    convergence_check: rg "strategy_states" src/ledger_store.py && rg "def get_strategy_phase|def ensure_strategy_defaults" src/strategy_catalog.py src/ledger_store.py
+  - component: docs/db-schema.dbml
+    reuse_as: mirror_shape
+    convergence_check: rg "research|shadow|paper_limited|paper_validated" src/strategy_catalog.py && rg "news_first|momentum|ta_barato|signal_copy|prodigy_15d|orb|mean_reversion" src/strategy_catalog.py
+  - component: migrations/001_ledger_up.sql
+    reuse_as: call
+    convergence_check: rg "CREATE TABLE strategy_states" migrations/001_ledger_up.sql && rg "strategy_states" src/ledger_store.py
+guardrail_contract:
+  - class: secrets
+    id: n7-1-no-secrets
+    target: src/strategy_catalog.py
+    check: python3 -c "from pathlib import Path; t=Path('src/strategy_catalog.py').read_text() if Path('src/strategy_catalog.py').exists() else ''; assert 'ALPACA_API' not in t and 'sk_live' not in t"
+    pass_condition: no broker credentials in catalog module
+  - class: subagent-safety
+    id: n7-1-live-lock
+    target: src/original.py
+    check: rg "LIVE_TRADING_ENABLED must be false" src/original.py
+    pass_condition: LAB_LOCK remains
+executor_prompt: |
+  ### Quality Brief (Sprint N7)
+  sprint: N7
+  Maintain: load_original().risk.check for the capital bracket — do not reimplement trader-risk/check.py.
+  Maintain: ledger_store.insert_row / connect / LEDGER_TABLES — extend helpers; no second persistence module.
+  Maintain: LIVE_TRADING_ENABLED=false and original.py LAB_LOCK.
+  Avoid: inventing RSI/percentile/score thresholds for momentum, Tá Barato, or Prodigy.
+  Avoid: promoting strategy_states.phase from PnL, HTTP 200, or PAPER_GATEWAY_QUEUE_ONLY; seed is insert-if-missing only.
+  [ABORDAGEM] Attach strategy_key on the in-memory signal in the worker after HMAC validate; Gate B never infers the key.
+  [RISCO] Catalog check must fail-closed when DB/override is missing.
+  [OPORTUNIDADE] Copy kill_switch_active SQL read pattern for strategy_states.phase.
+  EXPIRES at end of Sprint N7.
+
+  Melhoria: persistent strategy_states read/seed without a new migration.
+  Contexto: migrations/001_ledger_up.sql and db-schema.dbml already define strategy_states (strategy_key unique, phase research|shadow|paper_limited|paper_validated). src/ledger_store.py lists the table in LEDGER_TABLES but has only insert_row — no get/seed. Gate B cannot consult phases today.
+  Objetivo: add src/strategy_catalog.py plus helpers on ledger_store (get_strategy_phase, ensure_strategy_defaults). Known keys from DBML only. Seed insert-if-missing: news_first/momentum/ta_barato/prodigy_15d=research; signal_copy=paper_limited; orb/mean_reversion=shadow. Never overwrite an existing row. Never invent scoring numbers. LIVE_TRADING stays false.
+  Arquivos: src/strategy_catalog.py, src/ledger_store.py, tests/test_strategy_catalog.py.
+  Critério de pronto: unit tests for known keys/phases; ledger integration (skipUnless LEDGER_DATABASE_URL, apply migration like tests/test_paper_gateway_queue.py GateBLedgerIntegrationTest) proves insert-if-missing and that a second seed does not clobber a hand-updated phase; rg shows no CREATE TABLE strategy_states outside 001.
+  Cenários de teste:
+    1. Caso normal: empty table + ensure_strategy_defaults → seven rows with recommended phases.
+    2. Edge case: existing orb=paper_validated is left unchanged by seed (overwrite forbidden).
+    3. Edge case: unknown strategy_key → lookup error/None, never default paper_limited.
+    4. Regressão: LEDGER_TABLES still includes all eight ledger tables; insert_row still rejects unknown table.
+```
+</details>
+
+<details>
+<summary>N7.2 executor_prompt</summary>
+
+```yaml
+id: N7.2
+size: M
+bom_ref: BOM-3
+depends_on: []
+files:
+  - src/signal_copy.py
+  - src/tradingview_worker.py
+  - tests/test_signal_copy.py
+reuse_targets:
+  - component: src/signal_copy.py
+    reuse_as: extend
+    convergence_check: rg "strategy_key" src/signal_copy.py && rg "ALLOWED" src/signal_copy.py
+  - component: src/tradingview_worker.py
+    reuse_as: extend
+    convergence_check: rg "strategy_key" src/tradingview_worker.py
+  - component: tests/test_signal_copy.py
+    reuse_as: copy_pattern
+    convergence_check: rg "strategy_key" tests/test_signal_copy.py
+guardrail_contract:
+  - class: secrets
+    id: n7-2-hmac-no-leak
+    target: src/signal_copy.py
+    check: rg "provider_signature" src/signal_copy.py && ! rg -n "print\(.*SECRET" src/signal_copy.py src/tradingview_worker.py
+    pass_condition: signature stays HMAC compare; no secret print
+  - class: subagent-safety
+    id: n7-2-live-lock
+    target: src/original.py
+    check: rg "LIVE_TRADING_ENABLED=false" Dockerfile
+    pass_condition: image live lock unchanged
+executor_prompt: |
+  ### Quality Brief (Sprint N7)
+  sprint: N7
+  Maintain: load_original().risk.check — do not reimplement trader-risk.
+  Maintain: ledger_store helpers — no second store.
+  Maintain: LIVE_TRADING_ENABLED=false.
+  Avoid: invented scoring thresholds.
+  Avoid: silent strategy_key inference inside Gate B.
+  [ABORDAGEM] Worker attaches strategy_key after HMAC validate; add field to signal_copy.ALLOWED.
+  [RISCO] Extra JSON key today is INVALID_SCHEMA — ALLOWED must include strategy_key or TV payloads with the field never reach Gate B.
+  [OPORTUNIDADE] Keep signal_events schema unchanged (no strategy_key column).
+  EXPIRES at end of Sprint N7.
+
+  Melhoria: the signed signal carries strategy_key to Gate B.
+  Contexto: signal_copy.ALLOWED omits strategy_key (unrecognized field → INVALID_SCHEMA). paper_gateway_queue hardcodes strategy_key 'signal_copy'. Gate A signal_events has no strategy_key column — do not add one.
+  Objetivo: CONTRACT (documented in docs/.briefs/N7.brief.md): worker is the attachment point, not Gate A persist. Add optional strategy_key to ALLOWED. After validate succeeds, if missing and provider==tradingview, set signal_copy. Other providers without key stay missing (Gate B will reject). Do not default orb or momentum.
+  Arquivos: src/signal_copy.py, src/tradingview_worker.py, tests/test_signal_copy.py (worker test in same file or tests/test_tradingview_worker.py only if already present — do not create a parallel package).
+  Critério de pronto: valid HMAC without strategy_key still previews; with strategy_key='signal_copy' still previews; unknown extra field still INVALID_SCHEMA; worker-attached key is visible on the dict passed toward evaluate_signed_signal.
+  Cenários de teste:
+    1. Caso normal: signed payload with strategy_key=signal_copy → no INVALID_SCHEMA.
+    2. Edge case: payload without strategy_key still validates (legacy HMAC).
+    3. Edge case: unrecognized field (news_first=True) still INVALID_SCHEMA (test_unrecognized_field regression).
+    4. Regressão: orders_sent remains 0 on preflight; LIVE_TRADING_ENABLED false.
+```
+</details>
+
+<details>
+<summary>N7.3 executor_prompt</summary>
+
+```yaml
+id: N7.3
+size: M
+bom_ref: BOM-3, BOM-4
+depends_on: ["N7.1", "N7.2"]
+files:
+  - src/gate_b_risk.py
+  - tests/test_gate_b_risk.py
+reuse_targets:
+  - component: vendor/day-trader-skill/trader-risk/check.py
+    reuse_as: call
+    convergence_check: rg "load_original\(\)\.risk" src/gate_b_risk.py && ! rg "def check\(" src/gate_b_risk.py src/strategy_catalog.py
+  - component: src/strategy_catalog.py
+    reuse_as: call
+    convergence_check: rg "get_strategy_phase|STRATEGY_PHASE|STRATEGY_ORB" src/gate_b_risk.py
+  - component: src/gate_b_risk.py
+    reuse_as: extend
+    convergence_check: rg "evaluate_signed_signal" src/gate_b_risk.py && rg "kill_switch_active" src/gate_b_risk.py
+guardrail_contract:
+  - class: secrets
+    id: n7-3-no-live-host
+    target: src/gate_b_risk.py
+    check: rg "No broker calls" src/gate_b_risk.py && rg "LIVE_TRADING_ENABLED=false" Dockerfile
+    pass_condition: Gate B stays broker-free; live flag false
+  - class: subagent-safety
+    id: n7-3-no-reimplement-risk
+    target: vendor/day-trader-skill/trader-risk/check.py
+    check: rg "load_original" src/gate_b_risk.py && rg "risk.check" src/gate_b_risk.py
+    pass_condition: upstream check still called
+executor_prompt: |
+  ### Quality Brief (Sprint N7)
+  sprint: N7
+  Maintain: load_original().risk.check for the capital bracket — do not reimplement trader-risk/check.py.
+  Maintain: existing kill switch, session, and max-positions checks.
+  Maintain: LIVE_TRADING_ENABLED=false.
+  Avoid: invented scoring thresholds; do not call trader-scanner orb_hit to authorize paper.
+  Avoid: paper_allowed for research/shadow or for orb even if DB phase is paper_*.
+  [ABORDAGEM] Phase check after kill/session/cap and before risk.check.
+  [RISCO] Unit tests currently paper_allowed without DB — add strategy_phase= override for those cases; production path fail-closed without DB.
+  [OPORTUNIDADE] Mirror kill_switch_active SELECT WHERE deleted_at IS NULL.
+  EXPIRES at end of Sprint N7.
+
+  Melhoria: Gate B enforces strategy_states phase.
+  Contexto: evaluate_signed_signal applies kill switch, NYSE session, position cap, then trader-risk.check. It does not read strategy_states. Architecture: strategy in shadow never gets paper_allowed. Feature 4: ORB is not selectable as main paper strategy.
+  Objetivo: require signal['strategy_key']. Resolve phase via strategy_phase= test override, else catalog/ledger (fail-closed if neither). Reject codes: STRATEGY_KEY_REQUIRED, STRATEGY_UNKNOWN, STRATEGY_PHASE_UNKNOWN, STRATEGY_PHASE_NOT_PAPER (research|shadow), STRATEGY_ORB_NOT_SELECTABLE (orb always; mean_reversion same non-selectable rule). Only paper_limited|paper_validated proceed to existing risk.check. Do not reimplement check(). Do not add momentum/Tá Barato/Prodigy numeric gates.
+  Arquivos: src/gate_b_risk.py, tests/test_gate_b_risk.py.
+  Critério de pronto: pytest GateBRiskTest still PASSes a within-risk signal when strategy_phase=paper_limited and strategy_key=signal_copy; shadow/research/missing/orb never paper_allowed; risk.check still invoked on the happy path.
+  Cenários de teste:
+    1. Caso normal: signal_copy + paper_limited + within-risk → paper_allowed (existing qty=1 case).
+    2. Edge case: orb + paper_validated override still rejected STRATEGY_ORB_NOT_SELECTABLE.
+    3. Edge case: momentum + research → STRATEGY_PHASE_NOT_PAPER, orders path not reached.
+    4. Edge case: missing row / no DB and no override → STRATEGY_PHASE_UNKNOWN.
+    5. Regressão: qty=100 still blocked by upstream risk; kill switch and OUTSIDE_SESSION unchanged.
+```
+</details>
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
 |------|--------|-------|
-| Estratégias Ta Barato / Prodigy / momentum | LEGACY-ANALYSIS | Não inventar limiares |
+| Estratégias Ta Barato / Prodigy / momentum (fórmulas) | LEGACY-ANALYSIS | N7 cobre fases; **não** inventar limiares de scoring |
 | Walk-forward / Lean | RESEARCH_ROADMAP | Motor separado |
-| CI deploy EasyPanel | Operador | Exige `/devops infra` + L2 |
+| Collective2 paper-copy | Feature 4 | Fora de N7; `approved_for_paper_copy` permanece falso |
+| CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria |
 | Submodule pin vs clone raso | D1 | Preferir pin revisado, não `main` cego |
 
 ---
 
 ## Próximo passo operador
 
-1. Sprint **N6** ativa — branch `front/n6-deploy` (worktree) quando git safe.directory ok.  
-2. Após merge: rebuild **trading-lab** + **trading-lab-webhook**; **não** montar volume vazio em `/app/vendor`; manter `/app/reports`.  
-3. Backlog **N7+**: strategy-catalog, sinais/Tá Barato (sem limiar inventado — Feature 4).
+1. **`/pmo sprint`** ou **`/rock executar N7`** — criar frente `front/n7-strategy-catalog` se usar worktree (#252).  
+2. Após VERIFY: homologação Gate B com fase `research`/`shadow` rejeitando e TV `signal_copy` em `paper_limited`.
+2. Homologação demo US: smoke pós-N6 (`/health`, ingest, worker) com imagem `6813fb5` / merge PR #1.  
+3. Opcional: `/git front finish n6-deploy` na mãe após merge.

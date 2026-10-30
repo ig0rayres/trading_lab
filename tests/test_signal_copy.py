@@ -29,3 +29,7 @@ class SignalCopyTests(unittest.TestCase):
     def test_unrecognized_field(self):
         self.s['news_first']=True
         self.assertIn('INVALID_SCHEMA',self.check()['reasons'])
+    def test_strategy_key_allowed_when_signed(self):
+        self.s['strategy_key']='signal_copy'
+        self.s['provider_signature']=sign(self.s,self.secret)
+        self.assertEqual(self.check()['status'],'SIGNAL_ACCEPTED_RISK_PREVIEW')

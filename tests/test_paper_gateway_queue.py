@@ -19,6 +19,7 @@ def _signal():
         'stop': '99',
         'target': '102',
         'quantity': 1,
+        'strategy_key': 'signal_copy',
     }
 
 
@@ -99,7 +100,7 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
         with store.connect() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT rd.decision, rd.reject_code FROM risk_decisions rd "
+                    "SELECT rd.decision, rd.reject_code, rd.strategy_key FROM risk_decisions rd "
                     "JOIN signal_events se ON se.id = rd.signal_event_id "
                     'WHERE se.idempotency_key = %s',
                     (idempotency_key('tradingview', 'GATEB_REJ_001'),),
@@ -108,6 +109,47 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
         self.assertIsNotNone(row)
         self.assertEqual(row[0], 'rejected')
         self.assertEqual(row[1], 'LOSS')
+        self.assertEqual(row[2], 'signal_copy')
+
+    def test_seed_and_strategy_key_on_risk_row(self):
+        import ledger_store as store
+        import strategy_catalog as sc
+        from gate_a_signal import idempotency_key, record_signal_event
+
+        sc.ensure_strategy_defaults()
+        signal = _signal()
+        signal['signal_id'] = 'GATEB_SK_001'
+        signal['strategy_key'] = 'momentum'
+        with store.connect() as conn:
+            record_signal_event(
+                conn,
+                payload=signal,
+                http_status=202,
+                body={'status': 'QUEUED', 'orders_sent': 0},
+            )
+            conn.commit()
+        decision = {
+            'decision': 'rejected',
+            'reject_code': 'STRATEGY_PHASE_BLOCKED',
+            'risk_amount_cents': 0,
+        }
+        pgq.persist_risk_decision(signal, decision)
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT phase FROM strategy_states WHERE strategy_key = %s',
+                    ('momentum',),
+                )
+                phase_row = cur.fetchone()
+                cur.execute(
+                    "SELECT rd.strategy_key FROM risk_decisions rd "
+                    "JOIN signal_events se ON se.id = rd.signal_event_id "
+                    'WHERE se.idempotency_key = %s',
+                    (idempotency_key('tradingview', 'GATEB_SK_001'),),
+                )
+                sk_row = cur.fetchone()
+        self.assertEqual(phase_row[0], 'research')
+        self.assertEqual(sk_row[0], 'momentum')
 
 
 if __name__ == '__main__':

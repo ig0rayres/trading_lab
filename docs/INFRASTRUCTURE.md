@@ -88,7 +88,7 @@ Nunca commitar valores. Referência de nomes: webhook secret, chaves Alpaca **pa
 
 ## 7. Hooks Cursor (Beesy)
 
-Hooks de automação Beesy (`safety-guard`, `pmo-update`) **não** foram instalados neste passo: o repo não está ancorado na suíte Beesy com `scripts/` do framework. Podem ser adicionados quando o operador ligar o projeto a um anchor com hooks compartilhados.
+Hooks globais (`safety-guard`, `sprint-commit-guard`) aplicam a este repo via Cursor. Para **commit/push pelo agente** (F208/F199), o projeto expõe `scripts/beesy-override-check.py` (delega a `~/.cursor/scripts/beesy-override-check.py`). Override auditado do operador: `~/.cursor/beesy-override.json` (TTL ≤2h; escopos típicos `BEESY_ALLOW_NO_VERIFY`, `BEESY_VALIDATION_OVERRIDE` em push para `main`). Push de branch `front/*` usa CI do PR como autoridade (sem stamp local).
 
 ---
 

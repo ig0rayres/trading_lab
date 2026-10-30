@@ -137,9 +137,9 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 **Estados persistentes:** RESEARCH, SHADOW, PAPER_LIMITED, PAPER_VALIDATED. LIVE desabilitado. Um estado não sobe por lucratividade aparente nem por HTTP 200.
 
 **Critérios de aceite:**
-- [ ] ORB não é selecionável como estratégia principal de paper.
-- [ ] Nenhum provedor Collective2 entra em copy enquanto `approved_for_paper_copy` for falso.
-- [ ] Estratégia sem fórmula recuperada não ganha limiar inventado neste repositório.
+- [x] ORB não é selecionável como estratégia principal de paper (Gate B `STRATEGY_NOT_PAPER`; N7).
+- [x] Nenhum provedor Collective2 entra em copy enquanto `approved_for_paper_copy` for falso (inalterado; N7 não toca C2).
+- [x] Estratégia sem fórmula recuperada não ganha limiar inventado neste repositório (N7: fases seed only; sem scoring).
 
 ### Feature 5: Paper ponta a ponta
 

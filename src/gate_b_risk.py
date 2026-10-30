@@ -92,6 +92,8 @@ def evaluate_signed_signal(
     now=None,
     env: dict[str, str] | None = None,
     open_positions=None,
+    strategy_phase: str | None = None,
+    conn_factory=None,
 ) -> dict[str, Any]:
     """Return decision dict: paper_allowed | rejected with reject_code."""
     if kill_switch_active(env):
@@ -107,6 +109,13 @@ def evaluate_signed_signal(
     cap_code = open_positions_cap_reached(open_positions)
     if cap_code:
         return {'decision': 'rejected', 'reject_code': cap_code, 'risk_amount_cents': 0}
+    from strategy_catalog import gate_b_strategy_reject
+
+    strat_code = gate_b_strategy_reject(
+        signal, strategy_phase=strategy_phase, conn_factory=conn_factory
+    )
+    if strat_code:
+        return {'decision': 'rejected', 'reject_code': strat_code, 'risk_amount_cents': 0}
     from original import load_original
 
     risk = load_original().risk

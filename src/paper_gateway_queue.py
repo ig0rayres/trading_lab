@@ -69,13 +69,14 @@ def persist_risk_decision(
             if not signal_event_id:
                 return
             risk_id = uuid.uuid4()
+            sk = signal.get('strategy_key') or 'signal_copy'
             insert_row(
                 conn,
                 'risk_decisions',
                 {
                     'id': risk_id,
                     'signal_event_id': signal_event_id,
-                    'strategy_key': 'signal_copy',
+                    'strategy_key': str(sk)[:64],
                     'decision': 'paper_allowed' if allowed else 'rejected',
                     'reject_code': decision.get('reject_code'),
                     'risk_amount_cents': decision.get('risk_amount_cents', 0),

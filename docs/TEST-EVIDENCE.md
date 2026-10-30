@@ -107,3 +107,25 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 | PR | https://github.com/ig0rayres/trading_lab/pull/1 (merged 2026-10-30) |
 | `main` merge | `6813fb5` |
 | Operador | EasyPanel hashia — N6 no ar (dois apps) |
+
+## Homologação D5 itens 3–7 (Sprint N9 — operador EasyPanel)
+
+> Preencher após executar o runbook em `docs/HOMOLOGATION.md` § Runbook detalhado. **Sem** tokens, DSN, bearer ou chaves Alpaca. Só contagens redigidas e sim/não.
+
+| Item | Checklist | Comando / verificação | Evidência esperada | Status | Resultado (operador) |
+|------|-----------|------------------------|-------------------|--------|----------------------|
+| 3 | Gate A | `run.sh tv-webhook` + POST válido | ≥1 linha em `signal_events` | pendente | |
+| 4a | Gate B rejeição | `run.sh tv-worker` | linha em `risk_decisions` (opcional) | pendente | |
+| 4b | Gate B aceite | `run.sh tv-worker` | `paper_orders.status = queued_intent` | pendente | |
+| 5 | Reconcile | `v4-alpaca-reconcile` + `PAPER_RECONCILE_LEDGER_APPLY=true` | JSON com `ledger_apply`; `broker_reconciled` false | pendente | |
+| 6 | Dashboard | `run.sh v4-dashboard` + `/api/status` | `kill_switch_on`, `shadow_vs_paper`; auth se remoto | pendente | |
+| 7 | Kill switch | `TRADING_LAB_KILL_SWITCH` ou `control_flags` | worker bloqueia; sem nova ordem | pendente | |
+
+**N9.6 operador:** colar resultados redigidos na coluna “Resultado” e mudar **Status** para `ok` quando conferido. Agente/repo não executa SSH nem lê secrets.
+
+## Sprint N9 — repo (runbook docs)
+
+| Task | Artefato | Notas |
+|------|----------|--------|
+| N9.1–N9.4 | `docs/HOMOLOGATION.md` runbook § itens 3–7 | Sem diff em `src/` |
+| N9.5 | esta seção + bloco Feature 5 opcional em HOMOLOGATION | Feature 5 fill permanece `[ ]` em REQUIREMENTS |

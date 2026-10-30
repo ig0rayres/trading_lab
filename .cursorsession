@@ -16,12 +16,11 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint N8 concluída — homolog seed on migrate",
-  "sprint_atual": null,
+  "fase_nome": "Execução N9 — homologação D5 EasyPanel (itens 3–7)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T14:14:44-0300",
+  "ultimo_update": "2026-10-30T14:51:42-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,8 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "/git front finish n8-homolog-seed",
-    "/pmo — próximo item do roadmap (sem inventar scoring)"
+    "Operador: runbook HOMOLOGATION itens 3–7 no EasyPanel",
+    "Preencher TEST-EVIDENCE tabela N9",
+    "/qa validar N9 → PR → merge"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -112,78 +112,28 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo plan N8"
+    "/pmo sprint N9"
   ],
-  "contexto_rapido": "N8 concluída: PR #4 main 81e6e88; 7 strategy_states no EasyPanel; LIVE_TRADING false.",
+  "contexto_rapido": "N9 ativa: runbook + evidência docs; operador EasyPanel N9.6; sem src/; LIVE_TRADING false.",
   "sprint_tasks": [
     {
-      "id": "N8.1",
-      "title": "Hook ensure_strategy_defaults into ledger-migrate apply (including already_applied)",
-      "size": "M",
+      "id": "N9.1",
+      "title": "Runbook Gate A: webhook → signal_events",
+      "size": "P",
       "status": "done",
       "depends_on": [],
       "files": [
-        "src/ledger_migrate.py"
-      ],
-      "bom_ref": "BOM-3",
-      "reuse_targets": [
-        {
-          "component": "src/strategy_catalog.py",
-          "reuse_as": "call",
-          "convergence_check": "rg \"ensure_strategy_defaults\" src/ledger_migrate.py && ! rg \"def ensure_strategy_defaults\" src/ledger_migrate.py"
-        },
-        {
-          "component": "src/ledger_migrate.py",
-          "reuse_as": "extend",
-          "convergence_check": "rg \"def apply\" src/ledger_migrate.py && rg \"already_applied\" src/ledger_migrate.py"
-        }
-      ],
-      "guardrail_contract": [
-        {
-          "class": "secrets",
-          "id": "n8-1-no-dsn-print",
-          "target": "src/ledger_migrate.py",
-          "check": "rg \"LEDGER_DATABASE_URL\" src/ledger_migrate.py && ! rg -n \"print(.*PASSWORD\" src/ledger_migrate.py",
-          "pass_condition": "DSN stays in env; no password print"
-        },
-        {
-          "class": "subagent-safety",
-          "id": "n8-1-live-lock",
-          "target": "Dockerfile",
-          "check": "rg \"LIVE_TRADING_ENABLED=false\" Dockerfile",
-          "pass_condition": "image live lock unchanged"
-        },
-        {
-          "class": "caller-level",
-          "id": "n8-1-cli-apply-seed",
-          "target": "src/ledger_migrate.py",
-          "check": "pytest -q tests/test_ledger_migration.py -k apply",
-          "convergence_check": "pytest -q tests/test_ledger_migration.py -k apply",
-          "pass_condition": "apply path seeds catalog when LEDGER_DATABASE_URL is set"
-        }
-      ],
-      "executor_prompt": "### Quality Brief (Sprint N8)\nsprint: N8\nMaintain: strategy_catalog.ensure_strategy_defaults() insert-if-missing for the seven N7 keys — call it; do not reimplement INSERT.\nMaintain: ledger_migrate.apply / rollback / status CLI wired by scripts/run.sh ledger-migrate.\nMaintain: LIVE_TRADING_ENABLED=false and original.py LAB_LOCK.\nAvoid: migration 002, DDL edits, and a second persistence module.\nAvoid: Gate B / scoring changes; do not promote strategy_states.phase from PnL, HTTP 200, or PAPER_GATEWAY_QUEUE_ONLY.\n[ABORDAGEM] Call ensure_strategy_defaults() at the end of apply() on both first apply and already_applied; then SELECT the seven known keys and raise if any are missing (ops-visible). Do not seed on rollback.\n[RISCO] ensure_strategy_defaults() swallows exceptions and no-ops without LEDGER_DATABASE_URL. A silent no-op after migrate is the EasyPanel empty-table failure mode — migrate must not treat that as success.\n[OPORTUNIDADE] Extend LedgerMigrationIntegrationTest.test_apply_rollback_roundtrip (skipUnless LEDGER_DATABASE_URL) to assert seven strategy_states rows after the final apply.\nEXPIRES at end of Sprint N8.\n\nMelhoria: ledger-migrate apply seeds strategy_states.\nContexto: apply() runs 001_ledger_up.sql or returns already_applied without calling ensure_strategy_defaults(). EasyPanel had an empty strategy_states table until a manual INSERT or a worker fetch. ISS-002/N7 already defined the seven keys and insert-if-missing; do not reopen Gate B or invent scoring thresholds.\nObjetivo: after a successful apply — including the already_applied early return — call strategy_catalog.ensure_strategy_defaults(). Then verify the seven KNOWN_STRATEGY_KEYS / DEFAULT_PHASE_BY_KEY rows exist (SELECT); raise a RuntimeError (or equivalent) if any key is missing so operators see the failure. Do not overwrite an existing phase. Do not seed inside rollback(). Do not add migrations/002_*.sql. Do not edit gate_b_risk.py. LIVE_TRADING stays false. scripts/run.sh ledger-migrate wiring stays as-is.\nArquivos: src/ledger_migrate.py.\nCriterio de pronto: rg shows ensure_strategy_defaults imported/called from ledger_migrate.py and not redefined there; apply() no longer returns already_applied without attempting seed; unit coverage exists or is added in N8.2; no DSN/password printed.\nCenarios de teste (implemented in N8.2):\n1. empty DB + apply → seven strategy_states rows with N7 default phases.\n2. already_applied + empty table → seed still runs; seven rows appear.\n3. existing orb=paper_validated is left unchanged (overwrite forbidden).\n4. rollback still drops tables; apply after rollback still works; LIVE_TRADING_ENABLED false; no Gate B file edits."
-    },
-    {
-      "id": "N8.2",
-      "title": "Unit + optional ledger integration: apply roundtrip leaves 7 strategy_states rows",
-      "size": "P",
-      "status": "done",
-      "depends_on": [
-        "N8.1"
-      ],
-      "files": [
-        "tests/test_ledger_migration.py"
+        "docs/HOMOLOGATION.md"
       ],
       "bom_ref": "BOM-3"
     },
     {
-      "id": "N8.3",
-      "title": "Homologation runbook: verify 7 rows after migrate",
+      "id": "N9.2",
+      "title": "Runbook Gate B: worker → risk_decisions + paper_orders queued_intent",
       "size": "P",
       "status": "done",
       "depends_on": [
-        "N8.2"
+        "N9.1"
       ],
       "files": [
         "docs/HOMOLOGATION.md"
@@ -191,50 +141,84 @@
       "bom_ref": "BOM-3"
     },
     {
-      "id": "N8.4",
-      "title": "EasyPanel/INFRASTRUCTURE note: re-apply seeds insert-if-missing",
+      "id": "N9.3",
+      "title": "Runbook reconcile read-only (ledger_apply, não broker_reconciled)",
       "size": "P",
       "status": "done",
       "depends_on": [
-        "N8.1"
+        "N9.2"
       ],
       "files": [
-        "docs/INFRASTRUCTURE.md",
-        "EASYPANEL.md"
+        "docs/HOMOLOGATION.md"
       ],
       "bom_ref": "BOM-3"
+    },
+    {
+      "id": "N9.4",
+      "title": "Runbook dashboard auth + kill switch",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N9.3"
+      ],
+      "files": [
+        "docs/HOMOLOGATION.md",
+        "docs/INFRASTRUCTURE.md"
+      ],
+      "bom_ref": "BOM-3"
+    },
+    {
+      "id": "N9.5",
+      "title": "Evidence sheet + optional Feature 5 operator note",
+      "size": "M",
+      "status": "done",
+      "depends_on": [
+        "N9.4"
+      ],
+      "files": [
+        "docs/TEST-EVIDENCE.md",
+        "docs/HOMOLOGATION.md"
+      ],
+      "bom_ref": "BOM-3"
+    },
+    {
+      "id": "N9.6",
+      "title": "Operador: executar itens 3–7 no EasyPanel e preencher evidência",
+      "size": "P",
+      "status": "todo",
+      "depends_on": [
+        "N9.5"
+      ],
+      "files": [],
+      "bom_ref": "BOM-3",
+      "owner": "operador"
     }
   ],
   "checkpoint": {
-    "sprint": "N8",
-    "phase": "done",
-    "branch": "main",
-    "last_completed_task": "N8.1–N8.4",
-    "current_task": null,
-    "timestamp": "2026-10-30T14:14:44-0300",
+    "sprint": "N9",
+    "phase": "implementation",
+    "branch": "front/n9-easypanel-homolog",
+    "last_completed_task": "N9.5",
+    "current_task": "N9.6",
+    "timestamp": "2026-10-30T14:54:45-03:00",
+    "relevant_paths": [
+      "docs/HOMOLOGATION.md",
+      "docs/TEST-EVIDENCE.md",
+      "docs/INFRASTRUCTURE.md"
+    ],
     "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N8",
+      "result": "COM_RESSALVAS",
+      "sprint": "N9",
       "produced_by": "/qa validar",
-      "senior_review_status": "PASS",
-      "findings_registered": [
-        "ISS-003"
-      ],
-      "recorded_at": "2026-10-30T16:16:23Z",
+      "senior_review_status": "PASS_WITH_NOTES",
+      "findings_registered": [],
+      "recorded_at": "2026-10-30T18:37:55Z",
       "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
-      "notes": "11 unittest escopo N8 OK; 3 integração skip sem DSN. Senior: delta seed pós-apply, strict verify, sem Gate B.",
+      "notes": "N9.1-N9.5: runbook+folha OK; diff sem src/. N9.6 operador EasyPanel pendente (evidência pendente esperado). Senior: docs claros non-fill; sem segredos colados.",
       "round": 1,
       "full_suite_ran": false,
       "first_pass": true,
-      "senior_status": "PASS",
-      "findings_found": 1,
-      "findings_disposition": [
-        {
-          "id": "ISS-003",
-          "status": "fixed",
-          "evidence": "ledger_migrate apply seeds 7 rows; tests + docs N8"
-        }
-      ]
+      "senior_status": "PASS_WITH_NOTES"
     },
     "validation_gate": {
       "produced_by": "validation-stamp.py",
@@ -243,23 +227,22 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "PYTHONPATH=src python3 -m unittest tests.test_strategy_catalog tests.test_ledger_migration -q",
+          "cmd": "rg -q \"Runbook detalhado\" docs/HOMOLOGATION.md && rg -q \"Homologação D5 itens 3\" docs/TEST-EVIDENCE.md",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "e873645c51499a563bb1f36b21465c756075a034",
-      "stamped_at": "2026-10-30T16:18:04Z",
+      "last_validated_sha": "b3777b0f445134f6d3b0220626c5390bee7d1dbc",
+      "stamped_at": "2026-10-30T18:38:14Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "patch_id": "53ec13b37e930120d23fd07a70dcb063e0bc1211",
+      "patch_id": "a245bf1a400a087b27e17ebbd1135aa84d8eae63",
       "patch_id_version": 2
     },
-    "sprint_delivery": "verify_green",
-    "sprint_delivery_sprint": "N8",
-    "verify_evidence": "PR #4 merged; CI green; EasyPanel 7 rows strategy_states 2026-10-30"
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N9"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -278,12 +261,12 @@
   ],
   "anchor": {
     "persona": "planejador-tarefas",
-    "phase": "N8 concluída",
-    "intent": "Closeout N8 pós-homolog EasyPanel.",
+    "phase": "Sprint N9 implementation",
+    "intent": "Homologação D5 itens 3–7: runbook + evidência; operador EasyPanel.",
     "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
     "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
-    "next_steps": "/git front finish; /pmo próximo sprint.",
-    "updated_at": "2026-10-30T14:14:44-0300"
+    "next_steps": "N9.1 expand Gate A runbook in HOMOLOGATION.md",
+    "updated_at": "2026-10-30T14:51:42-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-10-30T16:14:53Z",
@@ -291,5 +274,17 @@
     "messages_lost": 363
   },
   "compact_count": 5,
-  "previous_sprint": "N8"
+  "previous_sprint": "N8",
+  "front": {
+    "slug": "n9-easypanel-homolog",
+    "kind": "agent",
+    "parent_root": "/media/igor/windows_part/Cursor/trading lab",
+    "worktree": "/media/igor/windows_part/Cursor/trading lab",
+    "branch": "front/n9-easypanel-homolog"
+  },
+  "sprint_atual": "N9",
+  "sprint_branch": "front/n9-easypanel-homolog",
+  "sprint_nome": "Sprint N9 — Homologação D5 EasyPanel",
+  "sprint_categoria": "N",
+  "plan_only": false
 }

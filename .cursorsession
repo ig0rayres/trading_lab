@@ -16,8 +16,8 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint D5 — homologação paper (próxima)",
-  "sprint_atual": "D5",
+  "fase_nome": "Construção D1–D5 concluída (backlog F-003 parity)",
+  "sprint_atual": null,
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "D3 mergeada (CI 41049439799). D4: fechar F-007..F-009.",
+  "contexto_rapido": "D4 fechada (CI 41052010551). Próximo: D5 F-011; D1 F-003 parity opcional.",
   "sprint_tasks": [
     {
       "id": "D1.1",

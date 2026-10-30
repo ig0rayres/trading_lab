@@ -21,7 +21,7 @@
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T10:25:00-03:00",
+  "ultimo_update": "2026-10-30T11:00:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -115,10 +115,11 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "Sprint D1 concluida (VERIFY CI). Proximo: /pmo sprint D2.",
+  "contexto_rapido": "Sprint D2 pushed (d68a845); aguarda CI. Branch sprint/D2.",
   "proximos_passos": [
-    "/pmo sprint D2 ledger Postgres",
-    "EasyPanel: trading-lab + trading-lab-webhook (mesma imagem)"
+    "Ver Actions na branch sprint/D2",
+    "ledger-migrate apply no Postgres do operador",
+    "Sprint D3 Gate A"
   ],
   "sprint_tasks": [
     {
@@ -175,14 +176,13 @@
     }
   ],
   "checkpoint": {
-    "sprint": "D1",
-    "phase": "done",
-    "branch": "sprint/D1",
-    "relevant_paths": [],
-    "last_completed_task": "D1.6",
+    "sprint": "D2",
+    "phase": "testing",
+    "branch": "sprint/D2",
+    "relevant_paths": ["migrations/", "src/ledger_migrate.py", "src/ledger_store.py", "tests/test_ledger_migration.py"],
+    "last_completed_task": "D2.5",
     "current_task": null,
-    "timestamp": "2026-10-30T10:45:00-03:00",
-    "validation": "CI run 41041762290 Success on main @ f597f8b"
+    "timestamp": "2026-10-30T11:00:00-03:00"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

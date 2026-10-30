@@ -14,15 +14,21 @@ from urllib.parse import urlsplit
 QUEUE=Path(os.environ.get('TV_QUEUE_DIR','/app/reports/webhooks/pending'))
 FIELDS={'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry','stop','target','quantity','ttl_seconds'}
 
+def _respond(payload, status, body):
+    from gate_a_signal import maybe_persist
+    maybe_persist(payload if isinstance(payload, dict) else {}, status, body)
+    return status, body
+
 def ingest(payload,secret,queue=QUEUE,now=None):
     now=now or datetime.now(timezone.utc)
     if not isinstance(payload,dict) or set(payload)!=FIELDS:
-        return 422,{'status':'REJECTED','reason':'INVALID_FIELDS'}
-    if payload['provider']!='tradingview':return 422,{'status':'REJECTED','reason':'INVALID_PROVIDER'}
+        return _respond({},422,{'status':'REJECTED','reason':'INVALID_FIELDS'})
+    if payload['provider']!='tradingview':
+        return _respond(payload,422,{'status':'REJECTED','reason':'INVALID_PROVIDER'})
     if not re.fullmatch(r'[A-Za-z0-9_.:-]{6,100}',str(payload['signal_id'])):
-        return 422,{'status':'REJECTED','reason':'INVALID_SIGNAL_ID'}
+        return _respond(payload,422,{'status':'REJECTED','reason':'INVALID_SIGNAL_ID'})
     if payload.get('side')!='buy' or payload.get('asset_class')!='us_equity':
-        return 422,{'status':'REJECTED','reason':'UNSUPPORTED_ASSET_OR_SIDE'}
+        return _respond(payload,422,{'status':'REJECTED','reason':'UNSUPPORTED_ASSET_OR_SIDE'})
     try:
         ts=datetime.fromisoformat(payload['sent_at_utc'].replace('Z','+00:00'))
         if ts.tzinfo is None:raise ValueError()
@@ -30,13 +36,13 @@ def ingest(payload,secret,queue=QUEUE,now=None):
         ttl=payload['ttl_seconds']
         if type(ttl)!=int or not 1<=ttl<=60 or not -5<=delta<=ttl:raise ValueError()
     except (TypeError,ValueError,AttributeError):
-        return 422,{'status':'REJECTED','reason':'STALE_OR_INVALID_TIMESTAMP'}
+        return _respond(payload,422,{'status':'REJECTED','reason':'STALE_OR_INVALID_TIMESTAMP'})
     # No need to store the URL token; HMAC is signed inside the trusted service.
     digest=hashlib.sha256((payload['provider']+'|'+payload['signal_id']).encode()).hexdigest()
     queue.mkdir(parents=True,exist_ok=True)
     dest=queue/(digest+'.json')
     if dest.exists() or (queue.parent/'processed'/dest.name).exists():
-        return 200,{'status':'DUPLICATE_IGNORED','reference':digest[:16]}
+        return _respond(payload,200,{'status':'DUPLICATE_IGNORED','reference':digest[:16]})
     from signal_copy import sign
     signed=dict(payload)
     signed['signal_id']=hashlib.sha256(payload['signal_id'].encode()).hexdigest()[:32]
@@ -49,10 +55,10 @@ def ingest(payload,secret,queue=QUEUE,now=None):
         import os as _os
         _os.link(tmp,dest)
     except FileExistsError:
-        return 200,{'status':'DUPLICATE_IGNORED','reference':digest[:16]}
+        return _respond(payload,200,{'status':'DUPLICATE_IGNORED','reference':digest[:16]})
     finally:
         tmp.unlink(missing_ok=True)
-    return 202,{'status':'QUEUED','reference':digest[:16],'orders_sent':0}
+    return _respond(payload,202,{'status':'QUEUED','reference':digest[:16],'orders_sent':0})
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self,*args):pass # do not log path token

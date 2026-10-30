@@ -57,6 +57,14 @@ UPSTREAM_DIR="$PWD/vendor/day-trader-skill" LIVE_TRADING_ENABLED=false PYTHONPAT
 
 Gate D1 pytest/docker: **closed** via CI run above. Re-run locally optional (`docs/pytest-D1.log`).
 
+## Sprint D2 — CI evidence
+
+| Run | Branch | Result |
+|-----|--------|--------|
+| [41043938920](https://github.com/ig0rayres/trading_lab/actions/runs/41043938920) | `sprint/D2` @ `d68a845` | **Success** (pytest + migration roundtrip + docker-build) |
+
+Merged to `main` after verify (2026-10-30).
+
 ## Sprint D1.3 (Git remote)
 
 | Item | Value |

@@ -4,11 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 12–28 |
-
----
-
-| D2 | ledger | migrations, ledger_store | 32–40 |
+| D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
+| D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
 
 ---
 

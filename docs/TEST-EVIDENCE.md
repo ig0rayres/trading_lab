@@ -70,7 +70,7 @@ Merged to `main` after verify (2026-10-30).
 | Run | Branch | Result |
 |-----|--------|--------|
 | [41044496969](https://github.com/ig0rayres/trading_lab/actions/runs/41044496969) | `main` @ `146ba5a` | **Success** (D2 merge + Gate A persist) |
-| [41044732897](https://github.com/ig0rayres/trading_lab/actions/runs/41044732897) | `sprint/D3` @ `1579f0d` | **Success** (session gate + rejection tests) |
+| [41052010551](https://github.com/ig0rayres/trading_lab/actions/runs/41052010551) | `sprint/D4` @ `deadea3` | **Success** (Gate B close: F-007–F-010) |
 
 Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test_gate_a_signal.py` (ledger rows when `LEDGER_DATABASE_URL` set in CI).
 

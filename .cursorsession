@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "Sprints honestas: D3+D4 abertas; ver docs/FINDINGS.md F-001..F-011.",
+  "contexto_rapido": "D3 mergeada (CI 41049439799). D4: fechar F-007..F-009.",
   "sprint_tasks": [
     {
       "id": "D1.1",

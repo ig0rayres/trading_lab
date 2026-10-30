@@ -1,11 +1,14 @@
-"""Process authenticated queued TradingView signals using existing Paper runner."""
+"""Process authenticated queued TradingView signals: Gate B then paper queue (no broker by default)."""
 import argparse
 import fcntl
 import json
 import os
 from pathlib import Path
 from datetime import datetime, timezone
-from signal_paper_runner import run
+
+from gate_b_risk import broker_open_positions, evaluate_signed_signal
+from paper_audit import get_json
+from paper_gateway_queue import process_after_gate_b
 from signal_copy import validate
 from paper_audit import validate_env
 
@@ -21,7 +24,18 @@ def process_one(path):
         obj=json.loads(claimed.read_text())
         fx=validate_env(os.environ)
         errs=validate(obj,os.environ.get('SIGNAL_COPY_SECRET',''),fx)
-        result={'status':'BLOCKED','reasons':errs,'orders_sent':0} if errs else run(obj,os.environ)
+        if errs:
+            result={'status':'BLOCKED','reasons':errs,'orders_sent':0}
+        else:
+            if not obj.get('strategy_key'):
+                provider = str(obj.get('provider', '')).lower()
+                if provider == 'tradingview':
+                    obj['strategy_key'] = 'signal_copy'
+            open_pos = broker_open_positions(get_json, os.environ)
+            decision = evaluate_signed_signal(
+                obj, fx=fx, env=os.environ, open_positions=open_pos,
+            )
+            result = process_after_gate_b(obj, decision, os.environ)
     except Exception as e:
         result={'status':'BLOCKED','reasons':[type(e).__name__],'orders_sent':0}
     completed=BASE.parent/'processed';completed.mkdir(parents=True,exist_ok=True)

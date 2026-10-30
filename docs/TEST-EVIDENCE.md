@@ -57,6 +57,33 @@ UPSTREAM_DIR="$PWD/vendor/day-trader-skill" LIVE_TRADING_ENABLED=false PYTHONPAT
 
 Gate D1 pytest/docker: **closed** via CI run above. Re-run locally optional (`docs/pytest-D1.log`).
 
+## Sprint D2 — CI evidence
+
+| Run | Branch | Result |
+|-----|--------|--------|
+| [41043938920](https://github.com/ig0rayres/trading_lab/actions/runs/41043938920) | `sprint/D2` @ `d68a845` | **Success** (pytest + migration roundtrip + docker-build) |
+
+Merged to `main` after verify (2026-10-30).
+
+## Sprint D3 — Gate A (em progresso)
+
+| Run | Branch | Result |
+|-----|--------|--------|
+| [41044496969](https://github.com/ig0rayres/trading_lab/actions/runs/41044496969) | `main` @ `146ba5a` | **Success** (D2 merge + Gate A persist) |
+| [41052645066](https://github.com/ig0rayres/trading_lab/actions/runs/41052645066) | `sprint/D5` @ `4667086` | **Success** (ledger reconcile + homologation docs) |
+
+## Sprint D1–D5 construction gate
+
+Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test_gate_a_signal.py` (ledger rows when `LEDGER_DATABASE_URL` set in CI).
+
+| [41049439799](https://github.com/ig0rayres/trading_lab/actions/runs/41049439799) | `sprint/D3` @ `9431250` | **Success** (Gate A close: HTTP + News First audit) |
+
+## Sprint D4 — Gate B + paper queue
+
+| Run | Branch | Result |
+|-----|--------|--------|
+| [41046350535](https://github.com/ig0rayres/trading_lab/actions/runs/41046350535) | `sprint/D4` @ `a8d94cb` | **Success** (`gate_b_risk`, `paper_gateway_queue`, full pytest) |
+
 ## Sprint D1.3 (Git remote)
 
 | Item | Value |
@@ -64,3 +91,19 @@ Gate D1 pytest/docker: **closed** via CI run above. Re-run locally optional (`do
 | Remote | `https://github.com/ig0rayres/trading_lab.git` |
 | Branch pushed | `sprint/D1`, `main` @ `f597f8b` |
 | CI run (pytest + docker) | https://github.com/ig0rayres/trading_lab/actions/runs/41041762290 |
+
+## Sprint N6 — Deploy reprodutível (local / CI)
+
+| Check | Command / artifact |
+|-------|---------------------|
+| Pin drift | `tests/test_image_pin.py::test_dockerfile_pin_matches_vendor_pin_doc` |
+| Image smoke | `docker build -t trading-lab:ci . && bash scripts/ci-docker-smoke.sh` |
+| CI workflow | `.github/workflows/docker-smoke.yml` (paralelo ao job `docker-build` em `ci.yml`) |
+
+**Nota:** validação local bloqueada neste agente (`local-runtime` ask); evidência pós-push na Action `Docker image smoke`.
+
+| Evidência | Valor |
+|-----------|--------|
+| PR | https://github.com/ig0rayres/trading_lab/pull/1 (merged 2026-10-30) |
+| `main` merge | `6813fb5` |
+| Operador | EasyPanel hashia — N6 no ar (dois apps) |

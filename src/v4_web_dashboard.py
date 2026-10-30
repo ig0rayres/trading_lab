@@ -83,6 +83,12 @@ def build_snapshot(root):
     data['generated_at'] = datetime.now(timezone.utc).isoformat()
     data['execution_state'] = 'READ_ONLY_NO_ORDER_SUBMISSION'
     data['operational_acceptance'] = False
+    try:
+        from gate_b_risk import kill_switch_active
+
+        data['kill_switch_on'] = kill_switch_active()
+    except Exception:
+        data['kill_switch_on'] = os.getenv('TRADING_LAB_KILL_SWITCH', '').lower() in ('1', 'true', 'yes', 'on')
     data['modules'] = {name: 'NOT_VERIFIED' for name in MODULES}
     data['research_overview'] = research_overview(root)
     # Never expose a raw manifest status as a trusted cycle. The overview

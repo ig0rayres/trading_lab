@@ -4,7 +4,11 @@
 
 ## 1. Secret
 
-The header is `X-Webhook-Token`. The configured value must be at least 32 characters. Reject otherwise with no database order row.
+Primary contract (`POST /webhooks/tradingview`): header **`X-Webhook-Token`**, value from `TV_WEBHOOK_TOKEN` (or legacy alias `TV_WEBHOOK_SECRET`). Minimum 32 characters. Missing or wrong → **401** without queue side effects.
+
+Legacy EasyPanel path `POST /webhook/{token}`: same secret in the URL path; invalid → **404** (no token oracle).
+
+News First (`news_first_sim`) and signed copy (`signal_copy.preflight`) append **`signal_events`** when `LEDGER_DATABASE_URL` is set. Still no broker.
 
 ## 2. Idempotency
 

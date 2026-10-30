@@ -84,7 +84,10 @@ def main():
     try:
         report=make_report(json.loads(Path(args.input).read_text(encoding='utf-8')))
         added=persist(report,args.output,args.journal)
+        from gate_a_signal import persist_news_first_report
+        ledger_rows=persist_news_first_report(report)
         print(json.dumps({'health':report['health'], **report['summary'], 'new_journal_records':added,
+                          'signal_events_audited':ledger_rows,
                           'orders_sent':0,'authorized_to_trade':False,
                           'report':args.output,'journal':args.journal}))
         return 0

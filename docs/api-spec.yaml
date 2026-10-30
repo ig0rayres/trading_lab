@@ -22,6 +22,9 @@ paths:
     post:
       tags: [signal-gate-a]
       summary: Receber sinal do TradingView
+      description: >
+        Autenticacao preferida via header X-Webhook-Token (docs/api-spec.yaml).
+        Compatibilidade EasyPanel: POST /webhook/{TV_WEBHOOK_TOKEN} sem header (404 se invalido).
       operationId: receiveTradingViewSignal
       security:
         - webhookSecret: []

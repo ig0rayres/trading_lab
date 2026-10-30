@@ -57,6 +57,12 @@ def main(argv=None):
         if out.suffix != '.json' or out.is_symlink():
             raise ValueError('UNSAFE_OUTPUT')
         report = reconcile(os.environ, fetch_positions=lambda env: get_json('/v2/positions', env))
+        if os.environ.get('LEDGER_DATABASE_URL', '').strip() and os.environ.get(
+            'PAPER_RECONCILE_LEDGER_APPLY', 'false'
+        ).lower() == 'true':
+            from ledger_reconcile import apply_from_report
+
+            report['ledger_apply'] = apply_from_report(report)
         atomic_json(out, report)
         print(json.dumps({'status': report['status'], 'orders_sent': 0}))
         return 2

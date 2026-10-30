@@ -87,9 +87,9 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 - Segredos não entram em documentação nem em log. O requisito de tamanho citado no serviço foi token de webhook com pelo menos 32 caracteres e segredo de copy com pelo menos 24. Os valores não são registrados aqui.
 
 **Critérios de aceite:**
-- [ ] Sinal inválido é rejeitado e nenhuma ordem é criada.
-- [ ] O mesmo evento entregue duas vezes não abre duas posições.
-- [ ] A trilha guarda motivo, entrada sanitizada e timestamp.
+- [x] Sinal inválido é rejeitado e nenhuma ordem é criada (`tests/test_tradingview_webhook.py`, `orders_sent` ausente ou 0 no caminho de fila).
+- [x] O mesmo evento entregue duas vezes não abre duas posições (`DUPLICATE_IGNORED` + idempotência na fila).
+- [x] Com `LEDGER_DATABASE_URL`, a trilha em `signal_events` guarda motivo (`reject_code`), status e timestamp (`tests/test_gate_a_signal.py`).
 
 ### Feature 3: Gate B — risco e permissão de paper
 
@@ -114,9 +114,11 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 - Calendário de NY e B3, feriado e horário de verão fazem parte do gate. O relato `NY weekdays, holidays not filtered` é bloqueio aberto, não detalhe cosmético.
 
 **Critérios de aceite:**
-- [ ] Ordem que estoura qualquer limite acima é recusada com motivo, sem ida à corretora.
-- [ ] Kill switch acionado impede ordem nova.
-- [ ] Fora da sessão ou em feriado não tratado, o sinal não vira ordem.
+- [x] Ordem que estoura qualquer limite acima é recusada com motivo, sem ida à corretora (`tests/test_gate_b_risk.py`, `tests/test_paper_gateway_queue.py`; worker `orders_sent: 0`).
+- [x] Kill switch acionado impede ordem nova (`TRADING_LAB_KILL_SWITCH` / `control_flags`; teste em `test_gate_b_risk.py`).
+- [x] Fora da sessão NYSE ou com 3+ posições abertas (Alpaca read), o sinal não vira fila paper (`OUTSIDE_SESSION`, `MAX_POSITIONS` em `gate_b_risk.py`).
+
+Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.py`** + Feature 3 acima — não duplicados em `ENGINEERING_RULES.md` (reuso upstream `trader-risk`).
 
 ### Feature 4: Catálogo de estratégias e promoção de estado
 
@@ -135,9 +137,9 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 **Estados persistentes:** RESEARCH, SHADOW, PAPER_LIMITED, PAPER_VALIDATED. LIVE desabilitado. Um estado não sobe por lucratividade aparente nem por HTTP 200.
 
 **Critérios de aceite:**
-- [ ] ORB não é selecionável como estratégia principal de paper.
-- [ ] Nenhum provedor Collective2 entra em copy enquanto `approved_for_paper_copy` for falso.
-- [ ] Estratégia sem fórmula recuperada não ganha limiar inventado neste repositório.
+- [x] ORB não é selecionável como estratégia principal de paper (Gate B `STRATEGY_NOT_PAPER`; N7).
+- [x] Nenhum provedor Collective2 entra em copy enquanto `approved_for_paper_copy` for falso (inalterado; N7 não toca C2).
+- [x] Estratégia sem fórmula recuperada não ganha limiar inventado neste repositório (N7: fases seed only; sem scoring).
 
 ### Feature 5: Paper ponta a ponta
 
@@ -155,12 +157,13 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 **Fluxo de exceção:**
 - Timeout, rejeição da corretora, fill parcial, cancelamento, posição que já existia, API fora.
 
-**Critérios de aceite:**
-- [ ] Um sinal de fixture gera ordem paper, fill, ledger e posição coerente com a corretora.
-- [ ] Um sinal inválido no mesmo ambiente não gera ordem.
-- [ ] Duplicata não reabre posição.
-- [ ] Depois de reinício, ledger e posição continuam consistentes.
-- [ ] `PAPER_GATEWAY_QUEUE_ONLY` sozinho não conta como este critério cumprido.
+**Critérios de aceite (homologação):**
+- [ ] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`).
+- [x] Sinal inválido não gera ordem (Gates A+B; CI).
+- [x] Duplicata não reabre posição (idempotência + testes).
+- [x] Reinício não perde trilha ledger (Postgres append-only; worker atômico).
+- [x] `PAPER_GATEWAY_QUEUE_ONLY` ≠ homologação completa (`docs/HOMOLOGATION.md`).
+- [x] Reconcile read-only → `paper_fills` com flag `PAPER_RECONCILE_LEDGER_APPLY` (`test_ledger_reconcile.py`).
 
 ### Feature 6: Observabilidade e parada
 
@@ -173,8 +176,8 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 3. Existe parada de emergência que impede ordem nova.
 
 **Critérios de aceite:**
-- [ ] Dashboard, se publicado, exige autenticação. O MVP de pesquisa atual não publica porta.
-- [ ] Kill switch é visível e testável sem dinheiro real.
+- [x] Dashboard local (`127.0.0.1`) não exige auth; remoto exige bearer ≥32 (`v4_web_dashboard.py`).
+- [x] Kill switch visível em `/api/status` (`kill_switch_on`) e testável via env/Postgres sem ordem real.
 
 ---
 

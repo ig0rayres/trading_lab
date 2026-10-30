@@ -12,6 +12,20 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trading_lab
+          POSTGRES_PASSWORD: ci_test_only
+          POSTGRES_DB: trading_lab_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U trading_lab -d trading_lab_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,6 +47,7 @@ jobs:
       - name: Pytest
         env:
           UPSTREAM_DIR: ${{ github.workspace }}/vendor/day-trader-skill
+          LEDGER_DATABASE_URL: postgresql://trading_lab:ci_test_only@localhost:5432/trading_lab_ci
         run: python -m pytest -q --tb=no
 
   docker-build:

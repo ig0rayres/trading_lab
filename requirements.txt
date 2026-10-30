@@ -1,0 +1,2 @@
+# Runtime deps for paper ledger (Postgres). Dev/test extras in requirements-dev.txt.
+psycopg[binary]>=3.1,<4

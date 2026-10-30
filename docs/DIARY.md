@@ -4,7 +4,18 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 12–28 |
+| D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
+| D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint D2 — Ledger Postgres
+
+**Gate:** migration apply/rollback; 8 tabelas; testes CI com Postgres efêmero.
+
+**Entregue (código):** `migrations/001_ledger_*.sql`, `ledger_migrate.py`, `ledger_store.py`, `.env.example`, CI Postgres service.
+
+**Próximo:** Sprint D3 Gate A.
 
 ---
 

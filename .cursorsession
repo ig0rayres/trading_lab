@@ -16,12 +16,12 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint D1 — baseline verificavel (ativa)",
-  "sprint_atual": null,
-  "sprint_pending_merge": "D1",
+  "fase_nome": "Planejamento N7 (strategy-catalog) — plan_only",
+  "sprint_atual": "N7",
+  "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T10:25:00-03:00",
+  "ultimo_update": "2026-10-30T11:50:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "/qa validar na D1",
-    "Sprint D2 ledger Postgres",
-    "EasyPanel: 1 servico pesquisa se webhook inativo"
+    "Operador confirma seed signal_copy=paper_limited",
+    "Parent Fable/plan-verifier no brief N7",
+    "/pmo sprint N7 em frente (não na mãe)"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -113,76 +113,92 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/rock continuar D1 closeout"
+    "/pmo plan N7"
   ],
-  "contexto_rapido": "Sprint D1 concluida (VERIFY CI). Proximo: /pmo sprint D2.",
-  "proximos_passos": [
-    "/pmo sprint D2 ledger Postgres",
-    "EasyPanel: trading-lab + trading-lab-webhook (mesma imagem)"
-  ],
+  "contexto_rapido": "N7 planejada (plan_only): strategy-catalog + Gate B por fase; sem limiares inventados; LIVE_TRADING false.",
   "sprint_tasks": [
     {
-      "id": "D1.1",
-      "title": "Vendor submodule e VENDOR-PIN.md",
-      "size": "P",
-      "status": "done",
-      "depends_on": [],
-      "files": ["vendor/day-trader-skill", "docs/VENDOR-PIN.md", ".gitmodules"],
-      "bom_ref": "BOM-2"
-    },
-    {
-      "id": "D1.2",
-      "title": "CI pytest + docker build",
-      "size": "P",
-      "status": "done",
-      "depends_on": [],
-      "files": [".github/workflows/ci.yml", "requirements-dev.txt", ".dockerignore", "docs/INFRASTRUCTURE.md"],
-      "bom_ref": "BOM-1"
-    },
-    {
-      "id": "D1.3",
-      "title": "Remote Git e PR",
-      "size": "P",
-      "status": "done",
-      "depends_on": ["D1.1", "D1.5"],
-      "files": [],
-      "notes": "origin + main; CI run 41041762290 Success. PR opcional."
-    },
-    {
-      "id": "D1.4",
-      "title": "vendor_verify e parity offline",
+      "id": "N7.1",
+      "title": "Catalog module + ledger helpers + insert-if-missing seed",
       "size": "M",
       "status": "done",
-      "depends_on": ["D1.1"],
-      "files": ["src/vendor_verify.py", "docs/TEST-EVIDENCE.md"],
-      "notes": "vendor_verify PASS; parity.py exige artefatos v0.5 — documentado."
+      "depends_on": [],
+      "files": [
+        "src/strategy_catalog.py",
+        "src/ledger_store.py",
+        "tests/test_strategy_catalog.py"
+      ],
+      "bom_ref": "BOM-3"
     },
     {
-      "id": "D1.5",
-      "title": "Pytest evidencia (nodeids)",
-      "size": "P",
+      "id": "N7.2",
+      "title": "Signal carries strategy_key (HMAC ALLOWED + worker attach)",
+      "size": "M",
       "status": "done",
-      "depends_on": ["D1.1"],
-      "files": ["docs/TEST-EVIDENCE.md"]
+      "depends_on": [],
+      "files": [
+        "src/signal_copy.py",
+        "src/tradingview_worker.py",
+        "tests/test_signal_copy.py"
+      ],
+      "bom_ref": "BOM-3"
     },
     {
-      "id": "D1.6",
-      "title": "Atualizar REQUIREMENTS criterio pytest",
+      "id": "N7.3",
+      "title": "Gate B reads strategy_states; shadow/research/ORB never paper_allowed",
+      "size": "M",
+      "status": "done",
+      "depends_on": ["N7.1", "N7.2"],
+      "files": [
+        "src/gate_b_risk.py",
+        "tests/test_gate_b_risk.py"
+      ],
+      "bom_ref": "BOM-3"
+    },
+    {
+      "id": "N7.4",
+      "title": "Persist risk_decisions.strategy_key from signal",
       "size": "P",
       "status": "done",
-      "depends_on": ["D1.5"],
-      "files": ["docs/REQUIREMENTS.md"]
+      "depends_on": ["N7.2"],
+      "files": [
+        "src/paper_gateway_queue.py",
+        "tests/test_paper_gateway_queue.py"
+      ],
+      "bom_ref": "BOM-3"
+    },
+    {
+      "id": "N7.5",
+      "title": "Ledger integration tests catalog + Gate B + queue",
+      "size": "P",
+      "status": "done",
+      "depends_on": ["N7.1", "N7.3", "N7.4"],
+      "files": [
+        "tests/test_strategy_catalog_gate_b.py"
+      ],
+      "bom_ref": "BOM-3"
+    },
+    {
+      "id": "N7.6",
+      "title": "REQUIREMENTS Feature 4 checkboxes N7 can close",
+      "size": "P",
+      "status": "done",
+      "depends_on": ["N7.5"],
+      "files": [
+        "docs/REQUIREMENTS.md",
+        "docs/ARCHITECTURE.md",
+        "docs/ISSUES.md"
+      ],
+      "bom_ref": "BOM-4"
     }
   ],
   "checkpoint": {
-    "sprint": "D1",
-    "phase": "done",
-    "branch": "sprint/D1",
-    "relevant_paths": [],
-    "last_completed_task": "D1.6",
-    "current_task": null,
-    "timestamp": "2026-10-30T10:45:00-03:00",
-    "validation": "CI run 41041762290 Success on main @ f597f8b"
+    "sprint": "N7",
+    "phase": "testing",
+    "branch": "front/n7-strategy-catalog",
+    "last_completed_task": "N7.1–N7.6 code+docs",
+    "current_task": "VALIDATE pytest CI + PR",
+    "timestamp": "2026-10-30T15:05:00-03:00"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -200,18 +216,18 @@
     ".dockerignore"
   ],
   "anchor": {
-    "persona": "rock",
-    "phase": "Sprint D1 VERIFY done",
-    "intent": "Fechar baseline D1; preparar D2 ledger.",
-    "changes_made": "DIARY, ROADMAP D1 concluida, INFRA two EasyPanel apps.",
-    "decisions": "Dois apps EasyPanel; CI 41041762290 Success.",
-    "next_steps": "/pmo sprint D2",
-    "updated_at": "2026-10-30T10:45:00-03:00"
+    "persona": "planejador-tarefas",
+    "phase": "Planejamento N7 (strategy-catalog) — plan_only",
+    "intent": "Planejar Sprint N7: fases persistidas + Gate B; sem limiares inventados; LIVE_TRADING false.",
+    "changes_made": "ROADMAP Sprint N7, docs/.briefs/N7.brief.md, ISS-002, .cursorsession sprint_tasks N7.1–N7.6. Sem código em src/.",
+    "decisions": "signal_copy seed paper_limited confirmado (operador opção 1); strategy_key no worker; ORB hard-reject; trader-risk.check reusado.",
+    "next_steps": "/pmo sprint ou /rock executar N7; frente front/n7-strategy-catalog.",
+    "updated_at": "2026-10-30T11:50:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T10:10:15Z",
-    "usage_percent": 95.6365,
-    "messages_lost": 362
+    "compacted_at": "2026-10-30T14:05:33Z",
+    "usage_percent": 90.6395,
+    "messages_lost": 275
   },
-  "compact_count": 1
+  "compact_count": 4
 }

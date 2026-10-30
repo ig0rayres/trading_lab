@@ -16,6 +16,8 @@ class DashboardTests(unittest.TestCase):
             self.assertIsNone(result['realized_gross_pnl_usd'])
             self.assertFalse(result['operational_acceptance'])
             self.assertEqual(result['execution_state'], 'READ_ONLY_NO_ORDER_SUBMISSION')
+            self.assertIn('shadow_vs_paper', result)
+            self.assertIn('kill_switch_on', result)
 
     def test_html_escapes_data(self):
         with tempfile.TemporaryDirectory() as d:

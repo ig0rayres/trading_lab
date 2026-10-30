@@ -1,0 +1,21 @@
+name: Docker image smoke
+
+on:
+  push:
+    branches: [master, main, front/**, sprint/**]
+  pull_request:
+
+env:
+  LIVE_TRADING_ENABLED: "false"
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker build
+        run: docker build -t trading-lab:ci .
+
+      - name: Image smoke (psycopg, vendor pin, live flag)
+        run: bash scripts/ci-docker-smoke.sh trading-lab:ci

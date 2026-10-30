@@ -1,6 +1,7 @@
 .git
 .github
 .cursor
+vendor
 docs
 *.md
 !data/**

@@ -60,7 +60,23 @@ O ZIP importado **não** incluiu `vendor/`; CI e Sprint D1 tratam de pin + evid�
 
 ## 5. Banco de dados (ledger paper)
 
-PostgreSQL da instância existente do operador (ver `docs/DATABASE.md`). Migrations **não** existem ainda — Sprint D2.
+PostgreSQL da instância existente do operador (ver `docs/DATABASE.md`). Migrations em `migrations/001_ledger_*.sql`; CLI `scripts/run.sh ledger-migrate`.
+
+### Kill switch (Gate B)
+
+Ordens paper não passam do Gate B quando:
+
+1. **`TRADING_LAB_KILL_SWITCH=true`** no ambiente do worker/gateway (fail-closed imediato), ou
+2. A linha mais recente em **`control_flags.kill_switch_on = true`** no Postgres (`LEDGER_DATABASE_URL`).
+
+O scheduler de pesquisa (`v4-scheduler`) não consulta o kill switch; só caminhos pós-Gate A (`tradingview_worker`, fila paper). Para ligar via SQL (operador):
+
+```sql
+INSERT INTO control_flags (kill_switch_on, max_risk_per_trade_cents, prodigy_risk_cents)
+VALUES (true, 5000, 2000);
+```
+
+Desligar: inserir nova linha com `kill_switch_on = false` (histórico append-only por linhas novas).
 
 ---
 
@@ -72,7 +88,7 @@ Nunca commitar valores. Referência de nomes: webhook secret, chaves Alpaca **pa
 
 ## 7. Hooks Cursor (Beesy)
 
-Hooks de automação Beesy (`safety-guard`, `pmo-update`) **não** foram instalados neste passo: o repo não está ancorado na suíte Beesy com `scripts/` do framework. Podem ser adicionados quando o operador ligar o projeto a um anchor com hooks compartilhados.
+Hooks globais (`safety-guard`, `sprint-commit-guard`) aplicam a este repo via Cursor. Para **commit/push pelo agente** (F208/F199), o projeto expõe `scripts/beesy-override-check.py` (delega a `~/.cursor/scripts/beesy-override-check.py`). Override auditado do operador: `~/.cursor/beesy-override.json` (TTL ≤2h; escopos típicos `BEESY_ALLOW_NO_VERIFY`, `BEESY_VALIDATION_OVERRIDE` em push para `main`). Push de branch `front/*` usa CI do PR como autoridade (sem stamp local).
 
 ---
 
@@ -85,12 +101,34 @@ Decisão do operador (2026-10-30): manter **`trading-lab`** + **`trading-lab-web
 | `trading-lab` | `v4-scheduler` (CMD padrão do Dockerfile) | Sem publicação se só pesquisa |
 | `trading-lab-webhook` | `tv-webhook` via entrypoint `run.sh` | HTTPS só neste app, após Gate A |
 
-Mesma build de imagem; volumes `/app/reports` e `/app/vendor` persistentes; **não** substituir deploy EasyPanel atual sem release supervisionada.
+Mesma build de imagem; volume persistente **`/app/reports`**. A partir da **Sprint N6**, o vendor pinado vem **na imagem** (`Dockerfile` clone @ `docs/VENDOR-PIN.md`); **não** monte volume vazio em `/app/vendor` (esconde o tree baked). `upstream-tests` / clone no start só como break-glass. **Não** substituir deploy EasyPanel atual sem release supervisionada.
+
+### Apply ledger migration (operador)
+
+1. Criar usuário `trading_lab` no Postgres existente (INSERT/SELECT/UPDATE nas tabelas do ledger; sem superuser).
+2. Definir `LEDGER_DATABASE_URL` **somente** no serviço paper-gateway (não no scheduler).
+3. No shell do container: `/app/scripts/run.sh ledger-migrate apply`
+4. Verificar: `/app/scripts/run.sh ledger-migrate status`
+5. Rollback de emergência (somente em homologação): `/app/scripts/run.sh ledger-migrate rollback`
+
+- CI: job `test` (pytest + Postgres efêmero) em `.github/workflows/ci.yml`; job **`docker-smoke.yml`** (build + `scripts/ci-docker-smoke.sh`) valida psycopg, vendor e `LIVE_TRADING_ENABLED=false` sem depender de editar `ci.yml`.
 
 ---
 
 ## 9. Próximos passos
 
-1. **Sprint D2** — migrations ledger Postgres (`docs/ROADMAP.md`).
-2. Opcional: `/devops infra` — topologia alinhada ao Postgres e volumes de reports.
-3. Deploy GitHub → EasyPanel quando houver sprint de infra aprovada.
+1. Homologação operador: `docs/HOMOLOGATION.md`.
+2. Comparativo EasyPanel: SHA imagem vs `git rev-parse HEAD` (abaixo).
+3. Backlog D1: `parity.py` / F-003 quando artefatos orb existirem.
+
+### Reconcile + ledger (read-only)
+
+- `PAPER_RECONCILE_LEDGER_APPLY=true` após `ledger-migrate apply`.
+- `scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile.json`
+- Campo `ledger_apply` no JSON; **`broker_reconciled` permanece false**.
+
+### EasyPanel — export comparativo (operador)
+
+Registrar no diário operacional: SHA da imagem no painel vs commit deste repositório. Não substituir serviços sem release supervisionada.
+
+---

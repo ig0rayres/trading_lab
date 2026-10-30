@@ -32,7 +32,7 @@
 | D5 | D | Paper reconciliado read-only; nenhum live | concluida* | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
 | N6 | N | Imagem com psycopg + vendor pinado; CI smoke | concluida | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
 | N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | concluida | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
-| N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | planejada | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
+| N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | concluida | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -383,7 +383,7 @@ executor_prompt: |
 
 ## Sprint N8 — Homologação + seed on migrate
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Migrate apply popula as 7 fases sem INSERT manual  
 > resumo_humano: Depois de aplicar o ledger, o Postgres já nasce com as sete famílias do catálogo. Reaplicar a migrate em base já migrada também preenche linhas que faltam, sem sobrescrever fase gravada à mão. O runbook de homologação/EasyPanel diz como conferir; sem rebuild de imagem nesta sprint.  
 > Gate: pytest — `ledger-migrate apply` (roundtrip ou `already_applied`) deixa 7 linhas em `strategy_states` quando `LEDGER_DATABASE_URL` está definido; seed insert-if-missing; rollback não semeia; `LIVE_TRADING_ENABLED` false; sem migration 002; sem reabrir Gate B nem limiar de scoring  
@@ -394,10 +394,10 @@ executor_prompt: |
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N8.1 Hook `ensure_strategy_defaults` into `ledger-migrate apply` (including `already_applied`) | `/dev` | — |
-| [ ] | P | N8.2 Unit + optional ledger integration: apply roundtrip leaves 7 `strategy_states` rows | `/qa testes` | N8.1 |
-| [ ] | P | N8.3 Homologation runbook: verify 7 rows after migrate | docs | N8.2 |
-| [ ] | P | N8.4 EasyPanel/INFRASTRUCTURE note: re-apply seeds insert-if-missing | docs | N8.1 |
+| [x] | M | N8.1 Hook `ensure_strategy_defaults` into `ledger-migrate apply` (including `already_applied`) | `/dev` | — |
+| [x] | P | N8.2 Unit + optional ledger integration: apply roundtrip leaves 7 `strategy_states` rows | `/qa testes` | N8.1 |
+| [x] | P | N8.3 Homologation runbook: verify 7 rows after migrate | docs | N8.2 |
+| [x] | P | N8.4 EasyPanel/INFRASTRUCTURE note: re-apply seeds insert-if-missing | docs | N8.1 |
 
 P notes (no executor_prompt): **N8.2** extend `tests/test_ledger_migration.py` — unit without DSN: `apply()` still calls `ensure_strategy_defaults` on `already_applied` (mock status/connect as needed). Integration (`skipUnless LEDGER_DATABASE_URL`): after the existing apply/rollback/apply roundtrip, `strategy_states` has 7 rows whose keys match `DEFAULT_PHASE_BY_KEY`; a second apply does not clobber a hand-updated phase; optional subprocess `python3 src/ledger_migrate.py apply`. Do not add Gate B tests. **N8.3** add a checklist step after migrate: `SELECT strategy_key, phase FROM strategy_states WHERE deleted_at IS NULL` → 7 keys; INSERT manual deixa de ser o caminho feliz. **N8.4** EasyPanel § apply: re-run `ledger-migrate apply` is safe (insert-if-missing); no new service, no image rebuild.
 
@@ -486,6 +486,6 @@ executor_prompt: |
 
 ## Próximo passo operador
 
-1. Parent Fable / plan-verifier no brief N8 (`docs/.briefs/N8.brief.md`).  
-2. **`/pmo sprint`** N8 em **frente nova** `front/n8-homolog-seed` (esta janela ainda é `front/n7-strategy-catalog`).  
-3. Sem docker/deploy nesta sprint; Feature 4 scoring continua fora (não inventar limiar).
+1. N8 **concluída** (PR #4 → `main` `81e6e88`; homolog: 7 linhas `strategy_states` no EasyPanel).  
+2. **`/git front finish n8-homolog-seed`** (ou `gc --apply --safe`) e reconciliar na mãe.  
+3. **`/pmo`** — escolher próximo item (backlog N ou Feature 5 fill real); sem inventar limiar de scoring.

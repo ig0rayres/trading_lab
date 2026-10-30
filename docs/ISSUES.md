@@ -6,7 +6,7 @@
 |----|--------|--------|--------|
 | ISS-001 | fechado | N6 | Imagem EasyPanel sem psycopg e sem vendor pinado |
 | ISS-002 | fechado | N7 | Catálogo de estratégias sem persistência nem Gate B |
-| ISS-003 | validado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
+| ISS-003 | fechado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
 
 ## ISS-001 — Imagem EasyPanel sem psycopg e sem vendor pinado
 
@@ -46,10 +46,12 @@
 |-------|--------|
 | Categoria | improvement |
 | Sprint | N8 |
-| Status | validado |
+| Status | fechado |
 
 **Impacto:** `migrations/001_ledger_up.sql` cria `strategy_states` sem seed. `ledger_migrate.apply()` só aplica DDL e retorna cedo em `already_applied`. `ensure_strategy_defaults()` existe em `src/strategy_catalog.py` mas só corre no caminho de leitura (Gate B / `fetch_strategy_phase`). EasyPanel ficou sem as 7 linhas até INSERT manual ou worker. Homologação não é reprodutível só com migrate.
 
 **Critério de fechamento:** `ledger-migrate apply` (incluindo `already_applied`) chama `strategy_catalog.ensure_strategy_defaults()`; pytest de roundtrip com `LEDGER_DATABASE_URL` deixa 7 linhas em `strategy_states`; runbook em `docs/HOMOLOGATION.md` + nota EasyPanel em `docs/INFRASTRUCTURE.md` / `EASYPANEL.md`; seed insert-if-missing (não overwrite); sem migration `002`; sem reabrir Gate B nem Feature 4 scoring; `LIVE_TRADING_ENABLED` false.
 
 **Fontes:** operador `/pmo plan` opção A 2026-10-30; ISS-002 fechado; evidência EasyPanel: tabela vazia até seed manual.
+
+**Fechamento:** PR #4 merge `81e6e88` em `main`; CI verde; homolog EasyPanel 2026-10-30 — `SELECT strategy_key, phase FROM strategy_states WHERE deleted_at IS NULL` com 7 linhas (fases N7: `signal_copy=paper_limited`, `orb`/`mean_reversion=shadow`, demais `research`).

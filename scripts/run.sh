@@ -119,6 +119,10 @@ case "${1:-idle}" in
    echo "Trading Lab v4.0 research package ready: live trading disabled; automatic Paper integration not homologated."
    exec tail -f /dev/null
    ;;
+ ledger-migrate)
+   shift
+   exec python3 /app/src/ledger_migrate.py "$@"
+   ;;
  prodigy-rank)
    shift
    exec python3 /app/src/prodigy_rank.py "$@"

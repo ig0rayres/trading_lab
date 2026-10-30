@@ -87,6 +87,16 @@ Decisão do operador (2026-10-30): manter **`trading-lab`** + **`trading-lab-web
 
 Mesma build de imagem; volumes `/app/reports` e `/app/vendor` persistentes; **não** substituir deploy EasyPanel atual sem release supervisionada.
 
+### Apply ledger migration (operador)
+
+1. Criar usuário `trading_lab` no Postgres existente (INSERT/SELECT/UPDATE nas tabelas do ledger; sem superuser).
+2. Definir `LEDGER_DATABASE_URL` **somente** no serviço paper-gateway (não no scheduler).
+3. No shell do container: `/app/scripts/run.sh ledger-migrate apply`
+4. Verificar: `/app/scripts/run.sh ledger-migrate status`
+5. Rollback de emergência (somente em homologação): `/app/scripts/run.sh ledger-migrate rollback`
+
+Arquivos SQL: `migrations/001_ledger_up.sql` / `001_ledger_down.sql`. CI executa roundtrip apply/rollback com Postgres efêmero.
+
 ---
 
 ## 9. Próximos passos

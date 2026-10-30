@@ -26,7 +26,7 @@
 | Sprint | Categoria | Gate (resumo) | Status | Tasks | Módulos | Resumo | Linhas |
 |--------|-----------|---------------|--------|-------|---------|--------|--------|
 | D1 | D | CI verde + vendor pinado + pytest com nodeids | concluida | 6 | baseline, vendor | Evidência reprodutível | 80–115 |
-| D2 | D | Tabelas ledger no Postgres + rollback testado | pendente | 5 | ledger | Persistência paper | 117–145 |
+| D2 | D | Tabelas ledger no Postgres + rollback testado | em execucao | 5 | ledger | Persistência paper | 117–145 |
 | D3 | D | Gate A rejeita sinal inválido sem broker | pendente | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
 | D4 | D | Gate B bloqueia ordem fora de limites | pendente | 6 | risk-gate-b, paper-gateway | Risco antes de fila | 180–212 |
 | D5 | D | Paper reconciliado read-only; nenhum live | pendente | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
@@ -88,11 +88,11 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | Alembic/SQL migration alinhada a `docs/db-schema.dbml` | `/arquiteto dados` | D1 |
-| [ ] | P | Teste rollback da migration | `/qa testes` | migration |
-| [ ] | M | Adapter de persistência (append-only; sem `deleted_at` como borracha) | `/dev` | migration |
-| [ ] | P | `.env.example` só com **nomes** de variáveis (DSN) | `/devops` | — |
-| [ ] | P | Documentar runbook de apply na instância existente | `docs/INFRASTRUCTURE.md` | migration |
+| [x] | M | Alembic/SQL migration alinhada a `docs/db-schema.dbml` | `/arquiteto dados` | D1 |
+| [x] | P | Teste rollback da migration | `/qa testes` | migration |
+| [x] | M | Adapter de persistência (append-only; sem `deleted_at` como borracha) | `/dev` | migration |
+| [x] | P | `.env.example` só com **nomes** de variáveis (DSN) | `/devops` | — |
+| [x] | P | Documentar runbook de apply na instância existente | `docs/INFRASTRUCTURE.md` | migration |
 
 ---
 

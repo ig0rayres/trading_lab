@@ -8,6 +8,20 @@
 
 ---
 
+| D2 | ledger | migrations, ledger_store | 32–40 |
+
+---
+
+## Sprint D2 — Ledger Postgres
+
+**Gate:** migration apply/rollback; 8 tabelas; testes CI com Postgres efêmero.
+
+**Entregue (código):** `migrations/001_ledger_*.sql`, `ledger_migrate.py`, `ledger_store.py`, `.env.example`, CI Postgres service.
+
+**Próximo:** Sprint D3 Gate A.
+
+---
+
 ## Sprint D1 — Baseline verificável
 
 **Gate:** CI verde + vendor pinado + pytest (Actions run [41041762290](https://github.com/ig0rayres/trading_lab/actions/runs/41041762290)).

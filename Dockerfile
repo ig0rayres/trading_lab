@@ -5,6 +5,7 @@ COPY src /app/src
 COPY tests /app/tests
 COPY data /app/data
 COPY config /app/config
+COPY migrations /app/migrations
 COPY scripts /app/scripts
 RUN chmod +x /app/scripts/*.sh
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LIVE_TRADING_ENABLED=false

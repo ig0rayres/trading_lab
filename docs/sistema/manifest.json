@@ -1,0 +1,57 @@
+[
+  {
+    "file": "PROJECT-BRIEF.md",
+    "title": "Project brief",
+    "description": "Visão do laboratório e plano de montagem da importação."
+  },
+  {
+    "file": "REQUIREMENTS.md",
+    "title": "Requisitos",
+    "description": "Contrato de produto: pesquisa, gates, estratégias, paper e o que fica fora."
+  },
+  {
+    "file": "ARCHITECTURE.md",
+    "title": "Arquitetura",
+    "description": "Monolito Python, dois processos, gates antes do paper."
+  },
+  {
+    "file": "DATABASE.md",
+    "title": "Banco",
+    "description": "Postgres existente para o ledger de paper. Pesquisa continua em JSON."
+  },
+  {
+    "file": "api-spec.yaml",
+    "title": "Contrato HTTP",
+    "description": "So o webhook e a leitura do dashboard. Nao ha CRUD de ordem."
+  },
+  {
+    "file": "db-schema.dbml",
+    "title": "DBML",
+    "description": "Oito tabelas do ledger, com os mesmos nomes de campo da spec."
+  },
+  {
+    "file": "LEGACY-ANALYSIS.md",
+    "title": "Legado",
+    "description": "O que o snapshot ja separa e a divida ate o contrato novo."
+  },
+  {
+    "file": "INFRASTRUCTURE.md",
+    "title": "Infraestrutura",
+    "description": "CI-only, Docker, vendor e secrets por nome."
+  },
+  {
+    "file": "ROADMAP.md",
+    "title": "Roadmap",
+    "description": "Sprints D1-D5 ate homologacao paper."
+  },
+  {
+    "file": "TEST-EVIDENCE.md",
+    "title": "Evidencia de testes",
+    "description": "vendor_verify, pytest e CI — Sprint D1."
+  },
+  {
+    "file": "VENDOR-PIN.md",
+    "title": "Vendor pin",
+    "description": "SHA revisado do day-trader-skill."
+  }
+]

@@ -12,38 +12,75 @@
       "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
     }
   ],
-  "fase_atual": "0",
+  "fase_atual": "9",
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Triagem concluida",
-  "sprint_atual": null,
+  "fase_nome": "Sprint D1 — baseline verificavel (ativa)",
+  "sprint_atual": "D1",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-29T18:41:00-03:00",
+  "ultimo_update": "2026-10-30T10:25:00-03:00",
   "modulos": [
     {
-      "nome": "v4-research-scheduler",
-      "descricao": "Ciclo de pesquisa a cada 15 min sobre o universo de 7 simbolos. Nao envia ordens.",
-      "status": "concluido",
-      "api": []
+      "nome": "market-data",
+      "descricao": "Feeds publicos e saneamento. Sem ordem.",
+      "status": "em_andamento",
+      "api": [
+        "v4-equity-feed",
+        "v4-crypto-feed",
+        "v4-import-prices"
+      ]
     },
     {
-      "nome": "v4-market-decision-risk",
-      "descricao": "Feeds publicos, pipeline, ciclo de decisao, preview de risco e merge conservador de portfolio. Research/shadow.",
-      "status": "concluido",
-      "api": []
+      "nome": "research-cycle",
+      "descricao": "Scheduler de pesquisa e manifesto. orders_sent permanece 0.",
+      "status": "em_andamento",
+      "api": [
+        "v4-scheduler",
+        "v4-run-once"
+      ]
     },
     {
-      "nome": "paper-gateway-webhook",
-      "descricao": "Modulos de Alpaca paper, TradingView webhook, News First e copy existem no codigo e nao estao ligados ao ciclo do MVP.",
+      "nome": "strategy-catalog",
+      "descricao": "Fase de cada familia. ORB em shadow. Formula ausente nao e inventada.",
       "status": "pendente",
       "api": []
+    },
+    {
+      "nome": "signal-gate-a",
+      "descricao": "Autenticidade, frescor e idempotencia. Nao envia ordem.",
+      "status": "pendente",
+      "api": [
+        "tv-webhook"
+      ]
+    },
+    {
+      "nome": "risk-gate-b",
+      "descricao": "Limites de capital, calendario e kill switch.",
+      "status": "pendente",
+      "api": []
+    },
+    {
+      "nome": "paper-gateway",
+      "descricao": "Unica porta Alpaca Paper, depois dos dois gates.",
+      "status": "pendente",
+      "api": []
+    },
+    {
+      "nome": "observability",
+      "descricao": "Dashboard de leitura e parada. Porta publica so com auth.",
+      "status": "pendente",
+      "api": [
+        "v4-dashboard"
+      ]
     }
   ],
   "proximos_passos": [
-    "Em uma nova conversa, rodar /analista planejar para fechar requisitos em cima deste legado"
+    "Operador: criar repo remoto, push branch sprint/D1, anexar URL do CI em TEST-EVIDENCE",
+    "Pytest: venv local ou primeira execucao do workflow CI",
+    "D1.6: atualizar REQUIREMENTS quando pytest verde"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -51,22 +88,134 @@
     "Scheduler research-only com invalidacao de manifesto obsoleto (presente no snapshot mais novo)",
     "Dashboard somente leitura que nao promove manifesto adulterado a sucesso"
   ],
+  "features_concluidas_docs": [
+    "docs/REQUIREMENTS.md v0.1 em revisao",
+    "docs/INFRASTRUCTURE.md CI-only",
+    "docs/ROADMAP.md sprints D1-D5 proposta"
+  ],
   "features_pendentes": [
     "Reexecutar pytest neste ambiente (contagens 224 a 395 sao relato do pacote, nao evidencia desta sessao)",
-    "Vendor pinado de day-trader-skill ausente no ZIP",
+    "Vendor pinado de day-trader-skill (submodule D1; pytest suite ainda sem evidencia nesta maquina)",
     "Ponte sinal, News First, risk gate, paper gateway, fill, ledger e reconciliacao nao homologada",
     "Edge de estrategia nao validado (ORB intraday reportado com resultado negativo)",
     "Export do que esta instalado no EasyPanel nao veio neste corte"
   ],
   "decisoes_tecnicas": [
     "Nao reiniciar o projeto: a base e o snapshot trading-lab-v4-mvp-pesquisa-validado, mais novo que trading-lab-v4-mvp-implantavel",
-    "Paper de referencia: R$5000, risco R$50 por operacao, maximo 3 posicoes",
+    "Paper de referencia: R$5000, risco R$50 por operacao, teto R$100, maximo 3 posicoes, risco agregado R$200, perda diaria R$200, semanal R$500, Prodigy R$20, sem alavancagem",
     "LIVE_TRADING permanece desligado ate evidencia de execucao, conciliacao, seguranca e edge liquido de custos",
     "Nao substituir os servicos EasyPanel trading-lab e trading-lab-webhook com este pacote",
     "Nao tratar HTTP 200, PAPER_GATEWAY_QUEUE_ONLY ou OK_RESEARCH_ONLY como ordem executada",
     "Collective2: nenhum provedor aprovado para paper-copy neste corte",
-    "baseline decisions_applied_until=427 (max em SETUP-DECISIONS na importacao)"
+    "baseline decisions_applied_until=427 (max em SETUP-DECISIONS na importacao)",
+    "BD: PostgreSQL da instancia existente",
+    "Tier: 1, um no, sem servidor novo",
+    "Composicao: Nivel 1, Postgres mais JSON de pesquisa, sem cache"
   ],
-  "comandos_recentes": ["/pmo project"],
-  "contexto_rapido": "Sessao criada via /pmo project na importacao do ZIP v4 de pesquisa. Cenario LEGADO, fase 0, sem sprint_atual. Pytest ainda nao reexecutado. baseline=427."
+  "perfil_usuario": "semi-tecnico",
+  "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
+  "comandos_recentes": [
+    "/pmo sprint D1"
+  ],
+  "contexto_rapido": "Sprint D1: vendor+CI+vendor_verify ok; pytest e PR aguardam repo remoto ou venv local.",
+  "sprint_tasks": [
+    {
+      "id": "D1.1",
+      "title": "Vendor submodule e VENDOR-PIN.md",
+      "size": "P",
+      "status": "done",
+      "depends_on": [],
+      "files": ["vendor/day-trader-skill", "docs/VENDOR-PIN.md", ".gitmodules"],
+      "bom_ref": "BOM-2"
+    },
+    {
+      "id": "D1.2",
+      "title": "CI pytest + docker build",
+      "size": "P",
+      "status": "done",
+      "depends_on": [],
+      "files": [".github/workflows/ci.yml", "requirements-dev.txt", ".dockerignore", "docs/INFRASTRUCTURE.md"],
+      "bom_ref": "BOM-1"
+    },
+    {
+      "id": "D1.3",
+      "title": "Remote Git e PR",
+      "size": "P",
+      "status": "pending",
+      "depends_on": ["D1.1", "D1.5"],
+      "files": [],
+      "notes": "Aguarda operador criar repositorio remoto; CI na primeira push."
+    },
+    {
+      "id": "D1.4",
+      "title": "vendor_verify e parity offline",
+      "size": "M",
+      "status": "done",
+      "depends_on": ["D1.1"],
+      "files": ["src/vendor_verify.py", "docs/TEST-EVIDENCE.md"],
+      "notes": "vendor_verify PASS; parity.py exige artefatos v0.5 — documentado."
+    },
+    {
+      "id": "D1.5",
+      "title": "Pytest evidencia (nodeids)",
+      "size": "P",
+      "status": "in_progress",
+      "depends_on": ["D1.1"],
+      "files": ["docs/TEST-EVIDENCE.md"]
+    },
+    {
+      "id": "D1.6",
+      "title": "Atualizar REQUIREMENTS criterio pytest",
+      "size": "P",
+      "status": "pending",
+      "depends_on": ["D1.5"],
+      "files": ["docs/REQUIREMENTS.md"]
+    }
+  ],
+  "checkpoint": {
+    "sprint": "D1",
+    "phase": "implementation",
+    "branch": "sprint/D1",
+    "relevant_paths": [
+      "vendor/",
+      "docs/VENDOR-PIN.md",
+      ".github/workflows/",
+      "requirements-dev.txt",
+      "docs/REQUIREMENTS.md",
+      "docs/TEST-EVIDENCE.md"
+    ],
+    "last_completed_task": "D1.4",
+    "current_task": "D1.5",
+    "timestamp": "2026-10-30T10:25:00-03:00"
+  },
+  "artefatos_gerados": [
+    ".cursor/rules/10-general.mdc",
+    ".cursor/rules/50-database.mdc",
+    ".cursor/rules/60-testing.mdc",
+    ".cursor/skills/paper-order-gate/SKILL.md",
+    ".cursor/skills/paper-order-gate/references/gate-sequence.md",
+    ".cursor/skills/signal-ingest/SKILL.md",
+    ".cursor/skills/signal-ingest/references/ingest-rules.md",
+    "docs/ROADMAP.md",
+    "docs/INFRASTRUCTURE.md",
+    "docs/VENDOR-PIN.md",
+    ".github/workflows/ci.yml",
+    "requirements-dev.txt",
+    ".dockerignore"
+  ],
+  "anchor": {
+    "persona": "sprint-init",
+    "phase": "Sprint D1 implementation",
+    "intent": "Baseline verificavel: vendor pin, pytest real, CI verde.",
+    "changes_made": "Branch sprint/D1; sprint_atual D1; tasks D1.1-D1.6; D1.2 marcada done.",
+    "decisions": "Submodule vendor (nao reimplementar upstream). Sem live trading.",
+    "next_steps": "Concluir D1.1 vendor; D1.4-D1.5 evidencia; D1.3 PR.",
+    "updated_at": "2026-10-30T10:25:00-03:00"
+  },
+  "compact_marker": {
+    "compacted_at": "2026-10-30T10:10:15Z",
+    "usage_percent": 95.6365,
+    "messages_lost": 362
+  },
+  "compact_count": 1
 }

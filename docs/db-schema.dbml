@@ -1,0 +1,131 @@
+// Gerado pelo analista-sistema na Fase 5
+// Banco: PostgreSQL da instancia existente
+// Pesquisa permanece em arquivo JSON. Estas tabelas sao so o ledger de paper.
+// PK uuid via gen_random_uuid() (nucleo do Postgres 13+). Se a instancia for anterior, a migration troca para a extensao uuid-ossp.
+
+Table strategy_states {
+  id uuid [pk, default: `gen_random_uuid()`]
+  strategy_key varchar(64) [not null, unique, note: 'news_first|momentum|ta_barato|signal_copy|prodigy_15d|orb|mean_reversion']
+  phase varchar(32) [not null, note: 'research|shadow|paper_limited|paper_validated']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'soft delete']
+
+  indexes {
+    strategy_key [name: 'idx_strategy_states_strategy_key', unique]
+  }
+}
+
+Table signal_events {
+  id uuid [pk, default: `gen_random_uuid()`]
+  idempotency_key varchar(128) [not null, unique]
+  source varchar(64) [not null]
+  symbol varchar(32) [not null]
+  side varchar(8) [not null, note: 'long|short']
+  status varchar(32) [not null, note: 'received|rejected|accepted']
+  reject_code varchar(64) [null]
+  received_at timestamp [not null]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'soft delete']
+
+  indexes {
+    idempotency_key [name: 'idx_signal_events_idempotency_key', unique]
+    status [name: 'idx_signal_events_status']
+  }
+}
+
+Table risk_decisions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  signal_event_id uuid [not null, ref: > signal_events.id]
+  strategy_key varchar(64) [not null]
+  decision varchar(32) [not null, note: 'rejected|paper_allowed']
+  reject_code varchar(64) [null]
+  risk_amount_cents bigint [not null, default: 0, note: 'BRL cents']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'soft delete']
+
+  indexes {
+    signal_event_id [name: 'idx_risk_decisions_signal_event_id']
+    decision [name: 'idx_risk_decisions_decision']
+  }
+}
+
+Table positions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  symbol varchar(32) [not null]
+  side varchar(8) [not null, note: 'long|short']
+  qty numeric [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'soft delete. Encerrar posicao nao e apagar a linha historica sem trilha.']
+
+  indexes {
+    symbol [name: 'idx_positions_symbol']
+  }
+}
+
+Table paper_orders {
+  id uuid [pk, default: `gen_random_uuid()`]
+  risk_decision_id uuid [not null, unique, ref: > risk_decisions.id]
+  position_id uuid [null, ref: > positions.id]
+  client_order_id varchar(128) [not null, unique, note: 'aceita prefixos nf- e demo-']
+  broker_order_id varchar(128) [null, unique]
+  symbol varchar(32) [not null]
+  side varchar(8) [not null, note: 'long|short']
+  status varchar(32) [not null]
+  qty numeric [not null]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'coluna por convencao. A aplicacao nao esconde ordem com soft delete.']
+
+  indexes {
+    risk_decision_id [name: 'idx_paper_orders_risk_decision_id', unique]
+    position_id [name: 'idx_paper_orders_position_id']
+    client_order_id [name: 'idx_paper_orders_client_order_id', unique]
+    broker_order_id [name: 'idx_paper_orders_broker_order_id', unique]
+    status [name: 'idx_paper_orders_status']
+  }
+}
+
+Table paper_fills {
+  id uuid [pk, default: `gen_random_uuid()`]
+  paper_order_id uuid [not null, ref: > paper_orders.id]
+  broker_fill_id varchar(128) [not null, unique]
+  qty numeric [not null]
+  price_cents bigint [not null, note: 'BRL cents']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'coluna por convencao. Fill nao se apaga. Correcao e ledger_entries de ajuste.']
+
+  indexes {
+    paper_order_id [name: 'idx_paper_fills_paper_order_id']
+    broker_fill_id [name: 'idx_paper_fills_broker_fill_id', unique]
+  }
+}
+
+Table ledger_entries {
+  id uuid [pk, default: `gen_random_uuid()`]
+  paper_fill_id uuid [not null, ref: > paper_fills.id]
+  amount_cents bigint [not null, note: 'BRL cents. Negativo e custo ou perda.']
+  kind varchar(32) [not null, note: 'fill|fee|adjustment']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'coluna por convencao. Linha de ledger nao se apaga.']
+
+  indexes {
+    paper_fill_id [name: 'idx_ledger_entries_paper_fill_id']
+    kind [name: 'idx_ledger_entries_kind']
+  }
+}
+
+Table control_flags {
+  id uuid [pk, default: `gen_random_uuid()`]
+  kill_switch_on boolean [not null, default: false]
+  max_risk_per_trade_cents bigint [not null, note: 'teto R$100 = 10000 cents']
+  prodigy_risk_cents bigint [not null, note: 'R$20 = 2000 cents']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: 'soft delete']
+}

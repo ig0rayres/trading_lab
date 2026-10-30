@@ -1,0 +1,26 @@
+---
+description: Project-wide conventions for the Trading Lab research snapshot. English code and commits, Portuguese for the operator, live trading stays off.
+alwaysApply: true
+---
+
+# General
+
+## 1. Language
+
+Code, comments, and commit messages are English. Talk to the operator in Brazilian Portuguese. Commits use Conventional Commits.
+
+## 2. Reuse the imported tree
+
+Change `src/`, `tests/`, `scripts/run.sh`, `config/universe.json`, and the existing `Dockerfile` in place. Do not create a parallel package. Do not replace the EasyPanel services `trading-lab` and `trading-lab-webhook` from this snapshot.
+
+## 3. Upstream
+
+`trader-entry`, `trader-exit`, `trader-budget`, `trader-risk`, and `trader-scanner` come from `vendor/day-trader-skill` through `src/original.py`. If that checkout is missing, stop and say so. Do not reimplement those functions.
+
+## 4. Live trading
+
+`LIVE_TRADING_ENABLED` stays false. Do not add a live broker host, a live key, or a path that places a real-money order.
+
+## 5. Evidence
+
+A passing HTTP status, `PAPER_GATEWAY_QUEUE_ONLY`, or `OK_RESEARCH_ONLY` is not a fill. Do not invent strategy thresholds that are not already in the recovered code.

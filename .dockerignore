@@ -1,0 +1,17 @@
+.git
+.github
+.cursor
+docs
+*.md
+!data/**
+reports
+__pycache__
+*.py[cod]
+.pytest_cache
+.venv
+venv
+*.zip
+trading-lab-v4-mvp-implantavel
+trading-lab-v4-mvp-pesquisa-validado (1)
+.cursorsession
+.cursorsession.lock

@@ -1,0 +1,23 @@
+---
+description: Python module boundaries for the Trading Lab monolith. The research scheduler never imports a broker client. Orders leave only through the paper gateway after both gates.
+alwaysApply: false
+globs: src/**/*.py,scripts/**/*.sh
+---
+
+# Backend Python
+
+## 1. Shape
+
+One codebase, two processes. Research runs `v4-scheduler`. Ingress runs `tv-webhook`. Both use `scripts/run.sh`. There is no NestJS or Laravel app beside this tree.
+
+## 2. Who may talk to the broker
+
+Only the paper-gateway modules may call Alpaca, and only the paper host. `src/v4_scheduler.py` and `src/v4_run_once.py` must not import a broker client.
+
+## 3. Order path
+
+A broker submit requires a `signal_events` row accepted by Gate A and a `risk_decisions` row with `decision = paper_allowed`. The research cycle keeps `orders_sent` at 0.
+
+## 4. Strategy phase
+
+ORB and mean reversion stay in research or shadow. Collective2 copy stays closed. Do not add a numeric threshold for a strategy whose formula was not recovered.

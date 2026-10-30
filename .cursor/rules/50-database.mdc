@@ -1,0 +1,23 @@
+---
+description: Ledger lives in the existing PostgreSQL instance. Research reports stay JSON files. Do not soft-delete fills or ledger rows.
+alwaysApply: false
+globs: docs/DATABASE.md,docs/db-schema.dbml,src/**/*.py
+---
+
+# Database
+
+## 1. Two stores
+
+Research output stays JSON on the reports volume. Paper orders, fills, positions, and ledger rows go to the PostgreSQL instance the operator already has. Do not add Valkey, Redis, or ClickHouse.
+
+## 2. Schema shape
+
+Follow `docs/db-schema.dbml`. UUID primary keys. `created_at` and `updated_at` on every table. No autoincrement. Snake_case plural tables.
+
+## 3. Fills are append-only
+
+`deleted_at` exists because of the project convention. Application code must not set it on `paper_orders`, `paper_fills`, or `ledger_entries` to hide a mistake. A correction is a new `ledger_entries` row with `kind = adjustment`.
+
+## 4. Secrets
+
+No DSN, password, or broker key in migrations, tests, or markdown.

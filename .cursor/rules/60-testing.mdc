@@ -1,0 +1,19 @@
+---
+description: Pytest is the suite. Do not treat historical ZIP test counts as a result from this machine. Assert behavior, including rejected orders.
+alwaysApply: false
+globs: tests/**/*.py,pytest.ini
+---
+
+# Testing
+
+## 1. Runner
+
+Use pytest with `pythonpath = src`, as in `pytest.ini`. A quoted count from a ZIP name is not a test result.
+
+## 2. What a test must show
+
+Cover the behavior under change. For anything on the order path, include the reject case that creates no broker order. Research-cycle tests keep `orders_sent` at 0.
+
+## 3. Fixtures
+
+Use local fixtures and the synthetic smoke data already in the repo. Do not call a live broker and do not require real API keys.

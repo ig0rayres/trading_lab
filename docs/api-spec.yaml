@@ -1,0 +1,219 @@
+openapi: 3.0.3
+info:
+  title: Trading Lab HTTP boundary
+  version: 0.1.0
+  description: >
+    Gerado pelo analista-sistema na Fase 5.
+    Este laboratorio nao expoe CRUD. Os modulos conversam por comando e arquivo,
+    como em docs/ARCHITECTURE.md. Aqui so entram as duas bordas HTTP reais:
+    o webhook do Gate A e a leitura do dashboard.
+    Criar ordem nao e um endpoint. paper_orders nasce dentro do paper-gateway
+    depois dos dois gates.
+servers:
+  - url: http://127.0.0.1
+    description: Processo local. Sem porta publica neste corte.
+tags:
+  - name: signal-gate-a
+    description: Autenticidade do sinal. Nao envia ordem.
+  - name: observability
+    description: Leitura. Nao envia ordem.
+paths:
+  /webhooks/tradingview:
+    post:
+      tags: [signal-gate-a]
+      summary: Receber sinal do TradingView
+      operationId: receiveTradingViewSignal
+      security:
+        - webhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignalEventInput'
+      responses:
+        '200':
+          description: Evento autentico gravado. status no corpo diz se foi accepted ou rejected. Nao e ordem na corretora.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignalEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /dashboard/snapshot:
+    get:
+      tags: [observability]
+      summary: Ler o ultimo ciclo, rejeicoes e ledger visivel
+      operationId: getDashboardSnapshot
+      security:
+        - dashboardAuth: []
+      responses:
+        '200':
+          description: Fotografia somente leitura.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  securitySchemes:
+    webhookSecret:
+      type: apiKey
+      in: header
+      name: X-Webhook-Token
+      description: Segredo no ambiente. Tamanho minimo 32. O valor nao entra nesta spec.
+    dashboardAuth:
+      type: http
+      scheme: bearer
+      description: Obrigatorio se a porta for publicada. O MVP de pesquisa nao publica porta.
+  responses:
+    Unauthorized:
+      description: Nao autenticado
+    Forbidden:
+      description: Autenticado sem permissao, ou live ligado
+    NotFound:
+      description: Recurso ausente
+    Unprocessable:
+      description: Validacao falhou
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorBody'
+    ServerError:
+      description: Falha interna sem vazar segredo
+  schemas:
+    ErrorBody:
+      type: object
+      required: [reject_code]
+      properties:
+        reject_code:
+          type: string
+        status:
+          type: string
+    SignalEventInput:
+      type: object
+      required: [idempotency_key, source, symbol, side]
+      properties:
+        idempotency_key:
+          type: string
+          maxLength: 128
+        source:
+          type: string
+          maxLength: 64
+        symbol:
+          type: string
+          maxLength: 32
+        side:
+          type: string
+          enum: [long, short]
+        strategy_key:
+          type: string
+          maxLength: 64
+    SignalEvent:
+      type: object
+      description: Mesmos nomes de signal_events no DBML.
+      required: [id, idempotency_key, source, symbol, side, status, received_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+        source:
+          type: string
+        symbol:
+          type: string
+        side:
+          type: string
+          enum: [long, short]
+        status:
+          type: string
+          enum: [received, rejected, accepted]
+        reject_code:
+          type: string
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+    RiskDecision:
+      type: object
+      required: [id, signal_event_id, strategy_key, decision]
+      properties:
+        id:
+          type: string
+          format: uuid
+        signal_event_id:
+          type: string
+          format: uuid
+        strategy_key:
+          type: string
+        decision:
+          type: string
+          enum: [rejected, paper_allowed]
+        reject_code:
+          type: string
+          nullable: true
+        risk_amount_cents:
+          type: integer
+          format: int64
+    PaperOrder:
+      type: object
+      required: [id, risk_decision_id, client_order_id, symbol, side, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        risk_decision_id:
+          type: string
+          format: uuid
+        client_order_id:
+          type: string
+        broker_order_id:
+          type: string
+          nullable: true
+        symbol:
+          type: string
+        side:
+          type: string
+          enum: [long, short]
+        status:
+          type: string
+        qty:
+          type: string
+          description: Decimal como texto para nao perder precisao.
+    DashboardSnapshot:
+      type: object
+      required: [orders_sent, kill_switch_on]
+      properties:
+        orders_sent:
+          type: integer
+          description: No ciclo de pesquisa permanece 0.
+        kill_switch_on:
+          type: boolean
+        research_status:
+          type: string
+        signal_events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignalEvent'
+        risk_decisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskDecision'
+        paper_orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaperOrder'

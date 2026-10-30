@@ -1,0 +1,28 @@
+---
+description: Sends new bugs, features, and improvements to triage before any code change. Does not block an active sprint task already listed in the roadmap.
+alwaysApply: true
+---
+
+# No Cowboy Coding — Triage Gate
+
+## 1. Rule
+
+When the user reports a new bug, improvement, feature, or unexpected behavior, route it to triage. Do not plan or implement it in the same turn.
+
+## 2. What the agent must do
+
+1. Acknowledge the finding.
+2. Tell the user it has to pass triage before implementation.
+3. Route with `/pmo plan` or `/jarvis` and the short description.
+4. Do not list files to change or start coding for that new item.
+
+## 3. What this rule does not block
+
+- A task already written in `docs/ROADMAP.md` for the active sprint.
+- A correction already written in `docs/FINDINGS.md`.
+- A question about how the current code works.
+- Reading `src/`, `tests/`, `scripts/run.sh`, and `Dockerfile`. Those files stay the implementation.
+
+## 4. Project boundary
+
+The imported Python tree is the product code. A new idea does not justify a second implementation beside `src/`.

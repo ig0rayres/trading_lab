@@ -1,4 +1,7 @@
 .context-snapshot.md
+
+# Beesy pre-flight discovery cache (local)
+docs/.discovery.json
 .cursor/journal-*.jsonl
 *.zip
 

@@ -87,9 +87,9 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 - Segredos não entram em documentação nem em log. O requisito de tamanho citado no serviço foi token de webhook com pelo menos 32 caracteres e segredo de copy com pelo menos 24. Os valores não são registrados aqui.
 
 **Critérios de aceite:**
-- [ ] Sinal inválido é rejeitado e nenhuma ordem é criada.
-- [ ] O mesmo evento entregue duas vezes não abre duas posições.
-- [ ] A trilha guarda motivo, entrada sanitizada e timestamp.
+- [x] Sinal inválido é rejeitado e nenhuma ordem é criada (`tests/test_tradingview_webhook.py`, `orders_sent` ausente ou 0 no caminho de fila).
+- [x] O mesmo evento entregue duas vezes não abre duas posições (`DUPLICATE_IGNORED` + idempotência na fila).
+- [x] Com `LEDGER_DATABASE_URL`, a trilha em `signal_events` guarda motivo (`reject_code`), status e timestamp (`tests/test_gate_a_signal.py`).
 
 ### Feature 3: Gate B — risco e permissão de paper
 

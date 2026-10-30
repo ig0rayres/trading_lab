@@ -13,6 +13,24 @@ from urllib.parse import urlsplit
 
 QUEUE=Path(os.environ.get('TV_QUEUE_DIR','/app/reports/webhooks/pending'))
 FIELDS={'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry','stop','target','quantity','ttl_seconds'}
+_ENTRY = None
+
+def _entry_module():
+    global _ENTRY
+    if _ENTRY is None:
+        from original import load_original
+        _ENTRY = load_original().entry
+    return _ENTRY
+
+def _within_regular_session(now):
+    from zoneinfo import ZoneInfo
+    ny = now.astimezone(ZoneInfo('America/New_York'))
+    sess = _entry_module().session(ny.date())
+    if sess is None:
+        return False
+    open_t, close_t = sess
+    t = ny.time()
+    return open_t <= t <= close_t
 
 def _respond(payload, status, body):
     from gate_a_signal import maybe_persist
@@ -29,6 +47,8 @@ def ingest(payload,secret,queue=QUEUE,now=None):
         return _respond(payload,422,{'status':'REJECTED','reason':'INVALID_SIGNAL_ID'})
     if payload.get('side')!='buy' or payload.get('asset_class')!='us_equity':
         return _respond(payload,422,{'status':'REJECTED','reason':'UNSUPPORTED_ASSET_OR_SIDE'})
+    if not _within_regular_session(now):
+        return _respond(payload,422,{'status':'REJECTED','reason':'OUTSIDE_SESSION'})
     try:
         ts=datetime.fromisoformat(payload['sent_at_utc'].replace('Z','+00:00'))
         if ts.tzinfo is None:raise ValueError()

@@ -105,11 +105,11 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | Extrair/contratar Gate A conforme `docs/api-spec.yaml` + skill `signal-ingest` | `/dev` | D1 |
-| [ ] | P | Testes: sinal inválido → código de motivo, zero ordem | `/qa testes` | Gate A |
+| [x] | M | Extrair/contratar Gate A conforme `docs/api-spec.yaml` + skill `signal-ingest` | `/dev` | D1 |
+| [x] | P | Testes: sinal inválido → código de motivo, zero ordem | `/qa testes` | Gate A |
 | [ ] | M | Integrar News First / copy apenas como **entrada** auditada (sem broker) | `/dev` | Gate A |
-| [ ] | P | Calendário/sessão: recusar fora de horário (upstream `session`) | `/dev` | vendor |
-| [ ] | P | Atualizar `docs/REQUIREMENTS.md` Feature 2 critérios | `/pmo` | testes |
+| [x] | P | Calendário/sessão: recusar fora de horário (upstream `session`) | `/dev` | vendor |
+| [x] | P | Atualizar `docs/REQUIREMENTS.md` Feature 2 critérios | `/pmo` | testes |
 | [ ] | P | Registrar achados abertos em `docs/FINDINGS.md` se gap | `/pmo triar` | — |
 
 ---

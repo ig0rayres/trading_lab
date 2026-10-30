@@ -65,6 +65,15 @@ Gate D1 pytest/docker: **closed** via CI run above. Re-run locally optional (`do
 
 Merged to `main` after verify (2026-10-30).
 
+## Sprint D3 — Gate A (em progresso)
+
+| Run | Branch | Result |
+|-----|--------|--------|
+| [41044496969](https://github.com/ig0rayres/trading_lab/actions/runs/41044496969) | `main` @ `146ba5a` | merge D2+Gate A persist — poll via API |
+| (next) | `sprint/D3` | session gate + rejection tests |
+
+Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test_gate_a_signal.py` (ledger rows when `LEDGER_DATABASE_URL` set in CI).
+
 ## Sprint D1.3 (Git remote)
 
 | Item | Value |

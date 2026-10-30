@@ -16,8 +16,8 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint D2 — ledger Postgres (ativa)",
-  "sprint_atual": "D2",
+  "fase_nome": "Sprint D3 — Gate A (ativa)",
+  "sprint_atual": "D3",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "/qa validar na D1",
-    "Sprint D2 ledger Postgres",
-    "EasyPanel: 1 servico pesquisa se webhook inativo"
+    "Aguardar CI sprint/D3 após push",
+    "News First audit trail (gap ROADMAP)",
+    "Sprint D4 Gate B"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -116,11 +116,6 @@
     "/rock continuar D1 closeout"
   ],
   "contexto_rapido": "Sprint D2 pushed (d68a845); aguarda CI. Branch sprint/D2.",
-  "proximos_passos": [
-    "Ver Actions na branch sprint/D2",
-    "ledger-migrate apply no Postgres do operador",
-    "Sprint D3 Gate A"
-  ],
   "sprint_tasks": [
     {
       "id": "D1.1",
@@ -128,7 +123,11 @@
       "size": "P",
       "status": "done",
       "depends_on": [],
-      "files": ["vendor/day-trader-skill", "docs/VENDOR-PIN.md", ".gitmodules"],
+      "files": [
+        "vendor/day-trader-skill",
+        "docs/VENDOR-PIN.md",
+        ".gitmodules"
+      ],
       "bom_ref": "BOM-2"
     },
     {
@@ -137,7 +136,12 @@
       "size": "P",
       "status": "done",
       "depends_on": [],
-      "files": [".github/workflows/ci.yml", "requirements-dev.txt", ".dockerignore", "docs/INFRASTRUCTURE.md"],
+      "files": [
+        ".github/workflows/ci.yml",
+        "requirements-dev.txt",
+        ".dockerignore",
+        "docs/INFRASTRUCTURE.md"
+      ],
       "bom_ref": "BOM-1"
     },
     {
@@ -145,7 +149,10 @@
       "title": "Remote Git e PR",
       "size": "P",
       "status": "done",
-      "depends_on": ["D1.1", "D1.5"],
+      "depends_on": [
+        "D1.1",
+        "D1.5"
+      ],
       "files": [],
       "notes": "origin + main; CI run 41041762290 Success. PR opcional."
     },
@@ -154,8 +161,13 @@
       "title": "vendor_verify e parity offline",
       "size": "M",
       "status": "done",
-      "depends_on": ["D1.1"],
-      "files": ["src/vendor_verify.py", "docs/TEST-EVIDENCE.md"],
+      "depends_on": [
+        "D1.1"
+      ],
+      "files": [
+        "src/vendor_verify.py",
+        "docs/TEST-EVIDENCE.md"
+      ],
       "notes": "vendor_verify PASS; parity.py exige artefatos v0.5 — documentado."
     },
     {
@@ -163,26 +175,39 @@
       "title": "Pytest evidencia (nodeids)",
       "size": "P",
       "status": "done",
-      "depends_on": ["D1.1"],
-      "files": ["docs/TEST-EVIDENCE.md"]
+      "depends_on": [
+        "D1.1"
+      ],
+      "files": [
+        "docs/TEST-EVIDENCE.md"
+      ]
     },
     {
       "id": "D1.6",
       "title": "Atualizar REQUIREMENTS criterio pytest",
       "size": "P",
       "status": "done",
-      "depends_on": ["D1.5"],
-      "files": ["docs/REQUIREMENTS.md"]
+      "depends_on": [
+        "D1.5"
+      ],
+      "files": [
+        "docs/REQUIREMENTS.md"
+      ]
     }
   ],
   "checkpoint": {
-    "sprint": "D2",
+    "sprint": "D3",
     "phase": "testing",
-    "branch": "sprint/D2",
-    "relevant_paths": ["migrations/", "src/ledger_migrate.py", "src/ledger_store.py", "tests/test_ledger_migration.py"],
-    "last_completed_task": "D2.5",
-    "current_task": null,
-    "timestamp": "2026-10-30T11:00:00-03:00"
+    "branch": "sprint/D3",
+    "relevant_paths": [
+      "src/tradingview_webhook.py",
+      "src/gate_a_signal.py",
+      "tests/test_tradingview_webhook.py",
+      "tests/test_gate_a_signal.py"
+    ],
+    "last_completed_task": "D3 session+tests",
+    "current_task": "D3 News First audit",
+    "timestamp": "2026-10-30T12:00:00-03:00"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -209,9 +234,9 @@
     "updated_at": "2026-10-30T10:45:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T10:10:15Z",
-    "usage_percent": 95.6365,
-    "messages_lost": 362
+    "compacted_at": "2026-10-30T10:57:19Z",
+    "usage_percent": 91.206,
+    "messages_lost": 414
   },
-  "compact_count": 1
+  "compact_count": 2
 }

@@ -117,6 +117,18 @@ Arquivos SQL: `migrations/001_ledger_up.sql` / `001_ledger_down.sql`. CI executa
 
 ## 9. Próximos passos
 
-1. **Sprint D2** — migrations ledger Postgres (`docs/ROADMAP.md`).
-2. Opcional: `/devops infra` — topologia alinhada ao Postgres e volumes de reports.
-3. Deploy GitHub → EasyPanel quando houver sprint de infra aprovada.
+1. Homologação operador: `docs/HOMOLOGATION.md`.
+2. Comparativo EasyPanel: SHA imagem vs `git rev-parse HEAD` (abaixo).
+3. Backlog D1: `parity.py` / F-003 quando artefatos orb existirem.
+
+### Reconcile + ledger (read-only)
+
+- `PAPER_RECONCILE_LEDGER_APPLY=true` após `ledger-migrate apply`.
+- `scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile.json`
+- Campo `ledger_apply` no JSON; **`broker_reconciled` permanece false**.
+
+### EasyPanel — export comparativo (operador)
+
+Registrar no diário operacional: SHA da imagem no painel vs commit deste repositório. Não substituir serviços sem release supervisionada.
+
+---

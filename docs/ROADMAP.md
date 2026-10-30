@@ -29,7 +29,9 @@
 | D2 | D | Tabelas ledger no Postgres + rollback testado | concluida* | 5 | ledger | Persistência paper | 117–145 |
 | D3 | D | Gate A rejeita sinal inválido sem broker | concluida | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
 | D4 | D | Gate B + fila paper sem fill | concluida | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
-| D5 | D | Paper reconciliado read-only; nenhum live | pendente | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
+| D5 | D | Paper reconciliado read-only; nenhum live | concluida* | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
+
+\* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
 \* D2: migration/CI ok; `.env.example` alinhado (F-004 fechado).
 
@@ -145,11 +147,11 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | `v4_alpaca_reconcile` integrado ao ledger (READ_ONLY) | `/dev` | D4 |
-| [ ] | M | Trilha de evidência: shadow vs paper no dashboard | `/dev` | D4 |
-| [ ] | P | Checklist de homologação operador (sem live) | `docs/REQUIREMENTS.md` | — |
-| [ ] | P | Export comparativo EasyPanel vs snapshot (SHA imagem) | operador | — |
-| [ ] | M | Fechar critérios de aceite Features 2–4 em REQUIREMENTS | `/pmo` | reconcile |
+| [x] | M | `v4_alpaca_reconcile` integrado ao ledger (READ_ONLY) | `/dev` | D4 |
+| [x] | M | Trilha de evidência: shadow vs paper no dashboard | `/dev` | D4 |
+| [x] | P | Checklist de homologação operador (sem live) | `docs/HOMOLOGATION.md` | — |
+| [x] | P | Export comparativo EasyPanel vs snapshot (SHA imagem) | operador | `docs/INFRASTRUCTURE.md` §9 |
+| [x] | M | Fechar critérios Features 2–3 e 6; Feature 5 parcial em REQUIREMENTS | `/pmo` | reconcile |
 
 ---
 

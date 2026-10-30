@@ -157,12 +157,13 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 **Fluxo de exceção:**
 - Timeout, rejeição da corretora, fill parcial, cancelamento, posição que já existia, API fora.
 
-**Critérios de aceite:**
-- [ ] Um sinal de fixture gera ordem paper, fill, ledger e posição coerente com a corretora.
-- [ ] Um sinal inválido no mesmo ambiente não gera ordem.
-- [ ] Duplicata não reabre posição.
-- [ ] Depois de reinício, ledger e posição continuam consistentes.
-- [ ] `PAPER_GATEWAY_QUEUE_ONLY` sozinho não conta como este critério cumprido.
+**Critérios de aceite (homologação):**
+- [ ] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`).
+- [x] Sinal inválido não gera ordem (Gates A+B; CI).
+- [x] Duplicata não reabre posição (idempotência + testes).
+- [x] Reinício não perde trilha ledger (Postgres append-only; worker atômico).
+- [x] `PAPER_GATEWAY_QUEUE_ONLY` ≠ homologação completa (`docs/HOMOLOGATION.md`).
+- [x] Reconcile read-only → `paper_fills` com flag `PAPER_RECONCILE_LEDGER_APPLY` (`test_ledger_reconcile.py`).
 
 ### Feature 6: Observabilidade e parada
 
@@ -175,8 +176,8 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 3. Existe parada de emergência que impede ordem nova.
 
 **Critérios de aceite:**
-- [ ] Dashboard, se publicado, exige autenticação. O MVP de pesquisa atual não publica porta.
-- [ ] Kill switch é visível e testável sem dinheiro real.
+- [x] Dashboard local (`127.0.0.1`) não exige auth; remoto exige bearer ≥32 (`v4_web_dashboard.py`).
+- [x] Kill switch visível em `/api/status` (`kill_switch_on`) e testável via env/Postgres sem ordem real.
 
 ---
 

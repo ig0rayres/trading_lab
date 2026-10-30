@@ -12,4 +12,6 @@
 
 Regra: upgrades do vendor exigem testes de paridade (`vendor_verify`, `parity`) e atualização desta tabela.
 
+**Imagem Docker (N6+):** o `Dockerfile` clona este SHA em `/app/vendor/day-trader-skill` no build; `ENV UPSTREAM_COMMIT` na imagem deve coincidir com a tabela acima. Submodule local permanece para pytest/`vendor_verify` no host.
+
 **Nota:** clone raso no submodule; para pin imutável de produção, fixar este SHA em `UPSTREAM_COMMIT` no EasyPanel após revisão humana.

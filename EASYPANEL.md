@@ -1,9 +1,16 @@
-# EasyPanel upgrade — Trading Lab v0.6
+# EasyPanel — Trading Lab (N6+)
 
-**Keep the existing service, volume mounts and database untouched.** Do not create an additional service, PostgreSQL database, public domain, or HTTP port. This package uses the Dockerfile and has an idle long-running command by default. The ZIP contains one project folder; configure the build context to that folder if EasyPanel does not strip it automatically.
+**Keep the existing EasyPanel project (hashia): two apps, one image.** Do not add a third service or enable live trading.
 
-1. In existing EasyPanel `trading-lab`, replace the source ZIP with v0.6 and select Dockerfile build; do **not** delete `/app/reports` or `/app/vendor`.
-2. Environment must contain `LIVE_TRADING_ENABLED=false`. No broker credentials. Keep `/app/reports` and `/app/vendor` persistent mounts.
+| App | Start (typical) | Notes |
+|-----|-----------------|-------|
+| `trading-lab` | Dockerfile `CMD` → `v4-scheduler` | Research scheduler; ledger DSN optional |
+| `trading-lab-webhook` | `/app/scripts/run.sh tv-webhook --port 8080` (+ worker loop if configured) | Public HTTPS; `LEDGER_DATABASE_URL` + paper read keys here |
+
+**N6 image:** vendor @ SHA in `docs/VENDOR-PIN.md` is **baked in the Dockerfile** at build time. Persist **`/app/reports` only**. Do **not** mount an empty directory on `/app/vendor` — it hides the baked tree and breaks `load_original`. Remove startup `git clone` hacks after the first successful N6 deploy.
+
+1. Rebuild **both** apps from the same Dockerfile tag/SHA after merge to `main`.
+2. Environment must contain `LIVE_TRADING_ENABLED=false`. Paper Alpaca keys only on webhook/worker as today.
 3. Deploy once.
 4. Shell: `/app/scripts/run.sh verify`. This executes 21 local offline tests, exercises the real original modules using a deterministic synthetic fixture, and runs the upstream repository's own tests. If the original repository has been updated, parity may fail; do not force it to pass without inspecting the upstream changes.
 5. Shell: `/app/scripts/run.sh history --days 30 --symbols TSLA,NVDA,AMD --output /app/reports/history/v06-first-run`.
@@ -12,7 +19,7 @@
 
 ### If `verify` says the original repository is missing
 
-The original `day-trader-skill` checkout must exist under `/app/vendor/day-trader-skill`; earlier v0.5 testing confirmed it on your service. If you migrated/recreated the vendor volume, review the source before allowing its first fetch:
+After **N6**, `/app/vendor/day-trader-skill` should exist inside the image. If a volume overlay emptied it, remove the `/app/vendor` mount and redeploy. Break-glass only:
 
 ```sh
 ALLOW_GITHUB_FETCH=true /app/scripts/run.sh upstream-tests

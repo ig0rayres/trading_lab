@@ -91,3 +91,13 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 | Remote | `https://github.com/ig0rayres/trading_lab.git` |
 | Branch pushed | `sprint/D1`, `main` @ `f597f8b` |
 | CI run (pytest + docker) | https://github.com/ig0rayres/trading_lab/actions/runs/41041762290 |
+
+## Sprint N6 — Deploy reprodutível (local / CI)
+
+| Check | Command / artifact |
+|-------|---------------------|
+| Pin drift | `tests/test_image_pin.py::test_dockerfile_pin_matches_vendor_pin_doc` |
+| Image smoke | `docker build -t trading-lab:ci . && bash scripts/ci-docker-smoke.sh` |
+| CI workflow | `.github/workflows/docker-smoke.yml` (paralelo ao job `docker-build` em `ci.yml`) |
+
+**Nota:** validação local bloqueada neste agente (`local-runtime` ask); evidência pós-push na Action `Docker image smoke`.

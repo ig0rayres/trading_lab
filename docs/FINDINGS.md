@@ -17,6 +17,7 @@
 | F-009 | D4 | P | Rejeição Gate B persiste `risk_decisions` | fechado |
 | F-010 | D4 | P | Limites paper em `gate_b_risk.py` + REQUIREMENTS Feature 3 | fechado |
 | F-011 | D5 | M | Reconcile→ledger + dashboard + homologação doc (fill real = operador) | fechado |
+| F-012 | N6 | M | Gate N6: diff não commitado; pytest/docker smoke/CI não reexecutados nesta rodada | pendente |
 
 ## Notas
 

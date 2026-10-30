@@ -101,7 +101,7 @@ Decisão do operador (2026-10-30): manter **`trading-lab`** + **`trading-lab-web
 | `trading-lab` | `v4-scheduler` (CMD padrão do Dockerfile) | Sem publicação se só pesquisa |
 | `trading-lab-webhook` | `tv-webhook` via entrypoint `run.sh` | HTTPS só neste app, após Gate A |
 
-Mesma build de imagem; volumes `/app/reports` e `/app/vendor` persistentes; **não** substituir deploy EasyPanel atual sem release supervisionada.
+Mesma build de imagem; volume persistente **`/app/reports`**. A partir da **Sprint N6**, o vendor pinado vem **na imagem** (`Dockerfile` clone @ `docs/VENDOR-PIN.md`); **não** monte volume vazio em `/app/vendor` (esconde o tree baked). `upstream-tests` / clone no start só como break-glass. **Não** substituir deploy EasyPanel atual sem release supervisionada.
 
 ### Apply ledger migration (operador)
 
@@ -111,7 +111,7 @@ Mesma build de imagem; volumes `/app/reports` e `/app/vendor` persistentes; **n�
 4. Verificar: `/app/scripts/run.sh ledger-migrate status`
 5. Rollback de emergência (somente em homologação): `/app/scripts/run.sh ledger-migrate rollback`
 
-Arquivos SQL: `migrations/001_ledger_up.sql` / `001_ledger_down.sql`. CI executa roundtrip apply/rollback com Postgres efêmero.
+- CI: job `test` (pytest + Postgres efêmero) em `.github/workflows/ci.yml`; job **`docker-smoke.yml`** (build + `scripts/ci-docker-smoke.sh`) valida psycopg, vendor e `LIVE_TRADING_ENABLED=false` sem depender de editar `ci.yml`.
 
 ---
 

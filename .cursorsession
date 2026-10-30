@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "Sprint D2 pushed (d68a845); aguarda CI. Branch sprint/D2.",
+  "contexto_rapido": "main @ 146ba5a (D2 merge). D3: sessão NYSE + testes rejeição; CI via API.",
   "sprint_tasks": [
     {
       "id": "D1.1",

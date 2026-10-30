@@ -5,7 +5,11 @@
 ## Checklist (ordem sugerida)
 
 1. **CI verde** em `main` (pytest + Postgres efêmero + `docker-smoke.yml`: psycopg import, vendor `entry.py`, `LIVE_TRADING_ENABLED=false`). Local: `docker build -t trading-lab:ci . && bash scripts/ci-docker-smoke.sh`. Pin drift: `tests/test_image_pin.py`. Evidência em `docs/TEST-EVIDENCE.md`.
-2. **Postgres:** `scripts/run.sh ledger-migrate apply` no serviço com `LEDGER_DATABASE_URL`.
+2. **Postgres:** `scripts/run.sh ledger-migrate apply` no serviço com `LEDGER_DATABASE_URL`. O apply semeia **7** linhas em `strategy_states` (insert-if-missing; re-apply seguro). Verificar:
+   ```sql
+   SELECT strategy_key, phase FROM strategy_states ORDER BY strategy_key;
+   ```
+   Esperado: `news_first`, `momentum`, `ta_barato`, `prodigy_15d` → `research`; `signal_copy` → `paper_limited`; `orb`, `mean_reversion` → `shadow`.
 3. **Gate A:** webhook com `TV_WEBHOOK_TOKEN` (header `X-Webhook-Token` ou legacy `/webhook/{token}`); confirmar linhas em `signal_events`.
 4. **Gate B:** worker com Alpaca paper read-only; rejeição grava `risk_decisions`; aceite grava `paper_orders` (`queued_intent`).
 5. **Reconcile read-only:** `PAPER_RECONCILE_LEDGER_APPLY=true` + credenciais paper; `scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile.json`. Ver `ledger_apply` no JSON — **não** implica `broker_reconciled=true`.

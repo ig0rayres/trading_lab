@@ -31,8 +31,24 @@ class LedgerMigrationFilesTest(unittest.TestCase):
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
 class LedgerMigrationIntegrationTest(unittest.TestCase):
+    def _count_strategy_keys(self):
+        import sys
+
+        sys.path.insert(0, str(ROOT / 'src'))
+        import ledger_migrate as lm
+        from strategy_catalog import KNOWN_STRATEGY_KEYS
+
+        with lm._connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT strategy_key FROM strategy_states WHERE deleted_at IS NULL'
+                )
+                found = {row[0] for row in cur.fetchall()}
+        return found, KNOWN_STRATEGY_KEYS
+
     def test_apply_rollback_roundtrip(self):
         import sys
+
         sys.path.insert(0, str(ROOT / 'src'))
         import ledger_migrate as lm
 
@@ -44,6 +60,42 @@ class LedgerMigrationIntegrationTest(unittest.TestCase):
         self.assertFalse(lm.status()['applied'])
         lm.apply()
         self.assertTrue(lm.status()['applied'])
+
+    def test_apply_seeds_seven_strategy_states(self):
+        import sys
+
+        sys.path.insert(0, str(ROOT / 'src'))
+        import ledger_migrate as lm
+
+        lm.rollback()
+        result = lm.apply()
+        self.assertEqual(result.get('strategy_seed'), 'ok')
+        found, expected = self._count_strategy_keys()
+        self.assertEqual(found, expected)
+
+    def test_already_applied_re_seeds_without_clobber(self):
+        import sys
+
+        sys.path.insert(0, str(ROOT / 'src'))
+        import ledger_migrate as lm
+
+        lm.apply()
+        with lm._connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE strategy_states SET phase = 'paper_validated' "
+                    "WHERE strategy_key = 'orb' AND deleted_at IS NULL"
+                )
+            conn.commit()
+        result = lm.apply()
+        self.assertEqual(result['status'], 'already_applied')
+        with lm._connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT phase FROM strategy_states WHERE strategy_key = 'orb'"
+                )
+                phase = cur.fetchone()[0]
+        self.assertEqual(phase, 'paper_validated')
 
 
 if __name__ == '__main__':

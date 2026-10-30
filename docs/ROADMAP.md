@@ -30,6 +30,7 @@
 | D3 | D | Gate A rejeita sinal inválido sem broker | concluida | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
 | D4 | D | Gate B + fila paper sem fill | concluida | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
 | D5 | D | Paper reconciliado read-only; nenhum live | concluida* | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
+| N6 | N | Imagem com psycopg + vendor pinado; CI smoke | planejada | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -155,6 +156,24 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 ---
 
+## Sprint N6 — Deploy reprodutível EasyPanel
+> Categoria: N  
+> titulo_humano: Imagem EasyPanel sobe com Postgres e vendor pinado  
+> resumo_humano: Redeploy deixa de depender de clone manual do vendor e de pip install de psycopg. Mesma imagem para trading-lab e trading-lab-webhook; live permanece desligado.  
+> Gate: docker build ok; container importa psycopg; vendor @ SHA VENDOR-PIN; CI docker-build smoke; pytest inalterado + test_image_pin  
+> bom_ref: BOM-2, BOM-3  
+> review: senior+qa  
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | Pin runtime psycopg[binary] on requirements.txt | `/dev` | — |
+| [x] | M | Bake vendor pin in Dockerfile (git clone SHA) | `/devops` | N6.1 |
+| [x] | P | CI docker-build smoke | `/devops` | N6.2 |
+| [x] | M | EasyPanel runbook: dois apps; sem overlay vazio /app/vendor | docs | N6.2 |
+| [x] | P | Pin-drift test VENDOR-PIN vs Dockerfile | `/qa testes` | N6.2 |
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -168,6 +187,6 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 
 ## Próximo passo operador
 
-1. Revisar este roadmap (ajustar ordem ou escopo).  
-2. **`/pmo sprint`** — iniciar **Sprint D1** (worktree: `/git front create d1-baseline` se paralelo).  
-3. Não promover para paper principal enquanto ORB intraday seguir negativo em evidência (REQUIREMENTS).
+1. Sprint **N6** ativa — branch `front/n6-deploy` (worktree) quando git safe.directory ok.  
+2. Após merge: rebuild **trading-lab** + **trading-lab-webhook**; **não** montar volume vazio em `/app/vendor`; manter `/app/reports`.  
+3. Backlog **N7+**: strategy-catalog, sinais/Tá Barato (sem limiar inventado — Feature 4).

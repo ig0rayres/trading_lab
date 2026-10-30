@@ -17,7 +17,7 @@
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
   "fase_nome": "Construção D1–D5 concluída (backlog F-003 parity)",
-  "sprint_atual": null,
+  "sprint_atual": "N6",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "D4 fechada (CI 41052010551). Próximo: D5 F-011; D1 F-003 parity opcional.",
+  "contexto_rapido": "Rock N6 deploy: Dockerfile vendor+psycopg; operador rebuild EasyPanel pos-merge.",
   "sprint_tasks": [
     {
       "id": "D1.1",
@@ -196,18 +196,75 @@
     }
   ],
   "checkpoint": {
-    "sprint": "D3",
+    "sprint": "N6",
     "phase": "testing",
-    "branch": "sprint/D3",
+    "branch": "front/n6-deploy",
     "relevant_paths": [
-      "src/tradingview_webhook.py",
-      "src/gate_a_signal.py",
-      "tests/test_tradingview_webhook.py",
-      "tests/test_gate_a_signal.py"
+      "Dockerfile",
+      "requirements.txt",
+      "scripts/ci-docker-smoke.sh",
+      ".github/workflows/docker-smoke.yml",
+      "tests/test_image_pin.py",
+      "EASYPANEL.md"
     ],
-    "last_completed_task": "D3 session+tests",
-    "current_task": "D3 News First audit",
-    "timestamp": "2026-10-30T12:00:00-03:00"
+    "last_completed_task": "N6 docs + docker-smoke workflow",
+    "current_task": "VALIDATE (CI) + PR",
+    "timestamp": "2026-10-30T14:15:00-03:00",
+    "validation_gate": {
+      "sprint": "N6",
+      "validation_round": 1,
+      "findings_found": 1,
+      "findings_registered": ["F-012"],
+      "files_modified_outside_findings": 0,
+      "findings_disposition": [
+        {
+          "id": "F-012",
+          "status": "escalated",
+          "reason": "Commit + push PR + CI verde (pytest job + Docker image smoke) antes de re-validar; local-runtime bloqueou pytest/docker neste agente."
+        }
+      ],
+      "senior_review_status": "PASS_WITH_NOTES",
+      "result": "REPROVADA",
+      "contract_source": "roadmap",
+      "in_contract": [
+        {
+          "id": "n6_pin_static",
+          "check": "Dockerfile UPSTREAM_COMMIT vs docs/VENDOR-PIN.md (grep)",
+          "pass": true
+        },
+        {
+          "id": "n6_psycopg_declared",
+          "check": "requirements.txt contains psycopg[binary]",
+          "pass": true
+        },
+        {
+          "id": "n6_smoke_artifact",
+          "check": "scripts/ci-docker-smoke.sh + .github/workflows/docker-smoke.yml present",
+          "pass": true
+        },
+        {
+          "id": "n6_docker_build",
+          "check": "docker build -t trading-lab:ci .",
+          "pass": false
+        },
+        {
+          "id": "n6_image_smoke",
+          "check": "bash scripts/ci-docker-smoke.sh trading-lab:ci",
+          "pass": false
+        },
+        {
+          "id": "n6_pytest",
+          "check": "python -m pytest (full suite + test_image_pin)",
+          "pass": false
+        },
+        {
+          "id": "n6_ci_green",
+          "check": "GitHub Actions CI + docker-smoke on PR",
+          "pass": false
+        }
+      ],
+      "preflight_notes": "PROC-025: working tree dirty (N6 files untracked/uncommitted). sprint-validation-preflight.py ausente no repo. Cross-platform deploy gate skipped (no install_deploy_manifest.py)."
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -234,9 +291,9 @@
     "updated_at": "2026-10-30T10:45:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T10:57:19Z",
-    "usage_percent": 91.206,
-    "messages_lost": 414
+    "compacted_at": "2026-10-30T14:05:33Z",
+    "usage_percent": 90.6395,
+    "messages_lost": 275
   },
-  "compact_count": 2
+  "compact_count": 4
 }

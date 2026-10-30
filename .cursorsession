@@ -16,12 +16,12 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Planejamento N8 (seed on migrate) — plan_only",
-  "sprint_atual": "N8",
+  "fase_nome": "Sprint N8 concluída — homolog seed on migrate",
+  "sprint_atual": null,
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T12:40:00-03:00",
+  "ultimo_update": "2026-10-30T14:14:44-0300",
   "modulos": [
     {
       "nome": "market-data",
@@ -44,7 +44,7 @@
     },
     {
       "nome": "strategy-catalog",
-      "descricao": "Fase de cada familia. ORB em shadow. Formula ausente nao e inventada. N8: seed no migrate apply.",
+      "descricao": "Fases persistidas; seed no migrate apply (N8). ORB em shadow.",
       "status": "em_andamento",
       "api": []
     },
@@ -78,9 +78,8 @@
     }
   ],
   "proximos_passos": [
-    "Parent Fable/plan-verifier no brief N8",
-    "/pmo sprint N8 em frente nova front/n8-homolog-seed (nao nesta N7)",
-    "Sem docker/deploy; nao reabrir Gate B nem Feature 4 scoring"
+    "/git front finish n8-homolog-seed",
+    "/pmo — próximo item do roadmap (sem inventar scoring)"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -115,13 +114,13 @@
   "comandos_recentes": [
     "/pmo plan N8"
   ],
-  "contexto_rapido": "N8 planejada (plan_only): seed on ledger-migrate apply + runbook homologacao; 7 strategy_states; LIVE_TRADING false.",
+  "contexto_rapido": "N8 concluída: PR #4 main 81e6e88; 7 strategy_states no EasyPanel; LIVE_TRADING false.",
   "sprint_tasks": [
     {
       "id": "N8.1",
       "title": "Hook ensure_strategy_defaults into ledger-migrate apply (including already_applied)",
       "size": "M",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "files": [
         "src/ledger_migrate.py"
@@ -169,7 +168,7 @@
       "id": "N8.2",
       "title": "Unit + optional ledger integration: apply roundtrip leaves 7 strategy_states rows",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N8.1"
       ],
@@ -182,7 +181,7 @@
       "id": "N8.3",
       "title": "Homologation runbook: verify 7 rows after migrate",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N8.2"
       ],
@@ -195,7 +194,7 @@
       "id": "N8.4",
       "title": "EasyPanel/INFRASTRUCTURE note: re-apply seeds insert-if-missing",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N8.1"
       ],
@@ -208,11 +207,11 @@
   ],
   "checkpoint": {
     "sprint": "N8",
-    "phase": "testing",
-    "branch": "front/n8-homolog-seed",
+    "phase": "done",
+    "branch": "main",
     "last_completed_task": "N8.1–N8.4",
-    "current_task": "PR → main → ledger-migrate apply no EasyPanel",
-    "timestamp": "2026-10-30T16:20:00-03:00",
+    "current_task": null,
+    "timestamp": "2026-10-30T14:14:44-0300",
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N8",
@@ -258,8 +257,9 @@
       "patch_id": "53ec13b37e930120d23fd07a70dcb063e0bc1211",
       "patch_id_version": 2
     },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N8"
+    "sprint_delivery": "verify_green",
+    "sprint_delivery_sprint": "N8",
+    "verify_evidence": "PR #4 merged; CI green; EasyPanel 7 rows strategy_states 2026-10-30"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -278,17 +278,18 @@
   ],
   "anchor": {
     "persona": "planejador-tarefas",
-    "phase": "Planejamento N8 (seed on migrate) — plan_only",
-    "intent": "Planejar Sprint N8: ledger-migrate apply dispara ensure_strategy_defaults; runbook; 7 strategy_states; LIVE_TRADING false.",
-    "changes_made": "ROADMAP Sprint N8, docs/.briefs/N8.brief.md, ISS-003, .cursorsession sprint_tasks N8.1–N8.4. Sem código em src/.",
+    "phase": "N8 concluída",
+    "intent": "Closeout N8 pós-homolog EasyPanel.",
+    "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
     "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
-    "next_steps": "Parent Fable/plan-verifier; /pmo sprint N8 em frente nova front/n8-homolog-seed (nao nesta N7).",
-    "updated_at": "2026-10-30T12:40:00-03:00"
+    "next_steps": "/git front finish; /pmo próximo sprint.",
+    "updated_at": "2026-10-30T14:14:44-0300"
   },
   "compact_marker": {
     "compacted_at": "2026-10-30T16:14:53Z",
     "usage_percent": 91.0545,
     "messages_lost": 363
   },
-  "compact_count": 5
+  "compact_count": 5,
+  "previous_sprint": "N8"
 }

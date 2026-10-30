@@ -72,7 +72,7 @@ D3 pode iniciar em paralelo com D2 após D1, mas D5 depende de D2–D4.
 |--------|---------|--------|---------------|------------|
 | [x] | P | Adicionar `vendor/day-trader-skill` (submodule ou cópia) e `docs/VENDOR-PIN.md` | `/git` + documentação | — |
 | [x] | P | Garantir CI (`.github/workflows/ci.yml`) e `requirements-dev.txt` | `/devops planejar` | — |
-| [ ] | P | Configurar remote Git + branch `front/d1-baseline` | `/git` | — *(aguarda repo remoto)* |
+| [~] | P | Configurar remote Git + branch `front/d1-baseline` | `/git` | — *(origin + push `sprint/D1`; PR/CI no GitHub)* |
 | [x] | M | Rodar `vendor_verify` / `parity` offline contra pin | skill `paper-order-gate` refs | vendor |
 | [ ] | P | Reexecutar pytest local; arquivar saída (nodeids) em `docs/` ou artefato CI | `/qa testes` | CI |
 | [ ] | P | Atualizar `docs/REQUIREMENTS.md` critério pytest quando verde | `/pmo` | pytest |

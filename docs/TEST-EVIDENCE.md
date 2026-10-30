@@ -57,4 +57,10 @@ Gate D1 closes when CI pytest is green and this file is updated with node count 
 
 ## Sprint D1.3 (Git remote)
 
-Deferred by operator — no GitHub/Git remote yet. After `git remote add` + push `sprint/D1`, attach CI run URL here.
+| Item | Value |
+|------|--------|
+| Remote | `https://github.com/ig0rayres/trading_lab.git` |
+| Branch pushed | `sprint/D1` (commit `2865054`) |
+| CI | GitHub Actions on push/PR — attach run URL below when green |
+
+_CI run URL:_ _(paste after Actions finishes)_

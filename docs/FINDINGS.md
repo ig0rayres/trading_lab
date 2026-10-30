@@ -20,6 +20,6 @@
 
 ## Notas
 
-- **D4 não está pronta para “concluída”** enquanto F-007–F-009 (e dependência D3 estável) permanecerem abertos.
-- **D2** migration/CI ok; F-004 impede fechar operador runbook sem confusão de nomes.
+- **D3** fechada no ROADMAP após F-001, F-005, F-006 (CI pytest obrigatório).
+- **D4** permanece **em execução** enquanto F-007–F-009 estiverem abertos.
 - **D1** CI + vendor_verify ok; F-003 é aceite consciente até existirem artefatos orb.

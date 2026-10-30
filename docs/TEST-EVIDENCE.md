@@ -74,6 +74,14 @@ Merged to `main` after verify (2026-10-30).
 
 Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test_gate_a_signal.py` (ledger rows when `LEDGER_DATABASE_URL` set in CI).
 
+| [41049439799](https://github.com/ig0rayres/trading_lab/actions/runs/41049439799) | `sprint/D3` @ `9431250` | **Success** (Gate A close: HTTP + News First audit) |
+
+## Sprint D4 — Gate B + paper queue
+
+| Run | Branch | Result |
+|-----|--------|--------|
+| [41046350535](https://github.com/ig0rayres/trading_lab/actions/runs/41046350535) | `sprint/D4` @ `a8d94cb` | **Success** (`gate_b_risk`, `paper_gateway_queue`, full pytest) |
+
 ## Sprint D1.3 (Git remote)
 
 | Item | Value |

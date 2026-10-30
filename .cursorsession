@@ -16,7 +16,7 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint D4 — Gate B + fila paper (ativa)",
+  "fase_nome": "Sprint D4 — Gate B (ativa)",
   "sprint_atual": "D4",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "D4 merge pendente; CI 41046350535 Success em sprint/D4 @ a8d94cb.",
+  "contexto_rapido": "Sprints honestas: D3+D4 abertas; ver docs/FINDINGS.md F-001..F-011.",
   "sprint_tasks": [
     {
       "id": "D1.1",

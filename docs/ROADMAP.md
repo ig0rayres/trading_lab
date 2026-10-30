@@ -28,7 +28,7 @@
 | D1 | D | CI verde + vendor pinado + pytest com nodeids | concluida | 6 | baseline, vendor | Evidência reprodutível | 80–115 |
 | D2 | D | Tabelas ledger no Postgres + rollback testado | concluida | 5 | ledger | Persistência paper | 117–145 |
 | D3 | D | Gate A rejeita sinal inválido sem broker | em execucao | 6 | signal-gate-a | Ingestão autêntica | 147–178 |
-| D4 | D | Gate B + fila paper sem fill | em execucao | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
+| D4 | D | Gate B + fila paper sem fill | concluida | 6 | risk-gate-b, paper-gateway | Limites antes da fila | 179–210 |
 | D4 | D | Gate B bloqueia ordem fora de limites | pendente | 6 | risk-gate-b, paper-gateway | Risco antes de fila | 180–212 |
 | D5 | D | Paper reconciliado read-only; nenhum live | pendente | 5 | paper-gateway, observability | Homologação ponta a ponta | 214–242 |
 

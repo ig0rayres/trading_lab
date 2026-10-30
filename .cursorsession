@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/rock continuar D1 closeout"
   ],
-  "contexto_rapido": "main @ 146ba5a (D2 merge). D3: sessão NYSE + testes rejeição; CI via API.",
+  "contexto_rapido": "D4 merge pendente; CI 41046350535 Success em sprint/D4 @ a8d94cb.",
   "sprint_tasks": [
     {
       "id": "D1.1",

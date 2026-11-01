@@ -31,19 +31,38 @@ def queue_intent(signal: dict[str, Any], decision: dict[str, Any]) -> dict[str, 
     }
 
 
-def _lookup_signal_event_id(conn, signal: dict[str, Any], fallback_key: str | None = None):
+def _lookup_signal_event_id(
+    conn,
+    signal: dict[str, Any],
+    fallback_key: str | None = None,
+    *,
+    queue_idempotency_key: str | None = None,
+):
+    """Resolve Gate A row. Queue JSON uses hashed signal_id; file stem matches Gate A key."""
+    keys: list[str] = []
+
+    def add(key: str | None) -> None:
+        if key and key not in keys:
+            keys.append(key)
+
+    add(queue_idempotency_key)
     provider = str(signal.get('provider', 'tradingview'))
     sid = str(signal.get('signal_id', ''))
-    key = idempotency_key(provider, sid) if sid else fallback_key
-    if not key:
+    if sid:
+        add(idempotency_key(provider, sid))
+    add(fallback_key)
+    if not keys:
         return None
     with conn.cursor() as cur:
-        cur.execute(
-            'SELECT id FROM signal_events WHERE idempotency_key = %s AND deleted_at IS NULL',
-            (key,),
-        )
-        row = cur.fetchone()
-    return row[0] if row else None
+        for key in keys:
+            cur.execute(
+                'SELECT id FROM signal_events WHERE idempotency_key = %s AND deleted_at IS NULL',
+                (key,),
+            )
+            row = cur.fetchone()
+            if row:
+                return row[0]
+    return None
 
 
 def persist_risk_decision(
@@ -51,6 +70,7 @@ def persist_risk_decision(
     decision: dict[str, Any],
     *,
     queue_result: dict[str, Any] | None = None,
+    queue_idempotency_key: str | None = None,
     conn_factory=None,
 ):
     if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
@@ -65,7 +85,12 @@ def persist_risk_decision(
         fallback = idempotency_key('unknown', queue_result.get('client_order_id', 'reject'))
     try:
         with conn_factory() as conn:
-            signal_event_id = _lookup_signal_event_id(conn, signal, fallback)
+            signal_event_id = _lookup_signal_event_id(
+                conn,
+                signal,
+                fallback,
+                queue_idempotency_key=queue_idempotency_key,
+            )
             if not signal_event_id:
                 return
             risk_id = uuid.uuid4()
@@ -102,8 +127,21 @@ def persist_risk_decision(
         return
 
 
-def persist_intent(signal: dict[str, Any], decision: dict[str, Any], queue_result: dict[str, Any], conn_factory=None):
-    persist_risk_decision(signal, decision, queue_result=queue_result, conn_factory=conn_factory)
+def persist_intent(
+    signal: dict[str, Any],
+    decision: dict[str, Any],
+    queue_result: dict[str, Any],
+    conn_factory=None,
+    *,
+    queue_idempotency_key: str | None = None,
+):
+    persist_risk_decision(
+        signal,
+        decision,
+        queue_result=queue_result,
+        queue_idempotency_key=queue_idempotency_key,
+        conn_factory=conn_factory,
+    )
 
 
 def process_after_gate_b(
@@ -114,13 +152,25 @@ def process_after_gate_b(
     ledger: str | None = None,
     broker_run=paper_run,
     conn_factory=None,
+    queue_idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     if decision.get('decision') != 'paper_allowed':
-        persist_risk_decision(signal, decision, conn_factory=conn_factory)
+        persist_risk_decision(
+            signal,
+            decision,
+            conn_factory=conn_factory,
+            queue_idempotency_key=queue_idempotency_key,
+        )
         code = decision.get('reject_code') or 'RISK_BLOCK'
         return {'status': 'BLOCKED', 'reasons': [code], 'orders_sent': 0}
     queued = queue_intent(signal, decision)
-    persist_intent(signal, decision, queued, conn_factory=conn_factory)
+    persist_intent(
+        signal,
+        decision,
+        queued,
+        conn_factory=conn_factory,
+        queue_idempotency_key=queue_idempotency_key,
+    )
     if not broker_auto_allowed(env):
         return queued
     return broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')

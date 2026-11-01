@@ -33,7 +33,8 @@
 | N6 | N | Imagem com psycopg + vendor pinado; CI smoke | concluida | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
 | N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | concluida | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
 | N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | concluida | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
-| N9 | N | Itens 3–7 com evidência operador; sem fill e sem src | planejada | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 no EasyPanel | *(abaixo)* |
+| N9 | N | Itens 3–7 com evidência operador; F-013 persist | concluida | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 EasyPanel | *(abaixo)* |
+| N10 | N | Closeout N9 no ROADMAP + notas smoke homolog | planejada | 5 | docs | Alinhamento pós-N9 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -55,7 +56,8 @@
 | N6 | senior+qa | Deploy EasyPanel |
 | N7 | senior+qa | Catálogo + Gate B produto |
 | N8 | senior+qa | Seed no CLI migrate + runbook homologação |
-| N9 | senior+qa | Runbook itens 3–7 + evidência; sem reabrir Gate B |
+| N9 | senior+qa | Runbook itens 3–7 + evidência; F-013 persist |
+| N10 | skip | Docs closeout only |
 
 ---
 
@@ -477,7 +479,7 @@ executor_prompt: |
 ## Sprint N9 — Homologação D5 no EasyPanel (itens 3–7)
 
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Checklist EasyPanel 3–7 com evidência, sem ordem live  
 > resumo_humano: O laboratório já grava sinal, risco e intenção de ordem paper. Esta sprint deixa o operador conferir isso no EasyPanel (webhook, worker, reconcile só leitura, dashboard e kill switch) e anotar a evidência sem segredo. Fila e HTTP 200 continuam sem ser fill; dinheiro real permanece desligado.  
 > Gate: `docs/HOMOLOGATION.md` itens 3–7 nomeiam comando `scripts/run.sh`, SQL ou campo JSON, e o que não conta como fill; `docs/TEST-EVIDENCE.md` tem linhas pendentes para o operador (sem segredo); nenhum diff em `src/`; `LIVE_TRADING_ENABLED` false; Feature 5 fill permanece `[ ]`; ISS-004 não aberto  
@@ -489,12 +491,12 @@ executor_prompt: |
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N9.1 Runbook Gate A: webhook → `signal_events` | docs | — |
-| [ ] | P | N9.2 Runbook Gate B: worker → `risk_decisions` + `paper_orders` `queued_intent` | docs | N9.1 |
-| [ ] | P | N9.3 Runbook reconcile read-only (`ledger_apply`, não `broker_reconciled`) | docs | N9.2 |
-| [ ] | P | N9.4 Runbook dashboard auth + kill switch | docs | N9.3 |
-| [ ] | M | N9.5 Evidence sheet + optional Feature 5 operator note (no fill task) | docs | N9.4 |
-| [ ] | P | N9.6 Operador: executar itens 3–7 no EasyPanel e preencher evidência redigida | operador | N9.5 |
+| [x] | P | N9.1 Runbook Gate A: webhook → `signal_events` | docs | — |
+| [x] | P | N9.2 Runbook Gate B: worker → `risk_decisions` + `paper_orders` `queued_intent` | docs | N9.1 |
+| [x] | P | N9.3 Runbook reconcile read-only (`ledger_apply`, não `broker_reconciled`) | docs | N9.2 |
+| [x] | P | N9.4 Runbook dashboard auth + kill switch | docs | N9.3 |
+| [x] | M | N9.5 Evidence sheet + optional Feature 5 operator note (no fill task) | docs | N9.4 |
+| [x] | P | N9.6 Operador: executar itens 3–7 no EasyPanel e preencher evidência redigida | operador | N9.5 |
 
 P notes (no executor_prompt): **N9.1** expand item 3 in `docs/HOMOLOGATION.md`: `scripts/run.sh tv-webhook`, header `X-Webhook-Token` or legacy `/webhook/{token}`, then `SELECT` on `signal_events` (count / status). HTTP 202 `QUEUED` is not a fill. **N9.2** expand item 4: `scripts/run.sh tv-worker` after Gate A; rejection row in `risk_decisions`; accept row in `paper_orders.status = queued_intent`. Cite `PAPER_GATEWAY_QUEUE_ONLY` and `orders_sent = 0` as non-fills. Do not change `gate_b_risk.py` or catalog phases. **N9.3** expand item 5: `PAPER_RECONCILE_LEDGER_APPLY=true` and `scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile.json`; record `ledger_apply`; do not treat `broker_reconciled` as true. **N9.4** expand items 6–7: loopback or `DASHBOARD_ALLOW_REMOTE=true` plus `DASHBOARD_BEARER_TOKEN` length ≥32 via `scripts/run.sh v4-dashboard`; `/api/status` fields `kill_switch_on` and `shadow_vs_paper`; kill via `TRADING_LAB_KILL_SWITCH=true` or a new `control_flags` row (see `docs/INFRASTRUCTURE.md` § Kill switch). Confirm the worker blocks (`orders_sent` 0, no new `queued_intent`). **N9.6** is operator-only on the existing EasyPanel apps. The agent does not SSH, does not read secrets, and does not invent row counts. Paste redacted counts into the N9.5 table. `bom_ref: BOM-3`.
 
@@ -570,6 +572,27 @@ executor_prompt: |
 
 ---
 
+## Sprint N10 — Closeout N9 (ROADMAP + homolog notes)
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Fechar N9 no roadmap e documentar smoke pós-deploy  
+> resumo_humano: N9 já entregue em main e no EasyPanel. Esta sprint só alinha ROADMAP, evidência e runbook (smoke pregão vs unittest integração), sem mudar código de gates ou live.  
+> Gate: N9 marcada concluida no indice e tasks [x]; sem diff em `src/`; `LIVE_TRADING_ENABLED` false; Feature 5 fill `[ ]`; `docs/TEST-EVIDENCE.md` nota smoke TTL/sessão  
+> review: skip  
+> Gerado via: /pmo plan + /pmo sprint N10  
+> Brief: `docs/.briefs/N10.brief.md`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N10.1 ROADMAP: N9 concluida + indice + proximo passo | docs | — |
+| [ ] | P | N10.2 TEST-EVIDENCE + HOMOLOGATION notas smoke item 4 | docs | N10.1 |
+| [ ] | P | N10.3 FINDINGS/TEST-EVIDENCE referencia main 0509732 | docs | N10.1 |
+| [ ] | P | N10.4 `.cursorsession` sprint N10 + previous N9 | session | N10.1 |
+| [ ] | P | N10.5 Operador: `/git front finish` frentes N9/N10 após merge | operador | N10.2 |
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -584,7 +607,6 @@ executor_prompt: |
 
 ## Próximo passo operador
 
-1. N8 **concluída** (PR #4 → `main` `81e6e88`; homolog: 7 linhas `strategy_states` no EasyPanel).  
-2. **N9 planejada** (`plan_only`: sem `sprint_atual`). Review senior+qa antes de `/pmo sprint`.  
-3. Repo: tasks N9.1–N9.5 (runbook + folha de evidência). EasyPanel: task N9.6, nos apps já existentes, sem live.  
-4. Feature 5 (fill real) fica fora do gate N9. Sem inventar limiar de scoring.
+1. N9 **concluída** (`main` `0509732`; homolog + F-013; QA APROVADA).  
+2. **N10** closeout docs (ROADMAP + notas smoke).  
+3. Próximo backlog: **F-003** orb-parity ou **Feature 5** fill (operador) — `/pmo plan`.

@@ -81,6 +81,48 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
         self.assertIsNotNone(row)
         self.assertEqual(row[0], 'queued_intent')
 
+    def test_persist_uses_queue_stem_when_signal_id_hashed(self):
+        import hashlib
+
+        import ledger_store as store
+        from gate_a_signal import idempotency_key, record_signal_event
+        from paper_gateway_queue import persist_intent, queue_intent
+
+        original_id = 'TV_QUEUE_HASH_001'
+        gate_payload = _signal()
+        gate_payload['signal_id'] = original_id
+        queue_key = idempotency_key('tradingview', original_id)
+        queued_signal = dict(gate_payload)
+        queued_signal['signal_id'] = hashlib.sha256(original_id.encode()).hexdigest()[:32]
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        queued = queue_intent(queued_signal, decision)
+        with store.connect() as conn:
+            record_signal_event(
+                conn,
+                payload=gate_payload,
+                http_status=202,
+                body={'status': 'QUEUED', 'orders_sent': 0},
+            )
+            conn.commit()
+        persist_intent(
+            queued_signal,
+            decision,
+            queued,
+            queue_idempotency_key=queue_key,
+        )
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT po.status FROM paper_orders po "
+                    "JOIN risk_decisions rd ON rd.id = po.risk_decision_id "
+                    "JOIN signal_events se ON se.id = rd.signal_event_id "
+                    'WHERE se.idempotency_key = %s',
+                    (queue_key,),
+                )
+                row = cur.fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row[0], 'queued_intent')
+
     def test_reject_persists_risk_decision(self):
         import ledger_store as store
         from gate_a_signal import idempotency_key, record_signal_event

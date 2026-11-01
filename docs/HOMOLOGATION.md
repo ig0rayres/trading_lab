@@ -39,7 +39,7 @@ Pré-requisitos nos dois apps: `LIVE_TRADING_ENABLED=false`, `LEDGER_DATABASE_UR
 | Passo | Ação |
 |-------|------|
 | Subir | Mesmo container (ou processo dedicado) com **`/app/scripts/run.sh tv-worker`**, credenciais Alpaca **paper** read-only, `LEDGER_DATABASE_URL` setado. |
-| Fluxo | Worker consome fila interna pós–Gate A; **rejeição** deve gravar **`risk_decisions`**; **aceite** grava **`paper_orders`** com **`status = queued_intent`**. |
+| Fluxo | Worker consome fila interna pós–Gate A; liga `signal_events` pelo **nome do arquivo** na fila (stem = chave Gate A). **Rejeição** grava **`risk_decisions`**; **aceite** grava **`paper_orders`** com **`status = queued_intent`**. |
 | Não conta como homologado | **`PAPER_GATEWAY_QUEUE_ONLY`**, fila sem linha no ledger, **`orders_sent = 0`** no JSON do worker — intenção na fila **não** é fill Alpaca. |
 | Verificar rejeição (opcional) | Forçar sinal fora de sessão ou estratégia não-paper (ex. `orb` em shadow): `SELECT decision, reason FROM risk_decisions ORDER BY created_at DESC LIMIT 3;` |
 | Verificar aceite (opcional) | Sinal `signal_copy` em fase paper com gates OK: `SELECT status, symbol FROM paper_orders ORDER BY created_at DESC LIMIT 3;` — esperar **`queued_intent`**. |

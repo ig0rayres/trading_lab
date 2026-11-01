@@ -18,6 +18,7 @@
 | F-010 | D4 | P | Limites paper em `gate_b_risk.py` + REQUIREMENTS Feature 3 | fechado |
 | F-011 | D5 | M | Reconcile→ledger + dashboard + homologação doc (fill real = operador) | fechado |
 | F-012 | N6 | M | Gate N6: diff não commitado; pytest/docker smoke/CI não reexecutados nesta rodada | fechado |
+| F-013 | N9 | P | Worker `persist_risk_decision` não liga `signal_events` quando `signal_id` na fila está hasheado (journal `QUEUED` sem `paper_orders` / `risk_decisions`) | fechado |
 
 ## Notas
 
@@ -25,3 +26,4 @@
 - **D4** fechada após F-007–F-010 e CI pytest.
 - **D5** fechada no escopo código/CI; fill Alpaca real continua checklist operador (Feature 5).
 - **N6** fechada: PR #1 merge `6813fb5`; CI test + docker-smoke verdes; operador EasyPanel hashia (2026-10-30).
+- **N9** homolog itens 3–7 operador (2026-10-30 / 2026-11-01): evidência em `TEST-EVIDENCE.md`. **F-013** fechado: worker passa `queue_idempotency_key` (stem da fila) em `persist_risk_decision` (`paper_gateway_queue.py`, `tradingview_worker.py`); teste `test_persist_uses_queue_stem_when_signal_id_hashed`.

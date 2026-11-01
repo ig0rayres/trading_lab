@@ -114,12 +114,12 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 
 | Item | Checklist | Comando / verificação | Evidência esperada | Status | Resultado (operador) |
 |------|-----------|------------------------|-------------------|--------|----------------------|
-| 3 | Gate A | `run.sh tv-webhook` + POST válido | ≥1 linha em `signal_events` | pendente | |
-| 4a | Gate B rejeição | `run.sh tv-worker` | linha em `risk_decisions` (opcional) | pendente | |
-| 4b | Gate B aceite | `run.sh tv-worker` | `paper_orders.status = queued_intent` | pendente | |
-| 5 | Reconcile | `v4-alpaca-reconcile` + `PAPER_RECONCILE_LEDGER_APPLY=true` | JSON com `ledger_apply`; `broker_reconciled` false | pendente | |
-| 6 | Dashboard | `run.sh v4-dashboard` + `/api/status` | `kill_switch_on`, `shadow_vs_paper`; auth se remoto | pendente | |
-| 7 | Kill switch | `TRADING_LAB_KILL_SWITCH` ou `control_flags` | worker bloqueia; sem nova ordem | pendente | |
+| 3 | Gate A | `run.sh tv-webhook` + POST válido | ≥1 linha em `signal_events` | ok | 1 linha `accepted` AAPL; `idempotency_key` = digest do sinal (~2026-10-30T19:28Z). HTTP 202 `QUEUED` ≠ fill. |
+| 4a | Gate B rejeição | `run.sh tv-worker` | linha em `risk_decisions` (opcional) | ok com ressalva | Journal `BLOCKED` (`WINDOW`, `EXPIRED_OR_FUTURE`); `risk_decisions` 0 linhas (gap persist — ver F-013). |
+| 4b | Gate B aceite | `run.sh tv-worker` | `paper_orders.status = queued_intent` | ok com ressalva | Journal `QUEUED` / `PAPER_GATEWAY_QUEUE_ONLY`; `orders_sent` 0; `paper_orders` 0 linhas (gap persist — F-013). |
+| 5 | Reconcile | `v4-alpaca-reconcile` + `PAPER_RECONCILE_LEDGER_APPLY=true` | JSON com `ledger_apply`; `broker_reconciled` false | ok | `reconcile.json`: `ledger_apply` presente; `broker_reconciled` false; stdout `BLOCKED_INCOMPLETE`, `orders_sent` 0. |
+| 6 | Dashboard | `run.sh v4-dashboard` + `/api/status` | `kill_switch_on`, `shadow_vs_paper`; auth se remoto | ok | Loopback 127.0.0.1:8765; Bearer auth; HTTP 200; campos `kill_switch_on`, `shadow_vs_paper` presentes (~2026-11-01). |
+| 7 | Kill switch | `TRADING_LAB_KILL_SWITCH` ou `control_flags` | worker bloqueia; sem nova ordem | ok | Switch `true` → fila + `tv-worker` → journal `BLOCKED` / `KILL_SWITCH`; `orders_sent` 0. Fim de semana: enfileirar via `ingest(..., now=)` em sessão NY (POST HTTP 422 `OUTSIDE_SESSION`). Switch reposto `false`. |
 
 **N9.6 operador:** colar resultados redigidos na coluna “Resultado” e mudar **Status** para `ok` quando conferido. Agente/repo não executa SSH nem lê secrets.
 

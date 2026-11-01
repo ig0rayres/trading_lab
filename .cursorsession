@@ -77,9 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Operador: runbook HOMOLOGATION itens 3–7 no EasyPanel",
-    "Preencher TEST-EVIDENCE tabela N9",
-    "/qa validar N9 → PR → merge"
+    "/qa validar N9 rodada 2 (evidência preenchida)",
+    "PR front → merge N9 closeout docs",
+    "Triagem F-013 persist worker→ledger (sprint código)"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -185,7 +185,7 @@
       "id": "N9.6",
       "title": "Operador: executar itens 3–7 no EasyPanel e preencher evidência",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N9.5"
       ],
@@ -198,9 +198,9 @@
     "sprint": "N9",
     "phase": "implementation",
     "branch": "front/n9-easypanel-homolog",
-    "last_completed_task": "N9.5",
-    "current_task": "N9.6",
-    "timestamp": "2026-10-30T14:54:45-03:00",
+    "last_completed_task": "N9.6",
+    "current_task": null,
+    "timestamp": "2026-11-01T19:30:00-03:00",
     "relevant_paths": [
       "docs/HOMOLOGATION.md",
       "docs/TEST-EVIDENCE.md",
@@ -269,11 +269,11 @@
     "updated_at": "2026-10-30T14:51:42-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T16:14:53Z",
-    "usage_percent": 91.0545,
-    "messages_lost": 363
+    "compacted_at": "2026-10-30T19:33:06Z",
+    "usage_percent": 90.923,
+    "messages_lost": 417
   },
-  "compact_count": 5,
+  "compact_count": 6,
   "previous_sprint": "N8",
   "front": {
     "slug": "n9-easypanel-homolog",

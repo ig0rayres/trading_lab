@@ -121,7 +121,7 @@
       "id": "N10.1",
       "title": "ROADMAP: N9 concluida + indice + proximo passo",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "files": ["docs/ROADMAP.md"]
     },
@@ -129,7 +129,7 @@
       "id": "N10.2",
       "title": "TEST-EVIDENCE + HOMOLOGATION notas smoke item 4",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N10.1"],
       "files": ["docs/TEST-EVIDENCE.md", "docs/HOMOLOGATION.md"]
     },
@@ -137,7 +137,7 @@
       "id": "N10.3",
       "title": "FINDINGS/TEST-EVIDENCE referencia main 0509732",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N10.1"],
       "files": ["docs/FINDINGS.md", "docs/TEST-EVIDENCE.md"]
     },
@@ -145,7 +145,7 @@
       "id": "N10.4",
       "title": "Sessao sprint N10 checkpoint",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N10.1"],
       "files": [".cursorsession"]
     },
@@ -163,8 +163,8 @@
     "sprint": "N10",
     "phase": "implementation",
     "branch": "front/n10-closeout",
-    "last_completed_task": null,
-    "current_task": "N10.1",
+    "last_completed_task": "N10.4",
+    "current_task": "N10.5",
     "timestamp": "2026-11-01T19:45:00-03:00",
     "relevant_paths": ["docs/ROADMAP.md", "docs/TEST-EVIDENCE.md", "docs/HOMOLOGATION.md"]
   },

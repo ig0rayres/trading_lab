@@ -585,10 +585,10 @@ executor_prompt: |
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N10.1 ROADMAP: N9 concluida + indice + proximo passo | docs | — |
-| [ ] | P | N10.2 TEST-EVIDENCE + HOMOLOGATION notas smoke item 4 | docs | N10.1 |
-| [ ] | P | N10.3 FINDINGS/TEST-EVIDENCE referencia main 0509732 | docs | N10.1 |
-| [ ] | P | N10.4 `.cursorsession` sprint N10 + previous N9 | session | N10.1 |
+| [x] | P | N10.1 ROADMAP: N9 concluida + indice + proximo passo | docs | — |
+| [x] | P | N10.2 TEST-EVIDENCE + HOMOLOGATION notas smoke item 4 | docs | N10.1 |
+| [x] | P | N10.3 FINDINGS/TEST-EVIDENCE referencia main 0509732 | docs | N10.1 |
+| [x] | P | N10.4 `.cursorsession` sprint N10 + previous N9 | session | N10.1 |
 | [ ] | P | N10.5 Operador: `/git front finish` frentes N9/N10 após merge | operador | N10.2 |
 
 ---

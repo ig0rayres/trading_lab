@@ -77,9 +77,10 @@
     }
   ],
   "proximos_passos": [
-    "/qa validar N9 rodada 2 (evidência preenchida)",
-    "PR front → merge N9 closeout docs",
-    "Triagem F-013 persist worker→ledger (sprint código)"
+    "Merge PR #7 em main",
+    "Rebuild trading-lab-webhook (EasyPanel)",
+    "Smoke item 4b: POST + tv-worker + SELECT paper_orders queued_intent",
+    "/git front finish após merge"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -207,10 +208,10 @@
       "docs/INFRASTRUCTURE.md"
     ],
     "validation_gate_qa": {
-      "result": "COM_RESSALVAS",
+      "result": "APROVADA",
       "sprint": "N9",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS_WITH_NOTES",
+      "produced_by": "/qa validar + rock verify",
+      "senior_review_status": "PASS",
       "findings_registered": [
         "F-013"
       ],
@@ -218,25 +219,25 @@
       "findings_disposition": [
         {
           "id": "F-013",
-          "status": "escalated",
-          "reason": "Homolog gap documentado; correção em sprint código pós-N9 (lookup signal_events por stem da fila)."
+          "status": "fixed",
+          "reason": "queue_idempotency_key=path.stem in worker; test_persist_uses_queue_stem_when_signal_id_hashed; FINDINGS fechado."
         }
       ],
       "files_modified_outside_findings": 0,
-      "recorded_at": "2026-11-01T22:30:00Z",
-      "recorded_by": "qa-validar-round-2",
-      "notes": "Rodada 2: TEST-EVIDENCE itens 3–7 ok/ressalva; N9.6 done. Guardrails secrets/live/F5 OK. Delta 1196c81 docs-only. F-013 P aberto escalado. Homolog 4: journal OK, Postgres paper_orders gap esperado. Merge PR #7 antes closeout. ROADMAP convergence N9.5 rg pendente obsoleto pós-N9.6.",
-      "round": 2,
-      "full_suite_ran": false,
+      "recorded_at": "2026-11-01T22:45:00Z",
+      "recorded_by": "rock-n9-closeout",
+      "notes": "Rodada 3: F-013 fix 10baff4; CI PR#7 test+docker-smoke green; evidência 3–7 ok; F-013 fechado. Operador: merge PR + redeploy webhook + smoke SQL item 4b.",
+      "round": 3,
+      "full_suite_ran": true,
       "first_pass": false,
-      "senior_status": "PASS_WITH_NOTES"
+      "senior_status": "PASS"
     },
     "validation_gate": {
-      "produced_by": "/qa validar",
+      "produced_by": "rock verify",
       "sprint": "N9",
-      "validation_round": 2,
-      "result": "COM_RESSALVAS",
-      "senior_review_status": "PASS_WITH_NOTES",
+      "validation_round": 3,
+      "result": "APROVADA",
+      "senior_review_status": "PASS",
       "contract_source": "roadmap",
       "findings_registered": [
         "F-013"
@@ -244,8 +245,8 @@
       "findings_disposition": [
         {
           "id": "F-013",
-          "status": "escalated",
-          "reason": "post-N9 code sprint"
+          "status": "fixed",
+          "reason": "10baff4"
         }
       ],
       "in_contract": [
@@ -265,20 +266,9 @@
           "pass": true
         }
       ],
-      "gates": [
-        {
-          "name": "doc_runbook",
-          "cmd": "grep Runbook detalhado docs/HOMOLOGATION.md",
-          "exit_code": 0
-        },
-        {
-          "name": "doc_evidence",
-          "cmd": "grep Homologação D5 itens 3 docs/TEST-EVIDENCE.md",
-          "exit_code": 0
-        }
-      ],
-      "last_validated_sha": "1196c81",
-      "stamped_at": "2026-11-01T22:30:00Z"
+      "ci_pr_7": "test pass, docker-smoke pass",
+      "last_validated_sha": "10baff4",
+      "stamped_at": "2026-11-01T22:45:00Z"
     },
     "sprint_delivery": "stamped",
     "sprint_delivery_sprint": "N9"

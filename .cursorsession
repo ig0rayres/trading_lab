@@ -121,7 +121,7 @@
       "id": "N12.1",
       "title": "TEST-EVIDENCE matriz Feature 5",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "files": ["docs/TEST-EVIDENCE.md"]
     },
@@ -129,7 +129,7 @@
       "id": "N12.2",
       "title": "HOMOLOGATION runbook Feature 5 signal_copy",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N12.1"],
       "files": ["docs/HOMOLOGATION.md"]
     },
@@ -137,7 +137,7 @@
       "id": "N12.3",
       "title": "pytest PAPER_SUBMITTED + process_after_gate_b mock",
       "size": "M",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N12.1"],
       "files": ["tests/test_signal_paper_runner.py", "tests/test_paper_gateway_queue.py"]
     },
@@ -161,12 +161,12 @@
   ],
   "checkpoint": {
     "sprint": "N12",
-    "phase": "planning",
+    "phase": "testing",
     "branch": "front/pivot-demo-paper",
-    "last_completed_task": null,
-    "current_task": "N12.1",
-    "timestamp": "2026-11-02T00:30:00-03:00",
-    "relevant_paths": ["docs/ROADMAP.md", "docs/.briefs/N12.brief.md", "docs/ISSUES.md"]
+    "last_completed_task": "N12.3",
+    "current_task": "N12.4",
+    "timestamp": "2026-11-02T01:00:00-03:00",
+    "relevant_paths": ["docs/HOMOLOGATION.md", "docs/TEST-EVIDENCE.md", "tests/test_signal_paper_runner.py"]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -209,7 +209,7 @@
   "sprint_branch": "front/pivot-demo-paper",
   "sprint_nome": "Sprint N12 — Demo Alpaca paper (signal_copy)",
   "sprint_categoria": "N",
-  "plan_only": true,
+  "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N10",

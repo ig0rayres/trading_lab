@@ -41,6 +41,29 @@ class PaperGatewayQueueTest(unittest.TestCase):
         self.assertEqual(out['status'], 'BLOCKED')
         self.assertEqual(out['orders_sent'], 0)
 
+    def test_auto_allowed_delegates_to_paper_run(self):
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        env = {
+            'LIVE_TRADING_ENABLED': 'false',
+            'PAPER_SIGNAL_AUTO_ENABLED': 'true',
+            'PAPER_EXECUTION_ENABLED': 'true',
+            'PAPER_SIGNAL_ACCOUNT_ACK': 'I_AUTHORIZE_ALPACA_PAPER_ONLY',
+        }
+        submitted = {
+            'status': 'PAPER_SUBMITTED',
+            'orders_sent': 1,
+            'client_order_id': 'nf-deadbeef',
+        }
+
+        def fake_run(signal, env, ledger=None, **kwargs):
+            return submitted
+
+        with patch.object(pgq, 'paper_run', side_effect=fake_run) as broker:
+            out = pgq.process_after_gate_b(_signal(), decision, env, broker_run=broker)
+        broker.assert_called_once()
+        self.assertEqual(out['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(out['orders_sent'], 1)
+
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
 class GateBLedgerIntegrationTest(unittest.TestCase):

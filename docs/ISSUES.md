@@ -7,6 +7,7 @@
 | ISS-001 | fechado | N6 | Imagem EasyPanel sem psycopg e sem vendor pinado |
 | ISS-002 | fechado | N7 | Catálogo de estratégias sem persistência nem Gate B |
 | ISS-003 | fechado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
+| ISS-004 | aberto | N11 | Feature 1 — critérios de ciclo research ainda `[ ]` em REQUIREMENTS |
 
 ## ISS-001 — Imagem EasyPanel sem psycopg e sem vendor pinado
 
@@ -55,3 +56,19 @@
 **Fontes:** operador `/pmo plan` opção A 2026-10-30; ISS-002 fechado; evidência EasyPanel: tabela vazia até seed manual.
 
 **Fechamento:** PR #4 merge `81e6e88` em `main`; CI verde; homolog EasyPanel 2026-10-30 — `SELECT strategy_key, phase FROM strategy_states WHERE deleted_at IS NULL` com 7 linhas (fases N7: `signal_copy=paper_limited`, `orb`/`mean_reversion=shadow`, demais `research`).
+
+---
+
+## ISS-004 — Feature 1 critérios abertos (ciclo research / manifesto)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | improvement |
+| Sprint | N11 |
+| Status | aberto |
+
+**Impacto:** `docs/REQUIREMENTS.md` Feature 1 mantém `[ ]` em “ciclo sem ordem com live desligado” e “ciclo falho não deixa manifesto anterior como sucesso confiável”, apesar de cobertura parcial em `tests/test_v4_scheduler.py`, `test_v4_run_once.py` e `test_v4_report_integrity.py`. Operador não consegue fechar MVP research só pela folha de requisitos.
+
+**Critério de fechamento:** matriz de evidência em `docs/TEST-EVIDENCE.md`; teste de integração scheduler `--once` + falha remove `v4_manifest.json` quando aplicável; ambos checkboxes Feature 1 `[x]` com referência a nodeids pytest; CI verde; sem novo caminho de ordem; `LIVE_TRADING_ENABLED` false.
+
+**Fontes:** operador `/pmo plan` N11 Feature 1 2026-11-01; `docs/REQUIREMENTS.md` § Feature 1; `docs/PROJECT-BRIEF.md` BOM-1.

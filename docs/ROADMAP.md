@@ -684,9 +684,9 @@ executor_prompt: |
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N12.1 Matriz Feature 5 → pytest nodeids + checklist operador | docs | — |
-| [ ] | P | N12.2 Runbook Feature 5 em HOMOLOGATION (`signal-paper` / worker auto flags) | docs | N12.1 |
-| [ ] | M | N12.3 Testes: `PAPER_SUBMITTED` + `process_after_gate_b` com broker mock | `/qa testes` | N12.1 |
+| [x] | P | N12.1 Matriz Feature 5 → pytest nodeids + checklist operador | docs | — |
+| [x] | P | N12.2 Runbook Feature 5 em HOMOLOGATION (`signal-paper` / worker auto flags) | docs | N12.1 |
+| [x] | M | N12.3 Testes: `PAPER_SUBMITTED` + `process_after_gate_b` com broker mock | `/qa testes` | N12.1 |
 | [ ] | P | N12.4 Operador: fill Alpaca paper + reconcile redigido (EasyPanel) | operador | N12.2, N12.3 |
 | [ ] | P | N12.5 REQUIREMENTS Feature 5 fill `[x]` + TEST-EVIDENCE operador | docs | N12.4 |
 

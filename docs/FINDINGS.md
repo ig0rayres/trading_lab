@@ -26,4 +26,5 @@
 - **D4** fechada após F-007–F-010 e CI pytest.
 - **D5** fechada no escopo código/CI; fill Alpaca real continua checklist operador (Feature 5).
 - **N6** fechada: PR #1 merge `6813fb5`; CI test + docker-smoke verdes; operador EasyPanel hashia (2026-10-30).
-- **N9** homolog itens 3–7 operador (2026-10-30 / 2026-11-01): evidência em `TEST-EVIDENCE.md`. **F-013** fechado: worker passa `queue_idempotency_key` (stem da fila) em `persist_risk_decision` (`paper_gateway_queue.py`, `tradingview_worker.py`); teste `test_persist_uses_queue_stem_when_signal_id_hashed`.
+- **N9** homolog itens 3–7 operador (2026-10-30 / 2026-11-01): evidência em `TEST-EVIDENCE.md`. **F-013** fechado em **`main` `0509732`**: worker passa `queue_idempotency_key` (stem da fila); unittest integração OK no EasyPanel (2026-11-01).
+- **N10** closeout: ROADMAP N9 concluída; runbook §4 documenta armadilhas de smoke (TTL/sessão).

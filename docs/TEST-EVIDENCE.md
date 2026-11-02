@@ -105,7 +105,7 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 | Evidência | Valor |
 |-----------|--------|
 | PR | https://github.com/ig0rayres/trading_lab/pull/1 (merged 2026-10-30) |
-| `main` merge | `6813fb5` |
+| `main` merge | `6813fb5` (N6); homolog N9 + F-013 → **`0509732`** (2026-11-01) |
 | Operador | EasyPanel hashia — N6 no ar (dois apps) |
 
 ## Homologação D5 itens 3–7 (Sprint N9 — operador EasyPanel)
@@ -116,7 +116,7 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 |------|-----------|------------------------|-------------------|--------|----------------------|
 | 3 | Gate A | `run.sh tv-webhook` + POST válido | ≥1 linha em `signal_events` | ok | 1 linha `accepted` AAPL; `idempotency_key` = digest do sinal (~2026-10-30T19:28Z). HTTP 202 `QUEUED` ≠ fill. |
 | 4a | Gate B rejeição | `run.sh tv-worker` | linha em `risk_decisions` (opcional) | ok | Journal `BLOCKED`; worker persiste rejeição via stem da fila (F-013). |
-| 4b | Gate B aceite | `run.sh tv-worker` | `paper_orders.status = queued_intent` | ok | Journal `QUEUED` / `PAPER_GATEWAY_QUEUE_ONLY`; `paper_orders.queued_intent` após worker com fix F-013 (PR #7). |
+| 4b | Gate B aceite | `run.sh tv-worker` | `paper_orders.status = queued_intent` | ok | Journal `QUEUED`; F-013 em **`main` `0509732`**. Persistência 4b confirmada no EasyPanel via unittest integração (`test_persist_uses_queue_stem_when_signal_id_hashed` OK). Smoke manual com `sent_at` antigo → worker `EXPIRED_OR_FUTURE_SIGNAL` (esperado). |
 | 5 | Reconcile | `v4-alpaca-reconcile` + `PAPER_RECONCILE_LEDGER_APPLY=true` | JSON com `ledger_apply`; `broker_reconciled` false | ok | `reconcile.json`: `ledger_apply` presente; `broker_reconciled` false; stdout `BLOCKED_INCOMPLETE`, `orders_sent` 0. |
 | 6 | Dashboard | `run.sh v4-dashboard` + `/api/status` | `kill_switch_on`, `shadow_vs_paper`; auth se remoto | ok | Loopback 127.0.0.1:8765; Bearer auth; HTTP 200; campos `kill_switch_on`, `shadow_vs_paper` presentes (~2026-11-01). |
 | 7 | Kill switch | `TRADING_LAB_KILL_SWITCH` ou `control_flags` | worker bloqueia; sem nova ordem | ok | Switch `true` → fila + `tv-worker` → journal `BLOCKED` / `KILL_SWITCH`; `orders_sent` 0. Fim de semana: enfileirar via `ingest(..., now=)` em sessão NY (POST HTTP 422 `OUTSIDE_SESSION`). Switch reposto `false`. |
@@ -129,6 +129,12 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 |------|----------|--------|
 | N9.1–N9.4 | `docs/HOMOLOGATION.md` runbook § itens 3–7 | Sem diff em `src/` |
 | N9.5 | esta seção + bloco Feature 5 opcional em HOMOLOGATION | Feature 5 fill permanece `[ ]` em REQUIREMENTS |
+
+## Sprint N10 — closeout N9 (docs)
+
+| Task | Evidência |
+|------|-----------|
+| N10 | ROADMAP N9 `concluida`; notas smoke §4 HOMOLOGATION; `main` `0509732` nesta folha |
 
 ## Sprint N11 — Feature 1 ciclo research (pytest traceability)
 

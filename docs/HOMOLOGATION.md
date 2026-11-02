@@ -43,6 +43,7 @@ Pré-requisitos nos dois apps: `LIVE_TRADING_ENABLED=false`, `LEDGER_DATABASE_UR
 | Não conta como homologado | **`PAPER_GATEWAY_QUEUE_ONLY`**, fila sem linha no ledger, **`orders_sent = 0`** no JSON do worker — intenção na fila **não** é fill Alpaca. |
 | Verificar rejeição (opcional) | Forçar sinal fora de sessão ou estratégia não-paper (ex. `orb` em shadow): `SELECT decision, reason FROM risk_decisions ORDER BY created_at DESC LIMIT 3;` |
 | Verificar aceite (opcional) | Sinal `signal_copy` em fase paper com gates OK: `SELECT status, symbol FROM paper_orders ORDER BY created_at DESC LIMIT 3;` — esperar **`queued_intent`**. |
+| Smoke pós-deploy (N10) | **`sent_at_utc` deve estar dentro de `ttl_seconds` do relógio real** quando o worker roda (`signal_copy.validate`). Fim de semana: POST HTTP → `OUTSIDE_SESSION`; `ingest(..., now=)` em **dia útil NY** enfileira, mas worker ainda rejeita se `sent_at` estiver no passado → **`EXPIRED_OR_FUTURE_SIGNAL`**. Evidência **4b** válida com: (a) pregão + `sent_at=now` + worker, ou (b) `python3 -m unittest tests.test_paper_gateway_queue.GateBLedgerIntegrationTest.test_persist_uses_queue_stem_when_signal_id_hashed` no container com `LEDGER_DATABASE_URL`. |
 | Evidência | Contagens redigidas na folha N9 (itens 4a rejeição / 4b aceite — pode ser “n/a” se só um caminho testado). |
 
 ### 5. Reconcile read-only — `ledger_apply`

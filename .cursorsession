@@ -16,7 +16,7 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Execução N11 — Feature 1 (aguardando /qa validar)",
+  "fase_nome": "Execução N10 — closeout N9 (docs)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -35,7 +35,7 @@
     {
       "nome": "research-cycle",
       "descricao": "Scheduler de pesquisa e manifesto. orders_sent permanece 0.",
-      "status": "concluido",
+      "status": "em_andamento",
       "api": [
         "v4-scheduler",
         "v4-run-once"
@@ -77,10 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Merge PR #7 em main",
-    "Rebuild trading-lab-webhook (EasyPanel)",
-    "Smoke item 4b: POST + tv-worker + SELECT paper_orders queued_intent",
-    "/git front finish após merge"
+    "Executar N10.1–N10.4 na frente n10-closeout",
+    "/qa validar N10",
+    "PR merge + /git front finish"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -113,52 +112,61 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo sprint N9"
+    "/pmo sprint N10"
   ],
-  "contexto_rapido": "N11 implementada: TEST-EVIDENCE matriz, teste main --once, REQUIREMENTS Feature 1 [x]; pendente QA + git.",
-  "sprint_atual": "N11",
+  "contexto_rapido": "N10 ativa: closeout ROADMAP N9 + notas smoke homolog; docs only; main 0509732.",
+  "sprint_atual": "N10",
   "sprint_tasks": [
     {
-      "id": "N11.1",
-      "title": "Matriz Feature 1 → pytest nodeids",
+      "id": "N10.1",
+      "title": "ROADMAP: N9 concluida + indice + proximo passo",
       "size": "P",
       "status": "done",
       "depends_on": [],
-      "files": ["docs/TEST-EVIDENCE.md"]
+      "files": ["docs/ROADMAP.md"]
     },
     {
-      "id": "N11.2",
-      "title": "Integração scheduler --once falha + manifest stale",
-      "size": "M",
-      "status": "done",
-      "depends_on": ["N11.1"],
-      "files": ["tests/test_v4_scheduler.py"]
-    },
-    {
-      "id": "N11.3",
-      "title": "REQUIREMENTS Feature 1 checkboxes",
+      "id": "N10.2",
+      "title": "TEST-EVIDENCE + HOMOLOGATION notas smoke item 4",
       "size": "P",
       "status": "done",
-      "depends_on": ["N11.1"],
-      "files": ["docs/REQUIREMENTS.md"]
+      "depends_on": ["N10.1"],
+      "files": ["docs/TEST-EVIDENCE.md", "docs/HOMOLOGATION.md"]
     },
     {
-      "id": "N11.4",
-      "title": "Sessão sprint N11 checkpoint",
+      "id": "N10.3",
+      "title": "FINDINGS/TEST-EVIDENCE referencia main 0509732",
       "size": "P",
       "status": "done",
-      "depends_on": ["N11.1"],
+      "depends_on": ["N10.1"],
+      "files": ["docs/FINDINGS.md", "docs/TEST-EVIDENCE.md"]
+    },
+    {
+      "id": "N10.4",
+      "title": "Sessao sprint N10 checkpoint",
+      "size": "P",
+      "status": "done",
+      "depends_on": ["N10.1"],
       "files": [".cursorsession"]
+    },
+    {
+      "id": "N10.5",
+      "title": "Operador: git front finish apos merge",
+      "size": "P",
+      "status": "todo",
+      "depends_on": ["N10.2"],
+      "files": [],
+      "owner": "operador"
     }
   ],
   "checkpoint": {
-    "sprint": "N11",
+    "sprint": "N10",
     "phase": "implementation",
-    "branch": "front/n11-feature1",
-    "last_completed_task": "N11.4",
-    "current_task": null,
-    "timestamp": "2026-11-01T22:05:00-03:00",
-    "relevant_paths": ["docs/ROADMAP.md", "docs/.briefs/N11.brief.md", "docs/REQUIREMENTS.md"]
+    "branch": "front/n10-closeout",
+    "last_completed_task": "N10.4",
+    "current_task": "N10.5",
+    "timestamp": "2026-11-01T19:45:00-03:00",
+    "relevant_paths": ["docs/ROADMAP.md", "docs/TEST-EVIDENCE.md", "docs/HOMOLOGATION.md"]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -185,51 +193,51 @@
     "updated_at": "2026-10-30T14:51:42-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-11-01T20:09:36Z",
-    "usage_percent": 91.5225,
-    "messages_lost": 340
+    "compacted_at": "2026-10-30T19:33:06Z",
+    "usage_percent": 90.923,
+    "messages_lost": 417
   },
-  "compact_count": 7,
+  "compact_count": 6,
   "previous_sprint": "N9",
   "front": {
-    "slug": "n11-feature1",
+    "slug": "n10-closeout",
     "kind": "agent",
     "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab.fronts/n11-feature1",
-    "branch": "front/n11-feature1"
+    "worktree": "/media/igor/windows_part/Cursor/trading lab.fronts/n10-closeout",
+    "branch": "front/n10-closeout"
   },
-  "sprint_branch": "front/n11-feature1",
-  "sprint_nome": "Sprint N11 — Feature 1 ciclo research",
+  "sprint_branch": "front/n10-closeout",
+  "sprint_nome": "Sprint N10 — Closeout N9",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
-    "sprint": "N11",
+    "sprint": "N10",
     "produced_by": "/qa validar",
     "senior_review_status": "PASS",
     "findings_registered": [],
     "findings_found": 0,
     "findings_disposition": [],
     "files_modified_outside_findings": 0,
-    "recorded_at": "2026-11-02T01:20:00Z",
-    "recorded_by": "qa-validar-n11",
-    "notes": "Feature 1 REQUIREMENTS [x]; TEST-EVIDENCE matriz; +1 test scheduler main --once; sem diff prod src/; F-003 fora escopo.",
+    "recorded_at": "2026-11-01T20:10:00Z",
+    "recorded_by": "qa-validar-n10",
+    "notes": "Docs-only delta vs main; N9 concluida no ROADMAP; smoke notes HOMOLOGATION; 0509732 TEST-EVIDENCE; sem src/. N10.5 operador (git front finish) apos merge PR — nao bloqueia entrega repo.",
     "round": 1,
     "full_suite_ran": false,
     "senior_status": "PASS"
   },
   "validation_gate": {
     "produced_by": "/qa validar",
-    "sprint": "N11",
+    "sprint": "N10",
     "validation_round": 1,
     "result": "APROVADA",
     "senior_review_status": "PASS",
     "in_contract": [
-      {"id": "n11-feature1-criteria", "check": "REQUIREMENTS Feature 1 checkboxes [x]", "pass": true},
-      {"id": "n11-no-broker", "check": "diff vs main sem src/ exceto tests", "pass": true},
-      {"id": "n11-target-tests", "check": "scheduler/run_once/report_integrity unittest OK", "pass": true}
+      {"id": "n10-no-src", "check": "no src/ in sprint diff", "pass": true},
+      {"id": "n10-n9-closed", "check": "N9 concluida index+section", "pass": true},
+      {"id": "n10-smoke-doc", "check": "HOMOLOGATION smoke row", "pass": true}
     ],
-    "last_validated_sha": "970cc9b",
-    "stamped_at": "2026-11-02T01:20:00Z"
+    "last_validated_sha": "58f2d38",
+    "stamped_at": "2026-11-01T20:10:00Z"
   }
 }

@@ -112,6 +112,25 @@ Mesmas flags de submit no env do **`tv-worker`**. Após Gate B aceitar, `paper_g
 - Só linha `paper_orders.status = queued_intent`.
 - HTTP 202 webhook ou journal `QUEUED` sem submit Alpaca.
 - Conta paper existente sem trilha documentada nesta folha.
+- **Deploy #10 / imagem nova** sem fill documentado na folha N12.
+
+---
+
+## Homolog por família — Feature 4 (Sprint N13)
+
+> Fases vêm de `strategy_catalog.DEFAULT_PHASE_BY_KEY` (seed insert-if-missing). **Não** promover fase por PnL, HTTP 200 ou fila.
+
+| Família | Fase default | O que homologar (operador) | Ordem paper? |
+|---------|--------------|----------------------------|--------------|
+| `news_first` | research | Scheduler `--once` / manifesto; Gate A audit (`news_first` report) | **Não** |
+| `momentum` | research | Confirmar Gate B recusa paper (`STRATEGY_PHASE_BLOCKED`) com `strategy_key=momentum` | **Não** (blocked upstream) |
+| `ta_barato` | research | Idem momentum | **Não** (blocked upstream) |
+| `prodigy_15d` | research | Idem research; teto R$20 só após regra recuperada | **Não** (blocked upstream) |
+| `signal_copy` | paper_limited | N12 § Feature 5 demo; Collective2 permanece reprovado | **Sim** (paper limitado; fill N12.4 pendente) |
+| `orb` | shadow | Shadow journal / research; Gate B `STRATEGY_NOT_PAPER` | **Não** (nunca principal) |
+| `mean_reversion` | shadow | Idem ORB (shadow) | **Não** |
+
+Evidência redigida: coluna **Status homolog** em `docs/TEST-EVIDENCE.md` § Sprint N13.
 
 ---
 

@@ -9,8 +9,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from shadow_journal import capture, summarize
 
 
+NY = ZoneInfo('America/New_York')
+
+
+def _market_day_ny():
+    """Journal uses NY session dates; align fixture as_of with now_ny, not UTC."""
+    return datetime.now(NY).date().isoformat()
+
+
 def fixture(day=None):
-    day = day or datetime.now(timezone.utc).date().isoformat()
+    day = day or _market_day_ny()
     return {'mode': 'READ_ONLY_RESEARCH_NO_ORDERS', 'health': 'OK_RESEARCH_ONLY',
             'paper_execution_authorized': False, 'live_execution_authorized': False,
             'errors': [], 'paper_account': {'status': 'READ_ONLY_DIAGNOSTIC_NO_ORDERS',
@@ -21,7 +29,7 @@ def fixture(day=None):
                             'fundamental': {'status': 'ANNUAL_COMPARABLE'}} for sym, px in [('AAPL', 100), ('SPY', 500)]]}
 
 
-AFTER_CLOSE = datetime.now(ZoneInfo('America/New_York')).replace(hour=16, minute=30)
+AFTER_CLOSE = datetime.now(NY).replace(hour=16, minute=30, second=0, microsecond=0)
 
 class JournalTests(unittest.TestCase):
     def setUp(self):

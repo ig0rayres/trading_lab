@@ -115,3 +115,5 @@ Registrar em `docs/TEST-EVIDENCE.md` § Sprint N16 (quando operador executar):
 ## N16.2 — gap de código
 
 **Decisão pós-inventory:** homolog one-shot **não exige** alteração em `src/` se operador promove fase + `PRODIGY_PROVIDERS` + sinal assinado. Adaptação ingest/worker só se Caminho B falhar com gap documentado (issue separada).
+
+**Promoção de fase + evolution:** `docs/HOMOLOGATION-EVOLUTION-N16.md` (N16.3).

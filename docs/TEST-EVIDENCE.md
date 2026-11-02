@@ -190,6 +190,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 |------------------|-----------|--------|-----------|
 | Git First inventory | `docs/.briefs/N16-GIT-FIRST-REUSE.md` | ok | N16.0 |
 | Runbook operador | `docs/HOMOLOGATION-PRODIGY.md` | ok | N16.1 |
+| Promoção fase + evolution | `docs/HOMOLOGATION-EVOLUTION-N16.md` | ok | N16.3 |
 | `prodigy-rank` → JSON | `tests.test_prodigy_rank` | ok | CI |
 | Rank → sinal → preview | Operador (`HOMOLOGATION-PRODIGY` § 1–3) | pendente | N16.4 |
 | Submit / fill paper Prodígio | Operador + Alpaca paper | pendente | N16.4 |

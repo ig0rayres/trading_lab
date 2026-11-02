@@ -80,6 +80,41 @@ Fill real na Alpaca Paper (aceite, fill parcial/cheio, P&L reconciliado) **não*
 
 ---
 
+## Feature 5 — demo paper `signal_copy` (Sprint N12, gate ISS-005)
+
+> **`queued_intent` / `PAPER_GATEWAY_QUEUE_ONLY` ≠ fill.** Este runbook fecha o critério aberto de Feature 5 só com evidência operador redigida em `docs/TEST-EVIDENCE.md` (N12.4). `LIVE_TRADING_ENABLED=false` obrigatório.
+
+### Pré-requisitos
+
+- Itens N9.3–N9.7 já ok (gates, reconcile read-only, kill switch).
+- `strategy_states`: `signal_copy` em fase que permite paper (`paper_limited` após seed N8).
+- Credenciais **Alpaca Paper** só no EasyPanel (nunca no Git).
+- Snapshot de risco consolidado: arquivo JSON apontado por **`V4_RISK_SNAPSHOT_FILE`** (ver `signal_paper_runner.risk_check` — stale >120s bloqueia).
+
+### Caminho A — one-shot (`signal-paper`)
+
+| Passo | Ação |
+|-------|------|
+| 1 | Montar JSON de sinal assinado (`signal_copy.validate` / `provider_signature` com `SIGNAL_COPY_SECRET`). |
+| 2 | Env **preview** (default): sem `PAPER_SIGNAL_AUTO_ENABLED` → stdout `PREVIEW_ONLY`, `orders_sent=0`. |
+| 3 | Env **submit** (operador consciente): `PAPER_SIGNAL_AUTO_ENABLED=true`, `PAPER_EXECUTION_ENABLED=true`, `PAPER_SIGNAL_ACCOUNT_ACK=I_AUTHORIZE_ALPACA_PAPER_ONLY`, `PAPER_DAILY_RISK_CONFIRMED=true`, `V4_RISK_SNAPSHOT_FILE=/app/data/risk-snapshot.json` (path real no container). |
+| 4 | Comando | `/app/scripts/run.sh signal-paper --signal /app/data/received-signal.json` |
+| 5 | Verificar stdout | `PAPER_SUBMITTED`, `orders_sent=1`, `broker_id` redigido na folha de evidência (não colar segredo). |
+| 6 | Corretora | Confirmar ordem/posição na UI Alpaca **paper** (contagem/símbolo redigidos). |
+| 7 | Reconcile | `PAPER_RECONCILE_LEDGER_APPLY=true` + `/app/scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile-post-fill.json` — anotar `ledger_apply` e que **`broker_reconciled` false** continua válido até política de reconcile completo. |
+
+### Caminho B — worker pós–Gate B (opcional)
+
+Mesmas flags de submit no env do **`tv-worker`**. Após Gate B aceitar, `paper_gateway_queue.process_after_gate_b` delega a `signal_paper_runner.run` quando `broker_auto_allowed(env)` é true. Journal do worker deve mostrar `orders_sent=1` no caminho submit — distinto de `QUEUED` / `orders_sent=0`.
+
+### O que não conta como Feature 5 fechada
+
+- Só linha `paper_orders.status = queued_intent`.
+- HTTP 202 webhook ou journal `QUEUED` sem submit Alpaca.
+- Conta paper existente sem trilha documentada nesta folha.
+
+---
+
 - HTTP 200 / `PAPER_GATEWAY_QUEUE_ONLY` / fila sem fill real observado.
 - Conta paper existente sem trilha ledger + reconcile aplicado.
 - ORB ou copy Collective2 como estratégia principal (Feature 4 aberta).

@@ -155,3 +155,28 @@ Comando local (com deps):
 ```bash
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest tests/test_v4_scheduler.py tests/test_v4_run_once.py tests/test_v4_report_integrity.py -q
 ```
+
+## Sprint N12 — Feature 5 demo paper (`signal_copy`)
+
+> Sprint N12 · ISS-005 · `docs/REQUIREMENTS.md` Feature 5 · fill operador **pendente** até N12.4 · `LIVE_TRADING_ENABLED=false`
+
+| Critério / check | Evidência pytest (nodeid) ou operador | Status | Resultado |
+|------------------|----------------------------------------|--------|-----------|
+| Preview não chama broker | `tests.test_signal_paper_runner.PaperRunnerTests.test_preview_does_not_call_broker` | ok | CI |
+| Assinatura inválida bloqueia | `tests.test_signal_paper_runner.PaperRunnerTests.test_bad_signature_blocked` | ok | CI |
+| Auto exige ack explícito | `tests.test_signal_paper_runner.PaperRunnerTests.test_auto_mode_requires_attestation` | ok | CI |
+| Submit mock → `PAPER_SUBMITTED`, `orders_sent=1` | `tests.test_signal_paper_runner.PaperRunnerTests.test_auto_submit_success_orders_sent_one` | ok | CI |
+| Fila sem auto → `QUEUED`, `orders_sent=0` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_queue_never_calls_broker` | ok | CI |
+| Auto flags → delega a `paper_run` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_auto_allowed_delegates_to_paper_run` | ok | CI |
+| Fill real Alpaca + posição coerente | Operador N12.4 (`docs/HOMOLOGATION.md` § Feature 5 demo) | pendente | |
+| Reconcile pós-fill redigido | Operador N12.4 + `v4-alpaca-reconcile` | pendente | |
+
+Comando local (repo tasks N12.1–N12.3):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
+  tests/test_signal_paper_runner.py \
+  tests/test_paper_gateway_queue.py -q
+```
+
+**N12.5:** marcar Feature 5 fill `[x]` em REQUIREMENTS **somente** após linhas operador acima preenchidas.

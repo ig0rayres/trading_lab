@@ -16,7 +16,7 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Execução N10 — closeout N9 (docs)",
+  "fase_nome": "Planejamento N12 — demo paper signal_copy (pivot P0)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -114,59 +114,59 @@
   "comandos_recentes": [
     "/pmo sprint N10"
   ],
-  "contexto_rapido": "N10 ativa: closeout ROADMAP N9 + notas smoke homolog; docs only; main 0509732.",
-  "sprint_atual": "N10",
+  "contexto_rapido": "Plano pivot-demo: N12 P0 Feature 5 signal_copy; N13 P1 homolog famílias; F-003 congelado até N12. main 67ebf0d.",
+  "sprint_atual": "N12",
   "sprint_tasks": [
     {
-      "id": "N10.1",
-      "title": "ROADMAP: N9 concluida + indice + proximo passo",
+      "id": "N12.1",
+      "title": "TEST-EVIDENCE matriz Feature 5",
       "size": "P",
       "status": "done",
       "depends_on": [],
-      "files": ["docs/ROADMAP.md"]
+      "files": ["docs/TEST-EVIDENCE.md"]
     },
     {
-      "id": "N10.2",
-      "title": "TEST-EVIDENCE + HOMOLOGATION notas smoke item 4",
+      "id": "N12.2",
+      "title": "HOMOLOGATION runbook Feature 5 signal_copy",
       "size": "P",
       "status": "done",
-      "depends_on": ["N10.1"],
-      "files": ["docs/TEST-EVIDENCE.md", "docs/HOMOLOGATION.md"]
+      "depends_on": ["N12.1"],
+      "files": ["docs/HOMOLOGATION.md"]
     },
     {
-      "id": "N10.3",
-      "title": "FINDINGS/TEST-EVIDENCE referencia main 0509732",
-      "size": "P",
+      "id": "N12.3",
+      "title": "pytest PAPER_SUBMITTED + process_after_gate_b mock",
+      "size": "M",
       "status": "done",
-      "depends_on": ["N10.1"],
-      "files": ["docs/FINDINGS.md", "docs/TEST-EVIDENCE.md"]
+      "depends_on": ["N12.1"],
+      "files": ["tests/test_signal_paper_runner.py", "tests/test_paper_gateway_queue.py"]
     },
     {
-      "id": "N10.4",
-      "title": "Sessao sprint N10 checkpoint",
-      "size": "P",
-      "status": "done",
-      "depends_on": ["N10.1"],
-      "files": [".cursorsession"]
-    },
-    {
-      "id": "N10.5",
-      "title": "Operador: git front finish apos merge",
+      "id": "N12.4",
+      "title": "Operador: fill Alpaca paper EasyPanel",
       "size": "P",
       "status": "todo",
-      "depends_on": ["N10.2"],
+      "depends_on": ["N12.2", "N12.3"],
       "files": [],
       "owner": "operador"
+    },
+    {
+      "id": "N12.5",
+      "title": "REQUIREMENTS Feature 5 fill [x] pós-evidência",
+      "size": "P",
+      "status": "todo",
+      "depends_on": ["N12.4"],
+      "files": ["docs/REQUIREMENTS.md", "docs/TEST-EVIDENCE.md"]
     }
   ],
   "checkpoint": {
-    "sprint": "N10",
-    "phase": "implementation",
-    "branch": "front/n10-closeout",
-    "last_completed_task": "N10.4",
-    "current_task": "N10.5",
-    "timestamp": "2026-11-01T19:45:00-03:00",
-    "relevant_paths": ["docs/ROADMAP.md", "docs/TEST-EVIDENCE.md", "docs/HOMOLOGATION.md"]
+    "sprint": "N12",
+    "phase": "testing",
+    "branch": "front/pivot-demo-paper",
+    "last_completed_task": "N12.3",
+    "current_task": "N12.4",
+    "timestamp": "2026-11-02T01:00:00-03:00",
+    "relevant_paths": ["docs/HOMOLOGATION.md", "docs/TEST-EVIDENCE.md", "tests/test_signal_paper_runner.py"]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -198,16 +198,16 @@
     "messages_lost": 417
   },
   "compact_count": 6,
-  "previous_sprint": "N9",
+  "previous_sprint": "N11",
   "front": {
-    "slug": "n10-closeout",
+    "slug": "pivot-demo-paper",
     "kind": "agent",
     "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab.fronts/n10-closeout",
-    "branch": "front/n10-closeout"
+    "worktree": "/media/igor/windows_part/Cursor/trading lab",
+    "branch": "front/pivot-demo-paper"
   },
-  "sprint_branch": "front/n10-closeout",
-  "sprint_nome": "Sprint N10 — Closeout N9",
+  "sprint_branch": "front/pivot-demo-paper",
+  "sprint_nome": "Sprint N12 — Demo Alpaca paper (signal_copy)",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {

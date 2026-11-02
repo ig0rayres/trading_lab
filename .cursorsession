@@ -115,7 +115,7 @@
   "comandos_recentes": [
     "/pmo sprint N9"
   ],
-  "contexto_rapido": "N11 planejada: Feature 1 evidência pytest + TEST-EVIDENCE; sem EasyPanel; ISS-004.",
+  "contexto_rapido": "N11 implementada: TEST-EVIDENCE matriz, teste main --once, REQUIREMENTS Feature 1 [x]; pendente QA + git.",
   "sprint_atual": "N11",
   "sprint_tasks": [
     {
@@ -201,5 +201,35 @@
   "sprint_branch": "front/n11-feature1",
   "sprint_nome": "Sprint N11 — Feature 1 ciclo research",
   "sprint_categoria": "N",
-  "plan_only": false
+  "plan_only": false,
+  "validation_gate_qa": {
+    "result": "APROVADA",
+    "sprint": "N11",
+    "produced_by": "/qa validar",
+    "senior_review_status": "PASS",
+    "findings_registered": [],
+    "findings_found": 0,
+    "findings_disposition": [],
+    "files_modified_outside_findings": 0,
+    "recorded_at": "2026-11-02T01:20:00Z",
+    "recorded_by": "qa-validar-n11",
+    "notes": "Feature 1 REQUIREMENTS [x]; TEST-EVIDENCE matriz; +1 test scheduler main --once; sem diff prod src/; F-003 fora escopo.",
+    "round": 1,
+    "full_suite_ran": false,
+    "senior_status": "PASS"
+  },
+  "validation_gate": {
+    "produced_by": "/qa validar",
+    "sprint": "N11",
+    "validation_round": 1,
+    "result": "APROVADA",
+    "senior_review_status": "PASS",
+    "in_contract": [
+      {"id": "n11-feature1-criteria", "check": "REQUIREMENTS Feature 1 checkboxes [x]", "pass": true},
+      {"id": "n11-no-broker", "check": "diff vs main sem src/ exceto tests", "pass": true},
+      {"id": "n11-target-tests", "check": "scheduler/run_once/report_integrity unittest OK", "pass": true}
+    ],
+    "last_validated_sha": "970cc9b",
+    "stamped_at": "2026-11-02T01:20:00Z"
+  }
 }

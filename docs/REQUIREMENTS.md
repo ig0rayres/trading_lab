@@ -65,8 +65,8 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 
 **Critérios de aceite:**
 - [x] `pytest` com evidência em CI (GitHub Actions run [41041762290](https://github.com/ig0rayres/trading_lab/actions/runs/41041762290), commit `f597f8b`, job **test** verde). Contagens 224–395 de ZIPs não substituem isso.
-- [ ] Com live desligado, um ciclo termina sem ordem enviada.
-- [ ] Ciclo falho não deixa manifesto de sucesso anterior visível como confiável.
+- [x] Com live desligado, um ciclo termina sem ordem enviada (`tests/test_v4_scheduler.py` `test_readonly_success`, `test_live_guard`; `tests/test_v4_run_once.py` `test_full_readonly_path`; matriz N11 em `docs/TEST-EVIDENCE.md`).
+- [x] Ciclo falho não deixa manifesto de sucesso anterior visível como confiável (`test_failed_cycle_invalidates_previous_manifest`, `test_main_once_failure_clears_stale_manifest`; `tests/test_v4_report_integrity.py`).
 
 ### Feature 2: Gate A — autenticidade do sinal
 

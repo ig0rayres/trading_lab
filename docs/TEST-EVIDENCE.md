@@ -135,3 +135,23 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 | Task | Evidência |
 |------|-----------|
 | N10 | ROADMAP N9 `concluida`; notas smoke §4 HOMOLOGATION; `main` `0509732` nesta folha |
+
+## Sprint N11 — Feature 1 ciclo research (pytest traceability)
+
+> Sprint N11 · ISS-004 · `docs/REQUIREMENTS.md` Feature 1 · `LIVE_TRADING_ENABLED=false`
+
+| Critério REQUIREMENTS | Evidência pytest (nodeid) | Notas |
+|------------------------|---------------------------|--------|
+| Live desligado: ciclo termina **sem ordem** | `tests.test_v4_scheduler.SchedulerTests.test_readonly_success` | `run_cycle` → `orders_sent` 0, sem `paper-gateway` no comando |
+| Live desligado: ciclo termina **sem ordem** | `tests.test_v4_scheduler.SchedulerTests.test_live_guard` | `BLOCKED_LIVE_FLAG`, exit 2 |
+| Live desligado: ciclo termina **sem ordem** | `tests.test_v4_run_once.TestOnce.test_full_readonly_path` | manifest `orders_sent` 0, `execution_authorized` false |
+| Ciclo falho não deixa manifesto antigo confiável | `tests.test_v4_scheduler.SchedulerTests.test_failed_cycle_invalidates_previous_manifest` | `invalidate_stale_manifest` remove arquivo |
+| Ciclo falho não deixa manifesto antigo confiável | `tests.test_v4_scheduler.SchedulerTests.test_main_once_failure_clears_stale_manifest` | `main --once` wiring + status JSON |
+| Dashboard não promove manifesto adulterado | `tests.test_v4_report_integrity.test_dashboard_never_promotes_tampered_manifest_to_visible_success` | integridade manifesto |
+| Status scheduler não autoriza execução | `tests.test_v4_scheduler.SchedulerTests.test_lock_and_status` | `execution_authorized` false |
+
+Comando local (com deps):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest tests/test_v4_scheduler.py tests/test_v4_run_once.py tests/test_v4_report_integrity.py -q
+```

@@ -16,7 +16,7 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Execução N9 — homologação D5 EasyPanel (itens 3–7)",
+  "fase_nome": "Execução N11 — Feature 1 (aguardando /qa validar)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -35,7 +35,7 @@
     {
       "nome": "research-cycle",
       "descricao": "Scheduler de pesquisa e manifesto. orders_sent permanece 0.",
-      "status": "em_andamento",
+      "status": "concluido",
       "api": [
         "v4-scheduler",
         "v4-run-once"
@@ -115,163 +115,50 @@
   "comandos_recentes": [
     "/pmo sprint N9"
   ],
-  "contexto_rapido": "N9 ativa: runbook + evidência docs; operador EasyPanel N9.6; sem src/; LIVE_TRADING false.",
+  "contexto_rapido": "N11 implementada: TEST-EVIDENCE matriz, teste main --once, REQUIREMENTS Feature 1 [x]; pendente QA + git.",
+  "sprint_atual": "N11",
   "sprint_tasks": [
     {
-      "id": "N9.1",
-      "title": "Runbook Gate A: webhook → signal_events",
+      "id": "N11.1",
+      "title": "Matriz Feature 1 → pytest nodeids",
       "size": "P",
       "status": "done",
       "depends_on": [],
-      "files": [
-        "docs/HOMOLOGATION.md"
-      ],
-      "bom_ref": "BOM-3"
+      "files": ["docs/TEST-EVIDENCE.md"]
     },
     {
-      "id": "N9.2",
-      "title": "Runbook Gate B: worker → risk_decisions + paper_orders queued_intent",
-      "size": "P",
-      "status": "done",
-      "depends_on": [
-        "N9.1"
-      ],
-      "files": [
-        "docs/HOMOLOGATION.md"
-      ],
-      "bom_ref": "BOM-3"
-    },
-    {
-      "id": "N9.3",
-      "title": "Runbook reconcile read-only (ledger_apply, não broker_reconciled)",
-      "size": "P",
-      "status": "done",
-      "depends_on": [
-        "N9.2"
-      ],
-      "files": [
-        "docs/HOMOLOGATION.md"
-      ],
-      "bom_ref": "BOM-3"
-    },
-    {
-      "id": "N9.4",
-      "title": "Runbook dashboard auth + kill switch",
-      "size": "P",
-      "status": "done",
-      "depends_on": [
-        "N9.3"
-      ],
-      "files": [
-        "docs/HOMOLOGATION.md",
-        "docs/INFRASTRUCTURE.md"
-      ],
-      "bom_ref": "BOM-3"
-    },
-    {
-      "id": "N9.5",
-      "title": "Evidence sheet + optional Feature 5 operator note",
+      "id": "N11.2",
+      "title": "Integração scheduler --once falha + manifest stale",
       "size": "M",
       "status": "done",
-      "depends_on": [
-        "N9.4"
-      ],
-      "files": [
-        "docs/TEST-EVIDENCE.md",
-        "docs/HOMOLOGATION.md"
-      ],
-      "bom_ref": "BOM-3"
+      "depends_on": ["N11.1"],
+      "files": ["tests/test_v4_scheduler.py"]
     },
     {
-      "id": "N9.6",
-      "title": "Operador: executar itens 3–7 no EasyPanel e preencher evidência",
+      "id": "N11.3",
+      "title": "REQUIREMENTS Feature 1 checkboxes",
       "size": "P",
       "status": "done",
-      "depends_on": [
-        "N9.5"
-      ],
-      "files": [],
-      "bom_ref": "BOM-3",
-      "owner": "operador"
+      "depends_on": ["N11.1"],
+      "files": ["docs/REQUIREMENTS.md"]
+    },
+    {
+      "id": "N11.4",
+      "title": "Sessão sprint N11 checkpoint",
+      "size": "P",
+      "status": "done",
+      "depends_on": ["N11.1"],
+      "files": [".cursorsession"]
     }
   ],
   "checkpoint": {
-    "sprint": "N9",
+    "sprint": "N11",
     "phase": "implementation",
-    "branch": "front/n9-easypanel-homolog",
-    "last_completed_task": "N9.6",
+    "branch": "front/n11-feature1",
+    "last_completed_task": "N11.4",
     "current_task": null,
-    "timestamp": "2026-11-01T19:30:00-03:00",
-    "relevant_paths": [
-      "docs/HOMOLOGATION.md",
-      "docs/TEST-EVIDENCE.md",
-      "docs/INFRASTRUCTURE.md"
-    ],
-    "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N9",
-      "produced_by": "/qa validar + rock verify",
-      "senior_review_status": "PASS",
-      "findings_registered": [
-        "F-013"
-      ],
-      "findings_found": 1,
-      "findings_disposition": [
-        {
-          "id": "F-013",
-          "status": "fixed",
-          "reason": "queue_idempotency_key=path.stem in worker; test_persist_uses_queue_stem_when_signal_id_hashed; FINDINGS fechado."
-        }
-      ],
-      "files_modified_outside_findings": 0,
-      "recorded_at": "2026-11-01T22:45:00Z",
-      "recorded_by": "rock-n9-closeout",
-      "notes": "Rodada 3: F-013 fix 10baff4; CI PR#7 test+docker-smoke green; evidência 3–7 ok; F-013 fechado. Operador: merge PR + redeploy webhook + smoke SQL item 4b.",
-      "round": 3,
-      "full_suite_ran": true,
-      "first_pass": false,
-      "senior_status": "PASS"
-    },
-    "validation_gate": {
-      "produced_by": "rock verify",
-      "sprint": "N9",
-      "validation_round": 3,
-      "result": "APROVADA",
-      "senior_review_status": "PASS",
-      "contract_source": "roadmap",
-      "findings_registered": [
-        "F-013"
-      ],
-      "findings_disposition": [
-        {
-          "id": "F-013",
-          "status": "fixed",
-          "reason": "10baff4"
-        }
-      ],
-      "in_contract": [
-        {
-          "id": "n9-5-no-live-secrets",
-          "check": "no APCA-API/BEGIN PRIVATE in HOMOLOGATION+TEST-EVIDENCE",
-          "pass": true
-        },
-        {
-          "id": "n9-5-live-lock",
-          "check": "Dockerfile LIVE_TRADING_ENABLED=false",
-          "pass": true
-        },
-        {
-          "id": "n9-5-feature5-open",
-          "check": "REQUIREMENTS Fill real Alpaca open",
-          "pass": true
-        }
-      ],
-      "ci_pr_7": "test pass, docker-smoke pass",
-      "last_validated_sha": "10baff4",
-      "stamped_at": "2026-11-01T22:45:00Z"
-    },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N9"
+    "timestamp": "2026-11-01T22:05:00-03:00",
+    "relevant_paths": ["docs/ROADMAP.md", "docs/.briefs/N11.brief.md", "docs/REQUIREMENTS.md"]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -298,22 +185,51 @@
     "updated_at": "2026-10-30T14:51:42-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T19:33:06Z",
-    "usage_percent": 90.923,
-    "messages_lost": 417
+    "compacted_at": "2026-11-01T20:09:36Z",
+    "usage_percent": 91.5225,
+    "messages_lost": 340
   },
-  "compact_count": 6,
-  "previous_sprint": "N8",
+  "compact_count": 7,
+  "previous_sprint": "N9",
   "front": {
-    "slug": "n9-easypanel-homolog",
+    "slug": "n11-feature1",
     "kind": "agent",
     "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab",
-    "branch": "front/n9-easypanel-homolog"
+    "worktree": "/media/igor/windows_part/Cursor/trading lab.fronts/n11-feature1",
+    "branch": "front/n11-feature1"
   },
-  "sprint_atual": "N9",
-  "sprint_branch": "front/n9-easypanel-homolog",
-  "sprint_nome": "Sprint N9 — Homologação D5 EasyPanel",
+  "sprint_branch": "front/n11-feature1",
+  "sprint_nome": "Sprint N11 — Feature 1 ciclo research",
   "sprint_categoria": "N",
-  "plan_only": false
+  "plan_only": false,
+  "validation_gate_qa": {
+    "result": "APROVADA",
+    "sprint": "N11",
+    "produced_by": "/qa validar",
+    "senior_review_status": "PASS",
+    "findings_registered": [],
+    "findings_found": 0,
+    "findings_disposition": [],
+    "files_modified_outside_findings": 0,
+    "recorded_at": "2026-11-02T01:20:00Z",
+    "recorded_by": "qa-validar-n11",
+    "notes": "Feature 1 REQUIREMENTS [x]; TEST-EVIDENCE matriz; +1 test scheduler main --once; sem diff prod src/; F-003 fora escopo.",
+    "round": 1,
+    "full_suite_ran": false,
+    "senior_status": "PASS"
+  },
+  "validation_gate": {
+    "produced_by": "/qa validar",
+    "sprint": "N11",
+    "validation_round": 1,
+    "result": "APROVADA",
+    "senior_review_status": "PASS",
+    "in_contract": [
+      {"id": "n11-feature1-criteria", "check": "REQUIREMENTS Feature 1 checkboxes [x]", "pass": true},
+      {"id": "n11-no-broker", "check": "diff vs main sem src/ exceto tests", "pass": true},
+      {"id": "n11-target-tests", "check": "scheduler/run_once/report_integrity unittest OK", "pass": true}
+    ],
+    "last_validated_sha": "970cc9b",
+    "stamped_at": "2026-11-02T01:20:00Z"
+  }
 }

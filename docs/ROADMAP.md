@@ -33,7 +33,8 @@
 | N6 | N | Imagem com psycopg + vendor pinado; CI smoke | concluida | 5 | vendor, observability | Deploy reprodutível EasyPanel | *(abaixo)* |
 | N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | concluida | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
 | N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | concluida | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
-| N9 | N | Itens 3–7 com evidência operador; sem fill e sem src | planejada | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 no EasyPanel | *(abaixo)* |
+| N9 | N | Itens 3–7 com evidência operador; F-013 persist | concluida | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 EasyPanel | *(abaixo)* |
+| N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | concluida | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -56,8 +57,7 @@
 | N7 | senior+qa | Catálogo + Gate B produto |
 | N8 | senior+qa | Seed no CLI migrate + runbook homologação |
 | N9 | senior+qa | Runbook itens 3–7 + evidência; sem reabrir Gate B |
-
----
+| N11 | senior+qa | Scheduler/run-once tests + REQUIREMENTS Feature 1 |
 
 ## Grafo de Dependências
 
@@ -570,6 +570,78 @@ executor_prompt: |
 
 ---
 
+## Sprint N11 — Feature 1 ciclo research (evidência + testes)
+
+> Categoria: N  
+> Status: concluida  
+> titulo_humano: Fechar Feature 1 — ciclo research sem ordem e manifesto honesto  
+> resumo_humano: Amarra os critérios abertos da Feature 1 a testes pytest e à folha de evidência. Reforça que scheduler e run-once não enviam ordem e que falha de ciclo não deixa manifesto antigo como sucesso. Sem corretora, sem live, sem EasyPanel.  
+> Gate: pytest CI verde; `docs/REQUIREMENTS.md` Feature 1 critérios `[x]`; matriz nodeid em `TEST-EVIDENCE`; `rg` sem novo submit broker em `v4_scheduler`/`v4_run_once`; `LIVE_TRADING_ENABLED` false  
+> bom_ref: BOM-1  
+> review: senior+qa  
+> Gerado via: `/pmo plan` N11 Feature 1 2026-11-01  
+> Brief: `docs/.briefs/N11.brief.md`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N11.1 Matriz Feature 1 → pytest nodeids em TEST-EVIDENCE | docs | — |
+| [x] | M | N11.2 Teste integração scheduler `--once` falha + manifesto stale | `/qa testes` | N11.1 |
+| [x] | P | N11.3 REQUIREMENTS Feature 1 checkboxes `[x]` com links | `/pmo` | N11.1 |
+| [x] | P | N11.4 Sessão sprint N11 + módulo research-cycle | session | N11.1 |
+
+<details>
+<summary>N11.2 executor_prompt</summary>
+
+```yaml
+id: N11.2
+size: M
+bom_ref: BOM-1
+depends_on: [N11.1]
+files:
+  - tests/test_v4_scheduler.py
+  - src/v4_scheduler.py
+reuse_targets:
+  - component: src/v4_scheduler.py
+    reuse_as: extend
+    convergence_check: rg "def run_cycle|def invalidate_stale_manifest|def main" src/v4_scheduler.py && rg "paper-gateway|alpaca" src/v4_scheduler.py && test $? -ne 0
+  - component: tests/test_v4_scheduler.py
+    reuse_as: extend
+    convergence_check: rg "test_failed_cycle_invalidates_previous_manifest|test_readonly_success" tests/test_v4_scheduler.py
+guardrail_contract:
+  - class: subagent-safety
+    id: n11-2-no-broker
+    target: src/v4_scheduler.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_scheduler.py').read_text(); assert 'paper-gateway' not in t and 'submit_order' not in t"
+    pass_condition: scheduler stays research-only imports
+  - class: subagent-safety
+    id: n11-2-live-lock
+    target: Dockerfile
+    check: rg "LIVE_TRADING_ENABLED=false" Dockerfile
+    pass_condition: live flag remains false in image
+executor_prompt: |
+  ### Quality Brief (Sprint N11)
+  sprint: N11
+  Maintain: v4_scheduler never imports broker or paper-gateway; run_cycle always reports orders_sent=0.
+  Maintain: invalidate_stale_manifest deletes file manifest on failed/timeout cycles only; symlink guard stays.
+  Avoid: adding Alpaca, tv-worker, or gate paths to scheduler tests.
+  Avoid: weakening manifest deletion on FAILED_OR_BLOCKED to make tests pass.
+  EXPIRES at end of Sprint N11.
+
+  Melhoria: close the gap between unit tests and main() wiring for stale manifest on failed --once cycle.
+  Contexto: ISS-004; REQUIREMENTS Feature 1 open criteria; existing unit tests cover invalidate_stale_manifest and run_cycle separately but not main(--once) after simulated failure with pre-existing v4_manifest.json.
+  Objetivo: extend tests/test_v4_scheduler.py with an integration-style test invoking main(['--once', ...]) with mocked runner returning non-zero; assert manifest removed and status JSON orders_sent=0 and execution_authorized=false. Only touch scheduler test file unless a minimal bugfix in v4_scheduler.py is required (document in commit).
+  Arquivos: tests/test_v4_scheduler.py (primary), src/v4_scheduler.py (only if wiring bug found).
+  Critério de pronto: pytest nodeid passes; full pytest -q green locally/CI; no new dependencies.
+  Cenários de teste:
+    1. Caso normal: failed run_cycle path via main --once removes stale v4_manifest.json.
+    2. Regressão: FINISHED_RESEARCH keeps manifest when exit_code 0.
+    3. Edge case: symlink manifest still raises UNSafe path without deleting target.
+    4. Regressão: LIVE_TRADING_ENABLED=true still BLOCKED before cycle.
+```
+</details>
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -584,7 +656,6 @@ executor_prompt: |
 
 ## Próximo passo operador
 
-1. N8 **concluída** (PR #4 → `main` `81e6e88`; homolog: 7 linhas `strategy_states` no EasyPanel).  
-2. **N9 planejada** (`plan_only`: sem `sprint_atual`). Review senior+qa antes de `/pmo sprint`.  
-3. Repo: tasks N9.1–N9.5 (runbook + folha de evidência). EasyPanel: task N9.6, nos apps já existentes, sem live.  
-4. Feature 5 (fill real) fica fora do gate N9. Sem inventar limiar de scoring.
+1. **N11** — `/qa validar` + `/pmo git` nesta frente (`front/n11-feature1`).  
+2. **N10** closeout: merge [PR #8](https://github.com/ig0rayres/trading_lab/pull/8) quando conveniente.  
+3. Backlog: F-003 orb-parity ou research-audit v0.9 — `/pmo plan`.

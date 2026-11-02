@@ -18,7 +18,7 @@ Read-only extension of `v4_web_dashboard.py` and `trading_dashboard_data.py`.
 
 `GET /api/status` includes `command_panel` and `operational_acceptance`:
 
-- `operational_acceptance` is **true** only when ledger reports `paper_fills > 0`.
+- `operational_acceptance` is **true** only when ledger reports `paper_fills > 0` **and** closed monitored snapshots exist for this reports root.
 - Operator must still verify broker reconciliation before treating performance as homologated.
 
 ## Auth

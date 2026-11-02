@@ -105,11 +105,13 @@ def build_snapshot(root):
     panel = data.get('command_panel') or {}
     health = panel.get('financial_health') or {}
     fills = int(health.get('paper_fills_recorded') or 0)
-    data['operational_acceptance'] = fills > 0
-    if fills == 0:
-        data['operational_acceptance_reason'] = 'NO_LEDGER_FILLS'
+    closed_pnl_rows = int(data.get('closed_orders_with_pnl') or 0)
+    # Ledger fills alone are not homologation (CI DB may contain rows unrelated to this snapshot root).
+    data['operational_acceptance'] = fills > 0 and closed_pnl_rows > 0
+    if not data['operational_acceptance']:
+        data['operational_acceptance_reason'] = 'NO_OPERATOR_HOMOLOGATION_EVIDENCE'
     else:
-        data['operational_acceptance_reason'] = 'LEDGER_FILLS_PRESENT_OPERATOR_VERIFY_BROKER'
+        data['operational_acceptance_reason'] = 'LEDGER_FILLS_AND_CLOSED_SNAPSHOTS_PRESENT'
     data['command_panel'] = panel
     # No inference of P&L from research candidates or incomplete brokerage records.
     return data

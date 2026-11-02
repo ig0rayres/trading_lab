@@ -8,6 +8,7 @@
 | ISS-002 | fechado | N7 | Catálogo de estratégias sem persistência nem Gate B |
 | ISS-003 | fechado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
 | ISS-004 | fechado | N11 | Feature 1 — critérios de ciclo research ainda `[ ]` em REQUIREMENTS |
+| ISS-005 | aberto | N12 | Feature 5 — demo Alpaca paper com `signal_copy` (pivot P0) |
 
 ## ISS-001 — Imagem EasyPanel sem psycopg e sem vendor pinado
 
@@ -74,3 +75,19 @@
 **Fontes:** operador `/pmo plan` N11 Feature 1 2026-11-01; `docs/REQUIREMENTS.md` § Feature 1; `docs/PROJECT-BRIEF.md` BOM-1.
 
 **Fechamento:** Sprint N11 — matriz em `TEST-EVIDENCE.md`; `test_main_once_failure_clears_stale_manifest`; REQUIREMENTS Feature 1 critérios `[x]` (2026-11-01).
+
+---
+
+## ISS-005 — Feature 5 demo Alpaca paper (`signal_copy`, pivot P0)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | improvement |
+| Sprint | N12 |
+| Status | aberto |
+
+**Impacto:** D1–N11 entregaram gates, ledger e homologação D5 (itens 3–7), mas o produto ainda não **opera** demo paper com fill comprovado. `docs/REQUIREMENTS.md` Feature 5 mantém `[ ]` em fill real; `queued_intent` / `PAPER_GATEWAY_QUEUE_ONLY` ≠ homologação completa.
+
+**Critério de fechamento:** trilha **`signal_copy`** via módulos existentes (`signal_paper_runner.py`, `paper_gateway_queue.process_after_gate_b`, `scripts/run.sh signal-paper`); runbook Feature 5 em `docs/HOMOLOGATION.md`; matriz pytest + linha operador redigida em `docs/TEST-EVIDENCE.md`; operador registra fill paper Alpaca + reconcile coerente (sem segredos no Git); checkbox Feature 5 fill `[x]` **somente** após evidência operador; `LIVE_TRADING_ENABLED` false; Collective2 permanece reprovado; **não** promover ORB/mean a paper principal.
+
+**Fontes:** operador `/pmo plan pivot-demo` 2026-11-02; `docs/REQUIREMENTS.md` § Feature 5; `docs/HOMOLOGATION.md` passo opcional Feature 5; ISS-005 aprovado no plano PMO.

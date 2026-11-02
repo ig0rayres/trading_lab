@@ -36,6 +36,8 @@
 | N9 | N | Itens 3–7 com evidência operador; F-013 persist | concluida | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 EasyPanel | *(abaixo)* |
 | N10 | N | Closeout N9 no ROADMAP + notas smoke homolog | concluida | 5 | docs | Alinhamento pós-N9 | *(abaixo)* |
 | N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | concluida | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
+| N12 | N | Feature 5 fill `signal_copy` evidenciado; LIVE false | planejada | 5 | paper-gateway, signal_copy | Demo Alpaca paper (P0 pivot) | *(abaixo)* |
+| N13 | N | Homolog por família; sem scoring inventado | planejada | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -60,6 +62,8 @@
 | N9 | senior+qa | Runbook itens 3–7 + evidência; F-013 persist |
 | N10 | skip | Docs closeout only |
 | N11 | senior+qa | Scheduler/run-once tests + REQUIREMENTS Feature 1 |
+| N12 | senior+qa | Paper submit path + homolog operador Feature 5 |
+| N13 | senior+qa | Matriz homolog estratégias; F-003 congelado até N12 |
 
 ---
 
@@ -667,6 +671,102 @@ executor_prompt: |
 
 ---
 
+## Sprint N12 — Demo Alpaca paper (`signal_copy`, P0 pivot)
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Operar demo paper com fill comprovado na trilha signal_copy  
+> resumo_humano: Fecha o único critério aberto de Feature 5 usando código já existente (runner + fila pós–Gate B), runbook e evidência operador — sem live e sem tratar fila como fill.  
+> Gate: pytest verde incluindo caminho `PAPER_SUBMITTED` mockado; `docs/TEST-EVIDENCE.md` matriz Feature 5; operador preenche linha fill redigida; `REQUIREMENTS` fill `[x]` só após N12.5; `LIVE_TRADING_ENABLED` false; F-003 permanece congelado  
+> bom_ref: BOM-3, BOM-4  
+> review: senior+qa  
+> Gerado via: `/pmo plan pivot-demo` 2026-11-02  
+> Brief: `docs/.briefs/N12.brief.md`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N12.1 Matriz Feature 5 → pytest nodeids + checklist operador | docs | — |
+| [ ] | P | N12.2 Runbook Feature 5 em HOMOLOGATION (`signal-paper` / worker auto flags) | docs | N12.1 |
+| [ ] | M | N12.3 Testes: `PAPER_SUBMITTED` + `process_after_gate_b` com broker mock | `/qa testes` | N12.1 |
+| [ ] | P | N12.4 Operador: fill Alpaca paper + reconcile redigido (EasyPanel) | operador | N12.2, N12.3 |
+| [ ] | P | N12.5 REQUIREMENTS Feature 5 fill `[x]` + TEST-EVIDENCE operador | docs | N12.4 |
+
+P notes: **N12.2** document env chain from `signal_paper_runner.py` (`PAPER_SIGNAL_AUTO_ENABLED`, `PAPER_EXECUTION_ENABLED`, `PAPER_SIGNAL_ACCOUNT_ACK`, `PAPER_DAILY_RISK_CONFIRMED`, `V4_RISK_SNAPSHOT_FILE`) and contrast with N9 `queued_intent`. Cite `scripts/run.sh signal-paper`. **N12.4** operator only — no secrets in Git; `orders_sent=1` / broker id redacted. **N12.5** do not check fill before operator row exists.
+
+<details>
+<summary>N12.3 executor_prompt</summary>
+
+```yaml
+id: N12.3
+size: M
+bom_ref: BOM-3
+depends_on: [N12.1]
+files:
+  - tests/test_signal_paper_runner.py
+  - tests/test_paper_gateway_queue.py
+  - src/signal_paper_runner.py
+  - src/paper_gateway_queue.py
+reuse_targets:
+  - component: src/signal_paper_runner.py
+    reuse_as: extend
+    convergence_check: rg "def run\\(|PAPER_SUBMITTED" src/signal_paper_runner.py
+  - component: src/paper_gateway_queue.py
+    reuse_as: extend
+    convergence_check: rg "process_after_gate_b|broker_auto_allowed" src/paper_gateway_queue.py
+guardrail_contract:
+  - class: subagent-safety
+    id: n12-3-live-lock
+    target: Dockerfile
+    check: rg "LIVE_TRADING_ENABLED=false" Dockerfile
+    pass_condition: live flag remains false in image
+  - class: subagent-safety
+    id: n12-3-paper-host
+    target: src/signal_paper_runner.py
+    check: rg "paper-api.alpaca.markets|PAPER_URL" src/paper_audit.py src/signal_paper_runner.py
+    pass_condition: submit stays on paper URL module
+executor_prompt: |
+  ### Quality Brief (Sprint N12)
+  sprint: N12
+  Maintain: LIVE_TRADING_ENABLED=false; no live host; reuse signal_paper_runner.run and paper_gateway_queue.process_after_gate_b — no second broker client.
+  Maintain: PREVIEW_ONLY and QUEUED paths unchanged when auto flags off.
+  Avoid: loosening risk caps or bypassing V4_RISK_SNAPSHOT_FILE / SIGNAL_COPY_SECRET validation.
+  Avoid: treating HTTP 200 or queued_intent as fill in assertions.
+  EXPIRES at end of Sprint N12.
+
+  Contexto: ISS-005; Feature 5 fill criterion open; existing tests cover preview/blocks but not successful PAPER_SUBMITTED with mocked POST, nor process_after_gate_b when broker_auto_allowed is true.
+  Objetivo: add pytest coverage for (1) run() returning PAPER_SUBMITTED orders_sent=1 with mocked broker_get/post and valid snapshot env; (2) process_after_gate_b delegating to paper_run when auto env set (mock paper_run). Minimal production changes only if test reveals a wiring bug.
+  Critério de pronto: new nodeids documented in TEST-EVIDENCE Feature 5 matrix (N12.1); pytest -q green in CI.
+  Cenários de teste:
+    1. Happy path mock: PAPER_SUBMITTED, orders_sent=1, ledger jsonl ATTEMPTED→SUBMITTED.
+    2. Regressão: auto flags off → PREVIEW_ONLY / QUEUED orders_sent=0.
+    3. Regressão: bad signature still BLOCKED.
+    4. Regressão: LIVE_TRADING_ENABLED=true still fail-closed.
+```
+</details>
+
+---
+
+## Sprint N13 — Homolog estratégias por família (P1)
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Checklist de homolog por estratégia sem inventar scoring  
+> resumo_humano: Depois do demo paper, documenta como testar e homologar cada família do catálogo (fase research/shadow/paper_limited) com evidência pytest e operador — sem promover ORB/C2 nem limiares novos.  
+> Gate: matriz por `strategy_key` em TEST-EVIDENCE; fases N7 intactas; momentum/ta_barato/prodigy sem checkbox fechado sem regra upstream recuperada; F-003 ainda congelado; CI verde; LIVE false  
+> bom_ref: BOM-1  
+> review: senior+qa  
+> Gerado via: `/pmo plan pivot-demo` 2026-11-02  
+> Brief: `docs/.briefs/N13.brief.md` *(criar na abertura N13)*
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N13.1 Matriz Feature 4 → família / fase / pytest ou “blocked upstream” | docs | — |
+| [ ] | P | N13.2 Folha homolog operador por família (sem ordem onde fase ≠ paper) | docs | N13.1 |
+| [ ] | P | N13.3 ROADMAP backlog: ordem P1 e freeze F-003 até N12 gate | docs | N13.1 |
+| [ ] | M | N13.4 Testes/traceability só para famílias com regra existente no repo | `/qa testes` | N13.1 |
+
+P notes: **N13** starts only after N12 gate (operador fill evidenciado). Do not run `parity.py` / F-003 in N13 until product explicitly reprioritizes after N12. No promotion of `strategy_states.phase` from PnL or queue success.
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -676,11 +776,14 @@ executor_prompt: |
 | Collective2 paper-copy | Feature 4 | Fora de N7; `approved_for_paper_copy` permanece falso |
 | CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria (fora de N8) |
 | Submodule pin vs clone raso | D1 | Preferir pin revisado, não `main` cego |
+| F-003 orb-parity (`parity.py`) | D1 / FINDINGS | **Congelado até gate N12** (pivot P0 demo paper); retomar só após `/pmo plan` explícito pós-N12 |
 
 ---
 
 ## Próximo passo operador
 
-1. **`main` `cb920cf`** inclui N11; este PR fecha **N10** docs.  
-2. **N10.5:** `/git front finish` na mãe após merge do [#8](https://github.com/ig0rayres/trading_lab/pull/8).  
-3. Backlog: F-003 orb-parity ou research-audit — `/pmo plan`.
+1. **Pivot aprovado** — branch `front/pivot-demo-paper` com ISS-005 + blueprint N12/N13 (`/pmo plan pivot-demo` 2026-11-02).  
+2. Abrir frente dedicada (recomendado): `cursor "/media/igor/windows_part/Cursor/trading lab.fronts/demo-paper"` após `/git front create demo-paper` **ou** continuar nesta branch e rodar **`/pmo sprint N12`**.  
+3. **P0:** executar N12.1→N12.3 no repo; **N12.4–N12.5** operador EasyPanel (fill paper `signal_copy`).  
+4. **P1:** N13 só depois do gate N12; F-003 permanece congelado.  
+5. **`LIVE_TRADING_ENABLED=false`** — invariável.

@@ -38,6 +38,7 @@
 | N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | concluida | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
 | N12 | N | Feature 5 fill `signal_copy` evidenciado; LIVE false | planejada | 5 | paper-gateway, signal_copy | Demo Alpaca paper (P0 pivot) | *(abaixo)* |
 | N13 | N | Homolog por família; sem scoring inventado | em execucao | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
+| N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | planejada | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -768,6 +769,28 @@ P notes: **N13** repo entregue com **N12.4 ainda pendente** (ISS-005 aberto). F-
 
 ---
 
+## Sprint N14 — Pacotão MVP-DEMO-1.0
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Um runbook, um smoke e regra de deploy para parar rebuild infinito  
+> resumo_humano: Consolida MVP demo em artefatos únicos; pendências Feature 5 (P-001–P-003) ficam explícitas em ISSUES; não substitui fill operador N12.4.  
+> Gate: `docs/MVP-DEMO-RUNBOOK.md` + `scripts/mvp-demo-smoke.sh` OK local/CI; `config/mvp-demo.env.example`; ISS-006 critérios repo; ISS-005 permanece aberto  
+> review: skip  
+> Gerado via: operador pacotão 2026-11-02 · ISS-006
+
+> Status: concluida  
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N14.1 `MVP-DEMO-RUNBOOK.md` + política deploy | docs | — |
+| [x] | P | N14.2 `config/mvp-demo.env.example` | docs | N14.1 |
+| [x] | P | N14.3 `scripts/mvp-demo-smoke.sh` | `/devops` | N14.1 |
+| [x] | P | N14.4 ISSUES pendências P-001–P-005 + ISS-006 | docs | N14.1 |
+
+P notes: **Um deploy EasyPanel** após merge N14; depois **freeze** rebuild até `src/`/`Dockerfile` ou N12.4 evidenciado.
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -783,8 +806,8 @@ P notes: **N13** repo entregue com **N12.4 ainda pendente** (ISS-005 aberto). F-
 
 ## Próximo passo operador
 
-1. **`main` `56974d2`** — PR #10 no ar (N12 plano + runbook + testes submit).  
-2. **N12.4 pendente:** fill paper `signal_copy` + evidência em `TEST-EVIDENCE` § N12 (deploy ≠ fill).  
-3. **N13 repo:** PR `front/n13-strategy-homolog` (matriz Feature 4 + homolog por família).  
-4. **F-003** congelado até ISS-005 fechado.  
+1. **`main` `4a71f7a`** — merge **N14 pacotão** (PR) → **último deploy** até mudança `src`/Dockerfile ou N12.4.  
+2. **`bash scripts/mvp-demo-smoke.sh`** pós-deploy (sem ordem).  
+3. **Pendências MVP:** `docs/ISSUES.md` § Pendências — **P-001 N12.4 fill** fecha Feature 5.  
+4. **`docs/MVP-DEMO-RUNBOOK.md`** — perfil env `config/mvp-demo.env.example`.  
 5. **`LIVE_TRADING_ENABLED=false`** — invariável.

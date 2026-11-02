@@ -8,26 +8,42 @@
 | ISS-002 | fechado | N7 | Catálogo de estratégias sem persistência nem Gate B |
 | ISS-003 | fechado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
 | ISS-004 | fechado | N11 | Feature 1 — critérios de ciclo research ainda `[ ]` em REQUIREMENTS |
-| ISS-005 | aberto | N12 | Feature 5 — demo Alpaca paper com `signal_copy` (pivot P0) |
+| ISS-005 | parcial | N12 | Feature 5 — submit paper ok; fill limit pendente (P-001b) |
 | ISS-006 | fechado | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
-| ISS-007 | planejado | N15–N17 | Release train **MVP-OP** (0.9 → 1.0 → 1.1) — aguarda aprovação operador |
+| ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
-> Plano **`/pmo plan MVP-OP-1.0`** 2026-11-02 · **Sem código** até operador aprovar este bloco e fechar **MVP-OP-0.9**.  
+> Plano **`/pmo plan MVP-OP-1.0`** 2026-11-02 · merge PR #13 · **Sem código N16+** até **MVP-OP-0.9** (N15) fechado.  
 > **`LIVE_TRADING_ENABLED=false`** em todas as releases. Sem limiar inventado. Sem C2 copy sem `approved_for_paper_copy`.
 
 | Release | Objetivo (operador vê funcionando) | Deploy EasyPanel | Issue / sprint |
 |---------|-----------------------------------|------------------|----------------|
-| **MVP-OP-0.9** | Cópia sinais **paper com fill comprovado** (`signal_copy`); Feature 5 `[x]`; ISS-005 fechado | **Não** (sessão operador) | P-001–P-002 · N12.4–N12.5 |
-| **MVP-OP-1.0** | **Prodígio**: rank → sinal assinado → paper homologado; evolution + checklist promoção de fase; estratégias “adotadas” no catálogo com runbook | **1 rebuild** / release tag | N16 · ISS-007 |
-| **MVP-OP-1.1** | **Tá Barato** (+ momentum se upstream): regras pinadas; shadow/paper homolog; melhoria contínua amarrada a promoção manual | **1 rebuild** se `src/` | N17 |
+| **MVP-OP-0.9** | Cópia sinais **paper submit homologado** (`signal_copy` → Alpaca `PAPER_SUBMITTED`); Feature 5 fill `[ ]` até execução limit; ISS-005 parcial | **Não** (sessão operador) | N15 · P-001b |
+| **MVP-OP-1.0** | **Prodígio** paper homologado + **painel único** (histórico, performance paper, ordens abertas, oportunidades rank, saúde/limites, fases catálogo, melhoria contínua, tips rotuladas research) | **1 rebuild** / release tag | N16 · ISS-007 |
+| **MVP-OP-1.1** | **Tá Barato** (+ momentum se upstream): shadow/paper homolog; **painel** estende família `ta_barato` | **1 rebuild** se `src/` | N17 |
+
+### Command Panel v1 — mapa de áreas (épico ISS-007, entrega **1.0**)
+
+| Área do painel | Fonte (reuse) | Release |
+|----------------|---------------|---------|
+| Histórico / ledger read-only | Postgres ledger + reconcile | 1.0 |
+| Performance (PnL paper) | `paper_fills` + Alpaca read-only | 1.0 (credível após 0.9 fill) |
+| Ordens abertas / fila | `paper_gateway` + Alpaca paper API | 1.0 |
+| Oportunidades | `prodigy-rank` / research (sem autorizar ordem) | 1.0 |
+| Saúde financeira | Gate B, capital, kill switch | 1.0 |
+| Estratégias adotadas / fase | `strategy_states` + catálogo | 1.0 |
+| Melhoria contínua | `evolution-daily`, `decisions.jsonl` | 1.0 |
+| Tips / sugestões | Rotuladas **research**; nunca ordem automática | 1.0 |
+| Tá Barato no painel | Mesma UI, família upstream | **1.1** |
+
+> **Sem N18 separado:** dashboard não é épico paralelo; estende `src/v4_web_dashboard.py` + dados existentes (Feature 6), bearer remoto invariável.
 
 ### Critérios “pronto” por tema (MVP-OP-1.0+)
 
 | Tema | Pronto quando |
 |------|----------------|
-| Cópia de sinais | 0.9 fechado |
+| Cópia de sinais | 0.9: submit `signal-paper` evidenciado (2026-11-02); fill limit na corretora **pendente** (`REQUIREMENTS` fill `[ ]`) |
 | Sinais Prodígio (rodízio) | Top-N do `prodigy-rank` mapeado → ingestão com `strategy_key=prodigy_15d`; ≥1 fill paper evidenciado; fase `paper_limited` **só** operador |
 | Tá Barato | 1.1 — fórmulas upstream em vendor; homolog; **não** em 1.0 |
 | Estratégias adotadas | Runbook promoção + dashboard fase; sem promoção por PnL/HTTP 200 |
@@ -38,17 +54,20 @@
 
 ## Pendências operacionais (MVP demo)
 
-> Atualizado: pacotão N14 · Feature 5 ainda aberta em `docs/REQUIREMENTS.md`.
+> Atualizado: operador N12.4 submit 2026-11-02 · Feature 5 fill `[ ]` mantido (ordem MSFT limit **new**, filled qty 0).
 
 | ID | Item | Responsável | Bloqueia MVP “operacional”? |
 |----|------|-------------|----------------------------|
-| P-001 | **N12.4** — Fill Alpaca paper `signal_copy` + posição coerente (evidência redigida) | Operador | **Sim** (Feature 5 `[ ]`) |
-| P-002 | **N12.5** — Atualizar `TEST-EVIDENCE` § N12 + Feature 5 fill `[x]` | Operador + docs | **Sim** (fecha ISS-005) |
-| P-003 | **Reconcile pós-fill** redigido (N12.4) | Operador | Sim (critério Feature 5) |
+| P-001a | **N12.4 submit** — `PAPER_SUBMITTED`, `orders_sent=1`, jsonl `SUBMITTED`, ordem Alpaca paper visível | Operador | **Não** (trilha demo submit) |
+| P-001b | **Feature 5 fill** — execução limit + posição coerente (ou cancel + novo sinal marketable) | Operador | **Sim** (`REQUIREMENTS` fill `[ ]`) |
+| P-002 | **N12.5 docs** — `TEST-EVIDENCE` § N12 operador (sem marcar fill `[x]` até P-001b) | Docs | Parcial (este PR) |
+| P-003 | **Reconcile** — `v4-alpaca-reconcile` + `ledger_apply` (one-shot não grava `paper_orders` Postgres) | Operador | Parcial (`linked:0` esperado no caminho jsonl) |
 | P-004 | **F-003** orb-parity | Backlog | Não (demo `signal_copy`) |
 | P-005 | **Momentum / Tá Barato / Prodigy** — homolog paper | Backlog upstream | Sim para “multi-estratégia”; **não** para demo única |
 
-**Não conta como P-001 fechado:** deploy EasyPanel, `queued_intent`, HTTP 202, CI verde, pytest mock `PAPER_SUBMITTED`.
+**Não conta como P-001a fechado:** deploy EasyPanel, `queued_intent`, HTTP 202, CI verde, pytest mock `PAPER_SUBMITTED` **sem** sessão operador redigida.
+
+**Não conta como P-001b fechado:** ordem **`new`** / **`accepted`** sem fill; reconcile com atividade FILL de outro símbolo/data.
 
 ---
 
@@ -126,15 +145,17 @@
 |-------|--------|
 | Categoria | improvement |
 | Sprint | N12 |
-| Status | aberto |
+| Status | parcial |
 
-**Impacto:** D1–N11 entregaram gates, ledger e homologação D5 (itens 3–7), mas o produto ainda não **opera** demo paper com fill comprovado. `docs/REQUIREMENTS.md` Feature 5 mantém `[ ]` em fill real; `queued_intent` / `PAPER_GATEWAY_QUEUE_ONLY` ≠ homologação completa.
+**Impacto:** D1–N11 entregaram gates, ledger e homologação D5 (itens 3–7). **Submit paper** `signal_copy` homologado em 2026-11-02 (`PAPER_SUBMITTED`, ordem Alpaca MSFT limit **new**). Critério **fill + posição** em `docs/REQUIREMENTS.md` permanece `[ ]`.
 
 **Critério de fechamento:** trilha **`signal_copy`** via módulos existentes (`signal_paper_runner.py`, `paper_gateway_queue.process_after_gate_b`, `scripts/run.sh signal-paper`); runbook Feature 5 em `docs/HOMOLOGATION.md`; matriz pytest + linha operador redigida em `docs/TEST-EVIDENCE.md`; operador registra fill paper Alpaca + reconcile coerente (sem segredos no Git); checkbox Feature 5 fill `[x]` **somente** após evidência operador; `LIVE_TRADING_ENABLED` false; Collective2 permanece reprovado; **não** promover ORB/mean a paper principal.
 
+**Evidência operador 2026-11-02 (redigida):** preview `PREVIEW_ONLY`; submit `PAPER_SUBMITTED` `orders_sent=1`; `client_order_id` `nf-54c50327…`; broker id `8dcfa34f…`; Alpaca paper ordem MSFT buy limit @420 qty 1 status **new** (filled 0); jsonl `/app/reports/paper/signal-orders.jsonl` estados `ATTEMPTED_UNKNOWN`→`SUBMITTED`; reconcile `ledger_apply` `linked:0` `skipped:1` (FILL histórico AAPL no bundle; one-shot não popula `paper_orders` Postgres).
+
 **Fontes:** operador `/pmo plan pivot-demo` 2026-11-02; `docs/REQUIREMENTS.md` § Feature 5; `docs/HOMOLOGATION.md` passo opcional Feature 5; ISS-005 aprovado no plano PMO.
 
-**Pendências detalhadas:** § Pendências operacionais (MVP) — P-001 a P-003.
+**Pendências detalhadas:** § Pendências operacionais (MVP) — P-001b, P-003 parcial.
 
 ---
 

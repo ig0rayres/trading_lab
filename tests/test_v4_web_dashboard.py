@@ -18,6 +18,11 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(result['execution_state'], 'READ_ONLY_NO_ORDER_SUBMISSION')
             self.assertIn('shadow_vs_paper', result)
             self.assertIn('kill_switch_on', result)
+            self.assertIn('command_panel', result)
+            cp = result['command_panel']
+            self.assertEqual(cp['schema_version'], 'command-panel-v1')
+            self.assertIn('strategy_catalog', cp)
+            self.assertIn('opportunities', cp)
 
     def test_html_escapes_data(self):
         with tempfile.TemporaryDirectory() as d:

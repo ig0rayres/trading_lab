@@ -101,7 +101,7 @@ Fill real na Alpaca Paper (aceite, fill parcial/cheio, P&L reconciliado) **não*
 | 4 | Comando | `/app/scripts/run.sh signal-paper --signal /app/data/received-signal.json` |
 | 5 | Verificar stdout | `PAPER_SUBMITTED`, `orders_sent=1`, `broker_id` redigido na folha de evidência (não colar segredo). |
 | 6 | Corretora | Confirmar ordem/posição na UI Alpaca **paper** (contagem/símbolo redigidos). |
-| 7 | Reconcile | `PAPER_RECONCILE_LEDGER_APPLY=true` + `/app/scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile-post-fill.json` — anotar `ledger_apply` e que **`broker_reconciled` false** continua válido até política de reconcile completo. |
+| 7 | Reconcile | `PAPER_RECONCILE_LEDGER_APPLY=true` + `/app/scripts/run.sh v4-alpaca-reconcile --output /app/reports/paper/reconcile-post-fill.json` — anotar `ledger_apply` e que **`broker_reconciled` false** continua válido até política de reconcile completo. **One-shot `signal-paper`:** trilha principal em `/app/reports/paper/signal-orders.jsonl`; `ledger_apply.linked=0` é esperado se não houver linha `paper_orders` Postgres para o símbolo. |
 
 ### Caminho B — worker pós–Gate B (opcional)
 

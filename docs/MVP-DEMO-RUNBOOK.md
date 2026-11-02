@@ -23,7 +23,7 @@ Fill Feature 5: mesma doc § **Feature 5 — demo paper `signal_copy`**.
 
 Registrado em `docs/ISSUES.md` § **Pendências operacionais (MVP)**:
 
-1. **N12.4** — Fill real Alpaca paper + posição coerente (evidência redigida).  
+1. **N12.4 submit** — `PAPER_SUBMITTED` + ordem Alpaca (evidência `TEST-EVIDENCE` § N12). **Fill limit** — pendente P-001b.  
 2. **N12.5** — `REQUIREMENTS` Feature 5 fill `[x]` + linhas N12 em `TEST-EVIDENCE.md`.  
 3. **ISS-005** — Fecha só após 1–2.  
 4. **F-003** — `parity.py` / orb-parity congelado até ISS-005 fechado.

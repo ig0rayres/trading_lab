@@ -16,7 +16,7 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Planejamento N11 — Feature 1 ciclo research",
+  "fase_nome": "Execução N11 — Feature 1 (aguardando /qa validar)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -35,7 +35,7 @@
     {
       "nome": "research-cycle",
       "descricao": "Scheduler de pesquisa e manifesto. orders_sent permanece 0.",
-      "status": "em_andamento",
+      "status": "concluido",
       "api": [
         "v4-scheduler",
         "v4-run-once"
@@ -122,7 +122,7 @@
       "id": "N11.1",
       "title": "Matriz Feature 1 → pytest nodeids",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "files": ["docs/TEST-EVIDENCE.md"]
     },
@@ -130,7 +130,7 @@
       "id": "N11.2",
       "title": "Integração scheduler --once falha + manifest stale",
       "size": "M",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N11.1"],
       "files": ["tests/test_v4_scheduler.py"]
     },
@@ -138,7 +138,7 @@
       "id": "N11.3",
       "title": "REQUIREMENTS Feature 1 checkboxes",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N11.1"],
       "files": ["docs/REQUIREMENTS.md"]
     },
@@ -146,17 +146,18 @@
       "id": "N11.4",
       "title": "Sessão sprint N11 checkpoint",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["N11.1"],
       "files": [".cursorsession"]
     }
   ],
   "checkpoint": {
     "sprint": "N11",
-    "phase": "planning",
+    "phase": "implementation",
     "branch": "front/n11-feature1",
-    "current_task": "N11.1",
-    "timestamp": "2026-11-01T21:57:00-03:00",
+    "last_completed_task": "N11.4",
+    "current_task": null,
+    "timestamp": "2026-11-01T22:05:00-03:00",
     "relevant_paths": ["docs/ROADMAP.md", "docs/.briefs/N11.brief.md", "docs/REQUIREMENTS.md"]
   },
   "artefatos_gerados": [
@@ -200,5 +201,5 @@
   "sprint_branch": "front/n11-feature1",
   "sprint_nome": "Sprint N11 — Feature 1 ciclo research",
   "sprint_categoria": "N",
-  "plan_only": true
+  "plan_only": false
 }

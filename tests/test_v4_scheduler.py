@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,6 +70,24 @@ class SchedulerTests(unittest.TestCase):
             p = Path(tmp) / '.lock'; p.symlink_to(Path(tmp) / 'target')
             with self.assertRaises(ValueError):
                 lock_once(p)
+
+    def test_main_once_failure_clears_stale_manifest(self):
+        universe = Path(__file__).resolve().parents[1] / 'config' / 'universe.json'
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            manifest = out / 'v4_manifest.json'
+            manifest.write_text('{"status":"RESEARCH_ONLY"}')
+            with patch.dict(os.environ, {'LIVE_TRADING_ENABLED': 'false'}):
+                with patch('v4_scheduler.run_cycle') as mock_cycle:
+                    mock_cycle.return_value = {
+                        'status': 'FAILED_OR_BLOCKED', 'exit_code': 3, 'orders_sent': 0,
+                    }
+                    code = main(['--universe', str(universe), '--output-dir', str(out), '--once'])
+            self.assertEqual(code, 2)
+            self.assertFalse(manifest.exists())
+            status = json.loads((out / 'v4_scheduler.json').read_text())
+            self.assertEqual(status['orders_sent'], 0)
+            self.assertFalse(status['execution_authorized'])
 
 if __name__ == '__main__':
     unittest.main()

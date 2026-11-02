@@ -34,7 +34,7 @@
 | N7 | N | Fases persistidas; shadow/research sem paper_allowed; ORB fora | concluida | 6 | strategy-catalog, risk-gate-b | Catálogo MVP + Gate B | *(abaixo)* |
 | N8 | N | migrate apply deixa 7 strategy_states; runbook EasyPanel | concluida | 4 | strategy-catalog, ledger | Homologação + seed on migrate | *(abaixo)* |
 | N9 | N | Itens 3–7 com evidência operador; F-013 persist | concluida | 6 | signal-gate-a, risk-gate-b, paper-gateway, observability | Homologação D5 EasyPanel | *(abaixo)* |
-| N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | planejada | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
+| N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | concluida | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -573,7 +573,7 @@ executor_prompt: |
 ## Sprint N11 — Feature 1 ciclo research (evidência + testes)
 
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Fechar Feature 1 — ciclo research sem ordem e manifesto honesto  
 > resumo_humano: Amarra os critérios abertos da Feature 1 a testes pytest e à folha de evidência. Reforça que scheduler e run-once não enviam ordem e que falha de ciclo não deixa manifesto antigo como sucesso. Sem corretora, sem live, sem EasyPanel.  
 > Gate: pytest CI verde; `docs/REQUIREMENTS.md` Feature 1 critérios `[x]`; matriz nodeid em `TEST-EVIDENCE`; `rg` sem novo submit broker em `v4_scheduler`/`v4_run_once`; `LIVE_TRADING_ENABLED` false  
@@ -584,10 +584,10 @@ executor_prompt: |
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N11.1 Matriz Feature 1 → pytest nodeids em TEST-EVIDENCE | docs | — |
-| [ ] | M | N11.2 Teste integração scheduler `--once` falha + manifesto stale | `/qa testes` | N11.1 |
-| [ ] | P | N11.3 REQUIREMENTS Feature 1 checkboxes `[x]` com links | `/pmo` | N11.1 |
-| [ ] | P | N11.4 Sessão sprint N11 + módulo research-cycle | session | N11.1 |
+| [x] | P | N11.1 Matriz Feature 1 → pytest nodeids em TEST-EVIDENCE | docs | — |
+| [x] | M | N11.2 Teste integração scheduler `--once` falha + manifesto stale | `/qa testes` | N11.1 |
+| [x] | P | N11.3 REQUIREMENTS Feature 1 checkboxes `[x]` com links | `/pmo` | N11.1 |
+| [x] | P | N11.4 Sessão sprint N11 + módulo research-cycle | session | N11.1 |
 
 <details>
 <summary>N11.2 executor_prompt</summary>
@@ -656,6 +656,6 @@ executor_prompt: |
 
 ## Próximo passo operador
 
-1. **N11** Feature 1 (evidência ciclo research) — frente `front/n11-feature1`; `/pmo sprint N11` nesta janela.  
-2. **N10** closeout: merge [PR #8](https://github.com/ig0rayres/trading_lab/pull/8) quando conveniente (CI verde; sem reteste EasyPanel obrigatório).  
-3. Feature 5 fill real e F-003 orb-parity permanecem fora de N11. Sem inventar limiar de scoring.
+1. **N11** — `/qa validar` + `/pmo git` nesta frente (`front/n11-feature1`).  
+2. **N10** closeout: merge [PR #8](https://github.com/ig0rayres/trading_lab/pull/8) quando conveniente.  
+3. Backlog: F-003 orb-parity ou research-audit v0.9 — `/pmo plan`.

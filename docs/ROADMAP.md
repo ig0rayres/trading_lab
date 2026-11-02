@@ -37,7 +37,7 @@
 | N10 | N | Closeout N9 no ROADMAP + notas smoke homolog | concluida | 5 | docs | Alinhamento pós-N9 | *(abaixo)* |
 | N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | concluida | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
 | N12 | N | Feature 5 fill `signal_copy` evidenciado; LIVE false | planejada | 5 | paper-gateway, signal_copy | Demo Alpaca paper (P0 pivot) | *(abaixo)* |
-| N13 | N | Homolog por família; sem scoring inventado | planejada | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
+| N13 | N | Homolog por família; sem scoring inventado | em execucao | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -754,16 +754,17 @@ executor_prompt: |
 > bom_ref: BOM-1  
 > review: senior+qa  
 > Gerado via: `/pmo plan pivot-demo` 2026-11-02  
-> Brief: `docs/.briefs/N13.brief.md` *(criar na abertura N13)*
+> Status: em execucao  
+> Brief: `docs/.briefs/N13.brief.md`
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N13.1 Matriz Feature 4 → família / fase / pytest ou “blocked upstream” | docs | — |
-| [ ] | P | N13.2 Folha homolog operador por família (sem ordem onde fase ≠ paper) | docs | N13.1 |
-| [ ] | P | N13.3 ROADMAP backlog: ordem P1 e freeze F-003 até N12 gate | docs | N13.1 |
-| [ ] | M | N13.4 Testes/traceability só para famílias com regra existente no repo | `/qa testes` | N13.1 |
+| [x] | P | N13.1 Matriz Feature 4 → família / fase / pytest ou “blocked upstream” | docs | — |
+| [x] | P | N13.2 Folha homolog operador por família (sem ordem onde fase ≠ paper) | docs | N13.1 |
+| [x] | P | N13.3 ROADMAP backlog: ordem P1 e freeze F-003 até N12 gate | docs | N13.1 |
+| [x] | M | N13.4 Testes/traceability só para famílias com regra existente no repo | `/qa testes` | N13.1 |
 
-P notes: **N13** starts only after N12 gate (operador fill evidenciado). Do not run `parity.py` / F-003 in N13 until product explicitly reprioritizes after N12. No promotion of `strategy_states.phase` from PnL or queue success.
+P notes: **N13** repo entregue com **N12.4 ainda pendente** (ISS-005 aberto). F-003 congelado até Feature 5 fill evidenciado.
 
 ---
 
@@ -776,14 +777,14 @@ P notes: **N13** starts only after N12 gate (operador fill evidenciado). Do not 
 | Collective2 paper-copy | Feature 4 | Fora de N7; `approved_for_paper_copy` permanece falso |
 | CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria (fora de N8) |
 | Submodule pin vs clone raso | D1 | Preferir pin revisado, não `main` cego |
-| F-003 orb-parity (`parity.py`) | D1 / FINDINGS | **Congelado até gate N12** (pivot P0 demo paper); retomar só após `/pmo plan` explícito pós-N12 |
+| F-003 orb-parity (`parity.py`) | D1 / FINDINGS | **Congelado até N12.4/ISS-005** (fill Feature 5); N13 repo não descongela |
 
 ---
 
 ## Próximo passo operador
 
-1. **Pivot aprovado** — branch `front/pivot-demo-paper` com ISS-005 + blueprint N12/N13 (`/pmo plan pivot-demo` 2026-11-02).  
-2. Abrir frente dedicada (recomendado): `cursor "/media/igor/windows_part/Cursor/trading lab.fronts/demo-paper"` após `/git front create demo-paper` **ou** continuar nesta branch e rodar **`/pmo sprint N12`**.  
-3. **P0:** executar N12.1→N12.3 no repo; **N12.4–N12.5** operador EasyPanel (fill paper `signal_copy`).  
-4. **P1:** N13 só depois do gate N12; F-003 permanece congelado.  
+1. **`main` `56974d2`** — PR #10 no ar (N12 plano + runbook + testes submit).  
+2. **N12.4 pendente:** fill paper `signal_copy` + evidência em `TEST-EVIDENCE` § N12 (deploy ≠ fill).  
+3. **N13 repo:** PR `front/n13-strategy-homolog` (matriz Feature 4 + homolog por família).  
+4. **F-003** congelado até ISS-005 fechado.  
 5. **`LIVE_TRADING_ENABLED=false`** — invariável.

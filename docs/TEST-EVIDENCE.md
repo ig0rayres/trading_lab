@@ -180,3 +180,31 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 ```
 
 **N12.5:** marcar Feature 5 fill `[x]` em REQUIREMENTS **somente** após linhas operador acima preenchidas.
+
+## Sprint N13 — Feature 4 homolog por família
+
+> Sprint N13 · `docs/REQUIREMENTS.md` Feature 4 · seed N7/N8 · **sem** limiar inventado · `LIVE_TRADING_ENABLED=false`  
+> **N12.4 aberto:** Feature 5 fill operador ainda pendente — N13 não substitui ISS-005.
+
+| `strategy_key` | Fase seed (N7) | Homolog repo (pytest / gate) | Homolog operador | Status homolog |
+|----------------|----------------|------------------------------|------------------|----------------|
+| `news_first` | research | `tests.test_strategy_catalog` + Gate B phase block; `test_news_first_report_audited` (Gate A audit, sem broker) | Research: ciclo/manifesto via scheduler; **sem ordem paper** | repo ok / operador pendente |
+| `momentum` | research | `tests.test_gate_b_risk` + `test_seed_and_strategy_key_on_risk_row` (fase research → rejeição paper) | Bloqueado paper até regra upstream recuperada | **blocked upstream** |
+| `ta_barato` | research | Idem momentum (fase research) | Bloqueado paper | **blocked upstream** |
+| `prodigy_15d` | research | Idem research phase; sem scoring inventado | Bloqueado paper | **blocked upstream** |
+| `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: N12 runbook § Feature 5; fill operador **pendente** (N12.4) | paper path doc ok / fill pendente |
+| `orb` | shadow | `tests.test_strategy_catalog.test_orb_never_paper_even_if_phase_paper`; `tests.test_gate_b_risk.test_orb_not_paper` | Shadow only — **nunca** paper principal | repo ok |
+| `mean_reversion` | shadow | `NEVER_PAPER_KEYS` + fase shadow (catálogo) | Shadow only | repo ok |
+
+Comando traceability (N13.4):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_strategy_homolog_traceability -v
+```
+
+Comando Gate B / catálogo (regressão):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
+  tests.test_strategy_catalog tests.test_gate_b_risk -v
+```

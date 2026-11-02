@@ -791,6 +791,76 @@ P notes: **Um deploy EasyPanel** após merge N14; depois **freeze** rebuild até
 
 ---
 
+## Release train MVP-OP (plano — ISS-007)
+
+> **Aprovação operador pendente** (merge PR plano). **Nenhum `src/`** neste PR de plano.  
+> Brief: `docs/.briefs/MVP-OP-RELEASE-TRAIN.brief.md`
+
+```text
+MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
+     │                      │                      │
+  fill signal_copy      Prodígio paper         Tá Barato paper
+  Feature 5 [x]         rank→sinal→fill       (Git First upstream)
+  0 rebuild             1 rebuild              1 rebuild max
+```
+
+---
+
+## Sprint N15 — Release MVP-OP-0.9 (fechar copy paper)
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Primeira ordem paper comprovada na copy  
+> Gate: Feature 5 fill `[x]`; ISS-005 fechado; TEST-EVIDENCE N12 operador; **sem** rebuild EasyPanel  
+> review: skip  
+> Release tag: `MVP-OP-0.9`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N15.1 Operador N12.4 fill + reconcile redigido | operador | — |
+| [ ] | P | N15.2 N12.5 REQUIREMENTS + TEST-EVIDENCE; ISS-005 fechado | docs | N15.1 |
+
+---
+
+## Sprint N16 — Release MVP-OP-1.0 (Prodígio + catálogo operável)
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Sinais Prodígio homologados em paper + melhoria contínua documentada  
+> Gate: Git First reuse inventory; ≥1 fill `prodigy_15d` evidenciado; `prodigy-rank`→ingestão documentada ou adaptada; evolution checklist; CI verde; LIVE false; **no** scoring inventado  
+> review: senior+qa  
+> Release tag: `MVP-OP-1.0`  
+> Deploy: **1 rebuild** após merge
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N16.0 Git First: vendor SHA + reuse inventory Prodígio/signal | `/git` | N15 gate |
+| [ ] | P | N16.1 Runbook Prodígio: rank → sinal assinado → Gate A/B (`strategy_key=prodigy_15d`) | docs | N16.0 |
+| [ ] | M | N16.2 Adaptação mínima ingestão (só se gap documentado pós-inventory) | `/dev` | N16.1 |
+| [ ] | P | N16.3 Runbook promoção de fase + `evolution-daily` checklist operador | docs | N16.1 |
+| [ ] | P | N16.4 Operador: fill paper Prodígio + evidência TEST-EVIDENCE | operador | N16.2 |
+| [ ] | P | N16.5 Tag release notes `MVP-OP-1.0` + atualizar MVP-DEMO-RUNBOOK | docs | N16.4 |
+
+**Pré-requisito duro:** N15 concluída (0.9). **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador.
+
+---
+
+## Sprint N17 — Release MVP-OP-1.1 (Tá Barato + momentum upstream)
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Tá Barato com regras upstream homologadas em shadow/paper  
+> Gate: fórmulas/limites de `ta_barato` (e momentum se escopo) recuperadas em vendor — **senão** sprint permanece blocked e documenta gap; homolog pytest; LIVE false  
+> review: senior+qa  
+> Release tag: `MVP-OP-1.1`
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N17.0 Git First: upstream paths ta_barato/momentum | `/git` | N16 gate |
+| [ ] | M | N17.1 Integração/adaptação Gate B ou research (reuse only) | `/dev` | N17.0 |
+| [ ] | P | N17.2 Homolog operador shadow → paper limitado (evidência) | operador | N17.1 |
+| [ ] | P | N17.3 REQUIREMENTS/TEST-EVIDENCE matriz ta_barato | docs | N17.2 |
+| [ ] | P | N17.4 Repriorizar F-003 orb-parity (opcional pós-1.1) | `/pmo` | N17.2 |
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -806,8 +876,8 @@ P notes: **Um deploy EasyPanel** após merge N14; depois **freeze** rebuild até
 
 ## Próximo passo operador
 
-1. **`main` `4a71f7a`** — merge **N14 pacotão** (PR) → **último deploy** até mudança `src`/Dockerfile ou N12.4.  
-2. **`bash scripts/mvp-demo-smoke.sh`** pós-deploy (sem ordem).  
-3. **Pendências MVP:** `docs/ISSUES.md` § Pendências — **P-001 N12.4 fill** fecha Feature 5.  
-4. **`docs/MVP-DEMO-RUNBOOK.md`** — perfil env `config/mvp-demo.env.example`.  
+1. **Aprovar plano:** merge PR **`front/mvp-op-plan`** (ISS-007) — ainda **sem** sprint N16 código.  
+2. **Executar MVP-OP-0.9:** N15 / P-001–P-002 (N12.4 fill `signal_copy`) — **0 rebuild**.  
+3. **`main` `9aaac77`** + smoke OK — freeze deploy até 0.9 ou release 1.0.  
+4. Depois de 0.9: **`/pmo sprint N16`** (Prodígio) — **1 rebuild** no fim de 1.0.  
 5. **`LIVE_TRADING_ENABLED=false`** — invariável.

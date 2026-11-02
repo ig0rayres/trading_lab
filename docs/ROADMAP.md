@@ -39,7 +39,7 @@
 | N12 | N | Feature 5 fill `signal_copy` evidenciado; LIVE false | planejada | 5 | paper-gateway, signal_copy | Demo Alpaca paper (P0 pivot) | *(abaixo)* |
 | N13 | N | Homolog por família; sem scoring inventado | em execucao | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
 | N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | concluida | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
-| N15 | N | MVP-OP-0.9 — fechar Feature 5 copy paper | planejada | 2 | operador, docs | Fill `signal_copy` | *(abaixo)* |
+| N15 | N | MVP-OP-0.9 — submit copy paper homologado | em execucao | 2 | operador, docs | Submit `signal_copy` | *(abaixo)* |
 | N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | planejada | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
 | N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 
@@ -815,15 +815,15 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 ## Sprint N15 — Release MVP-OP-0.9 (fechar copy paper)
 > Categoria: N  
 > Status: planejada  
-> titulo_humano: Primeira ordem paper comprovada na copy  
-> Gate: Feature 5 fill `[x]`; ISS-005 fechado; TEST-EVIDENCE N12 operador; **sem** rebuild EasyPanel  
+> titulo_humano: Submit paper homologado na copy (fill limit pendente)  
+> Gate: submit operador evidenciado; Feature 5 fill `[ ]` com nota; TEST-EVIDENCE N12; **sem** rebuild EasyPanel  
 > review: skip  
 > Release tag: `MVP-OP-0.9`
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N15.1 Operador N12.4 fill + reconcile redigido | operador | — |
-| [ ] | P | N15.2 N12.5 REQUIREMENTS + TEST-EVIDENCE; ISS-005 fechado | docs | N15.1 |
+| [x] | P | N15.1 Operador N12.4 submit + reconcile redigido (fill limit pendente) | operador | — |
+| [x] | P | N15.2 TEST-EVIDENCE + ISS-005 parcial (sem fill `[x]`) | docs | N15.1 |
 
 ---
 
@@ -848,7 +848,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 | [ ] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 |
 | [ ] | P | N16.5 Tag release notes `MVP-OP-1.0` + atualizar MVP-DEMO-RUNBOOK | docs | N16.4, N16.8 |
 
-**Pré-requisito duro:** N15 concluída (0.9). **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador. Performance no painel assume fills reais (0.9+).
+**Pré-requisito duro:** N15 submit evidenciado (0.9). Fill Feature 5 opcional para painel performance credível. **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador.
 
 ---
 
@@ -887,7 +887,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 ## Próximo passo operador
 
 1. **Plano ISS-007:** mergeado (PR #13); painel unificado no épico — PR docs **`front/mvp-op-epic-panel`** se ainda não mergeado.  
-2. **Executar MVP-OP-0.9:** N15 / P-001–P-002 (N12.4 fill `signal_copy`) — **0 rebuild**.  
+2. **MVP-OP-0.9 submit:** evidência N12 em `TEST-EVIDENCE` (2026-11-02) — **0 rebuild**. Fill P-001b quando quiser `[x]` Feature 5.  
 3. **`main` `925dd2f`** + smoke OK — freeze deploy até 0.9 ou release 1.0.  
 4. Depois de 0.9: **`/pmo sprint N16`** (Prodígio + Command Panel v1) — **1 rebuild** no fim de 1.0.  
 5. **`LIVE_TRADING_ENABLED=false`** — invariável.

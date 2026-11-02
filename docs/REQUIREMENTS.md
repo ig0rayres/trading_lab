@@ -158,7 +158,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - Timeout, rejeição da corretora, fill parcial, cancelamento, posição que já existia, API fora.
 
 **Critérios de aceite (homologação):**
-- [ ] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`).
+- [ ] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`). **Submit homologado 2026-11-02:** `PAPER_SUBMITTED` MSFT limit ordem **new** (filled 0) — ver `docs/TEST-EVIDENCE.md` § N12 operador.
 - [x] Sinal inválido não gera ordem (Gates A+B; CI).
 - [x] Duplicata não reabre posição (idempotência + testes).
 - [x] Reinício não perde trilha ledger (Postgres append-only; worker atômico).

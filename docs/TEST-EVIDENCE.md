@@ -158,7 +158,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest tests/test_v4_schedu
 
 ## Sprint N12 — Feature 5 demo paper (`signal_copy`)
 
-> Sprint N12 · ISS-005 · `docs/REQUIREMENTS.md` Feature 5 · fill operador **pendente** até N12.4 · `LIVE_TRADING_ENABLED=false`
+> Sprint N12 · ISS-005 **parcial** · operador submit **2026-11-02** · fill limit **pendente** · `LIVE_TRADING_ENABLED=false`
 
 | Critério / check | Evidência pytest (nodeid) ou operador | Status | Resultado |
 |------------------|----------------------------------------|--------|-----------|
@@ -168,8 +168,9 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest tests/test_v4_schedu
 | Submit mock → `PAPER_SUBMITTED`, `orders_sent=1` | `tests.test_signal_paper_runner.PaperRunnerTests.test_auto_submit_success_orders_sent_one` | ok | CI |
 | Fila sem auto → `QUEUED`, `orders_sent=0` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_queue_never_calls_broker` | ok | CI |
 | Auto flags → delega a `paper_run` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_auto_allowed_delegates_to_paper_run` | ok | CI |
-| Fill real Alpaca + posição coerente | Operador N12.4 (`docs/HOMOLOGATION.md` § Feature 5 demo) | pendente | |
-| Reconcile pós-fill redigido | Operador N12.4 + `v4-alpaca-reconcile` | pendente | |
+| Submit real Alpaca (`signal-paper`) | Operador EasyPanel 2026-11-02: `PAPER_SUBMITTED`, `orders_sent=1`, jsonl `SUBMITTED`, ordem MSFT limit **new** | ok | EasyPanel |
+| Fill real Alpaca + posição coerente | Operador — ordem aberta limit @420, filled qty 0 (2026-11-02) | pendente | P-001b |
+| Reconcile pós-submit | `v4-alpaca-reconcile`; `ledger_apply` linked 0 (one-shot jsonl; FILL AAPL histórico no bundle) | ok | parcial |
 
 Comando local (repo tasks N12.1–N12.3):
 
@@ -179,12 +180,12 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
   tests/test_paper_gateway_queue.py -q
 ```
 
-**N12.5:** marcar Feature 5 fill `[x]` em REQUIREMENTS **somente** após linhas operador acima preenchidas.
+**N12.5:** marcar Feature 5 fill `[x]` em REQUIREMENTS **somente** após linha **Fill real** ok (P-001b). Submit operador registrado acima (opção A MVP-OP-0.9).
 
 ## Sprint N13 — Feature 4 homolog por família
 
 > Sprint N13 · `docs/REQUIREMENTS.md` Feature 4 · seed N7/N8 · **sem** limiar inventado · `LIVE_TRADING_ENABLED=false`  
-> **N12.4 aberto:** Feature 5 fill operador ainda pendente — N13 não substitui ISS-005.
+> **ISS-005 parcial:** submit paper ok; fill Feature 5 ainda `[ ]`.
 
 | `strategy_key` | Fase seed (N7) | Homolog repo (pytest / gate) | Homolog operador | Status homolog |
 |----------------|----------------|------------------------------|------------------|----------------|
@@ -192,7 +193,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 | `momentum` | research | `tests.test_gate_b_risk` + `test_seed_and_strategy_key_on_risk_row` (fase research → rejeição paper) | Bloqueado paper até regra upstream recuperada | **blocked upstream** |
 | `ta_barato` | research | Idem momentum (fase research) | Bloqueado paper | **blocked upstream** |
 | `prodigy_15d` | research | Idem research phase; sem scoring inventado | Bloqueado paper | **blocked upstream** |
-| `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: N12 runbook § Feature 5; fill operador **pendente** (N12.4) | paper path doc ok / fill pendente |
+| `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: submit homologado 2026-11-02; fill limit **pendente** | submit ok / fill pendente |
 | `orb` | shadow | `tests.test_strategy_catalog.test_orb_never_paper_even_if_phase_paper`; `tests.test_gate_b_risk.test_orb_not_paper` | Shadow only — **nunca** paper principal | repo ok |
 | `mean_reversion` | shadow | `NEVER_PAPER_KEYS` + fase shadow (catálogo) | Shadow only | repo ok |
 

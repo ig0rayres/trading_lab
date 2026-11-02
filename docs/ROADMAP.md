@@ -57,8 +57,7 @@
 | N7 | senior+qa | Catálogo + Gate B produto |
 | N8 | senior+qa | Seed no CLI migrate + runbook homologação |
 | N9 | senior+qa | Runbook itens 3–7 + evidência; sem reabrir Gate B |
-
----
+| N11 | senior+qa | Scheduler/run-once tests + REQUIREMENTS Feature 1 |
 
 ## Grafo de Dependências
 

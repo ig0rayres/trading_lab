@@ -102,6 +102,15 @@ def build_snapshot(root):
             'status': overview['status'], 'trusted': True,
             'orders_sent': 0,
         }
+    panel = data.get('command_panel') or {}
+    health = panel.get('financial_health') or {}
+    fills = int(health.get('paper_fills_recorded') or 0)
+    data['operational_acceptance'] = fills > 0
+    if fills == 0:
+        data['operational_acceptance_reason'] = 'NO_LEDGER_FILLS'
+    else:
+        data['operational_acceptance_reason'] = 'LEDGER_FILLS_PRESENT_OPERATOR_VERIFY_BROKER'
+    data['command_panel'] = panel
     # No inference of P&L from research candidates or incomplete brokerage records.
     return data
 
@@ -124,9 +133,35 @@ def render_page(data):
         items += ''.join(f'<article><small>{esc(label)}</small><strong>{esc(counts[key])}</strong></article>' for label, key in (("Ativos com dados (pesquisa)", "assets_with_data"), ("Candidatos Shadow", "market_candidates"), ("Notícias em revisão", "news_reviews"), ("Sinais externos observados", "external_signals"), ("Erros de coleta", "feed_errors")))
     cycle = data.get('research_cycle', {}).get('status', 'NOT_AVAILABLE')
     caveats = ''.join(f'<li>{esc(text)}</li>' for text in data['limitations'])
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Trading Lab — Observação</title><style>
-    :root{{color-scheme:dark}}body{{font:16px system-ui;background:#0c1322;color:#eef3fa;max-width:1040px;margin:auto;padding:40px 20px}}h1{{font-size:32px}}.muted,small{{color:#a6b4c5}}.warning{{background:#30251a;border:1px solid #765124;border-radius:12px;padding:14px;margin:20px 0}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}}article{{background:#182337;border:1px solid #2c3c56;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}}strong{{font-size:24px}}footer{{margin-top:32px;color:#a6b4c5}}a{{color:#9bc5fa}}
-    </style></head><body><h1>Trading Lab <span class="muted">/ Observação</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens.</div><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)}</p><h2>Limitações</h2><ul>{caveats}</ul><footer>API local: <a href="/api/status">/api/status</a> · Esta interface não contém controles de negociação.</footer></body></html>'''
+    panel = data.get('command_panel') or {}
+    strategies = panel.get('strategy_catalog', {}).get('strategies') or []
+    strat_rows = ''.join(
+        f'<tr><td>{esc(s.get("strategy_key",""))}</td><td>{esc(s.get("phase",""))}</td>'
+        f'<td>{"sim" if s.get("paper_allowed") else "não"}</td></tr>'
+        for s in strategies
+    ) or '<tr><td colspan="3">Catálogo indisponível (ledger)</td></tr>'
+    opps = panel.get('opportunities', {}).get('items') or []
+    opp_rows = ''.join(
+        f'<tr><td>{esc(o.get("provider",""))}</td><td>{esc(o.get("status",""))}</td>'
+        f'<td>{esc(o.get("prodigy_score",""))}</td></tr>'
+        for o in opps
+    ) or '<tr><td colspan="3">Execute prodigy-rank ou aguarde relatório</td></tr>'
+    evo = panel.get('continuous_improvement', {}).get('recent') or []
+    evo_items = ''.join(
+        f'<li><span class="muted">{esc(e.get("at",""))}</span> — {esc(e.get("summary") or e.get("kind") or "—")}</li>'
+        for e in evo
+    ) or '<li>Nenhum evento em evolution/decisions.jsonl</li>'
+    health = panel.get('financial_health') or {}
+    health_line = (
+        f'Ledger: {"conectado" if health.get("ledger_connected") else "indisponível"} · '
+        f'Fills registrados: {esc(health.get("paper_fills_recorded", 0))} · '
+        f'Fila queued_intent: {esc(health.get("paper_queued_intent", 0))}'
+    )
+    if health.get('queued_is_not_fill'):
+        health_line += ' · <b>queued ≠ fill</b>'
+    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Trading Lab — Command Panel</title><style>
+    :root{{color-scheme:dark}}body{{font:16px system-ui;background:#0c1322;color:#eef3fa;max-width:1040px;margin:auto;padding:40px 20px}}h1{{font-size:32px}}h2{{margin-top:28px;font-size:20px}}.muted,small{{color:#a6b4c5}}.warning{{background:#30251a;border:1px solid #765124;border-radius:12px;padding:14px;margin:20px 0}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}}article{{background:#182337;border:1px solid #2c3c56;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}}strong{{font-size:24px}}footer{{margin-top:32px;color:#a6b4c5}}a{{color:#9bc5fa}}table{{width:100%;border-collapse:collapse;margin-top:10px}}td,th{{border:1px solid #2c3c56;padding:8px;text-align:left}}th{{color:#a6b4c5;font-weight:600}}
+    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div><p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (research)</h2><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Melhoria contínua</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
 
 
 def make_handler(root, token=None):

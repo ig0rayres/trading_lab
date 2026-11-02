@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-Uma linha de releases (**0.9 → 1.0 → 1.1**) até operador ter copy + Prodígio + catálogo + melhoria contínua **homologados**, sem deploy por doc.
+Uma linha de releases (**0.9 → 1.0 → 1.1**) e **um épico (ISS-007)**: copy + Prodígio + **Command Panel v1** (`v4_web_dashboard`, Feature 6) + catálogo + melhoria contínua **homologados**, sem deploy por doc. Sem sprint N18 paralelo.
 
 ### Leituras
 
@@ -22,6 +22,7 @@ Uma linha de releases (**0.9 → 1.0 → 1.1**) até operador ter copy + Prodíg
 - Ingestão webhook/worker + `strategy_key`
 - `PRODIGY_PROVIDERS`, `strategy_states.phase`
 - Alpaca paper API (host paper only)
+- `src/v4_web_dashboard.py`, `trading_dashboard_data.py` — leitura ledger/fila/Alpaca; auth bearer remoto
 
 ### Assumido
 

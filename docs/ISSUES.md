@@ -10,18 +10,34 @@
 | ISS-004 | fechado | N11 | Feature 1 — critérios de ciclo research ainda `[ ]` em REQUIREMENTS |
 | ISS-005 | aberto | N12 | Feature 5 — demo Alpaca paper com `signal_copy` (pivot P0) |
 | ISS-006 | fechado | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
-| ISS-007 | planejado | N15–N17 | Release train **MVP-OP** (0.9 → 1.0 → 1.1) — aguarda aprovação operador |
+| ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
-> Plano **`/pmo plan MVP-OP-1.0`** 2026-11-02 · **Sem código** até operador aprovar este bloco e fechar **MVP-OP-0.9**.  
+> Plano **`/pmo plan MVP-OP-1.0`** 2026-11-02 · merge PR #13 · **Sem código N16+** até **MVP-OP-0.9** (N15) fechado.  
 > **`LIVE_TRADING_ENABLED=false`** em todas as releases. Sem limiar inventado. Sem C2 copy sem `approved_for_paper_copy`.
 
 | Release | Objetivo (operador vê funcionando) | Deploy EasyPanel | Issue / sprint |
 |---------|-----------------------------------|------------------|----------------|
-| **MVP-OP-0.9** | Cópia sinais **paper com fill comprovado** (`signal_copy`); Feature 5 `[x]`; ISS-005 fechado | **Não** (sessão operador) | P-001–P-002 · N12.4–N12.5 |
-| **MVP-OP-1.0** | **Prodígio**: rank → sinal assinado → paper homologado; evolution + checklist promoção de fase; estratégias “adotadas” no catálogo com runbook | **1 rebuild** / release tag | N16 · ISS-007 |
-| **MVP-OP-1.1** | **Tá Barato** (+ momentum se upstream): regras pinadas; shadow/paper homolog; melhoria contínua amarrada a promoção manual | **1 rebuild** se `src/` | N17 |
+| **MVP-OP-0.9** | Cópia sinais **paper com fill comprovado** (`signal_copy`); Feature 5 `[x]`; ISS-005 fechado | **Não** (sessão operador) | P-001–P-002 · N15 |
+| **MVP-OP-1.0** | **Prodígio** paper homologado + **painel único** (histórico, performance paper, ordens abertas, oportunidades rank, saúde/limites, fases catálogo, melhoria contínua, tips rotuladas research) | **1 rebuild** / release tag | N16 · ISS-007 |
+| **MVP-OP-1.1** | **Tá Barato** (+ momentum se upstream): shadow/paper homolog; **painel** estende família `ta_barato` | **1 rebuild** se `src/` | N17 |
+
+### Command Panel v1 — mapa de áreas (épico ISS-007, entrega **1.0**)
+
+| Área do painel | Fonte (reuse) | Release |
+|----------------|---------------|---------|
+| Histórico / ledger read-only | Postgres ledger + reconcile | 1.0 |
+| Performance (PnL paper) | `paper_fills` + Alpaca read-only | 1.0 (credível após 0.9 fill) |
+| Ordens abertas / fila | `paper_gateway` + Alpaca paper API | 1.0 |
+| Oportunidades | `prodigy-rank` / research (sem autorizar ordem) | 1.0 |
+| Saúde financeira | Gate B, capital, kill switch | 1.0 |
+| Estratégias adotadas / fase | `strategy_states` + catálogo | 1.0 |
+| Melhoria contínua | `evolution-daily`, `decisions.jsonl` | 1.0 |
+| Tips / sugestões | Rotuladas **research**; nunca ordem automática | 1.0 |
+| Tá Barato no painel | Mesma UI, família upstream | **1.1** |
+
+> **Sem N18 separado:** dashboard não é épico paralelo; estende `src/v4_web_dashboard.py` + dados existentes (Feature 6), bearer remoto invariável.
 
 ### Critérios “pronto” por tema (MVP-OP-1.0+)
 

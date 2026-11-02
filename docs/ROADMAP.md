@@ -38,7 +38,10 @@
 | N11 | N | Feature 1 REQUIREMENTS fechada; pytest traceability | concluida | 4 | research-cycle | Ciclo research sem ordem + manifesto | *(abaixo)* |
 | N12 | N | Feature 5 fill `signal_copy` evidenciado; LIVE false | planejada | 5 | paper-gateway, signal_copy | Demo Alpaca paper (P0 pivot) | *(abaixo)* |
 | N13 | N | Homolog por família; sem scoring inventado | em execucao | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
-| N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | planejada | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
+| N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | concluida | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
+| N15 | N | MVP-OP-0.9 — fechar Feature 5 copy paper | planejada | 2 | operador, docs | Fill `signal_copy` | *(abaixo)* |
+| N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | planejada | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
+| N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -65,6 +68,9 @@
 | N11 | senior+qa | Scheduler/run-once tests + REQUIREMENTS Feature 1 |
 | N12 | senior+qa | Paper submit path + homolog operador Feature 5 |
 | N13 | senior+qa | Matriz homolog estratégias; F-003 congelado até N12 |
+| N15 | skip | Operador + docs; 0 rebuild |
+| N16 | senior+qa | Prodígio paper + dashboard v1 (`v4_web_dashboard`) |
+| N17 | senior+qa | Tá Barato upstream + extensão painel |
 
 ---
 
@@ -791,16 +797,16 @@ P notes: **Um deploy EasyPanel** após merge N14; depois **freeze** rebuild até
 
 ---
 
-## Release train MVP-OP (plano — ISS-007)
+## Release train MVP-OP (épico único — ISS-007)
 
-> **Aprovação operador pendente** (merge PR plano). **Nenhum `src/`** neste PR de plano.  
+> Plano mergeado (PR #13). Ampliado: **Command Panel v1** dentro de **1.0**, não sprint/epic separado.  
 > Brief: `docs/.briefs/MVP-OP-RELEASE-TRAIN.brief.md`
 
 ```text
 MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
      │                      │                      │
-  fill signal_copy      Prodígio paper         Tá Barato paper
-  Feature 5 [x]         rank→sinal→fill       (Git First upstream)
+  fill signal_copy      Prodígio + painel v1     Tá Barato + painel
+  Feature 5 [x]         rank→fill + ledger UI   (Git First upstream)
   0 rebuild             1 rebuild              1 rebuild max
 ```
 
@@ -821,11 +827,11 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ---
 
-## Sprint N16 — Release MVP-OP-1.0 (Prodígio + catálogo operável)
+## Sprint N16 — Release MVP-OP-1.0 (Prodígio + Command Panel v1)
 > Categoria: N  
 > Status: planejada  
-> titulo_humano: Sinais Prodígio homologados em paper + melhoria contínua documentada  
-> Gate: Git First reuse inventory; ≥1 fill `prodigy_15d` evidenciado; `prodigy-rank`→ingestão documentada ou adaptada; evolution checklist; CI verde; LIVE false; **no** scoring inventado  
+> titulo_humano: Plataforma operacional v1 — Prodígio paper + painel único (Feature 6 estendida)  
+> Gate: Git First reuse inventory; ≥1 fill `prodigy_15d` evidenciado; painel read-only com bearer remoto; evolution checklist; CI verde; LIVE false; **no** scoring inventado; **queued/submit ≠ fill** no copy de performance  
 > review: senior+qa  
 > Release tag: `MVP-OP-1.0`  
 > Deploy: **1 rebuild** após merge
@@ -837,9 +843,12 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 | [ ] | M | N16.2 Adaptação mínima ingestão (só se gap documentado pós-inventory) | `/dev` | N16.1 |
 | [ ] | P | N16.3 Runbook promoção de fase + `evolution-daily` checklist operador | docs | N16.1 |
 | [ ] | P | N16.4 Operador: fill paper Prodígio + evidência TEST-EVIDENCE | operador | N16.2 |
-| [ ] | P | N16.5 Tag release notes `MVP-OP-1.0` + atualizar MVP-DEMO-RUNBOOK | docs | N16.4 |
+| [ ] | M | N16.6 Command Panel: escopo v1 + mapa ISS-007 (histórico, performance, ordens, oportunidades, saúde, fases, evolution, tips research) | docs | N16.0 |
+| [ ] | M | N16.7 Implementação mínima em `v4_web_dashboard` + dados ledger/Alpaca read-only (reuse `trading_dashboard_data`) | `/dev` | N16.6 |
+| [ ] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 |
+| [ ] | P | N16.5 Tag release notes `MVP-OP-1.0` + atualizar MVP-DEMO-RUNBOOK | docs | N16.4, N16.8 |
 
-**Pré-requisito duro:** N15 concluída (0.9). **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador.
+**Pré-requisito duro:** N15 concluída (0.9). **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador. Performance no painel assume fills reais (0.9+).
 
 ---
 
@@ -858,6 +867,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 | [ ] | P | N17.2 Homolog operador shadow → paper limitado (evidência) | operador | N17.1 |
 | [ ] | P | N17.3 REQUIREMENTS/TEST-EVIDENCE matriz ta_barato | docs | N17.2 |
 | [ ] | P | N17.4 Repriorizar F-003 orb-parity (opcional pós-1.1) | `/pmo` | N17.2 |
+| [ ] | M | N17.5 Painel: seção Tá Barato / família upstream (read-only homolog) | `/dev` | N17.2 |
 
 ---
 
@@ -876,8 +886,8 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ## Próximo passo operador
 
-1. **Aprovar plano:** merge PR **`front/mvp-op-plan`** (ISS-007) — ainda **sem** sprint N16 código.  
+1. **Plano ISS-007:** mergeado (PR #13); painel unificado no épico — PR docs **`front/mvp-op-epic-panel`** se ainda não mergeado.  
 2. **Executar MVP-OP-0.9:** N15 / P-001–P-002 (N12.4 fill `signal_copy`) — **0 rebuild**.  
-3. **`main` `9aaac77`** + smoke OK — freeze deploy até 0.9 ou release 1.0.  
-4. Depois de 0.9: **`/pmo sprint N16`** (Prodígio) — **1 rebuild** no fim de 1.0.  
+3. **`main` `925dd2f`** + smoke OK — freeze deploy até 0.9 ou release 1.0.  
+4. Depois de 0.9: **`/pmo sprint N16`** (Prodígio + Command Panel v1) — **1 rebuild** no fim de 1.0.  
 5. **`LIVE_TRADING_ENABLED=false`** — invariável.

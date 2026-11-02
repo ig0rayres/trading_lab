@@ -182,6 +182,23 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 
 **N12.5:** marcar Feature 5 fill `[x]` em REQUIREMENTS **somente** após linha **Fill real** ok (P-001b). Submit operador registrado acima (opção A MVP-OP-0.9).
 
+## Sprint N16 — Prodígio paper (`prodigy_15d`, MVP-OP-1.0)
+
+> Sprint N16 · `docs/HOMOLOGATION-PRODIGY.md` · rank research-only · `LIVE_TRADING_ENABLED=false`
+
+| Critério / check | Evidência | Status | Resultado |
+|------------------|-----------|--------|-----------|
+| Git First inventory | `docs/.briefs/N16-GIT-FIRST-REUSE.md` | ok | N16.0 |
+| Runbook operador | `docs/HOMOLOGATION-PRODIGY.md` | ok | N16.1 |
+| `prodigy-rank` → JSON | `tests.test_prodigy_rank` | ok | CI |
+| Rank → sinal → preview | Operador (`HOMOLOGATION-PRODIGY` § 1–3) | pendente | N16.4 |
+| Submit / fill paper Prodígio | Operador + Alpaca paper | pendente | N16.4 |
+| Painel oportunidades | Command Panel + rank file | ok | PR #14 |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy_rank -q
+```
+
 ## Sprint N13 — Feature 4 homolog por família
 
 > Sprint N13 · `docs/REQUIREMENTS.md` Feature 4 · seed N7/N8 · **sem** limiar inventado · `LIVE_TRADING_ENABLED=false`  
@@ -192,7 +209,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 | `news_first` | research | `tests.test_strategy_catalog` + Gate B phase block; `test_news_first_report_audited` (Gate A audit, sem broker) | Research: ciclo/manifesto via scheduler; **sem ordem paper** | repo ok / operador pendente |
 | `momentum` | research | `tests.test_gate_b_risk` + `test_seed_and_strategy_key_on_risk_row` (fase research → rejeição paper) | Bloqueado paper até regra upstream recuperada | **blocked upstream** |
 | `ta_barato` | research | Idem momentum (fase research) | Bloqueado paper | **blocked upstream** |
-| `prodigy_15d` | research | Idem research phase; sem scoring inventado | Bloqueado paper | **blocked upstream** |
+| `prodigy_15d` | research | `tests.test_prodigy_rank`, Gate B phase; runbook N16 | Paper: **`HOMOLOGATION-PRODIGY.md`** após promoção fase | runbook ok / operador pendente |
 | `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: submit homologado 2026-11-02; fill limit **pendente** | submit ok / fill pendente |
 | `orb` | shadow | `tests.test_strategy_catalog.test_orb_never_paper_even_if_phase_paper`; `tests.test_gate_b_risk.test_orb_not_paper` | Shadow only — **nunca** paper principal | repo ok |
 | `mean_reversion` | shadow | `NEVER_PAPER_KEYS` + fase shadow (catálogo) | Shadow only | repo ok |

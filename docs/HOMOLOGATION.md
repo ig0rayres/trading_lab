@@ -125,7 +125,7 @@ Mesmas flags de submit no env do **`tv-worker`**. Após Gate B aceitar, `paper_g
 | `news_first` | research | Scheduler `--once` / manifesto; Gate A audit (`news_first` report) | **Não** |
 | `momentum` | research | Confirmar Gate B recusa paper (`STRATEGY_PHASE_BLOCKED`) com `strategy_key=momentum` | **Não** (blocked upstream) |
 | `ta_barato` | research | Idem momentum | **Não** (blocked upstream) |
-| `prodigy_15d` | research | Idem research; teto R$20 só após regra recuperada | **Não** (blocked upstream) |
+| `prodigy_15d` | research | Homolog paper: **`docs/HOMOLOGATION-PRODIGY.md`** (N16); rank research-only; fase `paper_limited` só operador | **Sim** após promoção fase + runbook N16 |
 | `signal_copy` | paper_limited | N12 § Feature 5 demo; Collective2 permanece reprovado | **Sim** (paper limitado; fill N12.4 pendente) |
 | `orb` | shadow | Shadow journal / research; Gate B `STRATEGY_NOT_PAPER` | **Não** (nunca principal) |
 | `mean_reversion` | shadow | Idem ORB (shadow) | **Não** |

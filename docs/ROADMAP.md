@@ -40,7 +40,7 @@
 | N13 | N | Homolog por família; sem scoring inventado | em execucao | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
 | N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | concluida | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
 | N15 | N | MVP-OP-0.9 — submit copy paper homologado | em execucao | 2 | operador, docs | Submit `signal_copy` | *(abaixo)* |
-| N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | planejada | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
+| N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | em execucao | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
 | N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
@@ -829,7 +829,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ## Sprint N16 — Release MVP-OP-1.0 (Prodígio + Command Panel v1)
 > Categoria: N  
-> Status: planejada  
+> Status: em execucao  
 > titulo_humano: Plataforma operacional v1 — Prodígio paper + painel único (Feature 6 estendida)  
 > Gate: Git First reuse inventory; ≥1 fill `prodigy_15d` evidenciado; painel read-only com bearer remoto; evolution checklist; CI verde; LIVE false; **no** scoring inventado; **queued/submit ≠ fill** no copy de performance  
 > review: senior+qa  
@@ -838,13 +838,13 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N16.0 Git First: vendor SHA + reuse inventory Prodígio/signal | `/git` | N15 gate |
-| [ ] | P | N16.1 Runbook Prodígio: rank → sinal assinado → Gate A/B (`strategy_key=prodigy_15d`) | docs | N16.0 |
-| [ ] | M | N16.2 Adaptação mínima ingestão (só se gap documentado pós-inventory) | `/dev` | N16.1 |
+| [x] | P | N16.0 Git First: vendor SHA + reuse inventory Prodígio/signal | `/git` | N15 gate |
+| [x] | P | N16.1 Runbook Prodígio: rank → sinal assinado → Gate A/B (`strategy_key=prodigy_15d`) | docs | N16.0 |
+| [ ] | M | N16.2 Adaptação mínima ingestão (**blocked** — inventory: no gap for one-shot; ver N16-GIT-FIRST) | `/dev` | N16.1 |
 | [ ] | P | N16.3 Runbook promoção de fase + `evolution-daily` checklist operador | docs | N16.1 |
 | [ ] | P | N16.4 Operador: fill paper Prodígio + evidência TEST-EVIDENCE | operador | N16.2 |
-| [ ] | M | N16.6 Command Panel: escopo v1 + mapa ISS-007 (histórico, performance, ordens, oportunidades, saúde, fases, evolution, tips research) | docs | N16.0 |
-| [ ] | M | N16.7 Implementação mínima em `v4_web_dashboard` + dados ledger/Alpaca read-only (reuse `trading_dashboard_data`) | `/dev` | N16.6 |
+| [x] | M | N16.6 Command Panel: escopo v1 + mapa ISS-007 (histórico, performance, ordens, oportunidades, saúde, fases, evolution, tips research) | docs | PR #14 |
+| [x] | M | N16.7 Implementação mínima em `v4_web_dashboard` + dados ledger/Alpaca read-only (reuse `trading_dashboard_data`) | `/dev` | N16.6 |
 | [ ] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 |
 | [ ] | P | N16.5 Tag release notes `MVP-OP-1.0` + atualizar MVP-DEMO-RUNBOOK | docs | N16.4, N16.8 |
 

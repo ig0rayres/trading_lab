@@ -838,9 +838,9 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N16.0 Git First: vendor SHA + reuse inventory Prodígio/signal | `/git` | N15 gate |
-| [ ] | P | N16.1 Runbook Prodígio: rank → sinal assinado → Gate A/B (`strategy_key=prodigy_15d`) | docs | N16.0 |
-| [ ] | M | N16.2 Adaptação mínima ingestão (só se gap documentado pós-inventory) | `/dev` | N16.1 |
+| [x] | P | N16.0 Git First: vendor SHA + reuse inventory Prodígio/signal | `/git` | N15 gate |
+| [x] | P | N16.1 Runbook Prodígio: rank → sinal assinado → Gate A/B (`strategy_key=prodigy_15d`) | docs | N16.0 |
+| [ ] | M | N16.2 Adaptação mínima ingestão (**blocked** — inventory: no gap for one-shot; ver N16-GIT-FIRST) | `/dev` | N16.1 |
 | [ ] | P | N16.3 Runbook promoção de fase + `evolution-daily` checklist operador | docs | N16.1 |
 | [ ] | P | N16.4 Operador: fill paper Prodígio + evidência TEST-EVIDENCE | operador | N16.2 |
 | [x] | M | N16.6 Command Panel: escopo v1 + mapa ISS-007 (histórico, performance, ordens, oportunidades, saúde, fases, evolution, tips research) | docs | PR #14 |

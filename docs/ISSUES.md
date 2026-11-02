@@ -9,8 +9,23 @@
 | ISS-003 | fechado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
 | ISS-004 | fechado | N11 | Feature 1 — critérios de ciclo research ainda `[ ]` em REQUIREMENTS |
 | ISS-005 | aberto | N12 | Feature 5 — demo Alpaca paper com `signal_copy` (pivot P0) |
+| ISS-006 | aberto | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
 
-## ISS-001 — Imagem EasyPanel sem psycopg e sem vendor pinado
+## Pendências operacionais (MVP demo)
+
+> Atualizado: pacotão N14 · Feature 5 ainda aberta em `docs/REQUIREMENTS.md`.
+
+| ID | Item | Responsável | Bloqueia MVP “operacional”? |
+|----|------|-------------|----------------------------|
+| P-001 | **N12.4** — Fill Alpaca paper `signal_copy` + posição coerente (evidência redigida) | Operador | **Sim** (Feature 5 `[ ]`) |
+| P-002 | **N12.5** — Atualizar `TEST-EVIDENCE` § N12 + Feature 5 fill `[x]` | Operador + docs | **Sim** (fecha ISS-005) |
+| P-003 | **Reconcile pós-fill** redigido (N12.4) | Operador | Sim (critério Feature 5) |
+| P-004 | **F-003** orb-parity | Backlog | Não (demo `signal_copy`) |
+| P-005 | **Momentum / Tá Barato / Prodigy** — homolog paper | Backlog upstream | Sim para “multi-estratégia”; **não** para demo única |
+
+**Não conta como P-001 fechado:** deploy EasyPanel, `queued_intent`, HTTP 202, CI verde, pytest mock `PAPER_SUBMITTED`.
+
+--- — Imagem EasyPanel sem psycopg e sem vendor pinado
 
 | Campo | Valor |
 |-------|--------|
@@ -91,3 +106,23 @@
 **Critério de fechamento:** trilha **`signal_copy`** via módulos existentes (`signal_paper_runner.py`, `paper_gateway_queue.process_after_gate_b`, `scripts/run.sh signal-paper`); runbook Feature 5 em `docs/HOMOLOGATION.md`; matriz pytest + linha operador redigida em `docs/TEST-EVIDENCE.md`; operador registra fill paper Alpaca + reconcile coerente (sem segredos no Git); checkbox Feature 5 fill `[x]` **somente** após evidência operador; `LIVE_TRADING_ENABLED` false; Collective2 permanece reprovado; **não** promover ORB/mean a paper principal.
 
 **Fontes:** operador `/pmo plan pivot-demo` 2026-11-02; `docs/REQUIREMENTS.md` § Feature 5; `docs/HOMOLOGATION.md` passo opcional Feature 5; ISS-005 aprovado no plano PMO.
+
+**Pendências detalhadas:** § Pendências operacionais (MVP) — P-001 a P-003.
+
+---
+
+## ISS-006 — Pacotão MVP-DEMO-1.0 (runbook + smoke + deploy policy)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | improvement |
+| Sprint | N14 |
+| Status | aberto |
+
+**Impacto:** Dezenas de builds CI/deploy sem percepção de plataforma operacional; falta artefato único de release e regra “doc-only não rebuild”.
+
+**Critério de fechamento:** `docs/MVP-DEMO-RUNBOOK.md`; `config/mvp-demo.env.example`; `scripts/mvp-demo-smoke.sh` executável; ROADMAP N14; pendências P-001–P-003 registradas; política deploy §5 runbook; CI verde; **ISS-006 fechado no repo** — ISS-005 permanece aberto até P-001–P-002.
+
+**Fontes:** operador 2026-11-02 — levantamento master + pacotão único.
+
+---

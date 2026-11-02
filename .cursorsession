@@ -209,5 +209,35 @@
   "sprint_branch": "front/n10-closeout",
   "sprint_nome": "Sprint N10 — Closeout N9",
   "sprint_categoria": "N",
-  "plan_only": false
+  "plan_only": false,
+  "validation_gate_qa": {
+    "result": "APROVADA",
+    "sprint": "N10",
+    "produced_by": "/qa validar",
+    "senior_review_status": "PASS",
+    "findings_registered": [],
+    "findings_found": 0,
+    "findings_disposition": [],
+    "files_modified_outside_findings": 0,
+    "recorded_at": "2026-11-01T20:10:00Z",
+    "recorded_by": "qa-validar-n10",
+    "notes": "Docs-only delta vs main; N9 concluida no ROADMAP; smoke notes HOMOLOGATION; 0509732 TEST-EVIDENCE; sem src/. N10.5 operador (git front finish) apos merge PR — nao bloqueia entrega repo.",
+    "round": 1,
+    "full_suite_ran": false,
+    "senior_status": "PASS"
+  },
+  "validation_gate": {
+    "produced_by": "/qa validar",
+    "sprint": "N10",
+    "validation_round": 1,
+    "result": "APROVADA",
+    "senior_review_status": "PASS",
+    "in_contract": [
+      {"id": "n10-no-src", "check": "no src/ in sprint diff", "pass": true},
+      {"id": "n10-n9-closed", "check": "N9 concluida index+section", "pass": true},
+      {"id": "n10-smoke-doc", "check": "HOMOLOGATION smoke row", "pass": true}
+    ],
+    "last_validated_sha": "58f2d38",
+    "stamped_at": "2026-11-01T20:10:00Z"
+  }
 }

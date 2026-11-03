@@ -56,7 +56,7 @@ rank = json.loads(Path("/app/reports/intelligence/prodigy-top10-latest.json").re
 pick = rank["top_10_research"][0]  # operador escolhe índice consciente
 secret = os.environ["SIGNAL_COPY_SECRET"]
 signal = {
-    "provider": pick["provider"],
+    "provider": pick["provider_id"],
     "signal_id": "n16-prodigy-001",
     "symbol": "AAPL",  # operador: ticker real do setup Prodígio
     "side": "buy",
@@ -68,7 +68,7 @@ signal = {
 }
 signal["provider_signature"] = sign(signal, secret)
 Path("/app/data/received-signal-prodigy.json").write_text(json.dumps(signal, indent=2))
-print("OK", pick["provider"], signal["signal_id"])
+print("OK", pick["provider_id"], signal["signal_id"])
 PY
 ```
 

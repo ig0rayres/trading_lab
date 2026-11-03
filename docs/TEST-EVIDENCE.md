@@ -192,8 +192,9 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 | Runbook operador | `docs/HOMOLOGATION-PRODIGY.md` | ok | N16.1 |
 | Promoção fase + evolution | `docs/HOMOLOGATION-EVOLUTION-N16.md` | ok | N16.3 |
 | `prodigy-rank` → JSON | `tests.test_prodigy_rank` | ok | CI |
-| Rank → sinal → preview | Operador (`HOMOLOGATION-PRODIGY` § 1–3) | pendente | N16.4 |
-| Submit / fill paper Prodígio | Operador + Alpaca paper | pendente | N16.4 |
+| Rank → sinal → preview | Operador (`HOMOLOGATION-PRODIGY` § 1–3) | ok | N16.4 preview + rank 0 candidates |
+| Submit paper Prodígio | Operador EasyPanel 2026-11-03 · NVDA · provider **132169961** · `PAPER_SUBMITTED` · `orders_sent=1` · bracket **new**/held Alpaca | ok | N16.4 submit |
+| Fill limit Prodígio | Alpaca paper (limit `new` / filled 0) | pendente | P-001b / ISS-005 parcial |
 | Painel oportunidades | Command Panel + rank file | ok | PR #14 |
 
 ```bash
@@ -210,7 +211,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy
 | `news_first` | research | `tests.test_strategy_catalog` + Gate B phase block; `test_news_first_report_audited` (Gate A audit, sem broker) | Research: ciclo/manifesto via scheduler; **sem ordem paper** | repo ok / operador pendente |
 | `momentum` | research | `tests.test_gate_b_risk` + `test_seed_and_strategy_key_on_risk_row` (fase research → rejeição paper) | Bloqueado paper até regra upstream recuperada | **blocked upstream** |
 | `ta_barato` | research | Idem momentum (fase research) | Bloqueado paper | **blocked upstream** |
-| `prodigy_15d` | research | `tests.test_prodigy_rank`, Gate B phase; runbook N16 | Paper: **`HOMOLOGATION-PRODIGY.md`** após promoção fase | runbook ok / operador pendente |
+| `prodigy_15d` | research | `tests.test_prodigy_rank`, Gate B phase; runbook N16 | Paper submit homologado 2026-11-03 (NVDA); fill limit pendente | submit ok / fill pendente |
 | `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: submit homologado 2026-11-02; fill limit **pendente** | submit ok / fill pendente |
 | `orb` | shadow | `tests.test_strategy_catalog.test_orb_never_paper_even_if_phase_paper`; `tests.test_gate_b_risk.test_orb_not_paper` | Shadow only — **nunca** paper principal | repo ok |
 | `mean_reversion` | shadow | `NEVER_PAPER_KEYS` + fase shadow (catálogo) | Shadow only | repo ok |

@@ -81,7 +81,8 @@ Antes de cada rebuild operador visível: anotar SHA anterior → SHA novo + resu
 
 1. **`MVP-OP-1.0` / N18:** CMD **`v4-ops`** — painel **8765** sobe com o container (sem `nohup`); runbook **`docs/DASHBOARD-OPERATIONS.md`**.  
 2. Homolog remoto bearer: **`docs/HOMOLOGATION-N16.8-PANEL.md`**.  
-3. **Fill** Feature 5 / Prodígio (P-001b) — opcional para demo; `[ ]` em REQUIREMENTS até evidência limit filled.
+3. Smoke §4 após rebuild quando `src/` mudar (#14 painel).  
+4. **Fill** Feature 5 / Prodígio (P-001b) — opcional para demo; `[ ]` em REQUIREMENTS até evidência limit filled.
 
 **Env demo fixo (EasyPanel `trading-lab`):** `PAPER_*` + `V4_RISK_SNAPSHOT_FILE` + `PRODIGY_PROVIDERS` — ver `config/mvp-demo.env.example`.
 

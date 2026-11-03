@@ -42,6 +42,7 @@
 | N15 | N | MVP-OP-0.9 — submit copy paper homologado | em execucao | 2 | operador, docs | Submit `signal_copy` | *(abaixo)* |
 | N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | em execucao | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
 | N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
+| N18 | N | Command Panel always-on (`v4-ops`) + runbook ops | em execucao | 4 | observability, docs | Painel 8765 sem nohup | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -870,6 +871,28 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ---
 
+## Sprint N18 — Command Panel always-on (`v4-ops`)
+> Categoria: N  
+> Status: em execucao  
+> resumo_humano: O painel operacional deixa de depender de nohup no Exec: a imagem sobe pesquisa e dashboard juntos, com restart automático do HTTP e runbook de segurança Bearer/HTTPS.  
+> titulo_humano: Painel operacional sempre ligado no trading-lab  
+> Gate: CI verde; CMD **`v4-ops`** na imagem; operador redeploy **trading-lab** com log `listening on …:8765` **sem** nohup; `/api/status` Bearer **200**; `LIVE_TRADING_ENABLED=false`  
+> review: senior+qa  
+> Issue: **ISS-008**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | M | N18.1 Layout **`v4-ops`**: `v4_ops_main.sh`, `run.sh`, Dockerfile CMD, `tests/test_v4_ops_layout.py` | `/dev` | — |
+| [x] | P | N18.2 Runbook **`docs/DASHBOARD-OPERATIONS.md`** + alinhar EASYPANEL, COMMAND-PANEL, HOMOLOGATION-N16.8 | docs | N18.1 |
+| [ ] | P | N18.3 Operador: rebuild EasyPanel `trading-lab` + linha TEST-EVIDENCE N18 (sem token no Git) | operador | N18.2 |
+| [ ] | P | N18.4 Closeout ROADMAP: **N16 → concluida**; MVP-DEMO-RUNBOOK menciona `v4-ops` | docs | N18.3 |
+
+**N18.1 — executor_prompt (resumo):** Reuse `scripts/run.sh` pattern; add `v4-ops` → `v4_ops_main.sh` spawning supervised `v4-dashboard` + foreground `v4-scheduler`; default Dockerfile CMD `v4-ops` with same scheduler args; env `DASHBOARD_AUTOSTART` default true; no broker submit code in dashboard path; regression `tests/test_v4_web_dashboard.py` + new layout test; `guardrail_contract`: LIVE false, read-only HTTP only, no third EasyPanel service.
+
+**Fora de escopo N18:** login HTML no browser; Tá Barato (N17); Feature 5 fill (P-001b operador).
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
@@ -885,8 +908,9 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ## Próximo passo operador
 
-1. **Plano ISS-007:** mergeado (PR #13); painel unificado no épico — PR docs **`front/mvp-op-epic-panel`** se ainda não mergeado.  
-2. **MVP-OP-0.9 submit:** evidência N12 em `TEST-EVIDENCE` (2026-11-02) — **0 rebuild**. Fill P-001b quando quiser `[x]` Feature 5.  
-3. **`main` `925dd2f`** + smoke OK — freeze deploy até 0.9 ou release 1.0.  
-4. Depois de 0.9: **`/pmo sprint N16`** (Prodígio + Command Panel v1) — **1 rebuild** no fim de 1.0.  
-5. **`LIVE_TRADING_ENABLED=false`** — invariável.
+1. **`/pmo sprint N18`** na frente `front/n16-8-panel` (ou frente dedicada `front/n18-ops-panel`) — merge PR → **1 rebuild** `trading-lab`.  
+2. Env inalterado: `DASHBOARD_*` + `LEDGER_DATABASE_URL`; confirmar CMD da imagem **`v4-ops`** (remover override `v4-scheduler` no EasyPanel se existir).  
+3. **P-001b** (ISS-005 fill) continua sessão operador — paralelo, não bloqueia N18.  
+4. Após N18.3: painel em **`/`** e **`/api/status`** com Bearer; ver `docs/DASHBOARD-OPERATIONS.md`.  
+5. **`/pmo sprint N17`** só após gate N16/N18 closeout + Git First upstream.  
+6. **`LIVE_TRADING_ENABLED=false`** — invariável.

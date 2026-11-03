@@ -37,15 +37,17 @@ print('kill_switch', d.get('kill_switch_on'))
 
 Esperado: `schema command-panel-v1`.
 
-## Passo 3 — Subir dashboard (processo long-lived)
+## Passo 3 — Dashboard (processo long-lived)
 
-No **mesmo** container (não substituir CMD do scheduler no EasyPanel sem sprint ops):
+**Padrão pós-deploy:** CMD **`v4-ops`** na imagem sobe **`v4-dashboard`** automaticamente (supervisor com restart). Confirme no log do container: `Read-only dashboard listening on …:8765`.
+
+Homolog legado (só scheduler no CMD): subir manualmente:
 
 ```bash
 /app/scripts/run.sh v4-dashboard --root /app/reports --host 0.0.0.0 --port 8765
 ```
 
-Deixe rodando (terminal, `tmux`, ou job operador). **Dois apps** no EasyPanel — **não** criar terceiro serviço.
+**Dois apps** no EasyPanel — **não** criar terceiro serviço.
 
 ## Passo 4 — Publicar porta
 

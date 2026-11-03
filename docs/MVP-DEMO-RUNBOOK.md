@@ -9,7 +9,7 @@
 
 | Modo | Comando / app | Ordem na corretora? |
 |------|----------------|---------------------|
-| **Pesquisa** | `trading-lab` → `v4-scheduler` | **Não** (`orders_sent=0`) |
+| **Pesquisa + painel** | `trading-lab` → **`v4-ops`** (scheduler + dashboard **8765**) | Pesquisa **não** envia ordem; painel read-only |
 | **Ingestão** | `trading-lab-webhook` → `tv-webhook` | **Não** (Gate A → fila) |
 | **Fila + Gate B** | `trading-lab` → `tv-worker` | **Não** até auto flags (`queued_intent`) |
 | **Demo paper (fill)** | `signal-paper` ou worker + flags | **Sim** — só operador **N12.4** |
@@ -38,7 +38,7 @@ Template de nomes: `config/mvp-demo.env.example` (valores só no painel).
 
 | App | CMD | Env crítico |
 |-----|-----|-------------|
-| `trading-lab` | `v4-scheduler` *ou* `tv-worker` conforme operação | `LIVE_TRADING_ENABLED=false`, `LEDGER_DATABASE_URL`, Alpaca paper read |
+| `trading-lab` | **`v4-ops`** (default imagem) ou `tv-worker` conforme operação | `LIVE_TRADING_ENABLED=false`, `LEDGER_DATABASE_URL`, `DASHBOARD_*`, Alpaca paper read |
 | `trading-lab-webhook` | `tv-webhook` | `LEDGER_DATABASE_URL`, `TV_WEBHOOK_TOKEN`, `SIGNAL_COPY_SECRET` |
 
 **Migrate:** `scripts/run.sh ledger-migrate apply` uma vez por DSN (N8 seed 7 estratégias).
@@ -79,8 +79,8 @@ Antes de cada rebuild operador visível: anotar SHA anterior → SHA novo + resu
 
 ## 6. Próximo marco único
 
-1. **`MVP-OP-1.0`:** operador **N16.8** — **`docs/HOMOLOGATION-N16.8-PANEL.md`** (6 passos).  
-2. Smoke §4 após rebuild quando `src/` mudar (#14 painel).  
+1. **`MVP-OP-1.0` / N18:** CMD **`v4-ops`** — painel **8765** sobe com o container (sem `nohup`); runbook **`docs/DASHBOARD-OPERATIONS.md`**.  
+2. Homolog remoto bearer: **`docs/HOMOLOGATION-N16.8-PANEL.md`**.  
 3. **Fill** Feature 5 / Prodígio (P-001b) — opcional para demo; `[ ]` em REQUIREMENTS até evidência limit filled.
 
 **Env demo fixo (EasyPanel `trading-lab`):** `PAPER_*` + `V4_RISK_SNAPSHOT_FILE` + `PRODIGY_PROVIDERS` — ver `config/mvp-demo.env.example`.

@@ -16,7 +16,7 @@
   "beesy_version": "4.104.20",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Planejamento N12 — demo paper signal_copy (pivot P0)",
+  "fase_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -112,61 +112,95 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo sprint N10"
+    "/pmo sprint N18"
   ],
-  "contexto_rapido": "Plano pivot-demo: N12 P0 Feature 5 signal_copy; N13 P1 homolog famílias; F-003 congelado até N12. main 67ebf0d.",
-  "sprint_atual": "N12",
+  "contexto_rapido": "Sprint N18: v4-ops autostart dashboard 8765; branch front/n16-8-panel; N18.3 operador rebuild; ISS-008.",
+  "sprint_atual": "N18",
   "sprint_tasks": [
     {
-      "id": "N12.1",
-      "title": "TEST-EVIDENCE matriz Feature 5",
-      "size": "P",
-      "status": "done",
-      "depends_on": [],
-      "files": ["docs/TEST-EVIDENCE.md"]
-    },
-    {
-      "id": "N12.2",
-      "title": "HOMOLOGATION runbook Feature 5 signal_copy",
-      "size": "P",
-      "status": "done",
-      "depends_on": ["N12.1"],
-      "files": ["docs/HOMOLOGATION.md"]
-    },
-    {
-      "id": "N12.3",
-      "title": "pytest PAPER_SUBMITTED + process_after_gate_b mock",
+      "id": "N18.1",
+      "title": "Layout v4-ops (run.sh, v4_ops_main.sh, Dockerfile, tests)",
       "size": "M",
       "status": "done",
-      "depends_on": ["N12.1"],
-      "files": ["tests/test_signal_paper_runner.py", "tests/test_paper_gateway_queue.py"]
+      "depends_on": [],
+      "files": [
+        "scripts/v4_ops_main.sh",
+        "scripts/run.sh",
+        "Dockerfile",
+        "Dockerfile.demo",
+        "tests/test_v4_ops_layout.py"
+      ]
     },
     {
-      "id": "N12.4",
-      "title": "Operador: fill Alpaca paper EasyPanel",
+      "id": "N18.2",
+      "title": "Runbook DASHBOARD-OPERATIONS + EASYPANEL/COMMAND-PANEL/MVP-DEMO",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N18.1"
+      ],
+      "files": [
+        "docs/DASHBOARD-OPERATIONS.md",
+        "EASYPANEL.md",
+        "docs/COMMAND-PANEL.md",
+        "docs/HOMOLOGATION-N16.8-PANEL.md",
+        "docs/MVP-DEMO-RUNBOOK.md"
+      ]
+    },
+    {
+      "id": "N18.3",
+      "title": "Operador: rebuild trading-lab + TEST-EVIDENCE N18",
       "size": "P",
       "status": "todo",
-      "depends_on": ["N12.2", "N12.3"],
+      "depends_on": [
+        "N18.2"
+      ],
       "files": [],
       "owner": "operador"
     },
     {
-      "id": "N12.5",
-      "title": "REQUIREMENTS Feature 5 fill [x] pós-evidência",
+      "id": "N18.4",
+      "title": "Closeout ROADMAP N16 concluida",
       "size": "P",
       "status": "todo",
-      "depends_on": ["N12.4"],
-      "files": ["docs/REQUIREMENTS.md", "docs/TEST-EVIDENCE.md"]
+      "depends_on": [
+        "N18.3"
+      ],
+      "files": [
+        "docs/ROADMAP.md"
+      ]
     }
   ],
   "checkpoint": {
-    "sprint": "N12",
-    "phase": "testing",
-    "branch": "front/pivot-demo-paper",
-    "last_completed_task": "N12.3",
-    "current_task": "N12.4",
-    "timestamp": "2026-11-02T01:00:00-03:00",
-    "relevant_paths": ["docs/HOMOLOGATION.md", "docs/TEST-EVIDENCE.md", "tests/test_signal_paper_runner.py"]
+    "sprint": "N18",
+    "phase": "implementation",
+    "branch": "front/n16-8-panel",
+    "last_completed_task": "N18.2",
+    "current_task": "N18.3",
+    "timestamp": "2026-11-03T19:52:00-03:00",
+    "relevant_paths": [
+      "scripts/v4_ops_main.sh",
+      "scripts/run.sh",
+      "Dockerfile",
+      "src/v4_web_dashboard.py",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "EASYPANEL.md"
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N18",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "senior_status": "PASS",
+      "findings_registered": [],
+      "findings_found": 0,
+      "findings_disposition": [],
+      "recorded_at": "2026-11-03T19:59:00Z",
+      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
+      "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
+      "round": 1,
+      "full_suite_ran": false
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -193,38 +227,37 @@
     "updated_at": "2026-10-30T14:51:42-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-10-30T19:33:06Z",
-    "usage_percent": 90.923,
-    "messages_lost": 417
+    "compacted_at": "2026-11-03T19:30:21Z",
+    "usage_percent": 90.752,
+    "messages_lost": 337
   },
-  "compact_count": 6,
-  "previous_sprint": "N11",
+  "compact_count": 9,
+  "previous_sprint": "N16",
   "front": {
-    "slug": "pivot-demo-paper",
+    "slug": "n16-8-panel",
     "kind": "agent",
     "parent_root": "/media/igor/windows_part/Cursor/trading lab",
     "worktree": "/media/igor/windows_part/Cursor/trading lab",
-    "branch": "front/pivot-demo-paper"
+    "branch": "front/n16-8-panel"
   },
-  "sprint_branch": "front/pivot-demo-paper",
-  "sprint_nome": "Sprint N12 — Demo Alpaca paper (signal_copy)",
+  "sprint_branch": "front/n16-8-panel",
+  "sprint_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
-    "sprint": "N10",
+    "sprint": "N18",
     "produced_by": "/qa validar",
     "senior_review_status": "PASS",
+    "senior_status": "PASS",
     "findings_registered": [],
     "findings_found": 0,
     "findings_disposition": [],
-    "files_modified_outside_findings": 0,
-    "recorded_at": "2026-11-01T20:10:00Z",
-    "recorded_by": "qa-validar-n10",
-    "notes": "Docs-only delta vs main; N9 concluida no ROADMAP; smoke notes HOMOLOGATION; 0509732 TEST-EVIDENCE; sem src/. N10.5 operador (git front finish) apos merge PR — nao bloqueia entrega repo.",
+    "recorded_at": "2026-11-03T19:59:00Z",
+    "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
+    "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
     "round": 1,
-    "full_suite_ran": false,
-    "senior_status": "PASS"
+    "full_suite_ran": false
   },
   "validation_gate": {
     "produced_by": "/qa validar",
@@ -233,9 +266,21 @@
     "result": "APROVADA",
     "senior_review_status": "PASS",
     "in_contract": [
-      {"id": "n10-no-src", "check": "no src/ in sprint diff", "pass": true},
-      {"id": "n10-n9-closed", "check": "N9 concluida index+section", "pass": true},
-      {"id": "n10-smoke-doc", "check": "HOMOLOGATION smoke row", "pass": true}
+      {
+        "id": "n10-no-src",
+        "check": "no src/ in sprint diff",
+        "pass": true
+      },
+      {
+        "id": "n10-n9-closed",
+        "check": "N9 concluida index+section",
+        "pass": true
+      },
+      {
+        "id": "n10-smoke-doc",
+        "check": "HOMOLOGATION smoke row",
+        "pass": true
+      }
     ],
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"

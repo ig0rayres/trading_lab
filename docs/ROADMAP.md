@@ -844,7 +844,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 | [x] | P | N16.4 Operador: submit paper Prodígio + evidência TEST-EVIDENCE (fill limit pendente) | operador | N16.2 |
 | [x] | M | N16.6 Command Panel: escopo v1 + mapa ISS-007 (histórico, performance, ordens, oportunidades, saúde, fases, evolution, tips research) | docs | PR #14 |
 | [x] | M | N16.7 Implementação mínima em `v4_web_dashboard` + dados ledger/Alpaca read-only (reuse `trading_dashboard_data`) | `/dev` | N16.6 |
-| [ ] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 |
+| [ ] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 · **`docs/HOMOLOGATION-N16.8-PANEL.md`** |
 | [x] | P | N16.5 Release notes `MVP-OP-1.0` + MVP-DEMO-RUNBOOK (N16.8 painel remoto pendente) | docs | N16.4 |
 
 **Pré-requisito duro:** N15 submit evidenciado (0.9). Fill Feature 5 opcional para painel performance credível. **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador.

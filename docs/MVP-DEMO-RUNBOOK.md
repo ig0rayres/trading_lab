@@ -79,7 +79,7 @@ Antes de cada rebuild operador visível: anotar SHA anterior → SHA novo + resu
 
 ## 6. Próximo marco único
 
-1. **`MVP-OP-1.0`:** operador **N16.8** (painel remoto bearer) — ver `docs/RELEASE-MVP-OP-1.0.md`.  
+1. **`MVP-OP-1.0`:** operador **N16.8** — **`docs/HOMOLOGATION-N16.8-PANEL.md`** (6 passos).  
 2. Smoke §4 após rebuild quando `src/` mudar (#14 painel).  
 3. **Fill** Feature 5 / Prodígio (P-001b) — opcional para demo; `[ ]` em REQUIREMENTS até evidência limit filled.
 

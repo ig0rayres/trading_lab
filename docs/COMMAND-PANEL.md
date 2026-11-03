@@ -35,6 +35,6 @@ Merged **PR #14** (`main` `3ae522a+`): rebuild EasyPanel image once. Snapshot sm
 2. Run process: `/app/scripts/run.sh v4-dashboard --root /app/reports --host 0.0.0.0 --port 8765` (long-lived — separate process or operador-approved start override; **do not** add a third EasyPanel app).
 3. Publish port **8765** behind HTTPS; all GET routes require bearer when remote.
 
-Details: `EASYPANEL.md` § Command Panel.
+Details: `EASYPANEL.md` § Command Panel. Operador N16.8: **`docs/HOMOLOGATION-N16.8-PANEL.md`**.
 
 Does not replace Feature 5 operator fill (P-001b optional).

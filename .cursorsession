@@ -200,6 +200,23 @@
       "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
       "round": 1,
       "full_suite_ran": false
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "BLOQUEADA_ARVORE_SUJA",
+      "validation_mode": "blocked",
+      "gates": [],
+      "dirty_production_paths": [
+        ".cursor/router-state.json",
+        ".cursor/session-state-cache.json",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "012649666d0c9b318dd84f9c690fe9b34d29bf94",
+      "stamped_at": "2026-11-03T20:01:22Z",
+      "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
+      "patch_id_version": 2
     }
   },
   "artefatos_gerados": [

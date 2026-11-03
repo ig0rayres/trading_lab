@@ -202,6 +202,23 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy_rank -q
 ```
 
+## Sprint N18 — Command Panel always-on (`v4-ops`)
+
+> Gate: merge **`feat(ops): v4-ops`** · rebuild **`trading-lab`** · log `listening on …:8765` **sem** `nohup` · Bearer `/api/status` **200** · `LIVE_TRADING_ENABLED=false`  
+> Runbook: `docs/DASHBOARD-OPERATIONS.md` · Issue **ISS-008**
+
+| Critério / check | Evidência | Status | Resultado |
+|------------------|-----------|--------|-----------|
+| Layout `v4-ops` + pytest | `tests/test_v4_ops_layout.py`, `tests/test_v4_web_dashboard.py` | ok | N18.1 repo |
+| Runbook ops + MVP-DEMO | `docs/DASHBOARD-OPERATIONS.md`, `EASYPANEL.md`, `MVP-DEMO-RUNBOOK.md` | ok | N18.2 repo |
+| Deploy imagem CMD `v4-ops` | EasyPanel `trading-lab` pós-merge `main`; **sem** override `v4-scheduler`; log dashboard **8765** | pendente | N18.3 operador |
+| `/api/status` remoto | Bearer **200**, `command-panel-v1` (sem token no Git) | pendente | N18.3 operador |
+| Closeout N16 no ROADMAP | N16 → concluida; ISS-008 fechado | pendente | N18.4 após N18.3 |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_v4_ops_layout tests.test_v4_web_dashboard -q
+```
+
 ## Sprint N13 — Feature 4 homolog por família
 
 > Sprint N13 · `docs/REQUIREMENTS.md` Feature 4 · seed N7/N8 · **sem** limiar inventado · `LIVE_TRADING_ENABLED=false`  

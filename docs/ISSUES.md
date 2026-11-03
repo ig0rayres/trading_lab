@@ -11,6 +11,7 @@
 | ISS-005 | parcial | N12 | Feature 5 — submit paper ok; fill limit pendente (P-001b) |
 | ISS-006 | fechado | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
 | ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
+| ISS-008 | aberto | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -192,5 +193,21 @@
 **Fontes:** operador **`/pmo plan MVP-OP-1.0`** opção B 2026-11-02.
 
 **Aprovação:** operador confirma plano no Git (merge PR plano) antes de `/pmo sprint N16`.
+
+---
+
+## ISS-008 — Command Panel always-on (`v4-ops`)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | improvement |
+| Sprint | N18 |
+| Status | aberto |
+
+**Impacto:** Operador perde painel após restart/deploy porque `v4-dashboard` era processo manual; impede “dashboard operacional” contínuo no hashia.
+
+**Critério de fechamento:** imagem com CMD **`v4-ops`**; supervisor reinicia dashboard; docs `docs/DASHBOARD-OPERATIONS.md` + EASYPANEL alinhados; pytest `test_v4_ops_layout`; operador registra redeploy **sem nohup** + `/api/status` Bearer **200** + log `listening on …:8765`; `LIVE_TRADING_ENABLED=false`.
+
+**Fontes:** operador 2026-11-03 (`/pmo plan`, pacote N18 ops); implementação local `front/n16-8-panel`.
 
 ---

@@ -7,6 +7,10 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/v4_alpaca_reconcile.py "$@"
    ;;
+ v4-ops)
+   shift
+   exec /app/scripts/v4_ops_main.sh "$@"
+   ;;
  v4-scheduler)
    shift
    exec python3 /app/src/v4_scheduler.py "$@"

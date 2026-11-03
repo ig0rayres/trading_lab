@@ -32,9 +32,9 @@ Merged **PR #14** (`main` `3ae522a+`): rebuild EasyPanel image once. Snapshot sm
 ### EasyPanel HTTP (operador)
 
 1. Same env as webhook where ledger keys live: `LEDGER_DATABASE_URL`, `DASHBOARD_BEARER_TOKEN`, `DASHBOARD_ALLOW_REMOTE=true`, `LIVE_TRADING_ENABLED=false`.
-2. Run process: `/app/scripts/run.sh v4-dashboard --root /app/reports --host 0.0.0.0 --port 8765` (long-lived — separate process or operador-approved start override; **do not** add a third EasyPanel app).
-3. Publish port **8765** behind HTTPS; all GET routes require bearer when remote.
+2. **Default:** image CMD **`v4-ops`** starts scheduler + dashboard (port **8765**, restart supervisor). Manual: `/app/scripts/run.sh v4-dashboard --root /app/reports --host 0.0.0.0 --port 8765`. Disable autostart: `DASHBOARD_AUTOSTART=false`.
+3. Publish port **8765** behind HTTPS; all GET routes require bearer when token is set.
 
-Details: `EASYPANEL.md` § Command Panel. Operador N16.8: **`docs/HOMOLOGATION-N16.8-PANEL.md`**.
+Details: `docs/DASHBOARD-OPERATIONS.md`, `EASYPANEL.md` § Command Panel. Operador N16.8: **`docs/HOMOLOGATION-N16.8-PANEL.md`**.
 
 Does not replace Feature 5 operator fill (P-001b optional).

@@ -19,7 +19,7 @@ Provar **HTTP remoto** com **Bearer** em `/api/status`, incluindo `command_panel
 |----------|--------|
 | `LIVE_TRADING_ENABLED` | `false` |
 | `DASHBOARD_ALLOW_REMOTE` | `true` |
-| `DASHBOARD_BEARER_TOKEN` | string **≥ 32** caracteres (só painel; rotacionar se vazou) |
+| `DASHBOARD_BEARER_TOKEN` | string **≥ 32** caracteres (28 falha bind `0.0.0.0`) |
 | `LEDGER_DATABASE_URL` | já configurado |
 
 **Não** colar o token em chat, PR ou `TEST-EVIDENCE`.

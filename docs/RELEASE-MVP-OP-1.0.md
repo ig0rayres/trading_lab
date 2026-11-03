@@ -20,7 +20,7 @@
 |----------|--------|
 | `prodigy_15d` fase `paper_limited` (SQL operador) | ok 2026-11-02 |
 | `PAPER_SUBMITTED` Prodígio (`strategy_key=prodigy_15d`) | ok 2026-11-03 (NVDA bracket) |
-| Painel remoto bearer (N16.8) | **pendente** |
+| Painel remoto bearer (N16.8) | **ok** 2026-11-03 (`0.0.0.0:8765`, Bearer, `command-panel-v1`) |
 | Fill limit Feature 5 / Prodígio (P-001b) | **pendente** (ordem `new`/`held` ok para demo) |
 
 ## Deploy

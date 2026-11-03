@@ -23,7 +23,7 @@ Read-only extension of `v4_web_dashboard.py` and `trading_dashboard_data.py`.
 
 ## Auth
 
-Unchanged: loopback without bearer; remote requires `DASHBOARD_ALLOW_REMOTE=true` and `DASHBOARD_BEARER_TOKEN` (≥32 chars).
+Unchanged: loopback without bearer **only if** `DASHBOARD_BEARER_TOKEN` is unset; if token is set, **all** clients (including `127.0.0.1`) must send `Authorization: Bearer …`.
 
 ## Deploy
 

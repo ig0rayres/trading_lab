@@ -831,7 +831,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 > Categoria: N  
 > Status: em execucao  
 > titulo_humano: Plataforma operacional v1 — Prodígio paper + painel único (Feature 6 estendida)  
-> Gate: Git First reuse inventory; **submit** `prodigy_15d` evidenciado (fill limit opcional P-001b); painel bearer remoto N16.8 pendente; evolution checklist; CI verde; LIVE false  
+> Gate: Git First reuse inventory; **submit** `prodigy_15d` evidenciado; painel bearer **ok** operador 2026-11-03; fill limit opcional P-001b; CI verde; LIVE false  
 > review: senior+qa  
 > Release tag: `MVP-OP-1.0`  
 > Deploy: **1 rebuild** após merge
@@ -844,7 +844,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 | [x] | P | N16.4 Operador: submit paper Prodígio + evidência TEST-EVIDENCE (fill limit pendente) | operador | N16.2 |
 | [x] | M | N16.6 Command Panel: escopo v1 + mapa ISS-007 (histórico, performance, ordens, oportunidades, saúde, fases, evolution, tips research) | docs | PR #14 |
 | [x] | M | N16.7 Implementação mínima em `v4_web_dashboard` + dados ledger/Alpaca read-only (reuse `trading_dashboard_data`) | `/dev` | N16.6 |
-| [ ] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 · **`docs/HOMOLOGATION-N16.8-PANEL.md`** |
+| [x] | P | N16.8 Homolog operador: painel remoto com bearer + smoke alinhado a MVP-DEMO | operador | N16.7 · **`docs/HOMOLOGATION-N16.8-PANEL.md`** |
 | [x] | P | N16.5 Release notes `MVP-OP-1.0` + MVP-DEMO-RUNBOOK (N16.8 painel remoto pendente) | docs | N16.4 |
 
 **Pré-requisito duro:** N15 submit evidenciado (0.9). Fill Feature 5 opcional para painel performance credível. **PRODIGY_PROVIDERS** e fase `paper_limited` só via operador.

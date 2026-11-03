@@ -196,7 +196,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
 | Submit paper Prodígio | Operador EasyPanel 2026-11-03 · NVDA · provider **132169961** · `PAPER_SUBMITTED` · `orders_sent=1` · bracket **new**/held Alpaca | ok | N16.4 submit |
 | Fill limit Prodígio | Alpaca paper (limit `new` / filled 0) | pendente | P-001b / ISS-005 parcial |
 | Painel oportunidades | Command Panel + rank file | ok | PR #14 |
-| Painel remoto bearer (N16.8) | Operador HTTPS + `/api/status` — ver `docs/HOMOLOGATION-N16.8-PANEL.md` | pendente | checklist §6 |
+| Painel remoto bearer (N16.8) | EasyPanel `trading-lab` 2026-11-03: `ALLOW_REMOTE=true`, token ≥32, `0.0.0.0:8765`, `/api/status` Bearer **200**, `command-panel-v1` | ok | operador |
 
 ```bash
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy_rank -q

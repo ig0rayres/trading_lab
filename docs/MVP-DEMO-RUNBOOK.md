@@ -79,15 +79,18 @@ Antes de cada rebuild operador visível: anotar SHA anterior → SHA novo + resu
 
 ## 6. Próximo marco único
 
-1. Merge pacotão N14 → **um** deploy `main`.  
-2. Executar smoke §4.  
-3. Sessão operador **N12.4** (fill) — **sem** novo PR até ISS-005 fechado ou `/pmo plan` explícito.
+1. **`MVP-OP-1.0`:** operador **N16.8** (painel remoto bearer) — ver `docs/RELEASE-MVP-OP-1.0.md`.  
+2. Smoke §4 após rebuild quando `src/` mudar (#14 painel).  
+3. **Fill** Feature 5 / Prodígio (P-001b) — opcional para demo; `[ ]` em REQUIREMENTS até evidência limit filled.
+
+**Env demo fixo (EasyPanel `trading-lab`):** `PAPER_*` + `V4_RISK_SNAPSHOT_FILE` + `PRODIGY_PROVIDERS` — ver `config/mvp-demo.env.example`.
 
 ---
 
 ## 7. Referências
 
 - `docs/REQUIREMENTS.md` Feature 5–6  
-- `docs/TEST-EVIDENCE.md` § N12, N13  
+- `docs/RELEASE-MVP-OP-1.0.md`  
+- `docs/TEST-EVIDENCE.md` § N12, N13, N16  
 - `docs/INFRASTRUCTURE.md` § EasyPanel  
 - Skill projeto: `.cursor/skills/paper-order-gate/SKILL.md`

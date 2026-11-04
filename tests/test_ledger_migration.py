@@ -28,6 +28,38 @@ class LedgerMigrationFilesTest(unittest.TestCase):
         for name in LEDGER_TABLES:
             self.assertIn('drop table if exists %s' % name, down, name)
 
+    def test_002_up_contains_triggers_schema(self):
+        up = (MIG / '002_triggers_up.sql').read_text(encoding='utf-8')
+        lower = up.lower()
+        for token in (
+            'market_controls',
+            'trigger_changes',
+            'demo_operation_on',
+            'quote_currency',
+            'price_quote',
+            'B3_EQUITY',
+            'CRYPTO',
+            'FOREX',
+        ):
+            self.assertIn(token, up, token)
+        self.assertNotIn('drop table paper_fills', lower)
+        self.assertNotIn('drop table paper_orders', lower)
+
+    def test_002_down_reverses_triggers_only(self):
+        down = (MIG / '002_triggers_down.sql').read_text(encoding='utf-8').lower()
+        self.assertIn('drop table if exists market_controls', down)
+        self.assertIn('drop table if exists trigger_changes', down)
+        self.assertNotIn('drop table paper_fills', down)
+        self.assertNotIn('drop table paper_orders', down)
+        self.assertNotIn('delete from paper_fills', down)
+        self.assertNotIn('delete from ledger_entries', down)
+
+    def test_002_migrations_have_no_broker_secrets(self):
+        for name in ('002_triggers_up.sql', '002_triggers_down.sql'):
+            text = (MIG / name).read_text(encoding='utf-8').lower()
+            self.assertNotIn('alpaca', text, name)
+            self.assertNotIn('api.alpaca', text, name)
+
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
 class LedgerMigrationIntegrationTest(unittest.TestCase):

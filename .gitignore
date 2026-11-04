@@ -5,12 +5,19 @@ docs/.discovery.json
 .cursor/journal-*.jsonl
 *.zip
 
+.env
+.env.local
+
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
 venv/
 reports/v4/
+
+# Design explorations. The approved system lives in docs/design/DESIGN.md.
+docs/design/moodboards/
+docs/design/canvas/
 
 # Duplicate snapshot kept on disk; the newer tree is the repo root.
 trading-lab-v4-mvp-implantavel/

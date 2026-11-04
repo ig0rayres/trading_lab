@@ -1,0 +1,27 @@
+---
+description: The autonomous loop trades B3, crypto, and forex. A local simulator is not a fill. Do not send B3 or forex through Alpaca.
+alwaysApply: false
+globs: src/signal_paper_runner.py,src/paper_gateway.py,src/v4_shadow_broker.py,src/portfolio_risk_v4.py,src/gate_b_risk.py
+---
+
+# Markets
+
+## 1. Operating set
+
+The autonomous loop accepts `B3_EQUITY`, `CRYPTO`, and `FOREX`. Store that literal on the signal, the order, and the position. Do not treat a bare symbol as enough to know the market.
+
+## 2. What counts as a fill
+
+An order leaves only when that market's demo account returns positions, open orders, and fills. `src/v4_shadow_broker.py` records a request and is not a fill. Do not count it in daily or weekly loss.
+
+## 3. Broker boundary
+
+Alpaca paper is not the venue for B3 or forex. Do not add a request that sends those symbols to `https://paper-api.alpaca.markets`. Crypto listed as `BTCBRL` or `ETHBRL` is not the same book as Alpaca crypto quoted in USD.
+
+## 4. Unverified money
+
+Risk anchors and realized loss stay in BRL cents. A fill quoted in another currency does not enter the loss sum until a verified BRL amount exists. Do not invent an FX rate to make the sum close. While that amount is missing, Gate B does not open a new order.
+
+## 5. Live
+
+No market gains a live host, a live key, or a panel switch that turns real-money trading on.

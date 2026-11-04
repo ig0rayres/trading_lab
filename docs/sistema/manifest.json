@@ -10,19 +10,24 @@
     "description": "Contrato de produto: pesquisa, gates, estratégias, paper e o que fica fora."
   },
   {
+    "file": "design/DESIGN.md",
+    "title": "Design",
+    "description": "Direção visual aprovada: login, Central e Sinais, tema claro e escuro."
+  },
+  {
     "file": "ARCHITECTURE.md",
     "title": "Arquitetura",
-    "description": "Monolito Python, dois processos, gates antes do paper."
+    "description": "Monolito Python. Revisão v0.2: gatilhos no painel e laço da conta demo."
   },
   {
     "file": "DATABASE.md",
     "title": "Banco",
-    "description": "Postgres existente para o ledger de paper. Pesquisa continua em JSON."
+    "description": "Postgres do ledger. Revisão v0.2: gatilho, mercado e histórico."
   },
   {
     "file": "api-spec.yaml",
     "title": "Contrato HTTP",
-    "description": "So o webhook e a leitura do dashboard. Nao ha CRUD de ordem."
+    "description": "Webhook, leitura e PATCH de gatilho. Nao ha endpoint de ordem."
   },
   {
     "file": "db-schema.dbml",

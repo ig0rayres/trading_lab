@@ -1,0 +1,27 @@
+---
+description: Panel is the only place that changes a trigger. A trigger write never places an order. Bearer auth alone cannot authorize the write.
+alwaysApply: false
+globs: src/v4_web_dashboard.py,src/gate_b_risk.py,src/trading_dashboard_data.py,docs/api-spec.yaml
+---
+
+# Triggers
+
+## 1. Surface
+
+The operator changes a trigger in the panel. Do not add a new environment variable that arms, disarms, or sizes an order. `LIVE_TRADING_ENABLED` stays false and has no panel control.
+
+## 2. Writes
+
+`PATCH /api/triggers`, `PATCH /api/markets/{market}`, and `PATCH /api/strategies/{strategy_key}` update `control_flags`, `market_controls`, or `strategy_states`. They do not insert `paper_orders`. An unknown `strategy_key` is a 404, not a new strategy.
+
+## 3. Auth
+
+A published read may use the bearer token. A trigger write requires the operator session. Bearer alone is rejected.
+
+## 4. Audit
+
+Every accepted change inserts one `trigger_changes` row with the previous value and the new value. Do not update or delete that row. Do not put a secret in it.
+
+## 5. Fail closed
+
+If `demo_operation_on` is false, or the market row is off, no order leaves for that market. If the database is unavailable, keep the tighter ceiling already in code (R$ 5.000 capital, R$ 50 per trade). Do not fall through to the looser R$ 10.000 or R$ 100 constants.

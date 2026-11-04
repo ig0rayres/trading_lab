@@ -1,0 +1,305 @@
+{
+  "projeto": "trading-lab",
+  "descricao": "Laboratorio de pesquisa para day trade e swing trade (LONG e SHORT). Identifica, estuda e filtra oportunidades; paper antes de qualquer dinheiro real. Pacote importado: MVP v4 de pesquisa (29/10/2026), scheduler research-only, LIVE_TRADING desligado.",
+  "cenario": "LEGADO",
+  "ambiente": "DESENVOLVIMENTO",
+  "perfil": null,
+  "referencias": [
+    {
+      "tipo": "github",
+      "valor": "https://github.com/Jakeschincariol/day-trader-skill",
+      "proposito": "integracao",
+      "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
+    }
+  ],
+  "fase_atual": "9",
+  "beesy_version": "4.104.20",
+  "decisions_applied_until": 427,
+  "strategic_context_captured_at": null,
+  "fase_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "sprint_pending_merge": null,
+  "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
+  "prazo": null,
+  "ultimo_update": "2026-10-30T14:51:42-03:00",
+  "modulos": [
+    {
+      "nome": "market-data",
+      "descricao": "Feeds publicos e saneamento. Sem ordem.",
+      "status": "em_andamento",
+      "api": [
+        "v4-equity-feed",
+        "v4-crypto-feed",
+        "v4-import-prices"
+      ]
+    },
+    {
+      "nome": "research-cycle",
+      "descricao": "Scheduler de pesquisa e manifesto. orders_sent permanece 0.",
+      "status": "em_andamento",
+      "api": [
+        "v4-scheduler",
+        "v4-run-once"
+      ]
+    },
+    {
+      "nome": "strategy-catalog",
+      "descricao": "Fases persistidas; seed no migrate apply (N8). ORB em shadow.",
+      "status": "em_andamento",
+      "api": []
+    },
+    {
+      "nome": "signal-gate-a",
+      "descricao": "Autenticidade, frescor e idempotencia. Nao envia ordem.",
+      "status": "pendente",
+      "api": [
+        "tv-webhook"
+      ]
+    },
+    {
+      "nome": "risk-gate-b",
+      "descricao": "Limites de capital, calendario e kill switch.",
+      "status": "pendente",
+      "api": []
+    },
+    {
+      "nome": "paper-gateway",
+      "descricao": "Unica porta Alpaca Paper, depois dos dois gates.",
+      "status": "pendente",
+      "api": []
+    },
+    {
+      "nome": "observability",
+      "descricao": "Dashboard de leitura e parada. Porta publica so com auth.",
+      "status": "pendente",
+      "api": [
+        "v4-dashboard"
+      ]
+    }
+  ],
+  "proximos_passos": [
+    "Executar N10.1–N10.4 na frente n10-closeout",
+    "/qa validar N10",
+    "PR merge + /git front finish"
+  ],
+  "features_concluidas": [
+    "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
+    "Politica fail-closed: LIVE_TRADING_ENABLED=false no Dockerfile e recusa no run.sh",
+    "Scheduler research-only com invalidacao de manifesto obsoleto (presente no snapshot mais novo)",
+    "Dashboard somente leitura que nao promove manifesto adulterado a sucesso"
+  ],
+  "features_concluidas_docs": [
+    "docs/REQUIREMENTS.md v0.1 em revisao",
+    "docs/INFRASTRUCTURE.md CI-only",
+    "docs/ROADMAP.md sprints D1-D5 proposta"
+  ],
+  "features_pendentes": [
+    "Ponte sinal, News First, risk gate, paper gateway, fill, ledger e reconciliacao nao homologada",
+    "Edge de estrategia nao validado (ORB intraday reportado com resultado negativo)",
+    "Export do que esta instalado no EasyPanel nao veio neste corte"
+  ],
+  "decisoes_tecnicas": [
+    "Nao reiniciar o projeto: a base e o snapshot trading-lab-v4-mvp-pesquisa-validado, mais novo que trading-lab-v4-mvp-implantavel",
+    "Paper de referencia: R$5000, risco R$50 por operacao, teto R$100, maximo 3 posicoes, risco agregado R$200, perda diaria R$200, semanal R$500, Prodigy R$20, sem alavancagem",
+    "LIVE_TRADING permanece desligado ate evidencia de execucao, conciliacao, seguranca e edge liquido de custos",
+    "Nao substituir os servicos EasyPanel trading-lab e trading-lab-webhook com este pacote",
+    "Nao tratar HTTP 200, PAPER_GATEWAY_QUEUE_ONLY ou OK_RESEARCH_ONLY como ordem executada",
+    "Collective2: nenhum provedor aprovado para paper-copy neste corte",
+    "baseline decisions_applied_until=427 (max em SETUP-DECISIONS na importacao)",
+    "BD: PostgreSQL da instancia existente",
+    "Tier: 1, um no, sem servidor novo",
+    "Composicao: Nivel 1, Postgres mais JSON de pesquisa, sem cache"
+  ],
+  "perfil_usuario": "semi-tecnico",
+  "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
+  "comandos_recentes": [
+    "/pmo sprint N18"
+  ],
+  "contexto_rapido": "Sprint N18: v4-ops autostart dashboard 8765; branch front/n16-8-panel; N18.3 operador rebuild; ISS-008.",
+  "sprint_atual": "N18",
+  "sprint_tasks": [
+    {
+      "id": "N18.1",
+      "title": "Layout v4-ops (run.sh, v4_ops_main.sh, Dockerfile, tests)",
+      "size": "M",
+      "status": "done",
+      "depends_on": [],
+      "files": [
+        "scripts/v4_ops_main.sh",
+        "scripts/run.sh",
+        "Dockerfile",
+        "Dockerfile.demo",
+        "tests/test_v4_ops_layout.py"
+      ]
+    },
+    {
+      "id": "N18.2",
+      "title": "Runbook DASHBOARD-OPERATIONS + EASYPANEL/COMMAND-PANEL/MVP-DEMO",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N18.1"
+      ],
+      "files": [
+        "docs/DASHBOARD-OPERATIONS.md",
+        "EASYPANEL.md",
+        "docs/COMMAND-PANEL.md",
+        "docs/HOMOLOGATION-N16.8-PANEL.md",
+        "docs/MVP-DEMO-RUNBOOK.md"
+      ]
+    },
+    {
+      "id": "N18.3",
+      "title": "Operador: rebuild trading-lab + TEST-EVIDENCE N18",
+      "size": "P",
+      "status": "todo",
+      "depends_on": [
+        "N18.2"
+      ],
+      "files": [],
+      "owner": "operador"
+    },
+    {
+      "id": "N18.4",
+      "title": "Closeout ROADMAP N16 concluida",
+      "size": "P",
+      "status": "todo",
+      "depends_on": [
+        "N18.3"
+      ],
+      "files": [
+        "docs/ROADMAP.md"
+      ]
+    }
+  ],
+  "checkpoint": {
+    "sprint": "N18",
+    "phase": "implementation",
+    "branch": "front/n16-8-panel",
+    "last_completed_task": "N18.2",
+    "current_task": "N18.3",
+    "timestamp": "2026-11-03T19:52:00-03:00",
+    "relevant_paths": [
+      "scripts/v4_ops_main.sh",
+      "scripts/run.sh",
+      "Dockerfile",
+      "src/v4_web_dashboard.py",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "EASYPANEL.md"
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N18",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "senior_status": "PASS",
+      "findings_registered": [],
+      "findings_found": 0,
+      "findings_disposition": [],
+      "recorded_at": "2026-11-03T19:59:00Z",
+      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
+      "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
+      "round": 1,
+      "full_suite_ran": false
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "BLOQUEADA_ARVORE_SUJA",
+      "validation_mode": "blocked",
+      "gates": [],
+      "dirty_production_paths": [
+        ".cursor/router-state.json",
+        ".cursor/session-state-cache.json",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "2701104e09ae052894138eb1f3c4395fea0761ec",
+      "stamped_at": "2026-11-03T20:01:58Z",
+      "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
+      "patch_id_version": 2
+    }
+  },
+  "artefatos_gerados": [
+    ".cursor/rules/10-general.mdc",
+    ".cursor/rules/50-database.mdc",
+    ".cursor/rules/60-testing.mdc",
+    ".cursor/skills/paper-order-gate/SKILL.md",
+    ".cursor/skills/paper-order-gate/references/gate-sequence.md",
+    ".cursor/skills/signal-ingest/SKILL.md",
+    ".cursor/skills/signal-ingest/references/ingest-rules.md",
+    "docs/ROADMAP.md",
+    "docs/INFRASTRUCTURE.md",
+    "docs/VENDOR-PIN.md",
+    ".github/workflows/ci.yml",
+    "requirements-dev.txt",
+    ".dockerignore"
+  ],
+  "anchor": {
+    "persona": "planejador-tarefas",
+    "phase": "Sprint N9 implementation",
+    "intent": "Homologação D5 itens 3–7: runbook + evidência; operador EasyPanel.",
+    "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
+    "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
+    "next_steps": "N9.1 expand Gate A runbook in HOMOLOGATION.md",
+    "updated_at": "2026-10-30T14:51:42-03:00"
+  },
+  "compact_marker": {
+    "compacted_at": "2026-11-03T19:30:21Z",
+    "usage_percent": 90.752,
+    "messages_lost": 337
+  },
+  "compact_count": 9,
+  "previous_sprint": "N16",
+  "front": {
+    "slug": "n16-8-panel",
+    "kind": "agent",
+    "parent_root": "/media/igor/windows_part/Cursor/trading lab",
+    "worktree": "/media/igor/windows_part/Cursor/trading lab",
+    "branch": "front/n16-8-panel"
+  },
+  "sprint_branch": "front/n16-8-panel",
+  "sprint_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "sprint_categoria": "N",
+  "plan_only": false,
+  "validation_gate_qa": {
+    "result": "APROVADA",
+    "sprint": "N18",
+    "produced_by": "/qa validar",
+    "senior_review_status": "PASS",
+    "senior_status": "PASS",
+    "findings_registered": [],
+    "findings_found": 0,
+    "findings_disposition": [],
+    "recorded_at": "2026-11-03T19:59:00Z",
+    "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
+    "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
+    "round": 1,
+    "full_suite_ran": false
+  },
+  "validation_gate": {
+    "produced_by": "/qa validar",
+    "sprint": "N10",
+    "validation_round": 1,
+    "result": "APROVADA",
+    "senior_review_status": "PASS",
+    "in_contract": [
+      {
+        "id": "n10-no-src",
+        "check": "no src/ in sprint diff",
+        "pass": true
+      },
+      {
+        "id": "n10-n9-closed",
+        "check": "N9 concluida index+section",
+        "pass": true
+      },
+      {
+        "id": "n10-smoke-doc",
+        "check": "HOMOLOGATION smoke row",
+        "pass": true
+      }
+    ],
+    "last_validated_sha": "58f2d38",
+    "stamped_at": "2026-11-01T20:10:00Z"
+  }
+}

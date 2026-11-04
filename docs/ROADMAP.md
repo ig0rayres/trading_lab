@@ -43,6 +43,7 @@
 | N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | em execucao | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
 | N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 | N18 | N | Command Panel always-on (`v4-ops`) + runbook ops | em execucao | 4 | observability, docs | Painel 8765 sem nohup | *(abaixo)* |
+| N19 | N | Laço demo: gatilho no painel e ciclo da ordem no ledger | em execucao | 4 | observability, paper-gateway | Operar B3, cripto e forex | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -890,6 +891,33 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 **N18.1 — executor_prompt (resumo):** Reuse `scripts/run.sh` pattern; add `v4-ops` → `v4_ops_main.sh` spawning supervised `v4-dashboard` + foreground `v4-scheduler`; default Dockerfile CMD `v4-ops` with same scheduler args; env `DASHBOARD_AUTOSTART` default true; no broker submit code in dashboard path; regression `tests/test_v4_web_dashboard.py` + new layout test; `guardrail_contract`: LIVE false, read-only HTTP only, no third EasyPanel service.
 
 **Fora de escopo N18:** login HTML no browser; Tá Barato (N17); Feature 5 fill (P-001b operador).
+
+---
+
+## Sprint N19 — Laço demo com gatilho no painel
+
+> Categoria: N
+> Status: em execucao
+> resumo_humano: O painel passa a alterar parada, âncoras e mercado, e a ordem paper deixa rastro no ledger até o fill. B3, cripto e forex só operam quando a conta demo daquele mercado devolver o estado. Conta real continua sem botão.
+> titulo_humano: Gatilhos no painel e ordem com rastro no ledger
+> Gate: pytest verde; `LIVE_TRADING_ENABLED=false`; PATCH de gatilho não insere `paper_orders`; resultado do simulador local não é fill; nenhuma ordem sai com `demo_operation_on` false
+> review: senior+qa
+> Issue: **ISS-009**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | M | N19.1 Migration `002`: mercado, âncoras, `market_controls`, `trigger_changes`, preço fora do real. Sem apagar fill | `/dev` | — |
+| [x] | M | N19.2 PATCH de gatilho em `v4_web_dashboard` conforme `docs/api-spec.yaml` 0.2.0. Bearer sozinho recebe 401 na escrita | `/dev` | N19.1 |
+| [ ] | M | N19.3 Persistir `broker_order_id` e estado a partir de resposta mockada. Simulador local permanece sem fill | `/dev` | N19.1 |
+| [ ] | P | N19.4 Teste: mercado sem conta demo que devolva posição fica barrado, com motivo, e não chama a Alpaca | `/qa testes` | N19.2, N19.3 |
+
+**Fora de escopo N19:** escolher a corretora demo de B3 ou forex; ligar `demo_operation_on` em produção; conta real; cadastrar estratégia nova; ajuste automático de parâmetro.
+
+**N19.1 — executor_prompt (resumo):** Add `migrations/002_triggers_up.sql` and down. Columns and tables from `docs/DATABASE.md` section 6 and `docs/db-schema.dbml`. Do not rewrite `001`. Do not drop fills. Test rollback. `guardrail_contract`: no secrets in SQL, no live host, no seed order.
+
+**N19.2 — executor_prompt (resumo):** Extend `src/v4_web_dashboard.py` only. Routes `PATCH /api/triggers`, `PATCH /api/markets/{market}`, `PATCH /api/strategies/{strategy_key}`. Insert `trigger_changes`. Do not import a broker client. Unknown strategy key is 404. `orb` and `mean_reversion` cannot move to a paper phase. `guardrail_contract`: write requires operator session; bearer alone is 401; response field names match the DBML.
+
+**N19.3 — executor_prompt (resumo):** When a mocked paper submit returns an id, store it on `paper_orders` and do not leave the row at `queued_intent`. `src/v4_shadow_broker.py` stays a request log. Do not send `B3_EQUITY` or `FOREX` to `https://paper-api.alpaca.markets`. `guardrail_contract`: `orders_sent` stays 0 unless the mock is an explicit paper submit; `LIVE_TRADING_ENABLED` false.
 
 ---
 

@@ -1,8 +1,9 @@
 # Database — Trading Lab
 
 > Gerado em: 2026-10-29
+> Revisado em: 2026-11-03 (v0.2, gatilhos e mercados B3, cripto e forex)
 > Fase: 4 — Arquitetura de Dados
-> Baseado em: docs/REQUIREMENTS.md + docs/ARCHITECTURE.md
+> Baseado em: docs/REQUIREMENTS.md v0.3 + docs/ARCHITECTURE.md v0.3
 
 Pesquisa continua em arquivo JSON no volume de reports. Este documento é só o ledger de paper, na instância PostgreSQL que o operador já tem. Não há servidor novo, réplica, cache nem banco analítico. Nenhuma credencial entra aqui.
 
@@ -149,9 +150,94 @@ O processo `v4-scheduler` não recebe DSN. Só o paper-gateway recebe.
 
 ## 5. Migration Inicial
 
-Não há Alembic nem migration neste repositório. A primeira sprint que for autorizada a tocar banco começa por criar estas tabelas, com as convenções acima, e um teste de rollback da migration. Sem seed de ordem real. Sem credencial no arquivo de migration.
+`migrations/001_ledger_up.sql` já cria as oito tabelas. Esta fase não aplica SQL e não cria a próxima migration. A sprint que for autorizada a tocar o banco escreve `002` em cima da `001`, com teste de rollback. Sem ordem real no arquivo. Sem credencial.
 
-Esta fase não cria sprint e não aplica SQL na instância.
+---
+
+## 6. Revisão 2026-11-03 — gatilho e mercado
+
+O motor continua o PostgreSQL da instância que já existe. Tier 1 e Nível 1 não mudam. Um operador e um ledger pequeno não justificam réplica, Valkey nem banco analítico.
+
+### 6.1 O que a 001 não guarda
+
+- Mercado da ordem. `paper_orders` e `positions` têm símbolo sem dizer se é B3, cripto ou forex.
+- As seis âncoras. `control_flags` só tem kill switch, risco por operação e risco do Prodígio.
+- O controle de operação demo. Hoje ele é variável de ambiente.
+- Quem mudou o gatilho, quando, e qual era o valor anterior.
+- Preço de fill fora do real. `paper_fills.price_cents` serve para duas casas de BRL. Não serve para forex nem para cripto com mais casas.
+
+### 6.2 Mercado
+
+Valor fechado, em três literais:
+
+| Valor | Mercado |
+|-------|---------|
+| `B3_EQUITY` | B3 |
+| `CRYPTO` | Cripto |
+| `FOREX` | Forex |
+
+`signal_events`, `paper_orders` e `positions` ganham `market`. Posição aberta é única por `(market, symbol)`, não por símbolo sozinho.
+
+Ação americana que já existe no código não ganha linha nova de mercado nesta revisão. O laço decidido é B3, cripto e forex.
+
+### 6.3 Gatilho vigente
+
+`control_flags` continua uma linha lógica. Colunas novas, com o valor de partida. Se a linha já existir, a migration preenche só o que estiver vazio. Não sobrescreve parada nem teto que o operador já tiver gravado.
+
+| Coluna | Partida | Significado |
+|--------|---------|-------------|
+| `demo_operation_on` | false | Operação demo ligada no painel |
+| `capital_cents` | 500000 | R$ 5.000 |
+| `max_risk_per_trade_cents` | 5000 | R$ 50. A coluna já existe |
+| `max_open_positions` | 3 | Posições simultâneas |
+| `max_aggregate_risk_cents` | 20000 | R$ 200 |
+| `max_daily_loss_cents` | 20000 | R$ 200 |
+| `max_weekly_loss_cents` | 50000 | R$ 500 |
+
+`kill_switch_on` e `prodigy_risk_cents` permanecem. O Prodígio em R$ 20 já está no código. Não é teto novo.
+
+Tabela nova `market_controls`, uma linha por mercado, as três nascendo desligadas:
+
+| Coluna | Regra |
+|--------|--------|
+| `market` | Único. Um dos três literais |
+| `operation_on` | false até o operador ligar no painel |
+
+Painel desligado em `demo_operation_on` ou em `market_controls` barra a ordem daquele mercado. Isso é dado, não variável de ambiente.
+
+### 6.4 Histórico do gatilho
+
+Tabela nova `trigger_changes`. Append-only. A aplicação não atualiza nem apaga linha daqui.
+
+| Coluna | Regra |
+|--------|--------|
+| `target_table` | `control_flags`, `market_controls` ou `strategy_states` |
+| `target_id` | Id da linha alterada |
+| `field_name` | Coluna alterada |
+| `old_value` | Texto do valor anterior. Nulo na primeira gravação |
+| `new_value` | Texto do valor novo |
+| `changed_at` | Momento da mudança |
+
+Não há tabela de usuário. O operador é um só. A linha não guarda segredo.
+
+### 6.5 Dinheiro
+
+Âncora e P&L realizado em real continuam em centavos (`bigint`). Perda do dia e da semana é soma de `ledger_entries.amount_cents` no período, não uma coluna acumulada que possa divergir do fill.
+
+`paper_fills` ganha `quote_currency` e `price_quote numeric(24, 8)`. Fill em BRL continua podendo usar `price_cents`. Fill em outra moeda grava `price_quote` e deixa `price_cents` nulo. A migration afrouxa o `NOT NULL` dessa coluna só para esse caso.
+
+`ledger_entries.amount_cents` só entra na âncora de perda quando o valor está em BRL. Fill cujo resultado ainda não tem conversão verificada para real fica de fora da soma e o Gate B não abre ordem nova. Não se inventa câmbio para fechar a conta.
+
+### 6.6 O que não entra
+
+- Nome da corretora demo de cada mercado. Ainda não foi escolhido.
+- Chave, segredo e DSN.
+- Candle e relatório de pesquisa.
+- Tabela de ajuste automático de estratégia. Espera fill real.
+
+### 6.7 Próxima migration
+
+A `002` adiciona colunas e as duas tabelas novas. Não reescreve a `001`. Não apaga fill. Não roda nesta fase.
 
 ---
 
@@ -160,3 +246,4 @@ Esta fase não cria sprint e não aplica SQL na instância.
 | Data | Versao | Alteracao | Autor |
 |------|--------|-----------|-------|
 | 2026-10-29 | 0.1 | Postgres existente, Tier 1, Nível 1, schema do ledger | Arquiteto de Dados (IA) |
+| 2026-11-03 | 0.2 | Gatilhos, mercado B3/cripto/forex, histórico e preço fora do real | Arquiteto de Dados (IA) |

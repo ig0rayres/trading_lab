@@ -9,17 +9,41 @@ import hashlib
 import html
 import json
 import os
+import re
+import uuid
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, unquote
 
 try:
+    from .strategy_catalog import NEVER_PAPER_KEYS, PAPER_PHASES
     from .trading_dashboard_data import summary
 except ImportError:
+    from strategy_catalog import NEVER_PAPER_KEYS, PAPER_PHASES
     from trading_dashboard_data import summary
 
+try:
+    from . import ledger_store as _ledger_store
+except ImportError:
+    import ledger_store as _ledger_store
+
 MODULES = ('market', 'news', 'signals', 'risk', 'paper', 'reconciliation')
+
+VALID_MARKETS = frozenset({'B3_EQUITY', 'CRYPTO', 'FOREX'})
+VALID_PHASES = frozenset({'research', 'shadow', 'paper_limited', 'paper_validated'})
+TRIGGER_PATCH_FIELDS = frozenset({
+    'kill_switch_on', 'demo_operation_on', 'capital_cents', 'max_risk_per_trade_cents',
+    'max_open_positions', 'max_aggregate_risk_cents', 'max_daily_loss_cents',
+    'max_weekly_loss_cents', 'prodigy_risk_cents',
+})
+INTEGER_PATCH_FIELDS = frozenset({
+    'capital_cents', 'max_risk_per_trade_cents', 'max_open_positions',
+    'max_aggregate_risk_cents', 'max_daily_loss_cents', 'max_weekly_loss_cents',
+    'prodigy_risk_cents',
+})
+CONTROL_FLAG_RESPONSE_FIELDS = tuple(TRIGGER_PATCH_FIELDS)
+_LIVE_FIELD_RE = re.compile(r'live[_ ]?trading', re.I)
 
 
 def research_overview(root):
@@ -166,47 +190,436 @@ def render_page(data):
     </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div><p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (research)</h2><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Melhoria contínua</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
 
 
-def make_handler(root, token=None):
+def default_connect():
+    return _ledger_store.connect()
+
+
+def cookie_value(cookie_header, name):
+    if not cookie_header:
+        return None
+    prefix = name + '='
+    for part in cookie_header.split(';'):
+        piece = part.strip()
+        if piece.startswith(prefix):
+            return piece[len(prefix):]
+    return None
+
+
+def operator_session_authorized(headers, operator_session):
+    if not operator_session:
+        return False
+    raw = cookie_value(headers.get('Cookie'), 'trading_lab_session')
+    if raw is None:
+        return False
+    return hmac.compare_digest(raw, operator_session)
+
+
+def bearer_authorized(headers, token):
+    if token is None:
+        return True
+    provided = headers.get('Authorization', '')
+    expected = 'Bearer ' + token
+    return hmac.compare_digest(provided, expected)
+
+
+def audit_value(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+    return str(value)
+
+
+def insert_trigger_change(conn, *, target_table, target_id, field_name, old_value, new_value):
+    now = datetime.now(timezone.utc)
+    _ledger_store.insert_row(conn, 'trigger_changes', {
+        'id': str(uuid.uuid4()),
+        'target_table': target_table,
+        'target_id': str(target_id),
+        'field_name': field_name,
+        'old_value': audit_value(old_value),
+        'new_value': audit_value(new_value),
+        'changed_at': now,
+        'created_at': now,
+        'updated_at': now,
+    })
+
+
+def row_to_control_flags(row):
+    return {name: row[name] for name in CONTROL_FLAG_RESPONSE_FIELDS}
+
+
+def fetch_control_flags_row(conn):
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id, ' + ', '.join(CONTROL_FLAG_RESPONSE_FIELDS)
+            + ' FROM control_flags WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 1'
+        )
+        row = cur.fetchone()
+    if not row:
+        return None
+    names = ('id',) + CONTROL_FLAG_RESPONSE_FIELDS
+    return dict(zip(names, row))
+
+
+def fetch_market_control_rows(conn):
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id, market, operation_on FROM market_controls '
+            'WHERE deleted_at IS NULL AND market = ANY(%s) ORDER BY market',
+            (list(VALID_MARKETS),),
+        )
+        rows = cur.fetchall()
+    return [
+        {'id': r[0], 'market': r[1], 'operation_on': r[2]}
+        for r in rows
+    ]
+
+
+def load_trigger_snapshot(conn):
+    flags = fetch_control_flags_row(conn)
+    if flags is None:
+        raise LookupError('NO_CONTROL_FLAGS')
+    markets = fetch_market_control_rows(conn)
+    public_flags = row_to_control_flags(flags)
+    public_markets = [{'market': m['market'], 'operation_on': m['operation_on']} for m in markets]
+    return {'control_flags': public_flags, 'market_controls': public_markets}
+
+
+def reject_live_field_names(body):
+    if not isinstance(body, dict):
+        return False
+    for key in body:
+        if _LIVE_FIELD_RE.search(key.replace('_', ' ')):
+            return True
+    return False
+
+
+def known_trigger_patch_keys(body):
+    if not isinstance(body, dict):
+        return []
+    return [key for key in body if key in TRIGGER_PATCH_FIELDS]
+
+
+def validate_trigger_patch(body):
+    if not isinstance(body, dict):
+        return 'INVALID_BODY'
+    if reject_live_field_names(body):
+        return 'LIVE_TRADING_FIELD_FORBIDDEN'
+    keys = known_trigger_patch_keys(body)
+    if not keys:
+        return 'EMPTY_PATCH'
+    for key in keys:
+        value = body[key]
+        if key in INTEGER_PATCH_FIELDS:
+            if not isinstance(value, int) or isinstance(value, bool):
+                return 'INVALID_FIELD'
+            if value < 1:
+                return 'BELOW_MINIMUM'
+        elif key in ('kill_switch_on', 'demo_operation_on'):
+            if not isinstance(value, bool):
+                return 'INVALID_FIELD'
+    return None
+
+
+def apply_trigger_patch(conn, body):
+    err = validate_trigger_patch(body)
+    if err:
+        return None, err
+    row = fetch_control_flags_row(conn)
+    if row is None:
+        raise LookupError('NO_CONTROL_FLAGS')
+    now = datetime.now(timezone.utc)
+    row_id = row['id']
+    for key in known_trigger_patch_keys(body):
+        new_value = body[key]
+        old_value = row[key]
+        if old_value == new_value:
+            continue
+        with conn.cursor() as cur:
+            cur.execute(
+                'UPDATE control_flags SET %s = %%s, updated_at = %%s WHERE id = %%s' % key,
+                (new_value, now, row_id),
+            )
+        insert_trigger_change(
+            conn, target_table='control_flags', target_id=row_id,
+            field_name=key, old_value=old_value, new_value=new_value,
+        )
+        row[key] = new_value
+    return row_to_control_flags(row), None
+
+
+def validate_market_patch(market, body):
+    if market not in VALID_MARKETS:
+        return 'INVALID_MARKET'
+    if not isinstance(body, dict) or 'operation_on' not in body:
+        return 'INVALID_BODY'
+    if not isinstance(body['operation_on'], bool):
+        return 'INVALID_FIELD'
+    return None
+
+
+def apply_market_patch(conn, market, body):
+    err = validate_market_patch(market, body)
+    if err:
+        return None, err
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id, operation_on FROM market_controls '
+            'WHERE market = %s AND deleted_at IS NULL',
+            (market,),
+        )
+        row = cur.fetchone()
+    if not row:
+        raise LookupError('NO_MARKET_ROW')
+    row_id, old_on = row[0], row[1]
+    new_on = body['operation_on']
+    if old_on == new_on:
+        return {'market': market, 'operation_on': new_on}, None
+    now = datetime.now(timezone.utc)
+    with conn.cursor() as cur:
+        cur.execute(
+            'UPDATE market_controls SET operation_on = %s, updated_at = %s WHERE id = %s',
+            (new_on, now, row_id),
+        )
+    insert_trigger_change(
+        conn, target_table='market_controls', target_id=row_id,
+        field_name='operation_on', old_value=old_on, new_value=new_on,
+    )
+    return {'market': market, 'operation_on': new_on}, None
+
+
+def validate_strategy_patch(strategy_key, body):
+    if not isinstance(body, dict) or 'phase' not in body:
+        return 'INVALID_BODY'
+    phase = body['phase']
+    if phase not in VALID_PHASES:
+        return 'INVALID_PHASE'
+    if strategy_key in NEVER_PAPER_KEYS and phase in PAPER_PHASES:
+        return 'STRATEGY_PAPER_FORBIDDEN'
+    return None
+
+
+def apply_strategy_patch(conn, strategy_key, body):
+    err = validate_strategy_patch(strategy_key, body)
+    if err:
+        return None, err, None
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id, phase FROM strategy_states '
+            'WHERE strategy_key = %s AND deleted_at IS NULL',
+            (strategy_key,),
+        )
+        row = cur.fetchone()
+    if not row:
+        return None, None, 'NOT_FOUND'
+    row_id, old_phase = row[0], row[1]
+    new_phase = body['phase']
+    if old_phase == new_phase:
+        return {'strategy_key': strategy_key, 'phase': new_phase}, None, None
+    now = datetime.now(timezone.utc)
+    with conn.cursor() as cur:
+        cur.execute(
+            'UPDATE strategy_states SET phase = %s, updated_at = %s WHERE id = %s',
+            (new_phase, now, row_id),
+        )
+    insert_trigger_change(
+        conn, target_table='strategy_states', target_id=row_id,
+        field_name='phase', old_value=old_phase, new_value=new_phase,
+    )
+    return {'strategy_key': strategy_key, 'phase': new_phase}, None, None
+
+
+def run_with_ledger(connect_factory, operation):
+    try:
+        with connect_factory() as conn:
+            result = operation(conn)
+            conn.commit()
+            return result
+    except RuntimeError:
+        return 'LEDGER_UNAVAILABLE'
+    except LookupError:
+        return 'LEDGER_INCOMPLETE'
+    except Exception:
+        return 'LEDGER_ERROR'
+
+
+def mutation_outcome(op, connect_factory):
+    outcome = run_with_ledger(connect_factory, op)
+    if isinstance(outcome, str):
+        return 'error', outcome, None
+    if outcome[0] == 'missing':
+        return 'missing', None, None
+    if outcome[0] == 'reject':
+        return 'reject', outcome[1], None
+    return 'ok', None, outcome[1]
+
+
+def patch_triggers_op(body):
+    def op(conn):
+        updated, code = apply_trigger_patch(conn, body)
+        if code:
+            return ('reject', code)
+        return ('ok', updated)
+    return op
+
+
+def patch_market_op(market, body):
+    def op(conn):
+        updated, code = apply_market_patch(conn, market, body)
+        if code:
+            return ('reject', code)
+        return ('ok', updated)
+    return op
+
+
+def patch_strategy_op(strategy_key, body):
+    def op(conn):
+        updated, code, missing = apply_strategy_patch(conn, strategy_key, body)
+        if missing:
+            return ('missing', None)
+        if code:
+            return ('reject', code)
+        return ('ok', updated)
+    return op
+
+
+def send_no_store_headers(handler, status, content_type=None, length=0):
+    handler.send_response(status)
+    if content_type:
+        handler.send_header('Content-Type', content_type)
+    handler.send_header('Content-Length', str(length))
+    handler.send_header('Cache-Control', 'no-store')
+    handler.end_headers()
+
+
+def send_json_response(handler, status, payload):
+    body = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode('utf-8')
+    send_no_store_headers(handler, status, 'application/json; charset=utf-8', len(body))
+    handler.wfile.write(body)
+
+
+def send_empty_response(handler, status):
+    send_no_store_headers(handler, status, length=0)
+
+
+def read_json_body(handler):
+    length = int(handler.headers.get('Content-Length') or 0)
+    if length <= 0:
+        return {}
+    raw = handler.rfile.read(length)
+    return json.loads(raw.decode('utf-8'))
+
+
+def respond_mutation(handler, kind, code, payload):
+    if kind == 'missing':
+        send_empty_response(handler, 404)
+        return
+    if kind == 'error':
+        send_json_response(handler, 500, {'reject_code': code})
+        return
+    if kind == 'reject':
+        send_json_response(handler, 422, {'reject_code': code})
+        return
+    send_json_response(handler, 200, payload)
+
+
+def dispatch_patch(path, body, connect_factory):
+    if path == '/api/triggers':
+        return mutation_outcome(patch_triggers_op(body), connect_factory)
+    if path.startswith('/api/markets/'):
+        market = unquote(path[len('/api/markets/'):])
+        return mutation_outcome(patch_market_op(market, body), connect_factory)
+    if path.startswith('/api/strategies/'):
+        strategy_key = unquote(path[len('/api/strategies/'):])
+        return mutation_outcome(patch_strategy_op(strategy_key, body), connect_factory)
+    return 'not_found', None, None
+
+
+def write_public_security_headers(handler):
+    handler.send_header('X-Content-Type-Options', 'nosniff')
+    handler.send_header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
+    handler.send_header('X-Frame-Options', 'DENY')
+
+
+def serve_public_get(handler, root, token, path):
+    if token is not None and not bearer_authorized(handler.headers, token):
+        handler.send_response(401)
+        handler.send_header('WWW-Authenticate', 'Bearer')
+        handler.send_header('Cache-Control', 'no-store')
+        handler.send_header('Content-Length', '0')
+        handler.end_headers()
+        return
+    if path not in ('/', '/api/status', '/healthz'):
+        handler.send_error(404)
+        return
+    if path == '/healthz':
+        body = b'{"status":"alive","orders_enabled":false}'
+        mime = 'application/json; charset=utf-8'
+    else:
+        try:
+            data = build_snapshot(root)
+            encoded = json.dumps(data, ensure_ascii=False, allow_nan=False) if path == '/api/status' else render_page(data)
+            body = encoded.encode('utf-8')
+        except (OSError, ValueError, TypeError, KeyError):
+            handler.send_error(503, 'Snapshot unavailable')
+            return
+        mime = 'application/json; charset=utf-8' if path == '/api/status' else 'text/html; charset=utf-8'
+    handler.send_response(200)
+    handler.send_header('Content-Type', mime)
+    handler.send_header('Content-Length', str(len(body)))
+    handler.send_header('Cache-Control', 'no-store')
+    write_public_security_headers(handler)
+    handler.end_headers()
+    handler.wfile.write(body)
+
+
+def make_handler(root, token=None, operator_session=None, connect_factory=None):
+    db_connect = connect_factory or default_connect
+
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
-            if token is not None:
-                provided = self.headers.get('Authorization', '')
-                expected = 'Bearer ' + token
-                if not hmac.compare_digest(provided, expected):
-                    self.send_response(401)
-                    self.send_header('WWW-Authenticate', 'Bearer')
-                    self.send_header('Cache-Control', 'no-store')
-                    self.send_header('Content-Length', '0')
-                    self.end_headers()
-                    return
             path = urlsplit(self.path).path
-            if path not in ('/', '/api/status', '/healthz'):
+            if path == '/api/triggers':
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                outcome = run_with_ledger(db_connect, load_trigger_snapshot)
+                if isinstance(outcome, str):
+                    send_json_response(self, 500, {'reject_code': outcome})
+                    return
+                send_json_response(self, 200, outcome)
+                return
+            serve_public_get(self, root, token, path)
+
+        def do_PATCH(self):
+            if not operator_session_authorized(self.headers, operator_session):
+                send_empty_response(self, 401)
+                return
+            path = urlsplit(self.path).path
+            try:
+                body = read_json_body(self)
+            except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                return
+            kind, code, payload = dispatch_patch(path, body, db_connect)
+            if kind == 'not_found':
                 self.send_error(404)
                 return
-            if path == '/healthz':
-                body = b'{"status":"alive","orders_enabled":false}'
-                mime = 'application/json; charset=utf-8'
-            else:
-                try:
-                    data = build_snapshot(root)
-                    body = (json.dumps(data, ensure_ascii=False, allow_nan=False) if path == '/api/status' else render_page(data)).encode('utf-8')
-                except (OSError, ValueError, TypeError, KeyError):
-                    self.send_error(503, 'Snapshot unavailable')
-                    return
-                mime = 'application/json; charset=utf-8' if path == '/api/status' else 'text/html; charset=utf-8'
-            self.send_response(200)
-            self.send_header('Content-Type', mime)
-            self.send_header('Content-Length', str(len(body)))
-            self.send_header('Cache-Control', 'no-store')
-            self.send_header('X-Content-Type-Options', 'nosniff')
-            self.send_header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
-            self.send_header('X-Frame-Options', 'DENY')
-            self.end_headers()
-            self.wfile.write(body)
+            respond_mutation(self, kind, code, payload)
 
         def do_POST(self):
             self.send_error(405, 'Read only')
     return Handler
+
+
+def operator_session_from_env(env=None):
+    env = env or os.environ
+    raw = env.get('DASHBOARD_OPERATOR_SESSION', '')
+    if raw is None:
+        return None
+    value = str(raw).strip()
+    return value if value else None
 
 
 def main(argv=None):
@@ -221,7 +634,11 @@ def main(argv=None):
     token = os.getenv('DASHBOARD_BEARER_TOKEN')
     if remote and (os.getenv('DASHBOARD_ALLOW_REMOTE', 'false').lower() != 'true' or not token or len(token) < 32):
         raise SystemExit('Remote binding requires explicit enablement and a bearer token of at least 32 characters')
-    server = ThreadingHTTPServer((args.host, args.port), make_handler(Path(args.root), token))
+    operator_session = operator_session_from_env()
+    server = ThreadingHTTPServer(
+        (args.host, args.port),
+        make_handler(Path(args.root), token, operator_session),
+    )
     print(f'Read-only dashboard listening on {args.host}:{args.port}', flush=True)
     server.serve_forever()
 

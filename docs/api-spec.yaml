@@ -1,14 +1,13 @@
 openapi: 3.0.3
 info:
   title: Trading Lab HTTP boundary
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Gerado pelo analista-sistema na Fase 5.
-    Este laboratorio nao expoe CRUD. Os modulos conversam por comando e arquivo,
-    como em docs/ARCHITECTURE.md. Aqui so entram as duas bordas HTTP reais:
-    o webhook do Gate A e a leitura do dashboard.
+    Gerado pelo analista-sistema na Fase 5. Revisado em 2026-11-03.
     Criar ordem nao e um endpoint. paper_orders nasce dentro do paper-gateway
     depois dos dois gates.
+    A escrita HTTP desta revisao so altera gatilho: control_flags, market_controls
+    e a fase em strategy_states. Nomes de campo iguais aos do DBML.
 servers:
   - url: http://127.0.0.1
     description: Processo local. Sem porta publica neste corte.
@@ -16,7 +15,7 @@ tags:
   - name: signal-gate-a
     description: Autenticidade do sinal. Nao envia ordem.
   - name: observability
-    description: Leitura. Nao envia ordem.
+    description: Leitura do ciclo e escrita de gatilho. Nao envia ordem.
 paths:
   /webhooks/tradingview:
     post:
@@ -71,6 +70,116 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/triggers:
+    get:
+      tags: [observability]
+      summary: Ler gatilhos vigentes
+      operationId: getTriggers
+      security:
+        - operatorSession: []
+      responses:
+        '200':
+          description: control_flags e market_controls. Sem segredo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    patch:
+      tags: [observability]
+      summary: Alterar parada, operacao demo ou ancora
+      operationId: patchTriggers
+      security:
+        - operatorSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerPatch'
+      responses:
+        '200':
+          description: Valor gravado. A linha anterior fica em trigger_changes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlFlags'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/markets/{market}:
+    patch:
+      tags: [observability]
+      summary: Ligar ou desligar a operacao demo de um mercado
+      operationId: patchMarketControl
+      security:
+        - operatorSession: []
+      parameters:
+        - name: market
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [B3_EQUITY, CRYPTO, FOREX]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketControlPatch'
+      responses:
+        '200':
+          description: market_controls atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketControl'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/strategies/{strategy_key}:
+    patch:
+      tags: [observability]
+      summary: Mudar a fase de uma estrategia que ja existe
+      operationId: patchStrategyPhase
+      security:
+        - operatorSession: []
+      parameters:
+        - name: strategy_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StrategyPhasePatch'
+      responses:
+        '200':
+          description: strategy_states atualizado. Nao cria estrategia nova.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyState'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerError'
 components:
   securitySchemes:
     webhookSecret:
@@ -81,7 +190,14 @@ components:
     dashboardAuth:
       type: http
       scheme: bearer
-      description: Obrigatorio se a porta for publicada. O MVP de pesquisa nao publica porta.
+      description: Leitura publicada. O valor nao entra nesta spec.
+    operatorSession:
+      type: apiKey
+      in: cookie
+      name: trading_lab_session
+      description: >
+        Escrita de gatilho. Bearer sozinho nao autoriza PATCH.
+        O valor do cookie nao entra nesta spec.
   responses:
     Unauthorized:
       description: Nao autenticado
@@ -139,6 +255,10 @@ components:
           type: string
         symbol:
           type: string
+        market:
+          type: string
+          nullable: true
+          enum: [B3_EQUITY, CRYPTO, FOREX]
         side:
           type: string
           enum: [long, short]
@@ -189,6 +309,10 @@ components:
           nullable: true
         symbol:
           type: string
+        market:
+          type: string
+          nullable: true
+          enum: [B3_EQUITY, CRYPTO, FOREX]
         side:
           type: string
           enum: [long, short]
@@ -220,3 +344,112 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PaperOrder'
+    ControlFlags:
+      type: object
+      required:
+        - kill_switch_on
+        - demo_operation_on
+        - capital_cents
+        - max_risk_per_trade_cents
+        - max_open_positions
+        - max_aggregate_risk_cents
+        - max_daily_loss_cents
+        - max_weekly_loss_cents
+        - prodigy_risk_cents
+      properties:
+        kill_switch_on:
+          type: boolean
+        demo_operation_on:
+          type: boolean
+        capital_cents:
+          type: integer
+          format: int64
+        max_risk_per_trade_cents:
+          type: integer
+          format: int64
+        max_open_positions:
+          type: integer
+        max_aggregate_risk_cents:
+          type: integer
+          format: int64
+        max_daily_loss_cents:
+          type: integer
+          format: int64
+        max_weekly_loss_cents:
+          type: integer
+          format: int64
+        prodigy_risk_cents:
+          type: integer
+          format: int64
+    TriggerPatch:
+      type: object
+      minProperties: 1
+      properties:
+        kill_switch_on:
+          type: boolean
+        demo_operation_on:
+          type: boolean
+        capital_cents:
+          type: integer
+          format: int64
+          minimum: 1
+        max_risk_per_trade_cents:
+          type: integer
+          format: int64
+          minimum: 1
+        max_open_positions:
+          type: integer
+          minimum: 1
+        max_aggregate_risk_cents:
+          type: integer
+          format: int64
+          minimum: 1
+        max_daily_loss_cents:
+          type: integer
+          format: int64
+          minimum: 1
+        max_weekly_loss_cents:
+          type: integer
+          format: int64
+          minimum: 1
+    TriggerSnapshot:
+      type: object
+      required: [control_flags, market_controls]
+      properties:
+        control_flags:
+          $ref: '#/components/schemas/ControlFlags'
+        market_controls:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketControl'
+    MarketControl:
+      type: object
+      required: [market, operation_on]
+      properties:
+        market:
+          type: string
+          enum: [B3_EQUITY, CRYPTO, FOREX]
+        operation_on:
+          type: boolean
+    MarketControlPatch:
+      type: object
+      required: [operation_on]
+      properties:
+        operation_on:
+          type: boolean
+    StrategyState:
+      type: object
+      required: [strategy_key, phase]
+      properties:
+        strategy_key:
+          type: string
+        phase:
+          type: string
+          enum: [research, shadow, paper_limited, paper_validated]
+    StrategyPhasePatch:
+      type: object
+      required: [phase]
+      properties:
+        phase:
+          type: string
+          enum: [research, shadow, paper_limited, paper_validated]

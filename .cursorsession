@@ -213,8 +213,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "012649666d0c9b318dd84f9c690fe9b34d29bf94",
-      "stamped_at": "2026-11-03T20:01:22Z",
+      "last_validated_sha": "2701104e09ae052894138eb1f3c4395fea0761ec",
+      "stamped_at": "2026-11-03T20:01:58Z",
       "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
       "patch_id_version": 2
     }
@@ -232,23 +232,26 @@
     "docs/VENDOR-PIN.md",
     ".github/workflows/ci.yml",
     "requirements-dev.txt",
-    ".dockerignore"
+    ".dockerignore",
+    ".cursor/rules/30-triggers.mdc",
+    ".cursor/rules/40-markets.mdc",
+    ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-tarefas",
-    "phase": "Sprint N9 implementation",
-    "intent": "Homologação D5 itens 3–7: runbook + evidência; operador EasyPanel.",
-    "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
-    "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
-    "next_steps": "N9.1 expand Gate A runbook in HOMOLOGATION.md",
-    "updated_at": "2026-10-30T14:51:42-03:00"
+    "persona": "tech-lead",
+    "phase": "Rules de gatilho e mercado; sprint N18 segue registrada",
+    "intent": "Travar no agente o contrato de gatilho no painel e os mercados B3, cripto e forex.",
+    "changes_made": ".cursor/rules/30-triggers.mdc, .cursor/rules/40-markets.mdc, .cursor/skills/panel-triggers/SKILL.md.",
+    "decisions": "Rules antigas não foram reescritas. PATCH não cria ordem. Simulador local não é fill. Alpaca não recebe B3 nem forex.",
+    "next_steps": "Sprint do laço via /pmo plan. Migration 002 só nessa sprint. /devops planejar se for mexer em CI ou no processo.",
+    "updated_at": "2026-11-03T22:54:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-11-03T19:30:21Z",
-    "usage_percent": 90.752,
-    "messages_lost": 337
+    "compacted_at": "2026-11-04T02:00:04Z",
+    "usage_percent": 95.121875,
+    "messages_lost": 423
   },
-  "compact_count": 9,
+  "compact_count": 11,
   "previous_sprint": "N16",
   "front": {
     "slug": "n16-8-panel",

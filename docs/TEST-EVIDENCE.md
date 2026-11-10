@@ -211,9 +211,9 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy
 |------------------|-----------|--------|-----------|
 | Layout `v4-ops` + pytest | `tests/test_v4_ops_layout.py`, `tests/test_v4_web_dashboard.py` | ok | N18.1 repo |
 | Runbook ops + MVP-DEMO | `docs/DASHBOARD-OPERATIONS.md`, `EASYPANEL.md`, `MVP-DEMO-RUNBOOK.md` | ok | N18.2 repo |
-| Deploy imagem CMD `v4-ops` | EasyPanel `trading-lab` pós-merge `main`; **sem** override `v4-scheduler`; log dashboard **8765** | pendente | N18.3 operador |
-| `/api/status` remoto | Bearer **200**, `command-panel-v1` (sem token no Git) | pendente | N18.3 operador |
-| Closeout N16 no ROADMAP | N16 → concluida; ISS-008 fechado | pendente | N18.4 após N18.3 |
+| Deploy imagem CMD `v4-ops` | 2026-11-10 EasyPanel `trading-lab`: log `v4-ops: starting read-only dashboard on 0.0.0.0:8765` e `Read-only dashboard listening on 0.0.0.0:8765`; trecho sem `nohup`; ciclos `RESEARCH_ONLY` com `orders_sent` 0 | ok | N18.3 operador |
+| `/api/status` com bearer | 2026-11-10 console do container, `GET http://127.0.0.1:8765/api/status` com bearer do ambiente: **200**, schema `command-panel-v1`. Sem token no Git. HTTPS público não foi reconsultado neste registro | ok | N18.3 operador |
+| Closeout N16 no ROADMAP | 2026-11-10: N16 `concluida` no índice e na seção; ISS-008 `fechado`. PR #20 já mergeado com checks verdes. Este commit de docs ainda local | ok | N18.4 |
 
 ```bash
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_v4_ops_layout tests.test_v4_web_dashboard -q

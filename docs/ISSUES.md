@@ -11,7 +11,7 @@
 | ISS-005 | parcial | N12 | Feature 5 — submit paper ok; fill limit pendente (P-001b) |
 | ISS-006 | fechado | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
 | ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
-| ISS-008 | aberto | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
+| ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -203,13 +203,15 @@
 |-------|--------|
 | Categoria | improvement |
 | Sprint | N18 |
-| Status | aberto |
+| Status | fechado |
 
 **Impacto:** Operador perde painel após restart/deploy porque `v4-dashboard` era processo manual; impede “dashboard operacional” contínuo no hashia.
 
 **Critério de fechamento:** imagem com CMD **`v4-ops`**; supervisor reinicia dashboard; docs `docs/DASHBOARD-OPERATIONS.md` + EASYPANEL alinhados; pytest `test_v4_ops_layout`; operador registra redeploy **sem nohup** + `/api/status` Bearer **200** + log `listening on …:8765`; `LIVE_TRADING_ENABLED=false`.
 
 **Fontes:** operador 2026-11-03 (`/pmo plan`, pacote N18 ops); implementação local `front/n16-8-panel`.
+
+**Evidência 2026-11-10:** log `listening on 0.0.0.0:8765` via `v4-ops`; console `GET /api/status` com bearer **200** e schema `command-panel-v1`; verificação automática do PR #20 verde. Sem token no Git. HTTPS público não reconsultado.
 
 ---
 

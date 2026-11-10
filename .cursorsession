@@ -114,7 +114,7 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "Sprint N18: v4-ops autostart dashboard 8765; branch front/n16-8-panel; N18.3 operador rebuild; ISS-008.",
+  "contexto_rapido": "N18.3 evidência 2026-11-10; N16 concluida no ROADMAP; ISS-008 fechado no doc; N18.4 local; branch front/n16-8-panel.",
   "sprint_atual": "N18",
   "sprint_tasks": [
     {
@@ -151,23 +151,27 @@
       "id": "N18.3",
       "title": "Operador: rebuild trading-lab + TEST-EVIDENCE N18",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N18.2"
       ],
-      "files": [],
+      "files": [
+        "docs/TEST-EVIDENCE.md"
+      ],
       "owner": "operador"
     },
     {
       "id": "N18.4",
       "title": "Closeout ROADMAP N16 concluida",
       "size": "P",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "N18.3"
       ],
       "files": [
-        "docs/ROADMAP.md"
+        "docs/ROADMAP.md",
+        "docs/ISSUES.md",
+        "docs/TEST-EVIDENCE.md"
       ]
     }
   ],
@@ -175,9 +179,9 @@
     "sprint": "N18",
     "phase": "implementation",
     "branch": "front/n16-8-panel",
-    "last_completed_task": "N18.2",
-    "current_task": "N18.3",
-    "timestamp": "2026-11-03T19:52:00-03:00",
+    "last_completed_task": "N18.4",
+    "current_task": null,
+    "timestamp": "2026-11-10T10:19:00-03:00",
     "relevant_paths": [
       "scripts/v4_ops_main.sh",
       "scripts/run.sh",
@@ -253,8 +257,8 @@
   "front": {
     "slug": "n16-8-panel",
     "kind": "agent",
-    "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab",
+    "parent_root": "/home/igor/cursor/trading-lab",
+    "worktree": "/home/igor/cursor/trading-lab",
     "branch": "front/n16-8-panel"
   },
   "sprint_branch": "front/n16-8-panel",

@@ -169,7 +169,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest tests/test_v4_schedu
 | Fila sem auto → `QUEUED`, `orders_sent=0` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_queue_never_calls_broker` | ok | CI |
 | Auto flags → delega a `paper_run` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_auto_allowed_delegates_to_paper_run` | ok | CI |
 | Submit real Alpaca (`signal-paper`) | Operador EasyPanel 2026-11-02: `PAPER_SUBMITTED`, `orders_sent=1`, jsonl `SUBMITTED`, ordem MSFT limit **new** | ok | EasyPanel |
-| Fill real Alpaca + posição coerente | Operador — ordem aberta limit @420, filled qty 0 (2026-11-02) | pendente | P-001b |
+| Fill real Alpaca + posição coerente | Operador 2026-11-11: Alpaca paper AAPL buy limit @349.85 (2026-10-29) **filled** qty 1 + posição AAPL qty 1 avg 349.85. MSFT/NVDA canceled/expired filled 0 — não contam. | ok | N20.3 / P-001b |
 | Reconcile pós-submit | `v4-alpaca-reconcile`; `ledger_apply` linked 0 (one-shot jsonl; FILL AAPL histórico no bundle) | ok | parcial |
 
 Comando local (repo tasks N12.1–N12.3):
@@ -219,18 +219,30 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_v4_ops_layout tests.test_v4_web_dashboard -q
 ```
 
+## Sprint N20 — Onda 0 (evidência operador + Feature 5 fill)
+
+> Gate: PR **#22** no `main` · `LIVE_TRADING_ENABLED=false` · fill Feature 5 só com qty preenchida ≠ 0
+
+| Critério / check | Evidência | Status | Resultado |
+|------------------|-----------|--------|-----------|
+| N20.1 Resgate contrato v0.3 + N19.1–N19.2 | PR [#22](https://github.com/ig0rayres/trading_lab/pull/22) merged | ok | N20.1 |
+| N20.2 SHA imagem EasyPanel | Digest Docker `trading-lab` `sha256:d3b5528dddc39a930fe1ca35bc2b10521115d4c142dfcb37e7c2c6714bcc81c1` (não é SHA Git); webhook não anotado | parcial | N20.2 |
+| N20.5 Postgres ledger | Exec: `ledger-migrate status` → `001_ledger` `applied: True`, `triggers_applied: False` | ok | N20.5 |
+| N20.3 Fill paper | AAPL 2026-10-29 buy @349.85 **filled** + posição qty 1. MSFT/NVDA sem fill. Tentativa `n20-fill-001` AAPL → `DUPLICATE_SYMBOL` (esperado) | ok | P-001b |
+| N20.4 Feature 5 fill `[x]` | REQUIREMENTS atualizado com evidência AAPL | ok | N20.4 |
+
 ## Sprint N13 — Feature 4 homolog por família
 
 > Sprint N13 · `docs/REQUIREMENTS.md` Feature 4 · seed N7/N8 · **sem** limiar inventado · `LIVE_TRADING_ENABLED=false`  
-> **ISS-005 parcial:** submit paper ok; fill Feature 5 ainda `[ ]`.
+> **ISS-005:** fill Feature 5 `[x]` via AAPL (N20); submits MSFT/NVDA sem fill permanecem só como histórico.
 
 | `strategy_key` | Fase seed (N7) | Homolog repo (pytest / gate) | Homolog operador | Status homolog |
 |----------------|----------------|------------------------------|------------------|----------------|
 | `news_first` | research | `tests.test_strategy_catalog` + Gate B phase block; `test_news_first_report_audited` (Gate A audit, sem broker) | Research: ciclo/manifesto via scheduler; **sem ordem paper** | repo ok / operador pendente |
 | `momentum` | research | `tests.test_gate_b_risk` + `test_seed_and_strategy_key_on_risk_row` (fase research → rejeição paper) | Bloqueado paper até regra upstream recuperada | **blocked upstream** |
 | `ta_barato` | research | Idem momentum (fase research) | Bloqueado paper | **blocked upstream** |
-| `prodigy_15d` | research | `tests.test_prodigy_rank`, Gate B phase; runbook N16 | Paper submit homologado 2026-11-03 (NVDA); fill limit pendente | submit ok / fill pendente |
-| `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: submit homologado 2026-11-02; fill limit **pendente** | submit ok / fill pendente |
+| `prodigy_15d` | research | `tests.test_prodigy_rank`, Gate B phase; runbook N16 | Paper submit 2026-11-03 (NVDA) sem fill; fill Feature 5 fechado via AAPL `signal_copy` | submit ok / fill via AAPL |
+| `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: AAPL fill 2026-10-29 + posição; MSFT submit sem fill | **fill ok** |
 | `orb` | shadow | `tests.test_strategy_catalog.test_orb_never_paper_even_if_phase_paper`; `tests.test_gate_b_risk.test_orb_not_paper` | Shadow only — **nunca** paper principal | repo ok |
 | `mean_reversion` | shadow | `NEVER_PAPER_KEYS` + fase shadow (catálogo) | Shadow only | repo ok |
 

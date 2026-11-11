@@ -160,7 +160,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - Timeout, rejeição da corretora, fill parcial, cancelamento, posição que já existia, API fora.
 
 **Critérios de aceite (homologação):**
-- [ ] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`). **Submit homologado 2026-11-02:** `PAPER_SUBMITTED` MSFT limit ordem **new** (filled 0) — ver `docs/TEST-EVIDENCE.md` § N12 operador.
+- [x] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`). **Evidência 2026-11-11:** Alpaca paper AAPL buy limit @349.85 em 2026-10-29 **filled** qty 1; posição aberta AAPL qty 1 (avg 349.85) conferida no Exec e na UI. MSFT/NVDA submits posteriores sem fill não contam. Ver `docs/TEST-EVIDENCE.md` § N20.
 - [x] Sinal inválido não gera ordem (Gates A+B; CI).
 - [x] Duplicata não reabre posição (idempotência + testes).
 - [x] Reinício não perde trilha ledger (Postgres append-only; worker atômico).
@@ -181,7 +181,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - [x] Dashboard local (`127.0.0.1`) não exige auth; remoto exige bearer ≥32 (`v4_web_dashboard.py`).
 - [x] Kill switch visível em `/api/status` (`kill_switch_on`) e testável via env/Postgres sem ordem real.
 
-> Features 7–11 entram na revisão v0.2 (2026-11-03). Dependem de fill paper confirmado na corretora (Feature 5, `[ ]`) para que performance e aprendizado tenham dado real.
+> Features 7–11 entram na revisão v0.2 (2026-11-03). Fill paper na corretora (Feature 5) está `[x]` (AAPL 2026-10-29); performance e aprendizado ainda exigem o laço de ledger das ondas seguintes.
 
 ### Feature 7: Operação autônoma na conta demo
 

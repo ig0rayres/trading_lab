@@ -40,7 +40,7 @@
 | N13 | N | Homolog por família; sem scoring inventado | em execucao | 4 | strategy-catalog | Estratégias P1 pós-demo | *(abaixo)* |
 | N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | concluida | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
 | N15 | N | MVP-OP-0.9 — submit copy paper homologado | em execucao | 2 | operador, docs | Submit `signal_copy` | *(abaixo)* |
-| N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | em execucao | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
+| N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | concluida | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
 | N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 | N18 | N | Command Panel always-on (`v4-ops`) + runbook ops | em execucao | 4 | observability, docs | Painel 8765 sem nohup | *(abaixo)* |
 | N19 | N | Laço demo: gatilho no painel e ciclo da ordem no ledger | em execucao | 4 | observability, paper-gateway | Operar B3, cripto e forex | *(abaixo)* |
@@ -850,7 +850,7 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ## Sprint N16 — Release MVP-OP-1.0 (Prodígio + Command Panel v1)
 > Categoria: N  
-> Status: em execucao  
+> Status: concluida  
 > titulo_humano: Plataforma operacional v1 — Prodígio paper + painel único (Feature 6 estendida)  
 > Gate: Git First reuse inventory; **submit** `prodigy_15d` evidenciado; painel bearer **ok** operador 2026-11-03; fill limit opcional P-001b; CI verde; LIVE false  
 > review: senior+qa  
@@ -904,8 +904,8 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 |--------|---------|--------|---------------|------------|
 | [x] | M | N18.1 Layout **`v4-ops`**: `v4_ops_main.sh`, `run.sh`, Dockerfile CMD, `tests/test_v4_ops_layout.py` | `/dev` | — |
 | [x] | P | N18.2 Runbook **`docs/DASHBOARD-OPERATIONS.md`** + alinhar EASYPANEL, COMMAND-PANEL, HOMOLOGATION-N16.8 | docs | N18.1 |
-| [ ] | P | N18.3 Operador: rebuild EasyPanel `trading-lab` + linha TEST-EVIDENCE N18 (sem token no Git) | operador | N18.2 |
-| [ ] | P | N18.4 Closeout ROADMAP: **N16 → concluida**; MVP-DEMO-RUNBOOK menciona `v4-ops` | docs | N18.3 |
+| [x] | P | N18.3 Operador: rebuild EasyPanel `trading-lab` + linha TEST-EVIDENCE N18 (sem token no Git) | operador | N18.2 |
+| [x] | P | N18.4 Closeout ROADMAP: **N16 → concluida**; MVP-DEMO-RUNBOOK menciona `v4-ops` | docs | N18.3 |
 
 **N18.1 — executor_prompt (resumo):** Reuse `scripts/run.sh` pattern; add `v4-ops` → `v4_ops_main.sh` spawning supervised `v4-dashboard` + foreground `v4-scheduler`; default Dockerfile CMD `v4-ops` with same scheduler args; env `DASHBOARD_AUTOSTART` default true; no broker submit code in dashboard path; regression `tests/test_v4_web_dashboard.py` + new layout test; `guardrail_contract`: LIVE false, read-only HTTP only, no third EasyPanel service.
 
@@ -1140,9 +1140,9 @@ Nenhum gate trava as Ondas 0–3.
 
 ## Próximo passo operador
 
-1. **`/pmo sprint N18`** na frente `front/n16-8-panel` (ou frente dedicada `front/n18-ops-panel`) — merge PR → **1 rebuild** `trading-lab`.  
-2. Env inalterado: `DASHBOARD_*` + `LEDGER_DATABASE_URL`; confirmar CMD da imagem **`v4-ops`** (remover override `v4-scheduler` no EasyPanel se existir).  
-3. **P-001b** (ISS-005 fill) continua sessão operador — paralelo, não bloqueia N18.  
-4. Após N18.3: painel em **`/`** e **`/api/status`** com Bearer; ver `docs/DASHBOARD-OPERATIONS.md`.  
-5. **`/pmo sprint N17`** só após gate N16/N18 closeout + Git First upstream.  
+1. N16 concluída neste closeout. Evidência N18.3 em `docs/TEST-EVIDENCE.md` (2026-11-10): log `8765` e `/api/status` bearer **200**. PR **#20** com verificação automática verde.  
+2. Sprint N18 segue em execução até este commit de docs entrar num pedido de revisão com checks verdes.  
+3. **P-001b** (ISS-005 fill) continua sessão operador.  
+4. **`/pmo sprint N17`** só após Git First upstream.  
+5. N19 (gatilho no painel) fica fora deste commit.  
 6. **`LIVE_TRADING_ENABLED=false`** — invariável.

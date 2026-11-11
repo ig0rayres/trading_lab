@@ -19,7 +19,7 @@ except ImportError:
     from v4_decision_cycle import run as decide
     from v4_decision_risk import assess
 
-MARKETS = {'US_EQUITY', 'B3_EQUITY', 'CRYPTO'}
+MARKETS = {'US_EQUITY', 'B3_EQUITY', 'CRYPTO', 'FOREX'}
 
 
 def parse_universe(data):
@@ -42,11 +42,11 @@ def parse_universe(data):
     return result
 
 
-def build(universe, *, equity_fetch=None, crypto_fetch=None, news=None, signals=None, secret='', fx=None, portfolio=None, tickets=None, now=None):
+def build(universe, *, equity_fetch=None, crypto_fetch=None, forex_fetch=None, news=None, signals=None, secret='', fx=None, portfolio=None, tickets=None, now=None):
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError('INVALID_CLOCK')
-    market = collect(universe, equity_fetch=equity_fetch, crypto_fetch=crypto_fetch)
+    market = collect(universe, equity_fetch=equity_fetch, crypto_fetch=crypto_fetch, forex_fetch=forex_fetch)
     decisions = decide(market, news, signals, secret=secret, fx=fx, now=now)
     risk = assess(decisions, portfolio, tickets)
     partial = bool(market['errors'] or decisions['errors'] or risk['status'] != 'RESEARCH_ONLY')

@@ -48,9 +48,9 @@
 | N21 | N | Ordem até fill/cancel/expira; P&L só de fill; restart sem duplicar | planejada | 3 | paper-gateway, ledger | Onda 1 — ciclo da ordem | *(abaixo)* |
 | N22 | N | Risco lê `control_flags`; capital único R$ 5.000; sessão B3 + feriado | concluida | 3 | risk-gate-b | Onda 2 — âncoras honestas | *(abaixo)* |
 | N23 | N | Trabalhador da fila dentro do `v4-ops`; dois apps EasyPanel | concluida | 3 | observability, paper-gateway | Onda 2 — worker (ADR-009) | *(abaixo)* |
-| N24 | N | Login + Central de controle; dia a dia sem Exec | planejada | 4 | v4_web_dashboard | Onda 3 — Feature 8 | *(abaixo)* |
-| N25 | N | Tela de sinais com destino, gate e âncora; ranking Prodígio | planejada | 3 | v4_web_dashboard | Onda 3 — Feature 9 | *(abaixo)* |
-| N26 | N | Performance só de fill confirmado; bruto rotulado | planejada | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
+| N24 | N | Login + Central de controle; dia a dia sem Exec | concluida | 4 | v4_web_dashboard | Onda 3 — Feature 8 | *(abaixo)* |
+| N25 | N | Tela de sinais com destino, gate e âncora; ranking Prodígio | concluida | 3 | v4_web_dashboard | Onda 3 — Feature 9 | *(abaixo)* |
+| N26 | N | Performance só de fill confirmado; bruto rotulado | concluida | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
 | N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
 | N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
 
@@ -1042,7 +1042,7 @@ Nenhum gate trava as Ondas 0–3.
 
 ## Sprint N24 — Login e central de controle
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Entrar no painel e mandar na operação sem o Exec  
 > Gate: painel não abre sem login; alteração registrada com valor anterior; plataforma não afrouxa âncora sozinha; parada pelo painel segura a próxima ordem em até um ciclo; um operador; LIVE false  
 > review: senior+qa  
@@ -1055,11 +1055,33 @@ Nenhum gate trava as Ondas 0–3.
 | [x] | P | N24.3 Teste: parada pelo painel segura a próxima ordem no ciclo | `/qa testes` | N24.2 |
 | [x] | P | N24.4 Runbook do dia a dia aponta o painel, não o Exec | docs | N24.2, N23.1 |
 
+### Quality Brief (Sprint N24 — Onda 3 bundle N24–N26)
+
+sprint: N24 (shipped with N25, N26 in PR #27, merge `fb4a473`)
+
+Maintain: operator session auth in front of `v4_web_dashboard`; reuse N19.2 session cookie pattern — no second auth stack.
+
+Maintain: Central reads/writes control anchors via existing ledger/`trigger_changes` paths; platform never relaxes risk anchors without operator intent.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; queued intent and HTTP 200 are not fills; performance totals only from confirmed fill (N26).
+
+Maintain: `panel_ops_data` + `build_snapshot` as single source for panel ops views — extend, do not fork dashboard data layer.
+
+Avoid: Exec/CLI as the default daily operator path; runbooks must point to the panel.
+
+Avoid: scoring or Prodígio thresholds not already in vendor/recovered code; ranking remains research-labeled.
+
+Avoid: treating `new`/`accepted`/queue rows as P&L; gross values must stay labeled.
+
+Evidence: 455 pytest local APROVADA; CI PR #27 all checks SUCCESS; fix `e545203` for `GateBLedgerIntegrationTest` + `demo_operation_on`.
+
+EXPIRES: closed at N24 closeout (2026-11-11).
+
 ---
 
 ## Sprint N25 — Sinais e Prodígio com motivo visível
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Cada sinal mostra para onde foi e o que o barrou  
 > Gate: lista com origem, destino e motivo; ranking Prodígio e cópias; barrado mostra gate e âncora  
 > review: senior+qa  
@@ -1071,11 +1093,15 @@ Nenhum gate trava as Ondas 0–3.
 | [x] | M | N25.2 Ranking Prodígio e sinais copiados (pesquisa, não autorização) | `/dev` | — |
 | [x] | P | N25.3 Teste: sinal barrado aponta gate e âncora com o valor da hora | `/qa testes` | N25.1 |
 
+### Quality Brief (Sprint N25)
+
+Delivered in PR #27 with N24/N26. Maintain: `blocked_context` exposes gate + anchor snapshot on reject; signal list shows market, origin, destination, reason. Prodígio rank and copied signals stay research-labeled, not trade authorization. See parent brief under Sprint N24.
+
 ---
 
 ## Sprint N26 — Performance só de fill confirmado
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: O número de resultado só conta fill da corretora  
 > Gate: total e por estratégia só de fill; ordem sem fill fora; bruto rotulado  
 > review: senior+qa  
@@ -1086,6 +1112,10 @@ Nenhum gate trava as Ondas 0–3.
 | [x] | M | N26.1 Resultado por estratégia e total só com fill confirmado | `/dev` | — |
 | [x] | P | N26.2 Teste: ordem `new`/`accepted`/fila fora do resultado | `/qa testes` | N26.1 |
 | [x] | P | N26.3 Rotular valor bruto onde não há custo completo | `/dev` | N26.1 |
+
+### Quality Brief (Sprint N26)
+
+Delivered in PR #27 with N24/N25. Maintain: `performance_from_snapshots` counts strategy/total only on confirmed fill; `PERFORMANCE_LABEL_GROSS` where costs incomplete. Depends on N21 fill semantics — do not regress reconcile-only rows into P&L. See parent brief under Sprint N24.
 
 ---
 
@@ -1099,9 +1129,9 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N27.1 Forex no universo e no avaliador de carteira, barrado sem conta | `/dev` | — |
+| [x] | M | N27.1 Forex no universo e no avaliador de carteira, barrado sem conta | `/dev` | — |
 | [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT |
-| [ ] | P | N27.3 Teste: mercado sem conta continua visível e barrado com motivo | `/qa testes` | N27.1, N19.4 |
+| [x] | P | N27.3 Teste: mercado sem conta continua visível e barrado com motivo | `/qa testes` | N27.1, N19.4 |
 | [ ] | P | N27.4 Operador: sinal válido vira ordem demo sem ação manual | operador | N27.2, N23.1, N24.2 |
 | [ ] | P | N27.5 Teste: chave live no ambiente não muda o destino paper | `/qa testes` | N27.2 |
 | [ ] | P | N27.6 Teste: restart com laço ligado não duplica | `/qa testes` | N27.4 |

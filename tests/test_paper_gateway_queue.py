@@ -230,6 +230,12 @@ class PaperAlpacaMarketGuardTest(unittest.TestCase):
         result = self._run_with_market('B3_EQUITY')
         _assert_n19_4_no_demo_block(self, result)
 
+    @patch('signal_paper_runner.validate', return_value=[])
+    def test_n27_regression_crypto_routes_alpaca_us_equity_only(self, _mock_validate):
+        """ADR-010 regression: only US_EQUITY may POST Alpaca paper; not B3/FOREX."""
+        result = self._run_with_market('US_EQUITY')
+        self.assertEqual(result.get('_alpaca_posts', []), [ALPACA_PAPER_HOST])
+
     @patch('risk_control_flags.demo_send_allowed', return_value=(True, None))
     @patch('signal_paper_runner.validate', return_value=[])
     def test_n19_4_forex_blocked_via_gateway_queue_no_alpaca(

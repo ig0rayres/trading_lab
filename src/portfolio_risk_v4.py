@@ -7,8 +7,9 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, Callable
 
 from risk_control_flags import TIGHT_DEFAULTS, brl_from_cents, fetch_control_flags
+from demo_account_gate import NO_DEMO_ACCOUNT_PATH, demo_market_block_reason
 
-ALLOWED_MARKETS = frozenset(('US_EQUITY', 'B3_EQUITY', 'CRYPTO'))
+ALLOWED_MARKETS = frozenset(('US_EQUITY', 'B3_EQUITY', 'CRYPTO', 'FOREX'))
 
 
 def _limits_from_flags(flags: dict[str, Any]) -> dict[str, Decimal | int]:
@@ -61,6 +62,10 @@ def evaluate(
     try:
         if candidate['market'] not in ALLOWED_MARKETS:
             reasons.append('UNSUPPORTED_MARKET')
+        if candidate.get('market') == 'FOREX':
+            demo_block = demo_market_block_reason('FOREX')
+            if demo_block:
+                reasons.append(demo_block)
         if not isinstance(candidate.get('symbol'), str) or not candidate['symbol'].strip():
             reasons.append('INVALID_SYMBOL')
         if candidate.get('side') != 'buy':
@@ -123,5 +128,12 @@ def evaluate(
             reasons.append('PENDING_ORDERS_UNVERIFIED')
     except (KeyError, ValueError, TypeError, AttributeError):
         reasons.append('MISSING_OR_INVALID_RISK_INPUT')
-    return {'allowed': not reasons, 'reasons': sorted(set(reasons)),
-            'mode': 'PURE_VALIDATION_NO_ORDERS', 'orders_sent': 0}
+    uniq = sorted(set(reasons))
+    reject_code = NO_DEMO_ACCOUNT_PATH if NO_DEMO_ACCOUNT_PATH in uniq else None
+    return {
+        'allowed': not reasons,
+        'reasons': uniq,
+        'reject_code': reject_code,
+        'mode': 'PURE_VALIDATION_NO_ORDERS',
+        'orders_sent': 0,
+    }

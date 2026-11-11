@@ -34,9 +34,11 @@ except ImportError:
 try:
     from . import panel_ops_data as _panel_ops
     from . import panel_ops_html as _panel_html
+    from .demo_account_gate import demo_market_block_reason
 except ImportError:
     import panel_ops_data as _panel_ops
     import panel_ops_html as _panel_html
+    from demo_account_gate import demo_market_block_reason
 
 MODULES = ('market', 'news', 'signals', 'risk', 'paper', 'reconciliation')
 
@@ -302,7 +304,13 @@ def load_trigger_snapshot(conn):
         raise LookupError('NO_CONTROL_FLAGS')
     markets = fetch_market_control_rows(conn)
     public_flags = row_to_control_flags(flags)
-    public_markets = [{'market': m['market'], 'operation_on': m['operation_on']} for m in markets]
+    public_markets = []
+    for m in markets:
+        row = {'market': m['market'], 'operation_on': m['operation_on']}
+        block = demo_market_block_reason(m['market'])
+        if block:
+            row['block_reason'] = block
+        public_markets.append(row)
     return {'control_flags': public_flags, 'market_controls': public_markets}
 
 

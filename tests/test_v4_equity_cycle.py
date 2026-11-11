@@ -80,6 +80,20 @@ class TestCycle(unittest.TestCase):
         result = collect([('US_EQUITY','AAPL'), ('US_EQUITY','AAPL')], equity_fetch=equity)
         self.assertIn('DUPLICATE_UNIVERSE_ENTRY', result['errors']['US_EQUITY:AAPL'])
 
+    def test_n27_forex_universe_not_unsupported_market(self):
+        """N27.1: FOREX symbols in the cycle are not discarded as unsupported junk."""
+
+        def forex(**kwargs):
+            return {
+                'market': 'FOREX',
+                'symbol': kwargs['symbol'],
+                'usable_for_live_trading': False,
+            }
+
+        result = collect([('FOREX', 'EURUSD')], forex_fetch=forex)
+        err = result.get('errors', {}).get('FOREX:EURUSD', '')
+        self.assertNotIn('UNSUPPORTED_MARKET', str(err))
+
 
 if __name__ == '__main__':
     unittest.main()

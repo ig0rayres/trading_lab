@@ -1,3 +1,4 @@
+import json
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,19 @@ class TestOnce(unittest.TestCase):
                         [{'market': 'US_EQUITY', 'symbol': 'AAPL'}] * 2):
             with self.assertRaises(ValueError):
                 parse_universe(invalid)
+
+    def test_n27_parse_universe_accepts_forex_symbol(self):
+        """N27.1: FOREX is a first-class universe market, not junk."""
+        parsed = parse_universe([{'market': 'FOREX', 'symbol': 'EURUSD'}])
+        self.assertEqual(parsed, [('FOREX', 'EURUSD')])
+
+    def test_n27_config_universe_lists_forex_pair(self):
+        """N27.1: shipped universe.json includes at least one FOREX pair."""
+        path = Path(__file__).resolve().parents[1] / 'config' / 'universe.json'
+        rows = json.loads(path.read_text(encoding='utf-8'))
+        forex = [row for row in rows if row.get('market') == 'FOREX']
+        self.assertGreaterEqual(len(forex), 1)
+        self.assertTrue(all(row.get('symbol', '').strip() for row in forex))
 
     def test_full_readonly_path(self):
         def broken(**kwargs):

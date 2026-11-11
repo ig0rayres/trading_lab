@@ -14,7 +14,7 @@ except ImportError:
 DEFAULT_UNIVERSE = [('US_EQUITY', 'AAPL'), ('B3_EQUITY', 'ITUB4'), ('CRYPTO', 'BTCBRL')]
 
 
-def collect(universe=None, *, equity_fetch=None, crypto_fetch=None):
+def collect(universe=None, *, equity_fetch=None, crypto_fetch=None, forex_fetch=None):
     equity_fetch = equity_fetch or fetch_equity
     crypto_fetch = crypto_fetch or fetch_crypto
     results, errors = {}, {}
@@ -30,6 +30,10 @@ def collect(universe=None, *, equity_fetch=None, crypto_fetch=None):
                 row = crypto_fetch(symbol=symbol, interval='1h')
             elif market in ('US_EQUITY', 'B3_EQUITY'):
                 row = equity_fetch(market=market, symbol=symbol, interval='1d')
+            elif market == 'FOREX':
+                if forex_fetch is None:
+                    raise ValueError('FOREX_FEED_NOT_CONFIGURED')
+                row = forex_fetch(market=market, symbol=symbol, interval='1d')
             else:
                 raise ValueError('UNSUPPORTED_MARKET')
             if row.get('market') != market or row.get('symbol') != symbol or row.get('usable_for_live_trading') is not False:

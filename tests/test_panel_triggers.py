@@ -18,6 +18,10 @@ from v4_web_dashboard import (
     operator_session_from_env,
 )
 
+# N27.3 / N19.4: stable literal when operator has not named a demo account (G-MKT).
+NO_DEMO_ACCOUNT_REJECT = 'NO_DEMO_ACCOUNT_PATH'
+DEMO_PANEL_MARKETS = frozenset({'B3_EQUITY', 'CRYPTO', 'FOREX'})
+
 
 class _MemoryCursor:
     def __init__(self, store):
@@ -149,6 +153,13 @@ def _patch(url, body, *, session=None, bearer=None, method='PATCH'):
         headers['Authorization'] = 'Bearer ' + bearer
     payload = json.dumps(body).encode('utf-8')
     return Request(url, data=payload, headers=headers, method=method)
+
+
+def _get(url, *, session=None):
+    headers = {}
+    if session is not None:
+        headers['Cookie'] = 'trading_lab_session=' + session
+    return Request(url, headers=headers)
 
 
 class PanelTriggerHttpTests(unittest.TestCase):
@@ -283,6 +294,50 @@ class PanelTriggerHttpTests(unittest.TestCase):
             with urlopen(req, timeout=3) as response:
                 json.load(response)
             self.assertEqual(store['paper_orders'], [])
+        finally:
+            self._shutdown(server, thread)
+
+
+class N27DemoMarketPanelTests(unittest.TestCase):
+    def _server(self, store=None, token=None):
+        store = store or _default_store()
+        handler = make_handler(
+            Path('/tmp'),
+            token=token,
+            operator_session='op-session-token',
+            connect_factory=_memory_connect(store),
+        )
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return server, thread, base, store
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n27_valid_markets_include_forex_and_demo_scope(self):
+        self.assertIn('FOREX', VALID_MARKETS)
+        self.assertTrue(DEMO_PANEL_MARKETS <= set(VALID_MARKETS))
+
+    def test_n27_3_get_triggers_lists_demo_markets_barred_with_reason(self):
+        server, thread, base, _store = self._server()
+        try:
+            with urlopen(_get(base + '/api/triggers', session='op-session-token'), timeout=3) as resp:
+                body = json.load(resp)
+            by_market = {row['market']: row for row in body['market_controls']}
+            self.assertTrue(DEMO_PANEL_MARKETS <= set(by_market))
+            for market in DEMO_PANEL_MARKETS:
+                row = by_market[market]
+                self.assertFalse(row['operation_on'], market)
+                block = row.get('block_reason') or row.get('demo_block_code')
+                self.assertEqual(
+                    block,
+                    NO_DEMO_ACCOUNT_REJECT,
+                    msg=f'{market} must expose {NO_DEMO_ACCOUNT_REJECT!r}, got {row!r}',
+                )
         finally:
             self._shutdown(server, thread)
 

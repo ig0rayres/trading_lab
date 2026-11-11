@@ -1,7 +1,9 @@
 import unittest
 from decimal import Decimal
 
-from portfolio_risk_v4 import evaluate
+from portfolio_risk_v4 import ALLOWED_MARKETS, evaluate
+
+NO_DEMO_ACCOUNT_REJECT = 'NO_DEMO_ACCOUNT_PATH'
 
 
 def setup():
@@ -84,5 +86,35 @@ class PortfolioRiskTests(unittest.TestCase):
         }
         c['quantity'] = 12
         self.assertIn('MAX_TRADE_RISK', evaluate(c, s, limits=limits)['reasons'])
+
+
+class N27ForexPortfolioRiskTests(unittest.TestCase):
+    def _forex_ticket(self):
+        _c, snap = setup()
+        snap = dict(snap)
+        candidate = dict(
+            _c,
+            market='FOREX',
+            symbol='EURUSD',
+            quantity=1,
+            entry_brl='5.50',
+            stop_brl='5.45',
+        )
+        return candidate, snap
+
+    def test_n27_allowed_markets_recognizes_forex(self):
+        self.assertIn('FOREX', ALLOWED_MARKETS)
+
+    def test_n27_forex_not_blocked_as_unsupported_market_only(self):
+        out = evaluate(*self._forex_ticket())
+        self.assertNotIn('UNSUPPORTED_MARKET', out.get('reasons') or [])
+
+    def test_n27_forex_fail_closed_without_named_demo_account(self):
+        out = evaluate(*self._forex_ticket())
+        self.assertFalse(out['allowed'])
+        reasons = out.get('reasons') or []
+        reject = out.get('reject_code')
+        visible = reject == NO_DEMO_ACCOUNT_REJECT or NO_DEMO_ACCOUNT_REJECT in reasons
+        self.assertTrue(visible, msg=f'expected {NO_DEMO_ACCOUNT_REJECT!r}, got {out!r}')
 
 if __name__=='__main__':unittest.main()

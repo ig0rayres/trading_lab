@@ -4,16 +4,28 @@ No market data access and no broker actions. It cannot certify broker state.
 All money is denominated in BRL; risk is planned, not guaranteed gap loss.
 """
 from decimal import Decimal, InvalidOperation
+from typing import Any, Callable
 
-CAPITAL = Decimal('10000')
-MAX_TRADE = Decimal('100')
-DEFAULT_TRADE = Decimal('50')
-PRODIGY_TRADE = Decimal('20')
-MAX_AGGREGATE = Decimal('200')
-MAX_DAILY_LOSS = Decimal('200')
-MAX_WEEKLY_LOSS = Decimal('500')
-MAX_POSITIONS = 3
+from risk_control_flags import TIGHT_DEFAULTS, brl_from_cents, fetch_control_flags
+
 ALLOWED_MARKETS = frozenset(('US_EQUITY', 'B3_EQUITY', 'CRYPTO'))
+
+
+def _limits_from_flags(flags: dict[str, Any]) -> dict[str, Decimal | int]:
+    return {
+        'capital': brl_from_cents(int(flags['capital_cents'])),
+        'max_trade': brl_from_cents(int(flags['max_risk_per_trade_cents'])),
+        'default_trade': brl_from_cents(int(flags['max_risk_per_trade_cents'])),
+        'prodigy_trade': brl_from_cents(int(flags['prodigy_risk_cents'])),
+        'max_aggregate': brl_from_cents(int(flags['max_aggregate_risk_cents'])),
+        'max_daily_loss': brl_from_cents(int(flags['max_daily_loss_cents'])),
+        'max_weekly_loss': brl_from_cents(int(flags['max_weekly_loss_cents'])),
+        'max_positions': int(flags['max_open_positions']),
+    }
+
+
+def resolve_limits(*, conn_factory: Callable[..., Any] | None = None) -> dict[str, Decimal | int]:
+    return _limits_from_flags(fetch_control_flags(conn_factory=conn_factory))
 
 
 def number(value):
@@ -28,8 +40,23 @@ def number(value):
     return result
 
 
-def evaluate(candidate, snapshot):
+def evaluate(
+    candidate,
+    snapshot,
+    *,
+    conn_factory: Callable[..., Any] | None = None,
+    limits: dict[str, Decimal | int] | None = None,
+):
     """Return allow=False for missing verification, even in simulation."""
+    lim = limits or resolve_limits(conn_factory=conn_factory)
+    capital = lim['capital']
+    max_trade = lim['max_trade']
+    default_trade = lim['default_trade']
+    prodigy_trade = lim['prodigy_trade']
+    max_aggregate = lim['max_aggregate']
+    max_daily_loss = lim['max_daily_loss']
+    max_weekly_loss = lim['max_weekly_loss']
+    max_positions = int(lim['max_positions'])
     reasons = []
     try:
         if candidate['market'] not in ALLOWED_MARKETS:
@@ -56,7 +83,7 @@ def evaluate(candidate, snapshot):
         if not isinstance(positions, list):
             reasons.append('INVALID_POSITIONS')
             positions = []
-        if len(positions) >= MAX_POSITIONS:
+        if len(positions) >= max_positions:
             reasons.append('MAX_POSITIONS')
         for p in positions:
             if not isinstance(p, dict) or p.get('market') not in ALLOWED_MARKETS or not isinstance(p.get('symbol'), str) or not p['symbol'].strip():
@@ -71,25 +98,22 @@ def evaluate(candidate, snapshot):
         at_risk = sum((number(p['planned_risk_brl']) for p in positions), Decimal(0))
         if any(number(p['notional_brl']) <= 0 or number(p['planned_risk_brl']) <= 0 for p in positions):
             reasons.append('INVALID_EXISTING_POSITION')
-        planned_risk = qty * (entry-stop)
+        planned_risk = qty * (entry - stop)
         notional = qty * entry
-        if planned_risk <= 0 or planned_risk > MAX_TRADE:
+        if planned_risk <= 0 or planned_risk > max_trade:
             reasons.append('MAX_TRADE_RISK')
-        risk_tier = PRODIGY_TRADE if candidate.get('prodigy') is True else DEFAULT_TRADE
-        # Strategy signals cannot self-authorize higher risk with an arbitrary boolean.
+        risk_tier = prodigy_trade if candidate.get('prodigy') is True else default_trade
         if planned_risk > risk_tier:
             reasons.append('DEFAULT_TRADE_RISK')
-        if at_risk + planned_risk > MAX_AGGREGATE:
+        if at_risk + planned_risk > max_aggregate:
             reasons.append('AGGREGATE_RISK_LIMIT')
-        if exposed + notional > CAPITAL:
+        if exposed + notional > capital:
             reasons.append('CAPITAL_LIMIT')
         daily_pnl = number(snapshot['daily_pnl_brl'])
         weekly_pnl = number(snapshot['weekly_pnl_brl'])
-        # Do not open a position whose planned stop would exceed the loss budget.
-        # Gap/slippage can cause larger losses; this is only the pre-trade bound.
-        if daily_pnl <= -MAX_DAILY_LOSS or daily_pnl - planned_risk < -MAX_DAILY_LOSS:
+        if daily_pnl <= -max_daily_loss or daily_pnl - planned_risk < -max_daily_loss:
             reasons.append('DAILY_LOSS_HALT')
-        if weekly_pnl <= -MAX_WEEKLY_LOSS or weekly_pnl - planned_risk < -MAX_WEEKLY_LOSS:
+        if weekly_pnl <= -max_weekly_loss or weekly_pnl - planned_risk < -max_weekly_loss:
             reasons.append('WEEKLY_LOSS_HALT')
         if number(snapshot['available_cash_brl']) < 0:
             reasons.append('INVALID_CASH')

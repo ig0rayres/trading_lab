@@ -20,8 +20,10 @@ Não envia ordens. Não promove fase de estratégia. POST → **405**.
 A partir desta entrega, a imagem padrão do app **`trading-lab`** usa:
 
 ```text
-CMD → v4-ops → v4-scheduler (foreground) + v4-dashboard (supervisor com restart)
+CMD → v4-ops → v4-scheduler (foreground) + v4-dashboard (supervisor com restart) + tv-worker --once (intervalo curto)
 ```
+
+Serviços EasyPanel permanecem **somente** `trading-lab` e `trading-lab-webhook` — não há terceiro app para o worker (ADR-009).
 
 | Variável | Default | Efeito |
 |----------|---------|--------|

@@ -46,8 +46,8 @@
 | N19 | N | Laço demo: gatilho no painel e ciclo da ordem no ledger | em execucao | 4 | observability, paper-gateway | Operar B3, cripto e forex | *(abaixo)* |
 | N20 | N | Contrato v0.3 + N19.1–N19.2 publicados; fill P-001b; SHA imagem; 0 rebuild | em execucao | 5 | docs, ledger, observability | Onda 0 — resgate | *(abaixo)* |
 | N21 | N | Ordem até fill/cancel/expira; P&L só de fill; restart sem duplicar | planejada | 3 | paper-gateway, ledger | Onda 1 — ciclo da ordem | *(abaixo)* |
-| N22 | N | Risco lê `control_flags`; capital único R$ 5.000; sessão B3 + feriado | planejada | 3 | risk-gate-b | Onda 2 — âncoras honestas | *(abaixo)* |
-| N23 | N | Trabalhador da fila dentro do `v4-ops`; dois apps EasyPanel | planejada | 3 | observability, paper-gateway | Onda 2 — worker (ADR-009) | *(abaixo)* |
+| N22 | N | Risco lê `control_flags`; capital único R$ 5.000; sessão B3 + feriado | concluida | 3 | risk-gate-b | Onda 2 — âncoras honestas | *(abaixo)* |
+| N23 | N | Trabalhador da fila dentro do `v4-ops`; dois apps EasyPanel | concluida | 3 | observability, paper-gateway | Onda 2 — worker (ADR-009) | *(abaixo)* |
 | N24 | N | Login + Central de controle; dia a dia sem Exec | planejada | 4 | v4_web_dashboard | Onda 3 — Feature 8 | *(abaixo)* |
 | N25 | N | Tela de sinais com destino, gate e âncora; ranking Prodígio | planejada | 3 | v4_web_dashboard | Onda 3 — Feature 9 | *(abaixo)* |
 | N26 | N | Performance só de fill confirmado; bruto rotulado | planejada | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
@@ -1010,7 +1010,7 @@ Nenhum gate trava as Ondas 0–3.
 
 ## Sprint N22 — Âncoras únicas e calendário B3
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Um teto de risco e sessão B3 de verdade  
 > Gate: Gate B e carteira leem `control_flags`; capital de partida R$ 5.000 nos dois caminhos; fora de sessão B3/NY e feriado ⇒ recusa com motivo; LIVE false  
 > review: senior+qa  
@@ -1018,15 +1018,15 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N22.1 Fazer `gate_b_risk` e `portfolio_risk_v4` lerem as âncoras gravadas pelo painel (banco fora: teto mais apertado) | `/dev` | — |
-| [ ] | M | N22.2 Unificar o capital de referência em R$ 5.000 (ARCHITECTURE §12.1) | `/dev` | N22.1 |
-| [ ] | M | N22.3 Recusar sinal fora da sessão B3/NY, feriado e horário de verão (calendário do upstream primeiro) | `/dev` | — |
+| [x] | M | N22.1 Fazer `gate_b_risk` e `portfolio_risk_v4` lerem as âncoras gravadas pelo painel (banco fora: teto mais apertado) | `/dev` | — |
+| [x] | M | N22.2 Unificar o capital de referência em R$ 5.000 (ARCHITECTURE §12.1) | `/dev` | N22.1 |
+| [x] | M | N22.3 Recusar sinal fora da sessão B3/NY, feriado e horário de verão (calendário do upstream primeiro) | `/dev` | — |
 
 ---
 
 ## Sprint N23 — Trabalhador da fila dentro do v4-ops
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: A fila anda no mesmo serviço do painel, sem app novo  
 > Gate: supervisor roda pesquisa, painel e worker; queda do worker não derruba a pesquisa; `demo_operation_on` false ⇒ worker recusa envio com motivo; dois apps EasyPanel  
 > review: senior+qa  
@@ -1034,9 +1034,9 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N23.1 Estender `scripts/v4_ops_main.sh` com o worker da fila em intervalo curto (ADR-009) | `/dev` | — |
-| [ ] | P | N23.2 Teste: saída forçada do worker não derruba a pesquisa | `/qa testes` | N23.1 |
-| [ ] | P | N23.3 Runbook da release: só dois serviços EasyPanel | docs | N23.1 |
+| [x] | M | N23.1 Estender `scripts/v4_ops_main.sh` com o worker da fila em intervalo curto (ADR-009) | `/dev` | — |
+| [x] | P | N23.2 Teste: saída forçada do worker não derruba a pesquisa | `/qa testes` | N23.1 |
+| [x] | P | N23.3 Runbook da release: só dois serviços EasyPanel | docs | N23.1 |
 
 ---
 

@@ -1,4 +1,6 @@
 import unittest
+from decimal import Decimal
+
 from portfolio_risk_v4 import evaluate
 
 
@@ -7,7 +9,7 @@ def setup():
              trading_mode='PAPER', quantity=10, entry_brl='40', stop_brl='37')
     s = dict(complete=True, daily_pnl_verified=True, weekly_pnl_verified=True,
              broker_reconciled=True, positions=[], daily_pnl_brl='0', weekly_pnl_brl='0',
-             available_cash_brl='10000', has_pending_orders=False)
+             available_cash_brl='5000', has_pending_orders=False)
     return c,s
 
 class PortfolioRiskTests(unittest.TestCase):
@@ -59,5 +61,28 @@ class PortfolioRiskTests(unittest.TestCase):
         c,s=setup();c['trading_mode']='LIVE';self.assertIn('NOT_PAPER',evaluate(c,s)['reasons'])
     def test_oversized(self):
         c,s=setup();c['quantity']=40;self.assertIn('MAX_TRADE_RISK',evaluate(c,s)['reasons'])
+
+    def test_capital_limit_at_five_thousand_not_ten(self):
+        c, s = setup()
+        s['available_cash_brl'] = '5000'
+        c['quantity'] = 12
+        c['entry_brl'] = '420'
+        c['stop_brl'] = '419'
+        self.assertIn('CAPITAL_LIMIT', evaluate(c, s)['reasons'])
+
+    def test_limits_override_from_flags(self):
+        c, s = setup()
+        limits = {
+            'capital': Decimal('5000'),
+            'max_trade': Decimal('30'),
+            'default_trade': Decimal('30'),
+            'prodigy_trade': Decimal('20'),
+            'max_aggregate': Decimal('200'),
+            'max_daily_loss': Decimal('200'),
+            'max_weekly_loss': Decimal('500'),
+            'max_positions': 3,
+        }
+        c['quantity'] = 12
+        self.assertIn('MAX_TRADE_RISK', evaluate(c, s, limits=limits)['reasons'])
 
 if __name__=='__main__':unittest.main()

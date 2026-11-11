@@ -399,7 +399,8 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
         self.assertEqual(phase_row[0], 'research')
         self.assertEqual(sk_row[0], 'momentum')
 
-    def test_auto_submit_persists_broker_order_id_not_queued_intent(self):
+    @patch('risk_control_flags.demo_send_allowed', return_value=(True, None))
+    def test_auto_submit_persists_broker_order_id_not_queued_intent(self, _mock_demo):
         import ledger_store as store
         from gate_a_signal import idempotency_key, record_signal_event
 
@@ -416,6 +417,12 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
                 http_status=202,
                 body={'status': 'QUEUED', 'orders_sent': 0},
             )
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE control_flags SET demo_operation_on = TRUE '
+                    'WHERE id = (SELECT id FROM control_flags WHERE deleted_at IS NULL '
+                    'ORDER BY created_at DESC LIMIT 1)'
+                )
             conn.commit()
         out = pgq.process_after_gate_b(
             signal,
@@ -424,7 +431,7 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
             ledger=ledger,
             broker_run=_mocked_paper_run,
         )
-        self.assertEqual(out['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(out['status'], 'PAPER_SUBMITTED', out)
         self.assertEqual(out.get('broker_id'), MOCK_BROKER_ORDER_ID)
         with store.connect() as conn:
             with conn.cursor() as cur:

@@ -1,5 +1,9 @@
 import json
+import os
+import tempfile
+import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from v4_shadow_broker import submit_local
 
@@ -70,3 +74,43 @@ def test_cannot_bypass_risk_limit(tmp_path, monkeypatch):
     monkeypatch.setenv('LIVE_TRADING_ENABLED', 'false')
     t = ticket();t['quantity'] = 20
     assert submit_local(t, snapshot(), tmp_path/'intents.jsonl')['status'] == 'BLOCKED'
+
+
+def test_local_shadow_never_inserts_paper_fills(tmp_path, monkeypatch):
+    """ADR-007 / N19.3: local B3-crypto simulator stays request log only."""
+    monkeypatch.setenv('LIVE_TRADING_ENABLED', 'false')
+    inserted_tables: list[str] = []
+
+    def capture_insert(_conn, table, _row):
+        inserted_tables.append(table)
+        return None
+
+    with patch('ledger_store.insert_row', side_effect=capture_insert):
+        for market in ('B3_EQUITY', 'CRYPTO'):
+            result = submit_local(ticket(market), snapshot(), tmp_path / f'{market}.jsonl')
+            assert result['orders_sent'] == 0
+    assert 'paper_fills' not in inserted_tables
+
+
+class ShadowBrokerN19GuardTest(unittest.TestCase):
+    """unittest entry for N19.3 shadow broker ledger guard."""
+
+    def test_local_shadow_never_inserts_paper_fills(self):
+        os.environ['LIVE_TRADING_ENABLED'] = 'false'
+        inserted_tables: list[str] = []
+
+        def capture_insert(_conn, table, _row):
+            inserted_tables.append(table)
+            return None
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch('ledger_store.insert_row', side_effect=capture_insert):
+                for market in ('B3_EQUITY', 'CRYPTO'):
+                    path = Path(tmp) / f'{market}.jsonl'
+                    result = submit_local(ticket(market), snapshot(), path)
+                    self.assertEqual(result['orders_sent'], 0)
+            self.assertNotIn('paper_fills', inserted_tables)
+
+
+if __name__ == '__main__':
+    unittest.main()

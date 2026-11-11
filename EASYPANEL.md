@@ -4,18 +4,27 @@
 
 | App | Start (typical) | Notes |
 |-----|-----------------|-------|
-| `trading-lab` | Dockerfile `CMD` → `v4-scheduler` | Research scheduler; ledger DSN optional |
+| `trading-lab` | Dockerfile `CMD` → **`v4-ops`** (scheduler + dashboard autostart) | Pesquisa + **Command Panel** na porta 8765; ledger DSN recomendado |
 | `trading-lab-webhook` | `/app/scripts/run.sh tv-webhook --port 8080` (+ worker loop if configured) | Public HTTPS; `LEDGER_DATABASE_URL` + paper read keys here |
 
-**N6 image:** vendor @ SHA in `docs/VENDOR-PIN.md` is **baked in the Dockerfile** at build time. Persist **`/app/reports` only**. Do **not** mount an empty directory on `/app/vendor` — it hides the baked tree and breaks `load_original`. Remove startup `git clone` hacks after the first successful N6 deploy.
+**Command Panel (#14+):** keep **two apps** (no third service). The panel code ships in the same image; HTTP is optional.
+
+| Check | Command |
+|-------|---------|
+| Smoke **sem HTTP** (scheduler `idle` ok) | `PYTHONPATH=/app/src python3 -c "from v4_web_dashboard import build_snapshot; d=build_snapshot('/app/reports'); print(d['command_panel']['schema_version'])"` → expect `command-panel-v1` |
+| **Browser / API** | Env: `DASHBOARD_ALLOW_REMOTE=true`, `DASHBOARD_BEARER_TOKEN` (≥32, EasyPanel only). **Default CMD `v4-ops`** starts dashboard on **8765** (supervisor restart). Override: `DASHBOARD_AUTOSTART=false` or CMD `v4-scheduler …` only. Map **8765** on HTTPS. See `docs/DASHBOARD-OPERATIONS.md`. |
+| Auth | If `DASHBOARD_BEARER_TOKEN` is set, **all** GET routes require `Authorization: Bearer <token>` (including loopback). Unset token: loopback without bearer only. |
+
+Do **not** replace `trading-lab-webhook` CMD. Default **`v4-ops`** on main image keeps scheduler + read-only dashboard; disable HTTP with `DASHBOARD_AUTOSTART=false` if needed. Persist **`/app/reports` only**. Do **not** mount an empty directory on `/app/vendor` — it hides the baked tree and breaks `load_original`. Remove startup `git clone` hacks after the first successful N6 deploy.
 
 1. Rebuild **both** apps from the same Dockerfile tag/SHA after merge to `main`.
 2. Environment must contain `LIVE_TRADING_ENABLED=false`. Paper Alpaca keys only on webhook/worker as today.
-3. Deploy once.
-4. Shell: `/app/scripts/run.sh verify`. This executes 21 local offline tests, exercises the real original modules using a deterministic synthetic fixture, and runs the upstream repository's own tests. If the original repository has been updated, parity may fail; do not force it to pass without inspecting the upstream changes.
-5. Shell: `/app/scripts/run.sh history --days 30 --symbols TSLA,NVDA,AMD --output /app/reports/history/v06-first-run`.
-6. Shell: `cat /app/reports/history/v06-first-run/summary.json`.
-7. Optional offline comparator for v0.5: `/app/scripts/run.sh orb-parity --date 2026-10-26`. It will report mismatches if original rounding or entry logic differs.
+3. On webhook (ledger): `/app/scripts/run.sh ledger-migrate apply` with `LEDGER_DATABASE_URL` — seeds **7** rows in `strategy_states` (safe to re-run; does not overwrite existing phases).
+4. Deploy once.
+5. Shell: `/app/scripts/run.sh verify`. This executes 21 local offline tests, exercises the real original modules using a deterministic synthetic fixture, and runs the upstream repository's own tests. If the original repository has been updated, parity may fail; do not force it to pass without inspecting the upstream changes.
+6. Shell: `/app/scripts/run.sh history --days 30 --symbols TSLA,NVDA,AMD --output /app/reports/history/v06-first-run`.
+7. Shell: `cat /app/reports/history/v06-first-run/summary.json`.
+8. Optional offline comparator for v0.5: `/app/scripts/run.sh orb-parity --date 2026-10-26`. It will report mismatches if original rounding or entry logic differs.
 
 ### If `verify` says the original repository is missing
 

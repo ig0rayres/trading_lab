@@ -1,10 +1,11 @@
 # Arquitetura — Trading Lab
 
 > Gerado em: 2026-10-29
+> Revisado em: 2026-11-03 (v0.3, laço em B3, cripto e forex; gatilhos no painel)
 > Fase: 3 — Arquitetura de Solucao
 > Status: Aprovada
-> Baseado em: docs/REQUIREMENTS.md
-> Design: `docs/design/DESIGN.md` nao existe. O operador escolheu seguir a arquitetura sem a fase de design. Tokens visuais do dashboard ficam para `/designer planejar`.
+> Baseado em: docs/REQUIREMENTS.md v0.2 e docs/design/DESIGN.md
+> A seção 12 prevalece sobre a frase de painel somente leitura nas seções 4, 7.2, 10 e 11.
 
 ---
 
@@ -170,7 +171,7 @@ Fontes (mercado, noticia, TradingView, copy)
 ### Modulo: observability
 
 - **Responsabilidade**: mostrar ciclo, rejeicoes, ordens paper e P&L. Parada de emergencia.
-- **API publica**: `v4-dashboard`, somente com autenticacao se houver porta publicada.
+- **API publica**: leitura do ciclo e, desde a revisão v0.2, escrita só dos gatilhos (seção 12). O painel não envia ordem.
 - **Depende de**: research-cycle, paper-gateway | **Desbloqueia**: nenhum
 - **Origem**: ADAPTAR (`src/v4_web_dashboard.py`)
 - **Complexidade**: 2
@@ -341,6 +342,8 @@ Nao ha fronteira com conta live.
 - **Encryption at rest**: a da instância já existente. Não desligar.
 - **Backups**: o backup que essa instância já tiver. Se não houver, o mínimo a confirmar é um dump diário. PITR não foi verificado.
 
+Revisão de 2026-11-03: motor, tier e nível permanecem. O ledger ganha mercado, gatilho e histórico de mudança. Detalhe em `docs/DATABASE.md` seção 6. Sem migration nova nesta fase.
+
 ---
 
 ## 9. Observabilidade
@@ -469,7 +472,8 @@ Nao ha fronteira com conta live.
 - Ciclo parcial. Ledger ainda vazio.
 
 **Integracoes criticas:**
-- Le research-cycle e paper-gateway. Nao escreve ordem.
+- Le research-cycle e paper-gateway. Nao envia ordem.
+- Revisão v0.2: escreve gatilho em `control_flags` e fase em `strategy_states`. Detalhe na seção 12.
 
 ---
 
@@ -488,7 +492,7 @@ Nenhum modulo deste laboratorio entra na biblioteca Beesy agora. O reuso externo
 - [ ] `.cursor/skills/` do projeto (`/arquiteto padroes`)
 - [ ] CI, hooks e Docker alem do Dockerfile ja importado (`/devops planejar`)
 - [ ] `docs/INFRASTRUCTURE.md` (`/devops infra`)
-- [ ] `docs/design/DESIGN.md` nao foi feito. Dashboard visual continua em aberto.
+- [x] `docs/design/DESIGN.md` (direção sóbria, login, Central e Sinais; 2026-11-03)
 
 ---
 
@@ -502,7 +506,7 @@ Nenhum modulo deste laboratorio entra na biblioteca Beesy agora. O reuso externo
 4. signal-gate-a, gravando `signal_events`
 5. risk-gate-b, gravando `risk_decisions` e lendo `control_flags`
 6. paper-gateway, gravando `paper_orders`, `paper_fills`, `positions`, `ledger_entries`
-7. observability, so leitura
+7. observability, leitura e escrita de gatilho. Sem envio de ordem.
 
 ### Matriz de impacto
 
@@ -514,9 +518,123 @@ Nenhum modulo deste laboratorio entra na biblioteca Beesy agora. O reuso externo
 | signal-gate-a | risk-gate-b, paper-gateway, observability |
 | risk-gate-b | paper-gateway |
 | paper-gateway | observability |
-| control_flags / kill switch | risk-gate-b, paper-gateway |
+| control_flags / market_controls / strategy_states | risk-gate-b, paper-gateway, observability |
 
 O webhook HTTP nao cria `paper_orders`. Quem cria e o paper-gateway, e so com `decision = paper_allowed`.
+
+---
+
+## 12. Revisão 2026-11-03 — operação demo e gatilhos no painel
+
+O operador aprovou esta revisão em 2026-11-03. O monolito Python, os dois processos, o risk-first e a conta real desligada continuam como nas ADR-001 a ADR-005.
+
+### 12.1 O que trava a ordem hoje
+
+O scheduler (`v4-scheduler`) só pesquisa. O worker da fila (`tradingview_worker`) é um comando de uma passada e ninguém o chama em ciclo. Um sinal aceito pelo Gate B vira intenção em `paper_orders` com `orders_sent = 0`, a menos que o ambiente tenha as três chaves de paper e o reconhecimento da conta.
+
+Mesmo com essas chaves, `signal_paper_runner` exige um retrato da carteira com perda do dia e da semana verificadas. O único gerador desse retrato, `v4_broker_snapshot.py`, grava essas verificações como falsas de propósito. Não existe P&L verificado porque, depois do envio, o banco não recebe o identificador da ordem nem acompanha o fill. A trava é correta. O ciclo que a satisfaria é que não existe.
+
+Há ainda dois tetos diferentes para o mesmo limite: o Gate B usa capital de R$ 5.000; `portfolio_risk_v4` usa R$ 10.000. As colunas de risco de `control_flags` não são lidas.
+
+### 12.2 Gatilho fica no painel
+
+Gatilho é o que liga, desliga ou dimensiona uma ordem, ou o que coloca uma estratégia no laço. O operador muda gatilho no painel. Variável de ambiente deixa de ser gatilho.
+
+| Gatilho | Hoje | Passa a viver |
+|---------|------|----------------|
+| Parada geral | `TRADING_LAB_KILL_SWITCH` e `control_flags.kill_switch_on` | Painel. Persiste em `control_flags`. |
+| Operação na conta demo | `PAPER_SIGNAL_AUTO_ENABLED`, `PAPER_EXECUTION_ENABLED`, `PAPER_SIGNAL_ACCOUNT_ACK`, `PAPER_DAILY_RISK_CONFIRMED` | Um controle no painel, desligado por padrão. Ligar é ato do operador, gravado com data e valor anterior. |
+| Capital, risco por operação, posições, risco aberto, perda do dia, perda da semana | Constantes em `gate_b_risk.py` e `portfolio_risk_v4.py` | `control_flags`, editável no painel. Partida: R$ 5.000, R$ 50, 3, R$ 200, R$ 200, R$ 500. |
+| Fase de cada estratégia já existente | SQL em `strategy_states` | Painel. Pesquisa, sombra ou paper. |
+| Motivo do sinal barrado | Código no ledger | Tela de sinais: qual gatilho, qual valor na hora. |
+
+Não são gatilho de painel:
+
+- Chave da corretora, segredo de webhook e DSN. O painel mostra só se estão presentes, nunca o valor.
+- Conta real. Aparece desligada e não tem botão. `LIVE_TRADING_ENABLED` continua false e nenhum módulo ganha caminho de ordem real.
+- Horário de pregão. Aparece como regra, sem controle para afrouxar.
+- Limiar de entrada que a estratégia original não tenha. O painel não cria número novo. Cadastrar estratégia nova continua fora deste corte.
+
+Regra fechada: painel desligado, nenhuma ordem sai, mesmo com o ambiente permissivo. Painel ligado e ambiente sem chave paper, nenhuma ordem sai e o painel diz que falta autorização no ambiente. Banco indisponível, vale o teto mais apertado que já está no código (R$ 5.000 e R$ 50, não R$ 10.000 e R$ 100).
+
+### 12.3 Laço da conta demo
+
+Ordem de construção. O passo seguinte só começa com o anterior fechado.
+
+1. No envio, gravar identificador e estado da corretora em `paper_orders`. Acompanhar até fill, cancelamento ou expiração e gravar `paper_fills`. Reaproveitar `paper_reconcile` e `ledger_reconcile`, hoje só manuais.
+2. Perda do dia e da semana só a partir desses fills. Aí o retrato pode dizer verificado.
+3. O laço autônomo cobre B3, cripto e forex. Ação americana deixa de ser o recorte. Cada mercado só recebe ordem quando a conta demo desse mercado devolve posição, ordem aberta e fill. O simulador local de B3 e cripto não conta: ele grava pedido e não fill.
+4. Gate B e o avaliador de carteira leem as âncoras de `control_flags`.
+5. O worker da fila entra no mesmo processo supervisionado do `v4-ops`, ao lado do scheduler e do painel. Não nasce serviço novo no EasyPanel.
+6. Login no painel para quem altera gatilho. Colar token no terminal deixa de ser o caminho do operador.
+
+O caminho desse laço é o que já existe: webhook, Gate A, worker, Gate B, `paper_gateway_queue`, `signal_paper_runner`. O `paper_gateway` de News First fica fora deste corte. Ele não passa pela mesma trilha de `signal_events` e `risk_decisions`.
+
+Ajuste automático de parâmetro (Feature 11) espera fill real. A tabela de mudança, com antes, depois, motivo e desfazer, fica reservada. O método não é desenhado em cima de zero dado.
+
+### 12.4 ADRs desta revisão
+
+### ADR-006: O painel é a única superfície de gatilho
+
+- **Status**: Aprovada em 2026-11-03
+- **Contexto**: Parada, âncoras, fase e permissão de envio estão em ambiente, constante e SQL. O operador não opera sem terminal.
+- **Decisao**: Todo gatilho da seção 12.2 é lido do banco e alterado pelo painel. O ambiente guarda segredo e impede conta real.
+- **Alternativas consideradas**:
+  1. Manter as flags de paper no ambiente e só mostrar o estado no painel — descartada porque o operador continuaria dependendo do Exec.
+  2. Deixar o código escolher o teto mais frouxo quando as constantes divergem — descartada porque alarga risco sem decisão humana.
+  3. Status quo — descartada pelo operador nesta revisão.
+- **Trade-offs aceitos**: o painel deixa de ser só leitura. Uma sessão roubada pode apertar ou desligar a operação, e também pode ligá-la dentro dos tetos. Não pode apontar para conta real nem ver segredo.
+- **Condicao de reversao**: se o painel ficar indisponível por uma falha de deploy, a operação permanece no último gatilho gravado e a parada de emergência por ambiente continua válida como teto, não como controle do dia a dia.
+- **Consequencias**: rotas de escrita novas em `v4_web_dashboard.py`, autenticadas. O módulo de observabilidade passa a escrever `control_flags` e `strategy_states`. Continua sem cliente de corretora.
+
+### ADR-007: Fechar o ciclo da ordem antes de ligar o envio
+
+- **Status**: Aprovada em 2026-11-03
+- **Contexto**: O retrato exigido pelo runner não pode ser honesto enquanto fill e P&L não voltam ao ledger.
+- **Decisao**: Persistência do identificador, acompanhamento até o estado final e P&L de fill vêm antes de tratar o controle do painel como suficiente para mandar ordem.
+- **Alternativas consideradas**:
+  1. Ligar as três flags de paper agora e aceitar o bloqueio `LOSS_DATA_NOT_VERIFIED` — descartada porque não produz operação.
+  2. Marcar o retrato como verificado sem fill — descartada porque mente sobre a carteira.
+  3. Status quo, pesquisa apenas — descartada pelo objetivo de operar na conta demo.
+- **Trade-offs aceitos**: as primeiras semanas não têm ordem autônoma. Têm trilha verificável.
+- **Condicao de reversao**: se a Alpaca paper não devolver estado de ordem consultável, o acompanhamento para e a ordem não é dada como enviada.
+- **Consequencias**: `paper_orders` deixa de ficar eterno em `queued_intent` depois de um POST aceito.
+
+### ADR-008: Laço autônomo só em ação americana
+
+- **Status**: Revogada em 2026-11-03 pelo operador. Substituída pela ADR-010.
+- **Contexto**: A primeira redação limitou o laço à Alpaca paper porque era a única conta que devolve posição.
+- **Decisao**: Não vale mais. O operador definiu os mercados de operação: B3, cripto e forex.
+- **Alternativas consideradas**:
+  1. Manter só ação americana — descartada pelo operador nesta mesma data.
+- **Trade-offs aceitos**: a ordem nesses três mercados espera uma conta demo por mercado. A Alpaca paper não cobre B3 nem forex.
+- **Condicao de reversao**: não se aplica. A ADR-010 é a decisão vigente.
+- **Consequencias**: ver ADR-010.
+
+### ADR-010: Operar B3, cripto e forex
+
+- **Status**: Aprovada em 2026-11-03
+- **Contexto**: O operador corrigiu o recorte. Os três mercados entram no laço. No código de hoje, B3 e cripto têm pesquisa e um simulador local que não preenche ordem. Forex não está no universo, nem no avaliador de carteira, nem em corretora.
+- **Decisao**: B3, cripto e forex são mercados de operação. A trilha é a mesma: gatilho no painel, Gate A, Gate B, conta demo, fill no ledger. Uma ordem só sai se a conta demo daquele mercado informar posição, ordem aberta e fill. Sem essa leitura, o sinal fica barrado com o motivo visível no painel. Conta real continua sem botão.
+- **Alternativas consideradas**:
+  1. Usar o simulador local como se fosse fill — descartada porque ele mesmo declara que o pedido não é fill e não calcula P&L.
+  2. Mandar B3 e forex pela Alpaca paper — descartada porque essa conta não opera esses mercados.
+  3. Escolher a corretora demo de cada mercado nesta revisão — descartada. O nome da conta ainda não foi decidido e não será inventado aqui.
+- **Trade-offs aceitos**: o laço não começa nos três ao mesmo tempo. Começa no mercado cuja conta demo já devolve o estado da ordem. Os outros ficam visíveis no painel como sem conta demo.
+- **Condicao de reversao**: se um mercado sair da lista, o painel deixa de oferecer gatilho para ele e o laço recusa o símbolo.
+- **Consequencias**: o painel tem o mercado em cada sinal e em cada gatilho. `portfolio_risk_v4` hoje não conhece forex; isso entra quando o contrato de dados desse mercado existir. Ação americana que já teve submit paper não é apagada, e não substitui os três mercados.
+
+### ADR-009: Worker dentro do v4-ops
+
+- **Status**: Aprovada em 2026-11-03
+- **Contexto**: O serviço `trading-lab` já sobe scheduler e painel. O worker não tem laço.
+- **Decisao**: O mesmo supervisor chama o worker em intervalo curto. Não há terceiro serviço no EasyPanel.
+- **Alternativas consideradas**:
+  1. Novo serviço no EasyPanel só para o worker — descartada porque o requisito não substitui os serviços atuais e multiplica deploy.
+  2. Processar a fila dentro do ciclo de 15 minutos da pesquisa — descartada porque um sinal não pode esperar o ciclo de pesquisa.
+- **Trade-offs aceitos**: três tarefas no mesmo container. Uma falha do worker não pode derrubar o scheduler; o supervisor reinicia só a tarefa caída.
+- **Condicao de reversao**: se o worker e o scheduler disputarem a mesma chave de corretora de um jeito que misture pesquisa com ordem, a chave continua só no caminho de ordem.
+- **Consequencias**: pesquisa segue sem chave de corretora, como na ADR-002.
 
 ---
 
@@ -525,3 +643,5 @@ O webhook HTTP nao cria `paper_orders`. Quem cria e o paper-gateway, e so com `d
 | Data | Versao | Alteracao | Autor |
 |------|--------|-----------|-------|
 | 2026-10-29 | 0.1 | Arquitetura aprovada: Python, dois processos, risk-first | Arquiteto de Solucoes (IA) |
+| 2026-11-03 | 0.2 | Operação demo: gatilhos no painel, ciclo da ordem, worker no v4-ops | Arquiteto de Solucoes (IA) com o operador |
+| 2026-11-03 | 0.3 | ADR-008 revogada. Mercados do laço: B3, cripto e forex, cada um com conta demo que devolva fill | Arquiteto de Solucoes (IA) com o operador |

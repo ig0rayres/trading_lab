@@ -7,6 +7,7 @@ from typing import Any
 
 from gate_a_signal import idempotency_key
 from ledger_store import insert_row
+from paper_fill_cycle import track_once as default_track_once
 from signal_paper_runner import make_order, run as paper_run, token
 
 
@@ -31,19 +32,38 @@ def queue_intent(signal: dict[str, Any], decision: dict[str, Any]) -> dict[str, 
     }
 
 
-def _lookup_signal_event_id(conn, signal: dict[str, Any], fallback_key: str | None = None):
+def _lookup_signal_event_id(
+    conn,
+    signal: dict[str, Any],
+    fallback_key: str | None = None,
+    *,
+    queue_idempotency_key: str | None = None,
+):
+    """Resolve Gate A row. Queue JSON uses hashed signal_id; file stem matches Gate A key."""
+    keys: list[str] = []
+
+    def add(key: str | None) -> None:
+        if key and key not in keys:
+            keys.append(key)
+
+    add(queue_idempotency_key)
     provider = str(signal.get('provider', 'tradingview'))
     sid = str(signal.get('signal_id', ''))
-    key = idempotency_key(provider, sid) if sid else fallback_key
-    if not key:
+    if sid:
+        add(idempotency_key(provider, sid))
+    add(fallback_key)
+    if not keys:
         return None
     with conn.cursor() as cur:
-        cur.execute(
-            'SELECT id FROM signal_events WHERE idempotency_key = %s AND deleted_at IS NULL',
-            (key,),
-        )
-        row = cur.fetchone()
-    return row[0] if row else None
+        for key in keys:
+            cur.execute(
+                'SELECT id FROM signal_events WHERE idempotency_key = %s AND deleted_at IS NULL',
+                (key,),
+            )
+            row = cur.fetchone()
+            if row:
+                return row[0]
+    return None
 
 
 def persist_risk_decision(
@@ -51,6 +71,7 @@ def persist_risk_decision(
     decision: dict[str, Any],
     *,
     queue_result: dict[str, Any] | None = None,
+    queue_idempotency_key: str | None = None,
     conn_factory=None,
 ):
     if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
@@ -65,7 +86,12 @@ def persist_risk_decision(
         fallback = idempotency_key('unknown', queue_result.get('client_order_id', 'reject'))
     try:
         with conn_factory() as conn:
-            signal_event_id = _lookup_signal_event_id(conn, signal, fallback)
+            signal_event_id = _lookup_signal_event_id(
+                conn,
+                signal,
+                fallback,
+                queue_idempotency_key=queue_idempotency_key,
+            )
             if not signal_event_id:
                 return
             risk_id = uuid.uuid4()
@@ -102,8 +128,103 @@ def persist_risk_decision(
         return
 
 
-def persist_intent(signal: dict[str, Any], decision: dict[str, Any], queue_result: dict[str, Any], conn_factory=None):
-    persist_risk_decision(signal, decision, queue_result=queue_result, conn_factory=conn_factory)
+def persist_intent(
+    signal: dict[str, Any],
+    decision: dict[str, Any],
+    queue_result: dict[str, Any],
+    conn_factory=None,
+    *,
+    queue_idempotency_key: str | None = None,
+):
+    persist_risk_decision(
+        signal,
+        decision,
+        queue_result=queue_result,
+        queue_idempotency_key=queue_idempotency_key,
+        conn_factory=conn_factory,
+    )
+
+
+def _persist_broker_submitted(
+    client_order_id: str,
+    broker_id: str,
+    *,
+    conn_factory=None,
+) -> None:
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return
+    if not broker_id or not client_order_id:
+        return
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE paper_orders SET broker_order_id = %s, status = %s '
+                    'WHERE client_order_id = %s',
+                    (broker_id, 'submitted', client_order_id),
+                )
+            conn.commit()
+    except Exception:
+        return
+
+
+def _load_paper_order(client_order_id: str, conn_factory=None) -> dict[str, Any] | None:
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return None
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT client_order_id, broker_order_id, symbol, side, status, qty '
+                    'FROM paper_orders WHERE client_order_id = %s AND deleted_at IS NULL',
+                    (client_order_id,),
+                )
+                row = cur.fetchone()
+        if not row:
+            return None
+        return {
+            'client_order_id': row[0],
+            'broker_order_id': row[1],
+            'symbol': row[2],
+            'side': row[3],
+            'status': row[4],
+            'qty': row[5],
+            'market': 'us_equity',
+        }
+    except Exception:
+        return None
+
+
+def _resume_track_existing(
+    order: dict[str, Any],
+    env: dict[str, str],
+    *,
+    track_fn=None,
+) -> dict[str, Any]:
+    track = track_fn or default_track_once
+    out = dict(track(order, env))
+    out['mode'] = 'RESUMED_AFTER_RESTART'
+    out['orders_sent'] = 0
+    return out
+
+
+def _broker_submitted_persistable(result: dict[str, Any]) -> bool:
+    if result.get('status') != 'PAPER_SUBMITTED':
+        return False
+    if result.get('orders_sent') != 1:
+        return False
+    broker_id = result.get('broker_id')
+    if not broker_id:
+        return False
+    return bool(result.get('client_order_id'))
 
 
 def process_after_gate_b(
@@ -113,14 +234,48 @@ def process_after_gate_b(
     *,
     ledger: str | None = None,
     broker_run=paper_run,
+    track_fn=None,
     conn_factory=None,
+    queue_idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     if decision.get('decision') != 'paper_allowed':
-        persist_risk_decision(signal, decision, conn_factory=conn_factory)
+        persist_risk_decision(
+            signal,
+            decision,
+            conn_factory=conn_factory,
+            queue_idempotency_key=queue_idempotency_key,
+        )
         code = decision.get('reject_code') or 'RISK_BLOCK'
         return {'status': 'BLOCKED', 'reasons': [code], 'orders_sent': 0}
     queued = queue_intent(signal, decision)
-    persist_intent(signal, decision, queued, conn_factory=conn_factory)
+    existing = _load_paper_order(queued['client_order_id'], conn_factory=conn_factory)
+    if not existing:
+        persist_intent(
+            signal,
+            decision,
+            queued,
+            conn_factory=conn_factory,
+            queue_idempotency_key=queue_idempotency_key,
+        )
+    elif str(existing.get('broker_order_id') or '').strip():
+        return _resume_track_existing(existing, env, track_fn=track_fn)
     if not broker_auto_allowed(env):
         return queued
-    return broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')
+    from risk_control_flags import demo_send_allowed
+
+    allowed_demo, demo_reason = demo_send_allowed(conn_factory=conn_factory)
+    if not allowed_demo:
+        return {
+            'status': 'BLOCKED',
+            'reasons': [demo_reason or 'DEMO_OPERATION_OFF'],
+            'orders_sent': 0,
+            'mode': 'DEMO_OPERATION_OFF',
+        }
+    result = broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')
+    if _broker_submitted_persistable(result):
+        _persist_broker_submitted(
+            str(result['client_order_id']),
+            str(result['broker_id']),
+            conn_factory=conn_factory,
+        )
+    return result

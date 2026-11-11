@@ -6,13 +6,14 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
-from gate_b_session import within_regular_session
+from gate_b_session import within_signal_session
 from paper_audit import amount
+from risk_control_flags import TIGHT_DEFAULTS, brl_from_cents, fetch_control_flags
 
-PAPER_CAPITAL_BRL = Decimal('5000')
-PAPER_RISK_BRL = Decimal('50')
-PAPER_DAILY_LOSS_BRL = Decimal('200')
-MAX_CONCURRENT_TRADES = 3
+PAPER_CAPITAL_BRL = brl_from_cents(int(TIGHT_DEFAULTS['capital_cents']))
+PAPER_RISK_BRL = brl_from_cents(int(TIGHT_DEFAULTS['max_risk_per_trade_cents']))
+PAPER_DAILY_LOSS_BRL = brl_from_cents(int(TIGHT_DEFAULTS['max_daily_loss_cents']))
+MAX_CONCURRENT_TRADES = int(TIGHT_DEFAULTS['max_open_positions'])
 
 
 def open_positions_cap_reached(open_positions, cap=MAX_CONCURRENT_TRADES) -> str | None:
@@ -46,14 +47,19 @@ def kill_switch_active(env: dict[str, str] | None = None, conn_factory=None) -> 
         return False
 
 
-def config_for_fx(fx: Decimal) -> dict[str, Any]:
-    cap_usd = float(PAPER_CAPITAL_BRL / fx)
+def config_for_fx(fx: Decimal, flags: dict[str, Any] | None = None) -> dict[str, Any]:
+    flags = flags or TIGHT_DEFAULTS
+    cap_brl = brl_from_cents(int(flags['capital_cents']))
+    risk_brl = brl_from_cents(int(flags['max_risk_per_trade_cents']))
+    daily_brl = brl_from_cents(int(flags['max_daily_loss_cents']))
+    max_trades = int(flags['max_open_positions'])
+    cap_usd = float(cap_brl / fx)
     return {
         'budget': cap_usd,
-        'max_loss_per_trade_usd': float(PAPER_RISK_BRL / fx),
-        'max_daily_loss_usd': float(PAPER_DAILY_LOSS_BRL / fx),
-        'max_trades_per_day': MAX_CONCURRENT_TRADES,
-        'max_orders_per_day': MAX_CONCURRENT_TRADES,
+        'max_loss_per_trade_usd': float(risk_brl / fx),
+        'max_daily_loss_usd': float(daily_brl / fx),
+        'max_trades_per_day': max_trades,
+        'max_orders_per_day': max_trades,
         'max_order_usd': cap_usd,
         'paper': True,
         'require_stop': True,
@@ -104,9 +110,22 @@ def evaluate_signed_signal(
         session_now = now
     else:
         session_now = datetime.now(timezone.utc)
-    if not within_regular_session(session_now):
+    if os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        from ledger_loss_anchor import gate_b_loss_reject
+
+        loss_code = gate_b_loss_reject(conn_factory=conn_factory, now_utc=session_now)
+        if loss_code:
+            return {
+                'decision': 'rejected',
+                'reject_code': loss_code,
+                'risk_amount_cents': 0,
+            }
+    if not within_signal_session(signal, session_now):
         return {'decision': 'rejected', 'reject_code': 'OUTSIDE_SESSION', 'risk_amount_cents': 0}
-    cap_code = open_positions_cap_reached(open_positions)
+    flags = fetch_control_flags(conn_factory=conn_factory)
+    cap_code = open_positions_cap_reached(
+        open_positions, cap=int(flags['max_open_positions']),
+    )
     if cap_code:
         return {'decision': 'rejected', 'reject_code': cap_code, 'risk_amount_cents': 0}
     from strategy_catalog import gate_b_strategy_reject
@@ -124,7 +143,7 @@ def evaluate_signed_signal(
     price_times = {order['symbol']: now} if now is not None else None
     res = risk.check(
         [order],
-        config_for_fx(fx),
+        config_for_fx(fx, flags),
         portfolio,
         prices,
         state,

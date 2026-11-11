@@ -35,7 +35,12 @@ def process_one(path):
             decision = evaluate_signed_signal(
                 obj, fx=fx, env=os.environ, open_positions=open_pos,
             )
-            result = process_after_gate_b(obj, decision, os.environ)
+            result = process_after_gate_b(
+                obj,
+                decision,
+                os.environ,
+                queue_idempotency_key=path.stem,
+            )
     except Exception as e:
         result={'status':'BLOCKED','reasons':[type(e).__name__],'orders_sent':0}
     completed=BASE.parent/'processed';completed.mkdir(parents=True,exist_ok=True)

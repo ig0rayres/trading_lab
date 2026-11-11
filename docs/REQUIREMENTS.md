@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-03 (v0.2, operação autônoma)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -15,6 +15,8 @@
 **Para quem**: O operador do laboratório, que pesquisa e, só depois, opera em paper.
 
 **Objetivo de negócio**: Errar rápido e barato. A escada é Research, Shadow, Paper limitado, Paper validado. Live permanece desligado. Nenhuma promoção acontece só porque um número de teste subiu ou uma requisição retornou 200.
+
+**Objetivo revisado (v0.3, 2026-11-03)**: A plataforma opera sozinha nas contas demo de B3, cripto e forex, com as estratégias já definidas, sem o operador disparar cada ordem. A Alpaca paper continua sendo a conta já ligada no código e não cobre B3 nem forex. As âncoras de risco seguram a operação: quando uma estoura, a plataforma para sozinha e avisa. O operador acompanha e ajusta tudo por um painel central, sem comando no Exec do EasyPanel. Do ponto de vista operacional, demo e real seguem as mesmas regras; só o destino da ordem muda, e o destino real continua desligado até autorização explícita do operador, separada deste documento.
 
 **Cenário**: LEGADO
 
@@ -32,7 +34,7 @@
 
 | Persona | Contexto | Principal frustração (hoje) | Objetivo | Nível técnico |
 |---|---|---|---|---|
-| Operador do laboratório | Pessoa única que acompanha pesquisa, paper e o que está no EasyPanel | Sinais, filas e HTTP 200 aparecem como se o robô tivesse operado. Várias builds com contagens diferentes, sem uma base canônica comprovada. | Ver o estado real (pesquisa, sombra ou paper), o motivo de cada rejeição e o P&L reconciliado com a corretora, antes de sequer discutir live. | Semi-técnico |
+| Operador do laboratório | Pessoa única que acompanha pesquisa, paper e o que está no EasyPanel | Sinais, filas e HTTP 200 aparecem como se o robô tivesse operado. Várias builds com contagens diferentes, sem uma base canônica comprovada. Em 2026-11-03: operar exige comandos colados no Exec e token no curl; o painel só mostra. | Não operar à mão. Ver o estado real (pesquisa, sombra ou paper), o motivo de cada rejeição e o P&L reconciliado com a corretora, e ajustar risco e estratégias num lugar só. | Semi-técnico |
 
 ---
 
@@ -65,8 +67,8 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 
 **Critérios de aceite:**
 - [x] `pytest` com evidência em CI (GitHub Actions run [41041762290](https://github.com/ig0rayres/trading_lab/actions/runs/41041762290), commit `f597f8b`, job **test** verde). Contagens 224–395 de ZIPs não substituem isso.
-- [ ] Com live desligado, um ciclo termina sem ordem enviada.
-- [ ] Ciclo falho não deixa manifesto de sucesso anterior visível como confiável.
+- [x] Com live desligado, um ciclo termina sem ordem enviada (`tests/test_v4_scheduler.py` `test_readonly_success`, `test_live_guard`; `tests/test_v4_run_once.py` `test_full_readonly_path`; matriz N11 em `docs/TEST-EVIDENCE.md`).
+- [x] Ciclo falho não deixa manifesto de sucesso anterior visível como confiável (`test_failed_cycle_invalidates_previous_manifest`, `test_main_once_failure_clears_stale_manifest`; `tests/test_v4_report_integrity.py`).
 
 ### Feature 2: Gate A — autenticidade do sinal
 
@@ -158,7 +160,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - Timeout, rejeição da corretora, fill parcial, cancelamento, posição que já existia, API fora.
 
 **Critérios de aceite (homologação):**
-- [ ] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`).
+- [x] Fill real Alpaca + posição coerente na corretora (passo operador; `docs/HOMOLOGATION.md`). **Evidência 2026-11-11:** Alpaca paper AAPL buy limit @349.85 em 2026-10-29 **filled** qty 1; posição aberta AAPL qty 1 (avg 349.85) conferida no Exec e na UI. MSFT/NVDA submits posteriores sem fill não contam. Ver `docs/TEST-EVIDENCE.md` § N20.
 - [x] Sinal inválido não gera ordem (Gates A+B; CI).
 - [x] Duplicata não reabre posição (idempotência + testes).
 - [x] Reinício não perde trilha ledger (Postgres append-only; worker atômico).
@@ -178,6 +180,95 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 **Critérios de aceite:**
 - [x] Dashboard local (`127.0.0.1`) não exige auth; remoto exige bearer ≥32 (`v4_web_dashboard.py`).
 - [x] Kill switch visível em `/api/status` (`kill_switch_on`) e testável via env/Postgres sem ordem real.
+
+> Features 7–11 entram na revisão v0.2 (2026-11-03). Fill paper na corretora (Feature 5) está `[x]` (AAPL 2026-10-29); performance e aprendizado ainda exigem o laço de ledger das ondas seguintes.
+
+### Feature 7: Operação autônoma na conta demo
+
+- **Persona**: Operador do laboratório
+- **Prioridade**: Must-have
+
+**Fluxo principal:**
+1. Um sinal chega (copy, Prodígio ou estratégia interna em fase paper).
+2. Gate A e Gate B decidem sem o operador.
+3. Se aprovado, a plataforma envia a ordem para a conta demo e acompanha até fill, cancelamento ou expiração.
+4. O resultado fica no ledger e aparece no painel.
+
+**Fluxo de erro:**
+- Âncora de risco estourada: a plataforma para de abrir ordem nova e registra o motivo. O operador vê no painel.
+- Ordem sem fill no prazo: a plataforma cancela, registra e não reenvia sozinha o mesmo sinal.
+- Falha de comunicação com a corretora: nenhuma ordem nova até a conciliação voltar a bater.
+
+**Âncoras de risco (valores atuais, editáveis só pelo operador):**
+
+| Âncora | Valor |
+|--------|-------|
+| Capital de referência | R$ 5.000 |
+| Risco por operação | R$ 50 |
+| Posições simultâneas | 3 |
+| Risco agregado aberto | R$ 200 |
+| Perda máxima no dia | R$ 200 |
+| Perda máxima na semana | R$ 500 |
+
+**Critérios de aceite:**
+- [ ] Sinal válido vira ordem na conta demo sem ação manual do operador.
+- [ ] Nenhuma ordem sai com qualquer âncora estourada.
+- [ ] Perda do dia ou da semana no teto para a operação até o próximo período e registra o motivo.
+- [ ] Host de destino é sempre o paper; existir uma chave live no ambiente não muda isso.
+- [ ] Reinício do serviço retoma a operação sem duplicar ordem.
+
+### Feature 8: Central de controle no painel
+
+- **Persona**: Operador do laboratório
+- **Prioridade**: Must-have
+
+**Fluxo principal:**
+1. O operador entra no painel com login.
+2. Vê e altera as âncoras de risco.
+3. Liga ou desliga cada estratégia existente e aciona a parada geral.
+
+**Critérios de aceite:**
+- [ ] Toda alteração vale a partir da próxima ordem e fica registrada com data e valor anterior.
+- [ ] A plataforma nunca afrouxa uma âncora sozinha; só o operador altera.
+- [ ] Parada geral pelo painel impede ordem nova em até um ciclo.
+- [ ] Nenhuma operação do dia a dia exige Exec no EasyPanel.
+- [ ] Acesso exige autenticação; o painel não abre sem login.
+
+### Feature 9: Sinais e Prodígio
+
+- **Persona**: Operador do laboratório
+- **Prioridade**: Must-have
+
+**Critérios de aceite:**
+- [ ] Lista de sinais recebidos com origem, destino (ordem, barrado, fila) e motivo da rejeição.
+- [ ] Ranking Prodígio dos provedores e quais sinais ele copiou.
+- [ ] Sinal barrado mostra qual gate e qual âncora barrou.
+
+### Feature 10: Performance
+
+- **Persona**: Operador do laboratório
+- **Prioridade**: Must-have
+
+**Critérios de aceite:**
+- [ ] Resultado por estratégia e total, calculado só a partir de fill confirmado na corretora.
+- [ ] Ordem sem fill não entra no resultado.
+- [ ] Indicação de quais valores ainda são brutos (sem custo completo).
+
+### Feature 11: Sugestões e ajuste supervisionado
+
+- **Persona**: Operador do laboratório
+- **Prioridade**: Should-have
+
+**Fluxo principal:**
+1. As estratégias encontram oportunidades; o painel mostra como sugestão, com a estratégia de origem.
+2. A plataforma registra cada erro (perda, ordem barrada, sinal sem fill) ligado à estratégia.
+3. A partir desses registros, ajusta parâmetros das estratégias.
+
+**Critérios de aceite:**
+- [ ] Sugestão aparece marcada como sugestão e nunca é tratada como ordem autorizada por si só.
+- [ ] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define.
+- [ ] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel.
+- [ ] Ajuste automático nunca altera as âncoras de risco.
 
 ---
 
@@ -222,6 +313,8 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - Substituir os serviços EasyPanel atuais por este ZIP.
 - Publicar dashboard sem autenticação.
 - Somar contagens de teste de ZIPs diferentes e apresentá-las como uma suíte única.
+- Cadastrar estratégia nova pelo painel (segundo momento, decisão do operador em 2026-11-03).
+- Ajuste automático que crie parâmetro ou limiar inexistente na estratégia original.
 
 ---
 
@@ -244,8 +337,11 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 | 3 | Fórmula de empate, drawdown e consistência do Prodigy 15d | Médio | Aberta. |
 | 4 | Qual imagem está de fato no EasyPanel (`trading-lab` e webhook), com SHA | Alto | Aberta. Export não veio. |
 | 5 | Commit pinado do `day-trader-skill` em `vendor/` | Alto | Aberta. |
-| 6 | Prazo de calendário para a homologação paper | Médio | Aberta. Nenhum prazo foi decidido. |
+| 6 | Prazo de calendário para a homologação paper | Médio | Respondida 2026-11-03: operação autônoma na conta demo nas próximas semanas, sem data fixa. |
 | 7 | Postgres: há migration e dado, ou só intenção de infra | Médio | Aberta. |
+| 8 | Método do ajuste automático (Feature 11): o que conta como erro, com que frequência ajustar, quando desfazer | Alto | Aberta. Fase de arquitetura. |
+| 9 | Login do painel no lugar do Bearer manual | Alto | Aberta. Fases de arquitetura e DevOps. |
+| 10 | Painel deixa de ser somente leitura e passa a alterar risco e estratégias | Alto | Aberta. Decisão de arquitetura; a regra atual do painel é read-only. |
 
 ---
 
@@ -295,3 +391,4 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | Data | Versão | Alteração | Autor |
 |---|---|---|---|
 | 2026-10-29 | 0.1 | Versão inicial a partir do adendo de 29/10/2026 e do snapshot importado | Analista de Requisitos (IA) |
+| 2026-11-03 | 0.2 | Operação autônoma na conta demo; âncoras de risco confirmadas; central de controle no painel; Features 7–11; cadastro de estratégia nova adiado | Analista de Requisitos (IA) com o operador |

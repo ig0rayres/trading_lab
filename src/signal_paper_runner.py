@@ -20,6 +20,15 @@ from signal_copy import validate, canonical_payload
 from portfolio_risk_v4 import evaluate as evaluate_portfolio_risk
 
 DEFAULT_LEDGER = '/app/reports/paper/signal-orders.jsonl'
+ALPACA_PAPER_BLOCKED_MARKETS = frozenset({'B3_EQUITY', 'FOREX'})
+NO_DEMO_ACCOUNT_PATH = 'NO_DEMO_ACCOUNT_PATH'
+
+
+def _market_blocks_alpaca_paper(signal: dict) -> str | None:
+    market = signal.get('market')
+    if market in ALPACA_PAPER_BLOCKED_MARKETS:
+        return NO_DEMO_ACCOUNT_PATH
+    return None
 
 
 def token(signal):
@@ -116,6 +125,9 @@ def run(signal,env,ledger=DEFAULT_LEDGER,broker_get=get_json,broker_post=submit,
             return {'status':'BLOCKED','reasons':['PAPER_EXECUTION_NOT_ENABLED'],'orders_sent':0}
         if env.get('PAPER_SIGNAL_ACCOUNT_ACK','')!='I_AUTHORIZE_ALPACA_PAPER_ONLY':
             return {'status':'BLOCKED','reasons':['EXPLICIT_PAPER_ACK_REQUIRED'],'orders_sent':0}
+        blocked = _market_blocks_alpaca_paper(signal)
+        if blocked:
+            return {'status': 'BLOCKED', 'reasons': [blocked], 'orders_sent': 0}
         path=Path(ledger);path.parent.mkdir(parents=True,exist_ok=True)
         with (path.parent/'signal-orders.lock').open('a+') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)

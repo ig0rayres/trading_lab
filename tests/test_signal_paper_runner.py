@@ -66,6 +66,38 @@ class PaperRunnerTests(unittest.TestCase):
         result=x.run(self.signal,self.env,self.ledger,broker_get=getter,broker_post=forbidden)
         self.assertEqual(result['status'],'BLOCKED')
         self.assertIn('V4_PORTFOLIO_SNAPSHOT_REQUIRED',result['reasons'])
+
+    def _auto_env_with_snapshot(self):
+        snapshot=Path(self.tmp.name)/'risk.json'
+        snapshot.write_text(json.dumps({'at_utc':datetime.now(timezone.utc).isoformat(),
+            'alpaca_positions_count':0,'alpaca_open_orders_count':0,'complete':True,
+            'daily_pnl_verified':True,'weekly_pnl_verified':True,'broker_reconciled':True,
+            'positions':[],'daily_pnl_brl':'0','weekly_pnl_brl':'0',
+            'available_cash_brl':'10000','has_pending_orders':False}))
+        self.env.update(
+            PAPER_SIGNAL_AUTO_ENABLED='true',
+            PAPER_EXECUTION_ENABLED='true',
+            PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY',
+            PAPER_DAILY_RISK_CONFIRMED='true',
+            V4_RISK_SNAPSHOT_FILE=str(snapshot),
+        )
+        return snapshot
+
+    def test_auto_submit_success_orders_sent_one(self):
+        self._auto_env_with_snapshot()
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status':'ACTIVE','currency':'USD','trading_blocked':False,
+                        'cash':'5000','equity':'5000'}
+            return []
+        def poster(body, env, opener=None):
+            return {'id':'mock-order-id','status':'accepted'}
+        result=x.run(self.signal,self.env,self.ledger,broker_get=getter,broker_post=poster)
+        self.assertEqual(result['status'],'PAPER_SUBMITTED')
+        self.assertEqual(result['orders_sent'],1)
+        self.assertEqual(result['broker_id'],'mock-order-id')
+        lines=[json.loads(ln) for ln in Path(self.ledger).read_text().splitlines() if ln.strip()]
+        self.assertTrue(any(row.get('state')=='SUBMITTED' for row in lines))
     def test_short_blocked(self):
         self.signal['side']='sell'
         self.signal['provider_signature']=sign(self.signal,self.env['SIGNAL_COPY_SECRET'])

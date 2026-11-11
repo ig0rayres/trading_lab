@@ -43,12 +43,14 @@ def normalize_strategy_key(raw) -> str | None:
     return key
 
 
-def ensure_strategy_defaults(conn_factory: Callable | None = None) -> None:
+def ensure_strategy_defaults(conn_factory: Callable | None = None, *, strict: bool = False) -> None:
     if conn_factory is None:
         from ledger_store import connect
 
         conn_factory = connect
     if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        if strict:
+            raise RuntimeError('LEDGER_DATABASE_URL is not set')
         return
     try:
         with conn_factory() as conn:
@@ -61,7 +63,44 @@ def ensure_strategy_defaults(conn_factory: Callable | None = None) -> None:
                     )
             conn.commit()
     except Exception:
+        if strict:
+            raise
         return
+
+
+def list_strategy_states(conn_factory: Callable | None = None) -> list[dict] | None:
+    """Read-only catalog rows for dashboard; None if DB unavailable."""
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return None
+    ensure_strategy_defaults(conn_factory)
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT strategy_key, phase FROM strategy_states '
+                    'WHERE deleted_at IS NULL ORDER BY strategy_key'
+                )
+                rows = cur.fetchall()
+        out = []
+        for key, phase in rows:
+            key_s = str(key)
+            phase_s = str(phase)
+            paper_allowed = phase_s in PAPER_PHASES and key_s not in NEVER_PAPER_KEYS
+            out.append(
+                {
+                    'strategy_key': key_s,
+                    'phase': phase_s,
+                    'paper_allowed': paper_allowed,
+                    'promotion': 'operator_only',
+                }
+            )
+        return out
+    except Exception:
+        return None
 
 
 def fetch_strategy_phase(strategy_key: str, conn_factory: Callable | None = None) -> str | None:

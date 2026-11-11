@@ -21,4 +21,4 @@ RUN mkdir -p /app/vendor \
 RUN chmod +x /app/scripts/*.sh
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LIVE_TRADING_ENABLED=false
 ENTRYPOINT ["/app/scripts/run.sh"]
-CMD ["v4-scheduler", "--universe", "/app/config/universe.json", "--output-dir", "/app/reports/v4", "--interval-seconds", "900", "--timeout-seconds", "180"]
+CMD ["v4-ops", "--universe", "/app/config/universe.json", "--output-dir", "/app/reports/v4", "--interval-seconds", "900", "--timeout-seconds", "180"]

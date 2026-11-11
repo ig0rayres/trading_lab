@@ -105,5 +105,156 @@ Coverage (no Alpaca on path A): `tests/test_tradingview_webhook.py`, `tests/test
 | Evidência | Valor |
 |-----------|--------|
 | PR | https://github.com/ig0rayres/trading_lab/pull/1 (merged 2026-10-30) |
-| `main` merge | `6813fb5` |
+| `main` merge | `6813fb5` (N6); homolog N9 + F-013 → **`0509732`** (2026-11-01) |
 | Operador | EasyPanel hashia — N6 no ar (dois apps) |
+
+## Homologação D5 itens 3–7 (Sprint N9 — operador EasyPanel)
+
+> Preencher após executar o runbook em `docs/HOMOLOGATION.md` § Runbook detalhado. **Sem** tokens, DSN, bearer ou chaves Alpaca. Só contagens redigidas e sim/não.
+
+| Item | Checklist | Comando / verificação | Evidência esperada | Status | Resultado (operador) |
+|------|-----------|------------------------|-------------------|--------|----------------------|
+| 3 | Gate A | `run.sh tv-webhook` + POST válido | ≥1 linha em `signal_events` | ok | 1 linha `accepted` AAPL; `idempotency_key` = digest do sinal (~2026-10-30T19:28Z). HTTP 202 `QUEUED` ≠ fill. |
+| 4a | Gate B rejeição | `run.sh tv-worker` | linha em `risk_decisions` (opcional) | ok | Journal `BLOCKED`; worker persiste rejeição via stem da fila (F-013). |
+| 4b | Gate B aceite | `run.sh tv-worker` | `paper_orders.status = queued_intent` | ok | Journal `QUEUED`; F-013 em **`main` `0509732`**. Persistência 4b confirmada no EasyPanel via unittest integração (`test_persist_uses_queue_stem_when_signal_id_hashed` OK). Smoke manual com `sent_at` antigo → worker `EXPIRED_OR_FUTURE_SIGNAL` (esperado). |
+| 5 | Reconcile | `v4-alpaca-reconcile` + `PAPER_RECONCILE_LEDGER_APPLY=true` | JSON com `ledger_apply`; `broker_reconciled` false | ok | `reconcile.json`: `ledger_apply` presente; `broker_reconciled` false; stdout `BLOCKED_INCOMPLETE`, `orders_sent` 0. |
+| 6 | Dashboard | `run.sh v4-dashboard` + `/api/status` | `kill_switch_on`, `shadow_vs_paper`; auth se remoto | ok | Loopback 127.0.0.1:8765; Bearer auth; HTTP 200; campos `kill_switch_on`, `shadow_vs_paper` presentes (~2026-11-01). |
+| 7 | Kill switch | `TRADING_LAB_KILL_SWITCH` ou `control_flags` | worker bloqueia; sem nova ordem | ok | Switch `true` → fila + `tv-worker` → journal `BLOCKED` / `KILL_SWITCH`; `orders_sent` 0. Fim de semana: enfileirar via `ingest(..., now=)` em sessão NY (POST HTTP 422 `OUTSIDE_SESSION`). Switch reposto `false`. |
+
+**N9.6 operador:** colar resultados redigidos na coluna “Resultado” e mudar **Status** para `ok` quando conferido. Agente/repo não executa SSH nem lê secrets.
+
+## Sprint N9 — repo (runbook docs)
+
+| Task | Artefato | Notas |
+|------|----------|--------|
+| N9.1–N9.4 | `docs/HOMOLOGATION.md` runbook § itens 3–7 | Sem diff em `src/` |
+| N9.5 | esta seção + bloco Feature 5 opcional em HOMOLOGATION | Feature 5 fill permanece `[ ]` em REQUIREMENTS |
+
+## Sprint N10 — closeout N9 (docs)
+
+| Task | Evidência |
+|------|-----------|
+| N10 | ROADMAP N9 `concluida`; notas smoke §4 HOMOLOGATION; `main` `0509732` nesta folha |
+
+## Sprint N11 — Feature 1 ciclo research (pytest traceability)
+
+> Sprint N11 · ISS-004 · `docs/REQUIREMENTS.md` Feature 1 · `LIVE_TRADING_ENABLED=false`
+
+| Critério REQUIREMENTS | Evidência pytest (nodeid) | Notas |
+|------------------------|---------------------------|--------|
+| Live desligado: ciclo termina **sem ordem** | `tests.test_v4_scheduler.SchedulerTests.test_readonly_success` | `run_cycle` → `orders_sent` 0, sem `paper-gateway` no comando |
+| Live desligado: ciclo termina **sem ordem** | `tests.test_v4_scheduler.SchedulerTests.test_live_guard` | `BLOCKED_LIVE_FLAG`, exit 2 |
+| Live desligado: ciclo termina **sem ordem** | `tests.test_v4_run_once.TestOnce.test_full_readonly_path` | manifest `orders_sent` 0, `execution_authorized` false |
+| Ciclo falho não deixa manifesto antigo confiável | `tests.test_v4_scheduler.SchedulerTests.test_failed_cycle_invalidates_previous_manifest` | `invalidate_stale_manifest` remove arquivo |
+| Ciclo falho não deixa manifesto antigo confiável | `tests.test_v4_scheduler.SchedulerTests.test_main_once_failure_clears_stale_manifest` | `main --once` wiring + status JSON |
+| Dashboard não promove manifesto adulterado | `tests.test_v4_report_integrity.test_dashboard_never_promotes_tampered_manifest_to_visible_success` | integridade manifesto |
+| Status scheduler não autoriza execução | `tests.test_v4_scheduler.SchedulerTests.test_lock_and_status` | `execution_authorized` false |
+
+Comando local (com deps):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest tests/test_v4_scheduler.py tests/test_v4_run_once.py tests/test_v4_report_integrity.py -q
+```
+
+## Sprint N12 — Feature 5 demo paper (`signal_copy`)
+
+> Sprint N12 · ISS-005 **parcial** · operador submit **2026-11-02** · fill limit **pendente** · `LIVE_TRADING_ENABLED=false`
+
+| Critério / check | Evidência pytest (nodeid) ou operador | Status | Resultado |
+|------------------|----------------------------------------|--------|-----------|
+| Preview não chama broker | `tests.test_signal_paper_runner.PaperRunnerTests.test_preview_does_not_call_broker` | ok | CI |
+| Assinatura inválida bloqueia | `tests.test_signal_paper_runner.PaperRunnerTests.test_bad_signature_blocked` | ok | CI |
+| Auto exige ack explícito | `tests.test_signal_paper_runner.PaperRunnerTests.test_auto_mode_requires_attestation` | ok | CI |
+| Submit mock → `PAPER_SUBMITTED`, `orders_sent=1` | `tests.test_signal_paper_runner.PaperRunnerTests.test_auto_submit_success_orders_sent_one` | ok | CI |
+| Fila sem auto → `QUEUED`, `orders_sent=0` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_queue_never_calls_broker` | ok | CI |
+| Auto flags → delega a `paper_run` | `tests.test_paper_gateway_queue.PaperGatewayQueueTest.test_auto_allowed_delegates_to_paper_run` | ok | CI |
+| Submit real Alpaca (`signal-paper`) | Operador EasyPanel 2026-11-02: `PAPER_SUBMITTED`, `orders_sent=1`, jsonl `SUBMITTED`, ordem MSFT limit **new** | ok | EasyPanel |
+| Fill real Alpaca + posição coerente | Operador 2026-11-11: Alpaca paper AAPL buy limit @349.85 (2026-10-29) **filled** qty 1 + posição AAPL qty 1 avg 349.85. MSFT/NVDA canceled/expired filled 0 — não contam. | ok | N20.3 / P-001b |
+| Reconcile pós-submit | `v4-alpaca-reconcile`; `ledger_apply` linked 0 (one-shot jsonl; FILL AAPL histórico no bundle) | ok | parcial |
+
+Comando local (repo tasks N12.1–N12.3):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest \
+  tests/test_signal_paper_runner.py \
+  tests/test_paper_gateway_queue.py -q
+```
+
+**N12.5:** marcar Feature 5 fill `[x]` em REQUIREMENTS **somente** após linha **Fill real** ok (P-001b). Submit operador registrado acima (opção A MVP-OP-0.9).
+
+## Sprint N16 — Prodígio paper (`prodigy_15d`, MVP-OP-1.0)
+
+> Sprint N16 · `docs/HOMOLOGATION-PRODIGY.md` · rank research-only · `LIVE_TRADING_ENABLED=false`
+
+| Critério / check | Evidência | Status | Resultado |
+|------------------|-----------|--------|-----------|
+| Git First inventory | `docs/.briefs/N16-GIT-FIRST-REUSE.md` | ok | N16.0 |
+| Runbook operador | `docs/HOMOLOGATION-PRODIGY.md` | ok | N16.1 |
+| Promoção fase + evolution | `docs/HOMOLOGATION-EVOLUTION-N16.md` | ok | N16.3 |
+| `prodigy-rank` → JSON | `tests.test_prodigy_rank` | ok | CI |
+| Rank → sinal → preview | Operador (`HOMOLOGATION-PRODIGY` § 1–3) | ok | N16.4 preview + rank 0 candidates |
+| Submit paper Prodígio | Operador EasyPanel 2026-11-03 · NVDA · provider **132169961** · `PAPER_SUBMITTED` · `orders_sent=1` · bracket **new**/held Alpaca | ok | N16.4 submit |
+| Fill limit Prodígio | Alpaca paper (limit `new` / filled 0) | pendente | P-001b / ISS-005 parcial |
+| Painel oportunidades | Command Panel + rank file | ok | PR #14 |
+| Painel remoto bearer (N16.8) | EasyPanel `trading-lab` 2026-11-03: `ALLOW_REMOTE=true`, token ≥32, `0.0.0.0:8765`, `/api/status` Bearer **200**, `command-panel-v1` | ok | operador |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_prodigy_rank -q
+```
+
+## Sprint N18 — Command Panel always-on (`v4-ops`)
+
+> Gate: merge **`feat(ops): v4-ops`** · rebuild **`trading-lab`** · log `listening on …:8765` **sem** `nohup` · Bearer `/api/status` **200** · `LIVE_TRADING_ENABLED=false`  
+> Runbook: `docs/DASHBOARD-OPERATIONS.md` · Issue **ISS-008**
+
+| Critério / check | Evidência | Status | Resultado |
+|------------------|-----------|--------|-----------|
+| Layout `v4-ops` + pytest | `tests/test_v4_ops_layout.py`, `tests/test_v4_web_dashboard.py` | ok | N18.1 repo |
+| Runbook ops + MVP-DEMO | `docs/DASHBOARD-OPERATIONS.md`, `EASYPANEL.md`, `MVP-DEMO-RUNBOOK.md` | ok | N18.2 repo |
+| Deploy imagem CMD `v4-ops` | 2026-11-10 EasyPanel `trading-lab`: histórico de implantação com sucesso, "Deploy service: Merge pull request #20 from ig0rayres/front/n16-8-panel", 40s, cerca de 52 min antes de 10:23 -03. Log `v4-ops: starting read-only dashboard on 0.0.0.0:8765` e `Read-only dashboard listening on 0.0.0.0:8765`; trecho sem `nohup`; ciclos `RESEARCH_ONLY` com `orders_sent` 0 | ok | N18.3 operador |
+| `/api/status` com bearer | 2026-11-10 console do container, `GET http://127.0.0.1:8765/api/status` com bearer do ambiente: **200**, schema `command-panel-v1`. Sem token no Git. HTTPS público não foi reconsultado neste registro | ok | N18.3 operador |
+| Closeout N16 no ROADMAP | 2026-11-10: N16 `concluida` no índice e na seção; ISS-008 `fechado`. PR #20 já mergeado com checks verdes. Este commit de docs ainda local | ok | N18.4 |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_v4_ops_layout tests.test_v4_web_dashboard -q
+```
+
+## Sprint N20 — Onda 0 (evidência operador + Feature 5 fill)
+
+> Gate: PR **#22** no `main` · `LIVE_TRADING_ENABLED=false` · fill Feature 5 só com qty preenchida ≠ 0
+
+| Critério / check | Evidência | Status | Resultado |
+|------------------|-----------|--------|-----------|
+| N20.1 Resgate contrato v0.3 + N19.1–N19.2 | PR [#22](https://github.com/ig0rayres/trading_lab/pull/22) merged | ok | N20.1 |
+| N20.2 SHA imagem EasyPanel | Digest Docker `trading-lab` `sha256:d3b5528dddc39a930fe1ca35bc2b10521115d4c142dfcb37e7c2c6714bcc81c1` (não é SHA Git); webhook não anotado | parcial | N20.2 |
+| N20.5 Postgres ledger | Exec: `ledger-migrate status` → `001_ledger` `applied: True`, `triggers_applied: False` | ok | N20.5 |
+| N20.3 Fill paper | AAPL 2026-10-29 buy @349.85 **filled** + posição qty 1. MSFT/NVDA sem fill. Tentativa `n20-fill-001` AAPL → `DUPLICATE_SYMBOL` (esperado) | ok | P-001b |
+| N20.4 Feature 5 fill `[x]` | REQUIREMENTS atualizado com evidência AAPL | ok | N20.4 |
+
+## Sprint N13 — Feature 4 homolog por família
+
+> Sprint N13 · `docs/REQUIREMENTS.md` Feature 4 · seed N7/N8 · **sem** limiar inventado · `LIVE_TRADING_ENABLED=false`  
+> **ISS-005:** fill Feature 5 `[x]` via AAPL (N20); submits MSFT/NVDA sem fill permanecem só como histórico.
+
+| `strategy_key` | Fase seed (N7) | Homolog repo (pytest / gate) | Homolog operador | Status homolog |
+|----------------|----------------|------------------------------|------------------|----------------|
+| `news_first` | research | `tests.test_strategy_catalog` + Gate B phase block; `test_news_first_report_audited` (Gate A audit, sem broker) | Research: ciclo/manifesto via scheduler; **sem ordem paper** | repo ok / operador pendente |
+| `momentum` | research | `tests.test_gate_b_risk` + `test_seed_and_strategy_key_on_risk_row` (fase research → rejeição paper) | Bloqueado paper até regra upstream recuperada | **blocked upstream** |
+| `ta_barato` | research | Idem momentum (fase research) | Bloqueado paper | **blocked upstream** |
+| `prodigy_15d` | research | `tests.test_prodigy_rank`, Gate B phase; runbook N16 | Paper submit 2026-11-03 (NVDA) sem fill; fill Feature 5 fechado via AAPL `signal_copy` | submit ok / fill via AAPL |
+| `signal_copy` | paper_limited | `tests.test_signal_copy`, `tests.test_signal_paper_runner`, `tests.test_paper_gateway_queue` | Paper: AAPL fill 2026-10-29 + posição; MSFT submit sem fill | **fill ok** |
+| `orb` | shadow | `tests.test_strategy_catalog.test_orb_never_paper_even_if_phase_paper`; `tests.test_gate_b_risk.test_orb_not_paper` | Shadow only — **nunca** paper principal | repo ok |
+| `mean_reversion` | shadow | `NEVER_PAPER_KEYS` + fase shadow (catálogo) | Shadow only | repo ok |
+
+Comando traceability (N13.4):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_strategy_homolog_traceability -v
+```
+
+Comando Gate B / catálogo (regressão):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
+  tests.test_strategy_catalog tests.test_gate_b_risk -v
+```

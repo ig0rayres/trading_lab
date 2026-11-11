@@ -107,9 +107,9 @@ Mesma build de imagem; volume persistente **`/app/reports`**. A partir da **Spri
 
 1. Criar usuário `trading_lab` no Postgres existente (INSERT/SELECT/UPDATE nas tabelas do ledger; sem superuser).
 2. Definir `LEDGER_DATABASE_URL` **somente** no serviço paper-gateway (não no scheduler).
-3. No shell do container: `/app/scripts/run.sh ledger-migrate apply`
-4. Verificar: `/app/scripts/run.sh ledger-migrate status`
-5. Rollback de emergência (somente em homologação): `/app/scripts/run.sh ledger-migrate rollback`
+3. No shell do container: `/app/scripts/run.sh ledger-migrate apply` — também semeia `strategy_states` (7 famílias; não sobrescreve fase já gravada).
+4. Verificar: `/app/scripts/run.sh ledger-migrate status` e `SELECT count(*) FROM strategy_states WHERE deleted_at IS NULL` (= 7 após apply).
+5. Rollback de emergência (somente em homologação): `/app/scripts/run.sh ledger-migrate rollback` — **não** executa seed.
 
 - CI: job `test` (pytest + Postgres efêmero) em `.github/workflows/ci.yml`; job **`docker-smoke.yml`** (build + `scripts/ci-docker-smoke.sh`) valida psycopg, vendor e `LIVE_TRADING_ENABLED=false` sem depender de editar `ci.yml`.
 

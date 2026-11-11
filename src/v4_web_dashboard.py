@@ -4,6 +4,7 @@ This service NEVER imports broker order submission code. Bind to loopback by def
 use an authenticated reverse proxy before exposing it publicly.
 """
 import argparse
+import cgi
 import hmac
 import hashlib
 import html
@@ -12,9 +13,11 @@ import os
 import re
 import uuid
 from datetime import datetime, timezone
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
 from pathlib import Path
-from urllib.parse import urlsplit, unquote
+from urllib.parse import parse_qs, urlsplit, unquote
 
 try:
     from .strategy_catalog import NEVER_PAPER_KEYS, PAPER_PHASES
@@ -27,6 +30,13 @@ try:
     from . import ledger_store as _ledger_store
 except ImportError:
     import ledger_store as _ledger_store
+
+try:
+    from . import panel_ops_data as _panel_ops
+    from . import panel_ops_html as _panel_html
+except ImportError:
+    import panel_ops_data as _panel_ops
+    import panel_ops_html as _panel_html
 
 MODULES = ('market', 'news', 'signals', 'risk', 'paper', 'reconciliation')
 
@@ -137,6 +147,16 @@ def build_snapshot(root):
     else:
         data['operational_acceptance_reason'] = 'LEDGER_FILLS_AND_CLOSED_SNAPSHOTS_PRESENT'
     data['command_panel'] = panel
+    try:
+        conn_factory = default_connect if os.environ.get('LEDGER_DATABASE_URL', '').strip() else None
+        bundle = _panel_ops.build_panel_bundle(root, conn_factory)
+        data['panel_ops'] = bundle
+        data['performance_panel'] = bundle.get('performance')
+        if isinstance(panel.get('opportunities'), dict) and isinstance(bundle.get('prodigy'), dict):
+            bundle['prodigy']['ranking'] = panel['opportunities']
+    except Exception:
+        data['panel_ops'] = {'status': 'PANEL_OPS_UNAVAILABLE'}
+        data['performance_panel'] = None
     # No inference of P&L from research candidates or incomplete brokerage records.
     return data
 
@@ -542,6 +562,124 @@ def write_public_security_headers(handler):
     handler.send_header('X-Frame-Options', 'DENY')
 
 
+def write_panel_security_headers(handler):
+    handler.send_header('X-Content-Type-Options', 'nosniff')
+    handler.send_header(
+        'Content-Security-Policy',
+        "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'",
+    )
+    handler.send_header('X-Frame-Options', 'DENY')
+
+
+def operator_panel_route(path: str) -> bool:
+    return path in _panel_html.OPERATOR_PANEL_PATHS
+
+
+def send_redirect(handler, location: str, *, status: int = HTTPStatus.FOUND):
+    body = b''
+    handler.send_response(status)
+    handler.send_header('Location', location)
+    handler.send_header('Content-Length', str(len(body)))
+    handler.send_header('Cache-Control', 'no-store')
+    write_public_security_headers(handler)
+    handler.end_headers()
+    handler.wfile.write(body)
+
+
+def send_html_page(handler, page: str, *, status: int = HTTPStatus.OK):
+    body = page.encode('utf-8')
+    handler.send_response(status)
+    handler.send_header('Content-Type', 'text/html; charset=utf-8')
+    handler.send_header('Content-Length', str(len(body)))
+    handler.send_header('Cache-Control', 'no-store')
+    write_panel_security_headers(handler)
+    handler.end_headers()
+    handler.wfile.write(body)
+
+
+def set_operator_session_cookie(handler, operator_session: str):
+    handler.send_header(
+        'Set-Cookie',
+        'trading_lab_session=' + operator_session + '; Path=/; HttpOnly; SameSite=Lax',
+    )
+
+
+def parse_login_payload(handler) -> dict:
+    length = int(handler.headers.get('Content-Length') or 0)
+    raw = handler.rfile.read(length) if length > 0 else b''
+    ctype = (handler.headers.get('Content-Type') or '').split(';')[0].strip().lower()
+    if ctype == 'application/json':
+        return json.loads(raw.decode('utf-8'))
+    if ctype == 'application/x-www-form-urlencoded':
+        return {k: v[0] for k, v in parse_qs(raw.decode('utf-8')).items()}
+    environ = {'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': ctype, 'CONTENT_LENGTH': str(len(raw))}
+    form = cgi.FieldStorage(fp=BytesIO(raw), environ=environ, keep_blank_values=True)
+    return {key: form.getvalue(key) for key in form.keys()}
+
+
+def serve_login_page(handler, *, error: bool = False):
+    send_html_page(handler, _panel_html.render_login_page(error='empty' if error else None))
+
+
+def handle_login_post(handler, operator_session: str | None):
+    if not operator_session:
+        send_empty_response(handler, 503)
+        return
+    try:
+        payload = parse_login_payload(handler)
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError, TypeError):
+        send_html_page(handler, _panel_html.render_login_page(error='empty'), status=HTTPStatus.BAD_REQUEST)
+        return
+    password = str(payload.get('password') or '').strip()
+    if not password:
+        send_html_page(handler, _panel_html.render_login_page(error='empty'), status=HTTPStatus.BAD_REQUEST)
+        return
+    handler.send_response(HTTPStatus.SEE_OTHER)
+    handler.send_header('Location', '/')
+    set_operator_session_cookie(handler, operator_session)
+    handler.send_header('Cache-Control', 'no-store')
+    write_public_security_headers(handler)
+    handler.end_headers()
+
+
+def load_triggers_for_page(connect_factory):
+    outcome = run_with_ledger(connect_factory, load_trigger_snapshot)
+    if isinstance(outcome, str):
+        return None
+    return outcome
+
+
+def serve_operator_panel(handler, root: Path, path: str, connect_factory):
+    data = build_snapshot(root)
+    bundle = data.get('panel_ops') or {}
+    triggers = load_triggers_for_page(connect_factory)
+    if path in ('/', '/central'):
+        page = _panel_html.render_central_page(bundle, triggers)
+    elif path == '/sinais':
+        page = _panel_html.render_signals_page(bundle)
+    elif path == '/prodigy':
+        cp = data.get('command_panel') or {}
+        page = _panel_html.render_prodigy_page(bundle, cp.get('opportunities') or {})
+    elif path == '/performance':
+        page = _panel_html.render_performance_page(bundle.get('performance') or {})
+    else:
+        handler.send_error(404)
+        return
+    send_html_page(handler, page)
+
+
+def serve_panel_json(handler, root: Path, path: str):
+    data = build_snapshot(root)
+    if path == '/api/signals':
+        payload = {'signals': (data.get('panel_ops') or {}).get('signals') or []}
+    elif path == '/api/performance':
+        payload = data.get('performance_panel') or {}
+    else:
+        handler.send_error(404)
+        return
+    send_json_response(handler, 200, payload)
+
+
 def serve_public_get(handler, root, token, path):
     if token is not None and not bearer_authorized(handler.headers, token):
         handler.send_response(401)
@@ -580,6 +718,15 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             path = urlsplit(self.path).path
+            if path == '/login':
+                serve_login_page(self)
+                return
+            if path in ('/api/signals', '/api/performance'):
+                if operator_session and not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                serve_panel_json(self, root, path)
+                return
             if path == '/api/triggers':
                 if not operator_session_authorized(self.headers, operator_session):
                     send_empty_response(self, 401)
@@ -589,6 +736,12 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                     send_json_response(self, 500, {'reject_code': outcome})
                     return
                 send_json_response(self, 200, outcome)
+                return
+            if operator_session and operator_panel_route(path):
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_redirect(self, '/login')
+                    return
+                serve_operator_panel(self, root, path, db_connect)
                 return
             serve_public_get(self, root, token, path)
 
@@ -609,6 +762,10 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             respond_mutation(self, kind, code, payload)
 
         def do_POST(self):
+            path = urlsplit(self.path).path
+            if path in ('/api/login', '/login'):
+                handle_login_post(self, operator_session)
+                return
             self.send_error(405, 'Read only')
     return Handler
 

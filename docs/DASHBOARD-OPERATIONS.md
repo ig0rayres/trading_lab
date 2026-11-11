@@ -66,14 +66,29 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 
 ---
 
-## Abrir o HTML no browser (com Bearer)
+## Dia a dia do operador (sem Exec)
 
-O servidor **não** tem tela de login. Com token ativo:
+| Ação | Onde |
+|------|------|
+| Entrar | `GET /login` → senha não vazia (protótipo) → cookie `trading_lab_session` (= `DASHBOARD_OPERATOR_SESSION` no env) |
+| Ver âncoras, mercados, parada | `GET /` (Central) após login |
+| Ligar parada geral | Botão na Central → `PATCH /api/triggers` (cookie obrigatório) |
+| Ver sinais com motivo | `GET /sinais` ou `GET /api/signals` |
+| Ver ranking Prodígio | `GET /prodigy` |
+| Ver performance só de fill | `GET /performance` ou `GET /api/performance` |
+| Monitoramento JSON | `GET /api/status` com Bearer (como antes) |
 
-- **Postman / Insomnia / curl** com header Bearer → `/api/status` ou `/`.
-- **Browser:** extensão que injeta `Authorization`, ou proxy que adiciona o header, ou túnel + ferramenta que você já usou na homolog N16.8.
+Rotina **não** exige shell no Exec do EasyPanel para parar, ajustar âncora ou ler sinais — só o painel HTTPS. Exec permanece para migrate, segredos e rebuild (operação rara).
 
-Sem Bearer → **401** (esperado).
+Bearer sozinho **não** autoriza escrita (`PATCH` → **401**); cookie de operador obrigatório.
+
+---
+
+## Abrir o HTML no browser
+
+1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Prodígio / Performance.
+2. **API/monitoramento:** `curl -H "Authorization: Bearer …" https://…/api/status` (token ≥ 32 se remoto).
+3. Sem Bearer nem cookie → **401** ou redirecionamento para `/login` nas rotas operacionais.
 
 ---
 

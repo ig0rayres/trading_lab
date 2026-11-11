@@ -1050,10 +1050,10 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N24.1 Tela de entrar na frente do painel (reuso da sessão de operador da N19.2) | `/dev` | — |
-| [ ] | M | N24.2 Central ligada às âncoras, mercados, estratégias e parada (DESIGN.md) | `/dev` | N24.1 |
-| [ ] | P | N24.3 Teste: parada pelo painel segura a próxima ordem no ciclo | `/qa testes` | N24.2 |
-| [ ] | P | N24.4 Runbook do dia a dia aponta o painel, não o Exec | docs | N24.2, N23.1 |
+| [x] | M | N24.1 Tela de entrar na frente do painel (reuso da sessão de operador da N19.2) | `/dev` | — |
+| [x] | M | N24.2 Central ligada às âncoras, mercados, estratégias e parada (DESIGN.md) | `/dev` | N24.1 |
+| [x] | P | N24.3 Teste: parada pelo painel segura a próxima ordem no ciclo | `/qa testes` | N24.2 |
+| [x] | P | N24.4 Runbook do dia a dia aponta o painel, não o Exec | docs | N24.2, N23.1 |
 
 ---
 
@@ -1067,9 +1067,9 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N25.1 Tela de sinais com mercado, origem, destino e motivo | `/dev` | — |
-| [ ] | M | N25.2 Ranking Prodígio e sinais copiados (pesquisa, não autorização) | `/dev` | — |
-| [ ] | P | N25.3 Teste: sinal barrado aponta gate e âncora com o valor da hora | `/qa testes` | N25.1 |
+| [x] | M | N25.1 Tela de sinais com mercado, origem, destino e motivo | `/dev` | — |
+| [x] | M | N25.2 Ranking Prodígio e sinais copiados (pesquisa, não autorização) | `/dev` | — |
+| [x] | P | N25.3 Teste: sinal barrado aponta gate e âncora com o valor da hora | `/qa testes` | N25.1 |
 
 ---
 
@@ -1083,9 +1083,9 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N26.1 Resultado por estratégia e total só com fill confirmado | `/dev` | — |
-| [ ] | P | N26.2 Teste: ordem `new`/`accepted`/fila fora do resultado | `/qa testes` | N26.1 |
-| [ ] | P | N26.3 Rotular valor bruto onde não há custo completo | `/dev` | N26.1 |
+| [x] | M | N26.1 Resultado por estratégia e total só com fill confirmado | `/dev` | — |
+| [x] | P | N26.2 Teste: ordem `new`/`accepted`/fila fora do resultado | `/qa testes` | N26.1 |
+| [x] | P | N26.3 Rotular valor bruto onde não há custo completo | `/dev` | N26.1 |
 
 ---
 

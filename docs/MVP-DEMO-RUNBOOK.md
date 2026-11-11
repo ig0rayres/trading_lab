@@ -11,7 +11,7 @@
 |------|----------------|---------------------|
 | **Pesquisa + painel** | `trading-lab` → **`v4-ops`** (scheduler + dashboard **8765**) | Pesquisa **não** envia ordem; painel read-only |
 | **Ingestão** | `trading-lab-webhook` → `tv-webhook` | **Não** (Gate A → fila) |
-| **Fila + Gate B** | `trading-lab` → `tv-worker` | **Não** até auto flags (`queued_intent`) |
+| **Fila + Gate B** | `trading-lab` (`v4-ops` inclui `tv-worker` em intervalo curto) | **Não** até auto flags + `demo_operation_on` no painel (`queued_intent`) |
 | **Demo paper (fill)** | `signal-paper` ou worker + flags | **Sim** — só operador **N12.4** |
 
 Homologação D5 itens 3–7: `docs/HOMOLOGATION.md`.  

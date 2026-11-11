@@ -140,9 +140,14 @@ def portfolio_risk_snapshot(
     *,
     conn_factory: Callable[..., Any] | None = None,
     now_utc: datetime | None = None,
-    available_cash_brl: str = '10000',
+    available_cash_brl: str | None = None,
 ) -> dict[str, Any]:
     anchor = loss_anchor_snapshot(conn_factory=conn_factory, now_utc=now_utc)
+    if available_cash_brl is None:
+        from risk_control_flags import brl_from_cents, fetch_control_flags
+
+        cash = brl_from_cents(int(fetch_control_flags(conn_factory=conn_factory)['capital_cents']))
+        available_cash_brl = str(cash)
     verified = anchor.get('daily_pnl_verified') is True and anchor.get('weekly_pnl_verified') is True
     return {
         'complete': verified,

@@ -64,11 +64,31 @@ class PaperGatewayQueueTest(unittest.TestCase):
         def fake_run(signal, env, ledger=None, **kwargs):
             return submitted
 
+        with patch('risk_control_flags.demo_send_allowed', return_value=(True, None)):
+            with patch.object(pgq, 'paper_run', side_effect=fake_run) as broker:
+                out = pgq.process_after_gate_b(_signal(), decision, env, broker_run=broker)
+            broker.assert_called_once()
+            self.assertEqual(out['status'], 'PAPER_SUBMITTED')
+            self.assertEqual(out['orders_sent'], 1)
+
+    def test_demo_operation_off_blocks_broker_even_with_auto_flags(self):
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        env = {
+            'LIVE_TRADING_ENABLED': 'false',
+            'PAPER_SIGNAL_AUTO_ENABLED': 'true',
+            'PAPER_EXECUTION_ENABLED': 'true',
+            'PAPER_SIGNAL_ACCOUNT_ACK': 'I_AUTHORIZE_ALPACA_PAPER_ONLY',
+        }
+
+        def fake_run(signal, env, ledger=None, **kwargs):
+            raise AssertionError('broker must not run when demo_operation_on is false')
+
         with patch.object(pgq, 'paper_run', side_effect=fake_run) as broker:
             out = pgq.process_after_gate_b(_signal(), decision, env, broker_run=broker)
-        broker.assert_called_once()
-        self.assertEqual(out['status'], 'PAPER_SUBMITTED')
-        self.assertEqual(out['orders_sent'], 1)
+        broker.assert_not_called()
+        self.assertEqual(out['status'], 'BLOCKED')
+        self.assertEqual(out['orders_sent'], 0)
+        self.assertIn('DEMO_OPERATION_OFF', out['reasons'])
 
 
 ALPACA_PAPER_HOST = 'https://paper-api.alpaca.markets'
@@ -210,8 +230,11 @@ class PaperAlpacaMarketGuardTest(unittest.TestCase):
         result = self._run_with_market('B3_EQUITY')
         _assert_n19_4_no_demo_block(self, result)
 
+    @patch('risk_control_flags.demo_send_allowed', return_value=(True, None))
     @patch('signal_paper_runner.validate', return_value=[])
-    def test_n19_4_forex_blocked_via_gateway_queue_no_alpaca(self, _mock_validate):
+    def test_n19_4_forex_blocked_via_gateway_queue_no_alpaca(
+        self, _mock_validate, _mock_demo,
+    ):
         signal = _gated_signal('N19_4_FOREX_GW')
         signal['market'] = 'FOREX'
         decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}

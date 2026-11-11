@@ -90,6 +90,31 @@ class GateBRiskTest(unittest.TestCase):
         d = gb.evaluate_signed_signal(sig, fx=self.fx, now=self.now, strategy_phase='paper_limited')
         self.assertEqual(d['reject_code'], 'STRATEGY_KEY_REQUIRED')
 
+    def test_control_flags_tighten_capital_config(self):
+        flags = {
+            'capital_cents': 300_000,
+            'max_risk_per_trade_cents': 3_000,
+            'max_daily_loss_cents': 10_000,
+            'max_open_positions': 2,
+        }
+        cfg = gb.config_for_fx(self.fx, flags)
+        self.assertAlmostEqual(cfg['budget'], 600.0)
+        self.assertAlmostEqual(cfg['max_loss_per_trade_usd'], 6.0)
+        self.assertEqual(cfg['max_trades_per_day'], 2)
+
+    def test_b3_outside_session_blocked(self):
+        sig = _signal()
+        sig['asset_class'] = 'b3_equity'
+        sig['symbol'] = 'ITUB4'
+        from zoneinfo import ZoneInfo
+        from datetime import datetime
+
+        saturday = datetime(2026, 11, 7, 15, 0, tzinfo=ZoneInfo('America/Sao_Paulo'))
+        d = gb.evaluate_signed_signal(
+            sig, fx=self.fx, now=saturday, strategy_phase='paper_limited',
+        )
+        self.assertEqual(d['reject_code'], 'OUTSIDE_SESSION')
+
 
 if __name__ == '__main__':
     unittest.main()

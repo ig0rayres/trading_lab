@@ -1,6 +1,9 @@
+import json
 import os
 import sys
+import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -63,6 +66,159 @@ class PaperGatewayQueueTest(unittest.TestCase):
         broker.assert_called_once()
         self.assertEqual(out['status'], 'PAPER_SUBMITTED')
         self.assertEqual(out['orders_sent'], 1)
+
+
+ALPACA_PAPER_HOST = 'https://paper-api.alpaca.markets'
+MOCK_BROKER_ORDER_ID = 'alpaca-mock-order-id-n19-3'
+# N19.3/N19.4 stable reject literal for B3_EQUITY and FOREX (ADR-010; no invented broker).
+NO_DEMO_ACCOUNT_REJECT = 'NO_DEMO_ACCOUNT_PATH'
+
+
+def _auto_env_with_snapshot(tmp_dir: str) -> dict[str, str]:
+    snapshot = Path(tmp_dir) / 'risk.json'
+    snapshot.write_text(
+        json.dumps(
+            {
+                'at_utc': datetime.now(timezone.utc).isoformat(),
+                'alpaca_positions_count': 0,
+                'alpaca_open_orders_count': 0,
+                'complete': True,
+                'daily_pnl_verified': True,
+                'weekly_pnl_verified': True,
+                'broker_reconciled': True,
+                'positions': [],
+                'daily_pnl_brl': '0',
+                'weekly_pnl_brl': '0',
+                'available_cash_brl': '10000',
+                'has_pending_orders': False,
+            }
+        )
+    )
+    return {
+        'LIVE_TRADING_ENABLED': 'false',
+        'PAPER_SIGNAL_AUTO_ENABLED': 'true',
+        'PAPER_EXECUTION_ENABLED': 'true',
+        'PAPER_SIGNAL_ACCOUNT_ACK': 'I_AUTHORIZE_ALPACA_PAPER_ONLY',
+        'PAPER_DAILY_RISK_CONFIRMED': 'true',
+        'ALPACA_PAPER_TRADE': 'true',
+        'ALPACA_BASE_URL': ALPACA_PAPER_HOST,
+        'ALPACA_API_KEY': 'test',
+        'ALPACA_SECRET_KEY': 'test',
+        'USD_BRL_REFERENCE': '5',
+        'SIGNAL_COPY_SECRET': 'x' * 32,
+        'V4_RISK_SNAPSHOT_FILE': str(snapshot),
+    }
+
+
+def _gated_signal(signal_id: str) -> dict:
+    sig = _signal()
+    sig['signal_id'] = signal_id
+    sig['sent_at_utc'] = datetime.now(timezone.utc).isoformat()
+    sig['ttl_seconds'] = 60
+    sig['entry'] = 100
+    sig['stop'] = 99
+    sig['target'] = 102
+    return sig
+
+
+def _mocked_paper_run(signal, env, ledger=None):
+    import signal_paper_runner as spr
+
+    def getter(endpoint, _env):
+        if endpoint.endswith('account'):
+            return {
+                'status': 'ACTIVE',
+                'currency': 'USD',
+                'trading_blocked': False,
+                'cash': '5000',
+                'equity': '5000',
+            }
+        return []
+
+    alpaca_posts: list[str] = []
+
+    def poster(body, post_env, opener=None):
+        base = post_env.get('ALPACA_BASE_URL', '').rstrip('/')
+        alpaca_posts.append(base)
+        if base == ALPACA_PAPER_HOST:
+            return {'id': MOCK_BROKER_ORDER_ID, 'status': 'accepted'}
+        raise AssertionError(f'unexpected broker host {base!r}')
+
+    result = spr.run(signal, env, ledger, broker_get=getter, broker_post=poster)
+    result['_alpaca_posts'] = alpaca_posts
+    return result
+
+
+def _snapshot_with_market_position(snapshot_path: Path, market: str, symbol: str) -> None:
+    data = json.loads(snapshot_path.read_text())
+    data['positions'] = [
+        {
+            'market': market,
+            'symbol': symbol,
+            'notional_brl': '500',
+            'planned_risk_brl': '20',
+        }
+    ]
+    snapshot_path.write_text(json.dumps(data))
+
+
+def _assert_n19_4_no_demo_block(test: unittest.TestCase, result: dict) -> None:
+    """N19.4: visible stable reason, zero orders, never Alpaca paper POST."""
+    test.assertEqual(result.get('status'), 'BLOCKED')
+    test.assertEqual(result.get('orders_sent'), 0)
+    test.assertEqual(result.get('_alpaca_posts', []), [])
+    reasons = result.get('reasons') or []
+    reject_code = result.get('reject_code')
+    test.assertTrue(
+        reject_code == NO_DEMO_ACCOUNT_REJECT or NO_DEMO_ACCOUNT_REJECT in reasons,
+        msg=f'expected {NO_DEMO_ACCOUNT_REJECT!r} in reject_code or reasons, got {result!r}',
+    )
+
+
+class PaperAlpacaMarketGuardTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.env = _auto_env_with_snapshot(self.tmp.name)
+        self.ledger = str(Path(self.tmp.name) / 'signal-orders.jsonl')
+
+    def _run_with_market(self, market: str) -> dict:
+        signal = _gated_signal(f'MKT_{market}_001')
+        signal['market'] = market
+        return _mocked_paper_run(signal, self.env, self.ledger)
+
+    @patch('signal_paper_runner.validate', return_value=[])
+    def test_b3_equity_never_posts_alpaca_paper_host(self, _mock_validate):
+        """Once `market` is accepted on the signal, B3 must not hit Alpaca paper."""
+        result = self._run_with_market('B3_EQUITY')
+        _assert_n19_4_no_demo_block(self, result)
+
+    @patch('signal_paper_runner.validate', return_value=[])
+    def test_forex_never_posts_alpaca_paper_host(self, _mock_validate):
+        result = self._run_with_market('FOREX')
+        _assert_n19_4_no_demo_block(self, result)
+
+    @patch('signal_paper_runner.validate', return_value=[])
+    def test_n19_4_b3_with_snapshot_position_blocked_visible_reason(self, _mock_validate):
+        """ADR-010: B3 snapshot may list positions; without demo account path, block before Alpaca."""
+        snap = Path(self.env['V4_RISK_SNAPSHOT_FILE'])
+        _snapshot_with_market_position(snap, 'B3_EQUITY', 'ITUB4')
+        result = self._run_with_market('B3_EQUITY')
+        _assert_n19_4_no_demo_block(self, result)
+
+    @patch('signal_paper_runner.validate', return_value=[])
+    def test_n19_4_forex_blocked_via_gateway_queue_no_alpaca(self, _mock_validate):
+        signal = _gated_signal('N19_4_FOREX_GW')
+        signal['market'] = 'FOREX'
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        out = pgq.process_after_gate_b(
+            signal,
+            decision,
+            self.env,
+            ledger=self.ledger,
+            broker_run=_mocked_paper_run,
+        )
+        _assert_n19_4_no_demo_block(self, out)
 
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
@@ -215,6 +371,50 @@ class GateBLedgerIntegrationTest(unittest.TestCase):
                 sk_row = cur.fetchone()
         self.assertEqual(phase_row[0], 'research')
         self.assertEqual(sk_row[0], 'momentum')
+
+    def test_auto_submit_persists_broker_order_id_not_queued_intent(self):
+        import ledger_store as store
+        from gate_a_signal import idempotency_key, record_signal_event
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        signal = _gated_signal('N19_BROKER_PERSIST_001')
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        env = _auto_env_with_snapshot(tmp.name)
+        ledger = str(Path(tmp.name) / 'signal-orders.jsonl')
+        with store.connect() as conn:
+            record_signal_event(
+                conn,
+                payload=signal,
+                http_status=202,
+                body={'status': 'QUEUED', 'orders_sent': 0},
+            )
+            conn.commit()
+        out = pgq.process_after_gate_b(
+            signal,
+            decision,
+            env,
+            ledger=ledger,
+            broker_run=_mocked_paper_run,
+        )
+        self.assertEqual(out['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(out.get('broker_id'), MOCK_BROKER_ORDER_ID)
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT po.status, po.broker_order_id '
+                    'FROM paper_orders po '
+                    'JOIN risk_decisions rd ON rd.id = po.risk_decision_id '
+                    'JOIN signal_events se ON se.id = rd.signal_event_id '
+                    'WHERE se.idempotency_key = %s',
+                    (idempotency_key('tradingview', signal['signal_id']),),
+                )
+                row = cur.fetchone()
+        self.assertIsNotNone(row)
+        status, broker_order_id = row
+        self.assertIsNotNone(broker_order_id)
+        self.assertEqual(broker_order_id, MOCK_BROKER_ORDER_ID)
+        self.assertNotEqual(status, 'queued_intent')
 
 
 if __name__ == '__main__':

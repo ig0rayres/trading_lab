@@ -195,31 +195,50 @@
       "sprint": "N18",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
-      "senior_status": "PASS",
       "findings_registered": [],
-      "findings_found": 0,
-      "findings_disposition": [],
-      "recorded_at": "2026-11-03T19:59:00Z",
-      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
-      "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
-      "round": 1,
-      "full_suite_ran": false
+      "recorded_at": "2026-11-11T16:50:24Z",
+      "recorded_by": "249247c9-51d6-4e10-b1b2-94eaa27413e7",
+      "notes": "N18 closeout docs after operator evidence",
+      "senior_status": "PASS"
     },
     "validation_gate": {
       "produced_by": "validation-stamp.py",
-      "result": "BLOQUEADA_ARVORE_SUJA",
-      "validation_mode": "blocked",
-      "gates": [],
+      "result": "REPROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "static_analysis",
+          "cmd": "ruff check .",
+          "exit_code": 127
+        },
+        {
+          "name": "lint",
+          "cmd": "ruff check .",
+          "exit_code": 127
+        },
+        {
+          "name": "tests",
+          "cmd": "/usr/bin/python3 -m pytest -q",
+          "exit_code": 1
+        }
+      ],
       "dirty_production_paths": [
-        ".cursor/router-state.json",
-        ".cursor/session-state-cache.json",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "012649666d0c9b318dd84f9c690fe9b34d29bf94",
-      "stamped_at": "2026-11-03T20:01:22Z",
-      "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
+      "last_validated_sha": "86593252c63bfc9867743a9e2a637800025fb6f5",
+      "stamped_at": "2026-11-11T16:50:18Z",
+      "validation_profile": "python",
+      "validation_gate_keys": [
+        "static_analysis",
+        "lint",
+        "tests"
+      ],
+      "failed_gate": "static_analysis",
+      "failed_cmd": "ruff check .",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "2988c4b57c877b88aa06d17448dfaa87746da7a4",
       "patch_id_version": 2
     }
   },
@@ -255,13 +274,13 @@
   "compact_count": 9,
   "previous_sprint": "N16",
   "front": {
-    "slug": "n16-8-panel",
+    "slug": "n18-closeout",
     "kind": "agent",
     "parent_root": "/home/igor/cursor/trading-lab",
-    "worktree": "/home/igor/cursor/trading-lab",
-    "branch": "front/n16-8-panel"
+    "worktree": "/home/igor/cursor/trading-lab.fronts/n18-closeout",
+    "branch": "front/n18-closeout"
   },
-  "sprint_branch": "front/n16-8-panel",
+  "sprint_branch": "front/n18-closeout",
   "sprint_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
   "sprint_categoria": "N",
   "plan_only": false,

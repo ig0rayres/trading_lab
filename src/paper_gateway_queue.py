@@ -144,6 +144,44 @@ def persist_intent(
     )
 
 
+def _persist_broker_submitted(
+    client_order_id: str,
+    broker_id: str,
+    *,
+    conn_factory=None,
+) -> None:
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return
+    if not broker_id or not client_order_id:
+        return
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE paper_orders SET broker_order_id = %s, status = %s '
+                    'WHERE client_order_id = %s',
+                    (broker_id, 'submitted', client_order_id),
+                )
+            conn.commit()
+    except Exception:
+        return
+
+
+def _broker_submitted_persistable(result: dict[str, Any]) -> bool:
+    if result.get('status') != 'PAPER_SUBMITTED':
+        return False
+    if result.get('orders_sent') != 1:
+        return False
+    broker_id = result.get('broker_id')
+    if not broker_id:
+        return False
+    return bool(result.get('client_order_id'))
+
+
 def process_after_gate_b(
     signal: dict[str, Any],
     decision: dict[str, Any],
@@ -173,4 +211,11 @@ def process_after_gate_b(
     )
     if not broker_auto_allowed(env):
         return queued
-    return broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')
+    result = broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')
+    if _broker_submitted_persistable(result):
+        _persist_broker_submitted(
+            str(result['client_order_id']),
+            str(result['broker_id']),
+            conn_factory=conn_factory,
+        )
+    return result

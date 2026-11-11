@@ -28,7 +28,7 @@ def _fill_price(activity: dict[str, Any], quote: str) -> tuple[int | None, Decim
 def _ledger_amount_cents(activity: dict[str, Any], quote: str) -> int | None:
     if quote != 'BRL':
         return None
-    for key in ('amount_cents_brl', 'amount_cents', 'pnl_cents_brl'):
+    for key in ('amount_cents_brl', 'pnl_cents_brl'):
         if key not in activity:
             continue
         try:
@@ -38,6 +38,32 @@ def _ledger_amount_cents(activity: dict[str, Any], quote: str) -> int | None:
     return None
 
 
+def _has_quote_columns(conn) -> bool:
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT 1 FROM information_schema.columns '
+            "WHERE table_schema = 'public' AND table_name = 'paper_fills' "
+            "AND column_name = 'quote_currency' LIMIT 1",
+        )
+        return cur.fetchone() is not None
+
+
+def _paper_fill_price_cols(
+    conn,
+    quote: str,
+    price_cents: int | None,
+    price_quote: Decimal | None,
+) -> dict[str, Any]:
+    if quote == 'BRL':
+        return {'price_cents': price_cents if price_cents is not None else 0}
+    cols: dict[str, Any] = {'price_cents': 0}
+    if _has_quote_columns(conn):
+        cols['quote_currency'] = quote
+        if price_quote is not None:
+            cols['price_quote'] = price_quote
+    return cols
+
+
 def _append_fill(conn, insert_row, po_id, act: dict[str, Any]) -> None:
     quote = _quote_currency(act)
     price_cents, price_quote = _fill_price(act, quote)
@@ -45,25 +71,24 @@ def _append_fill(conn, insert_row, po_id, act: dict[str, Any]) -> None:
         'paper_order_id': po_id,
         'broker_fill_id': str(act['id']).strip(),
         'qty': act.get('qty') or act.get('quantity') or 1,
-        'quote_currency': quote,
+        **_paper_fill_price_cols(conn, quote, price_cents, price_quote),
     }
-    if quote == 'BRL':
-        fill_cols['price_cents'] = price_cents if price_cents is not None else 0
-    else:
-        fill_cols['price_cents'] = None
-        fill_cols['price_quote'] = price_quote
     insert_row(conn, 'paper_fills', fill_cols)
+    amount = _ledger_amount_cents(act, quote)
+    if amount is None:
+        return
     with conn.cursor() as cur:
         cur.execute(
             'SELECT id FROM paper_fills WHERE broker_fill_id = %s',
             (fill_cols['broker_fill_id'],),
         )
-        pf_id = cur.fetchone()[0]
-    amount = _ledger_amount_cents(act, quote)
+        pf_row = cur.fetchone()
+    if not pf_row:
+        return
     insert_row(
         conn,
         'ledger_entries',
-        {'paper_fill_id': pf_id, 'amount_cents': amount, 'kind': 'fill'},
+        {'paper_fill_id': pf_row[0], 'amount_cents': amount, 'kind': 'fill'},
     )
 
 

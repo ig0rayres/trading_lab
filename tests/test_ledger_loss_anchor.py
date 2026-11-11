@@ -48,6 +48,19 @@ class LossAnchorLedgerIntegration(unittest.TestCase):
         import ledger_migrate as lm
 
         lm.apply()
+        self._clear_fill_ledger()
+
+    def _clear_fill_ledger(self):
+        import ledger_store as store
+
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute('DELETE FROM ledger_entries')
+                cur.execute('DELETE FROM paper_fills')
+                cur.execute('DELETE FROM paper_orders')
+                cur.execute('DELETE FROM risk_decisions')
+                cur.execute('DELETE FROM signal_events')
+            conn.commit()
 
     def _seed_order(self, symbol: str, client_order_id: str):
         import ledger_store as store
@@ -148,18 +161,9 @@ class LossAnchorLedgerIntegration(unittest.TestCase):
                     'paper_order_id': paper_order_id,
                     'broker_fill_id': fill_id,
                     'qty': 1,
-                    'price_cents': None,
+                    'price_cents': 0,
                     'quote_currency': 'USD',
                     'price_quote': Decimal('100'),
-                },
-            )
-            insert_row(
-                conn,
-                'ledger_entries',
-                {
-                    'paper_fill_id': pf_id,
-                    'amount_cents': None,
-                    'kind': 'fill',
                 },
             )
             conn.commit()

@@ -13,6 +13,8 @@ LEDGER_TABLES = (
     'paper_fills',
     'ledger_entries',
     'control_flags',
+    'market_controls',
+    'trigger_changes',
 )
 
 NO_SOFT_DELETE_TABLES = frozenset({'paper_orders', 'paper_fills', 'ledger_entries'})

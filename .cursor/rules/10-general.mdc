@@ -24,3 +24,7 @@ Change `src/`, `tests/`, `scripts/run.sh`, `config/universe.json`, and the exist
 ## 5. Evidence
 
 A passing HTTP status, `PAPER_GATEWAY_QUEUE_ONLY`, or `OK_RESEARCH_ONLY` is not a fill. Do not invent strategy thresholds that are not already in the recovered code.
+
+## 6. Git merge authority (operator 2026-11-11)
+
+On this product repo only, after CI is green on a `front/*` PR, the agent merges into `main` (`gh pr merge --merge`). Do not leave a green product PR waiting for a second human Merge click. Full text: `docs/AGENT-NOTES.md`. Rebuild on EasyPanel, secrets, G-MKT account names, and broker fill evidence stay with the operator.

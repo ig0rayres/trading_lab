@@ -43,6 +43,16 @@
 | N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | concluida | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
 | N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 | N18 | N | Command Panel always-on (`v4-ops`) + runbook ops | em execucao | 4 | observability, docs | Painel 8765 sem nohup | *(abaixo)* |
+| N19 | N | Laço demo: gatilho no painel e ciclo da ordem no ledger | em execucao | 4 | observability, paper-gateway | Operar B3, cripto e forex | *(abaixo)* |
+| N20 | N | Contrato v0.3 + N19.1–N19.2 publicados; fill P-001b; SHA imagem; 0 rebuild | em execucao | 5 | docs, ledger, observability | Onda 0 — resgate | *(abaixo)* |
+| N21 | N | Ordem até fill/cancel/expira; P&L só de fill; restart sem duplicar | planejada | 3 | paper-gateway, ledger | Onda 1 — ciclo da ordem | *(abaixo)* |
+| N22 | N | Risco lê `control_flags`; capital único R$ 5.000; sessão B3 + feriado | planejada | 3 | risk-gate-b | Onda 2 — âncoras honestas | *(abaixo)* |
+| N23 | N | Trabalhador da fila dentro do `v4-ops`; dois apps EasyPanel | planejada | 3 | observability, paper-gateway | Onda 2 — worker (ADR-009) | *(abaixo)* |
+| N24 | N | Login + Central de controle; dia a dia sem Exec | planejada | 4 | v4_web_dashboard | Onda 3 — Feature 8 | *(abaixo)* |
+| N25 | N | Tela de sinais com destino, gate e âncora; ranking Prodígio | planejada | 3 | v4_web_dashboard | Onda 3 — Feature 9 | *(abaixo)* |
+| N26 | N | Performance só de fill confirmado; bruto rotulado | planejada | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
+| N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
+| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -72,6 +82,16 @@
 | N15 | skip | Operador + docs; 0 rebuild |
 | N16 | senior+qa | Prodígio paper + dashboard v1 (`v4_web_dashboard`) |
 | N17 | senior+qa | Tá Barato upstream + extensão painel |
+| N19 | senior+qa | Escrita de gatilho + rastro da ordem |
+| N20 | senior+qa | Resgate de contrato e código N19.1–N19.2 |
+| N21 | senior+qa | Ciclo da ordem e P&L de fill |
+| N22 | senior+qa | Gates de risco e calendário |
+| N23 | senior+qa | Supervisor `v4-ops` |
+| N24 | senior+qa | Autenticação do painel |
+| N25 | senior+qa | Tela de sinais |
+| N26 | senior+qa | Performance financeira |
+| N27 | comprehensive | Envio autônomo na conta demo |
+| N28 | senior+qa | Ajuste automático de parâmetro |
 
 ---
 
@@ -890,6 +910,218 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 **N18.1 — executor_prompt (resumo):** Reuse `scripts/run.sh` pattern; add `v4-ops` → `v4_ops_main.sh` spawning supervised `v4-dashboard` + foreground `v4-scheduler`; default Dockerfile CMD `v4-ops` with same scheduler args; env `DASHBOARD_AUTOSTART` default true; no broker submit code in dashboard path; regression `tests/test_v4_web_dashboard.py` + new layout test; `guardrail_contract`: LIVE false, read-only HTTP only, no third EasyPanel service.
 
 **Fora de escopo N18:** login HTML no browser; Tá Barato (N17); Feature 5 fill (P-001b operador).
+
+---
+
+## Sprint N19 — Laço demo com gatilho no painel
+
+> Categoria: N
+> Status: em execucao
+> resumo_humano: O painel passa a alterar parada, âncoras e mercado, e a ordem paper deixa rastro no ledger até o fill. B3, cripto e forex só operam quando a conta demo daquele mercado devolver o estado. Conta real continua sem botão.
+> titulo_humano: Gatilhos no painel e ordem com rastro no ledger
+> Gate: pytest verde; `LIVE_TRADING_ENABLED=false`; PATCH de gatilho não insere `paper_orders`; resultado do simulador local não é fill; nenhuma ordem sai com `demo_operation_on` false
+> review: senior+qa
+> Issue: **ISS-009**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | M | N19.1 Migration `002`: mercado, âncoras, `market_controls`, `trigger_changes`, preço fora do real. Sem apagar fill | `/dev` | — |
+| [x] | M | N19.2 PATCH de gatilho em `v4_web_dashboard` conforme `docs/api-spec.yaml` 0.2.0. Bearer sozinho recebe 401 na escrita | `/dev` | N19.1 |
+| [ ] | M | N19.3 Persistir `broker_order_id` e estado a partir de resposta mockada. Simulador local permanece sem fill | `/dev` | N19.1 |
+| [ ] | P | N19.4 Teste: mercado sem conta demo que devolva posição fica barrado, com motivo, e não chama a Alpaca | `/qa testes` | N19.2, N19.3 |
+
+**Fora de escopo N19:** escolher a corretora demo de B3 ou forex; ligar `demo_operation_on` em produção; conta real; cadastrar estratégia nova; ajuste automático de parâmetro.
+
+**N19.1 — executor_prompt (resumo):** Add `migrations/002_triggers_up.sql` and down. Columns and tables from `docs/DATABASE.md` section 6 and `docs/db-schema.dbml`. Do not rewrite `001`. Do not drop fills. Test rollback. `guardrail_contract`: no secrets in SQL, no live host, no seed order.
+
+**N19.2 — executor_prompt (resumo):** Extend `src/v4_web_dashboard.py` only. Routes `PATCH /api/triggers`, `PATCH /api/markets/{market}`, `PATCH /api/strategies/{strategy_key}`. Insert `trigger_changes`. Do not import a broker client. Unknown strategy key is 404. `orb` and `mean_reversion` cannot move to a paper phase. `guardrail_contract`: write requires operator session; bearer alone is 401; response field names match the DBML.
+
+**N19.3 — executor_prompt (resumo):** When a mocked paper submit returns an id, store it on `paper_orders` and do not leave the row at `queued_intent`. `src/v4_shadow_broker.py` stays a request log. Do not send `B3_EQUITY` or `FOREX` to `https://paper-api.alpaca.markets`. `guardrail_contract`: `orders_sent` stays 0 unless the mock is an explicit paper submit; `LIVE_TRADING_ENABLED` false.
+
+---
+
+## Programa MVP-FINAL — plataforma operacional pelo contrato v0.3
+
+> Aprovado pelo operador em 2026-11-11 (`/pmo plan`).  
+> Auditoria: `docs/.briefs/MVP-FINAL-AUDIT.intake.md` · Plano detalhado com rastreio critério → sprint: `docs/.briefs/MVP-FINAL-WAVES.plan.md`  
+> Definição de pronto: todos os critérios das Features 1–10 conferíveis pelo operador no painel e na conta demo; Feature 11 é Should-have. Tempo de resposta e uptime ficam fora porque o contrato diz "a definir".  
+> Invariantes: `LIVE_TRADING_ENABLED=false`; só `trading-lab` e `trading-lab-webhook`; nenhum limiar inventado; ORB e mean reversion fora de paper; simulador local não é fill; HTTP 200 ou fila não é ordem executada.
+
+```text
+Onda 0  N20                resgate do contrato v0.3 + N19.1–N19.2; fill P-001b; SHA      0 rebuild
+Onda 1  N19.3–N19.4 + N21  ordem com id da corretora até fill; P&L só de fill (ADR-007)  MVP-OP-1.2 (1)
+Onda 2  N22 + N23          âncoras lidas, capital único, sessão B3; worker no v4-ops     ┐
+Onda 3  N24 + N25 + N26    login, Central, sinais com motivo, performance de fill        ┘ MVP-OP-1.3 (1)
+Onda 4  N27                laço autônomo no mercado com conta demo nomeada (G-MKT)       MVP-OP-1.4 (0–1)
+Onda 5  N17 (existente)    Tá Barato / momentum só com fórmula upstream (G-FORM)         MVP-OP-1.1 (0–1)
+Onda 6  N28                ajuste supervisionado (G-AJUSTE + fill real)                  0–1
+```
+
+Caminho crítico Must-have: **0 → 1 → 2 → 3 → 4**. Envio autônomo permanece desligado até a Onda 4.
+
+### Gates do operador
+
+| ID | Decisão | Destrava | Sem resposta |
+|----|---------|----------|--------------|
+| G-MKT | Nome da conta demo de B3, de cripto e de forex (ou "fica barrado") | N27.2, N27.4 | Mercado barrado com motivo visível; nome nunca inventado (ADR-010) |
+| G-FORM | Onde está a fórmula de Tá Barato e de momentum no upstream (ou "não existe") | N17.1+ | Família fica fora de paper |
+| G-AJUSTE | Método do ajuste (erro, frequência, desfazer) | N28.2 | Feature 11 fica `[ ]` |
+
+Nenhum gate trava as Ondas 0–3.
+
+---
+
+## Sprint N20 — Publicar o contrato e o painel que já altera gatilho
+> Categoria: N  
+> Status: em execucao  
+> titulo_humano: Contrato v0.3 e gatilhos do painel num pedido de revisão  
+> Gate: PR em frente própria (não `n18-closeout`); Features 7–11 no contrato; escrita de gatilho exige sessão de operador (Bearer sozinho = 401); suíte verde contra vendor pinado; `LIVE_TRADING_ENABLED=false`; **0 rebuild**  
+> Issue: ISS-009 + P-001b + dúvidas 4 e 7  
+> review: senior+qa  
+> Gerado via: `/pmo plan` — 2026-11-11 (planner, aprovado pelo operador)
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N20.1 Resgatar contrato v0.3 e código N19.1–N19.2 do checkpoint local `3d26a13` (sem arquivos de sessão) | `/git` + `/dev` | — |
+| [ ] | P | N20.2 Operador: anotar o SHA da imagem de `trading-lab` e `trading-lab-webhook` no EasyPanel | operador | — |
+| [ ] | P | N20.3 Operador: levar a ordem paper já enviada a fill com posição coerente (ou cancelar e substituir) | operador | — |
+| [ ] | P | N20.4 Marcar o fill da Feature 5 em REQUIREMENTS só com a linha de evidência | docs | N20.3 |
+| [ ] | P | N20.5 Operador: confirmar que o Postgres do EasyPanel tem o ledger (migrate N8) | operador | — |
+
+**N20.1 — executor_prompt (resumo):** Apply only product paths from `3d26a13` onto a front cut from `main`: REQUIREMENTS v0.3, ARCHITECTURE §12, DATABASE §6, api-spec 0.2.0, DESIGN.md, db-schema.dbml, ISS-009, ROADMAP N19 block, N19 brief, `migrations/002_*`, ledger patches, PATCH trigger routes, `tests/test_ledger_migration.py`, `tests/test_panel_triggers.py`, panel-triggers rule/skill. Exclude `.cursorsession*`, `.beesy/`, `.cursor` caches. Do not implement N19.3–N19.4. `guardrail_contract`: LIVE false; no rebuild; full suite green with `UPSTREAM_DIR` at the pinned vendor SHA.
+
+---
+
+## Sprint N21 — Acompanhar até o fill e P&L verdadeiro
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Fill, cancelamento ou expiração no ledger, com perda honesta  
+> Gate: estado final gravado; perda do dia/semana só de fill em real; restart sem duplicar; LIVE false; sem envio autônomo  
+> review: senior+qa  
+> Depende de: N19.3 · Release: **MVP-OP-1.2** (1 rebuild, junto com N19.3–N19.4)
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N21.1 Acompanhar a ordem até fill, cancelamento ou expiração (reuso `paper_reconcile` / `ledger_reconcile`) | `/dev` | N19.3 |
+| [ ] | M | N21.2 Calcular perda do dia e da semana só com fill confirmado em real; sem câmbio inventado | `/dev` | N21.1 |
+| [ ] | P | N21.3 Provar que reinício não duplica ordem | `/qa testes` | N21.1 |
+
+---
+
+## Sprint N22 — Âncoras únicas e calendário B3
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Um teto de risco e sessão B3 de verdade  
+> Gate: Gate B e carteira leem `control_flags`; capital de partida R$ 5.000 nos dois caminhos; fora de sessão B3/NY e feriado ⇒ recusa com motivo; LIVE false  
+> review: senior+qa  
+> Depende de: N21 · Release: **MVP-OP-1.3**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N22.1 Fazer `gate_b_risk` e `portfolio_risk_v4` lerem as âncoras gravadas pelo painel (banco fora: teto mais apertado) | `/dev` | — |
+| [ ] | M | N22.2 Unificar o capital de referência em R$ 5.000 (ARCHITECTURE §12.1) | `/dev` | N22.1 |
+| [ ] | M | N22.3 Recusar sinal fora da sessão B3/NY, feriado e horário de verão (calendário do upstream primeiro) | `/dev` | — |
+
+---
+
+## Sprint N23 — Trabalhador da fila dentro do v4-ops
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: A fila anda no mesmo serviço do painel, sem app novo  
+> Gate: supervisor roda pesquisa, painel e worker; queda do worker não derruba a pesquisa; `demo_operation_on` false ⇒ worker recusa envio com motivo; dois apps EasyPanel  
+> review: senior+qa  
+> Depende de: N21, N22.1 · Release: **MVP-OP-1.3**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N23.1 Estender `scripts/v4_ops_main.sh` com o worker da fila em intervalo curto (ADR-009) | `/dev` | — |
+| [ ] | P | N23.2 Teste: saída forçada do worker não derruba a pesquisa | `/qa testes` | N23.1 |
+| [ ] | P | N23.3 Runbook da release: só dois serviços EasyPanel | docs | N23.1 |
+
+---
+
+## Sprint N24 — Login e central de controle
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Entrar no painel e mandar na operação sem o Exec  
+> Gate: painel não abre sem login; alteração registrada com valor anterior; plataforma não afrouxa âncora sozinha; parada pelo painel segura a próxima ordem em até um ciclo; um operador; LIVE false  
+> review: senior+qa  
+> Depende de: N19.2, N23.1 · Release: **MVP-OP-1.3**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N24.1 Tela de entrar na frente do painel (reuso da sessão de operador da N19.2) | `/dev` | — |
+| [ ] | M | N24.2 Central ligada às âncoras, mercados, estratégias e parada (DESIGN.md) | `/dev` | N24.1 |
+| [ ] | P | N24.3 Teste: parada pelo painel segura a próxima ordem no ciclo | `/qa testes` | N24.2 |
+| [ ] | P | N24.4 Runbook do dia a dia aponta o painel, não o Exec | docs | N24.2, N23.1 |
+
+---
+
+## Sprint N25 — Sinais e Prodígio com motivo visível
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Cada sinal mostra para onde foi e o que o barrou  
+> Gate: lista com origem, destino e motivo; ranking Prodígio e cópias; barrado mostra gate e âncora  
+> review: senior+qa  
+> Release: **MVP-OP-1.3**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N25.1 Tela de sinais com mercado, origem, destino e motivo | `/dev` | — |
+| [ ] | M | N25.2 Ranking Prodígio e sinais copiados (pesquisa, não autorização) | `/dev` | — |
+| [ ] | P | N25.3 Teste: sinal barrado aponta gate e âncora com o valor da hora | `/qa testes` | N25.1 |
+
+---
+
+## Sprint N26 — Performance só de fill confirmado
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: O número de resultado só conta fill da corretora  
+> Gate: total e por estratégia só de fill; ordem sem fill fora; bruto rotulado  
+> review: senior+qa  
+> Depende de: N21 · Release: **MVP-OP-1.3**
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N26.1 Resultado por estratégia e total só com fill confirmado | `/dev` | — |
+| [ ] | P | N26.2 Teste: ordem `new`/`accepted`/fila fora do resultado | `/qa testes` | N26.1 |
+| [ ] | P | N26.3 Rotular valor bruto onde não há custo completo | `/dev` | N26.1 |
+
+---
+
+## Sprint N27 — Contas demo no laço, sem inventar o nome
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Operar só o mercado cuja conta demo o operador nomeou  
+> Gate: G-MKT por mercado; Feature 7 conferível só nos mercados respondidos; destino sempre paper; restart sem duplicar; dois apps; LIVE false  
+> review: comprehensive  
+> Depende de: Ondas 1–3 · Release: **MVP-OP-1.4** (ou dentro da 1.3 se G-MKT chegar a tempo)
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N27.1 Forex no universo e no avaliador de carteira, barrado sem conta | `/dev` | — |
+| [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT |
+| [ ] | P | N27.3 Teste: mercado sem conta continua visível e barrado com motivo | `/qa testes` | N27.1, N19.4 |
+| [ ] | P | N27.4 Operador: sinal válido vira ordem demo sem ação manual | operador | N27.2, N23.1, N24.2 |
+| [ ] | P | N27.5 Teste: chave live no ambiente não muda o destino paper | `/qa testes` | N27.2 |
+| [ ] | P | N27.6 Teste: restart com laço ligado não duplica | `/qa testes` | N27.4 |
+
+---
+
+## Sprint N28 — Ajuste supervisionado depois do método
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ajuste registrado e reversível, sem mexer no risco  
+> Gate: G-AJUSTE e fill real; só parâmetro existente na faixa original; histórico com desfazer; âncoras intocadas; LIVE false  
+> review: senior+qa  
+> Depende de: N20.3, N21
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N28.1 Sugestão continua rotulada como sugestão | `/dev` | — |
+| [ ] | M | N28.2 Ajustar só parâmetro existente, dentro da faixa original | `/dev` | G-AJUSTE |
+| [ ] | M | N28.3 Registrar antes, depois e motivo, com desfazer na Central | `/dev` | N28.2 |
+| [ ] | P | N28.4 Teste: ajuste nunca altera âncora de risco | `/qa testes` | N28.2 |
 
 ---
 

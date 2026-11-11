@@ -37,6 +37,10 @@ Nada aqui foi classificado como critico de seguranca exploravel sem reler o webh
 - Substituir os servicos EasyPanel atuais com este snapshot. O requisito manda nao fazer isso.
 - Tratar `deleted_at` como borracha de fill. O DBML deixa a coluna e proibe esse uso.
 
+## 3b. Contrato de 2026-11-03 ainda nao esta no codigo
+
+O painel responde POST com 405. A spec 0.2 passa a exigir PATCH de gatilho em `/api/triggers`, `/api/markets/{market}` e `/api/strategies/{strategy_key}`. A migration `001` existe. A `002`, com mercado e `trigger_changes`, nao. Nenhuma das duas foi aplicada por esta fase.
+
 ## 4. O que esta fora deste mapa
 
 - Imagem que esta rodando no EasyPanel. Nao houve export.

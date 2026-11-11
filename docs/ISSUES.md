@@ -12,6 +12,7 @@
 | ISS-006 | fechado | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
 | ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
 | ISS-008 | aberto | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
+| ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -209,5 +210,21 @@
 **Critério de fechamento:** imagem com CMD **`v4-ops`**; supervisor reinicia dashboard; docs `docs/DASHBOARD-OPERATIONS.md` + EASYPANEL alinhados; pytest `test_v4_ops_layout`; operador registra redeploy **sem nohup** + `/api/status` Bearer **200** + log `listening on …:8765`; `LIVE_TRADING_ENABLED=false`.
 
 **Fontes:** operador 2026-11-03 (`/pmo plan`, pacote N18 ops); implementação local `front/n16-8-panel`.
+
+---
+
+## ISS-009 — Laço demo em B3, cripto e forex, com gatilhos no painel
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio |
+| Sprint | N19 |
+| Status | aberto |
+
+**Impacto:** A plataforma não manda ordem sozinha. O retrato de risco nunca fica verificado e o painel não altera gatilho. Sem isso a conta demo não opera e o operador continua no terminal.
+
+**Critério de fechamento:** ordem só na conta demo do mercado, com fill no ledger; mudança de gatilho pelo painel gravada em `trigger_changes`; conta real sem botão; simulador local não conta como fill; `LIVE_TRADING_ENABLED` false.
+
+**Fontes:** operador 2026-11-03; `docs/REQUIREMENTS.md` v0.3; `docs/ARCHITECTURE.md` seção 12 e ADR-010; `docs/DATABASE.md` seção 6; `docs/api-spec.yaml` 0.2.0.
 
 ---

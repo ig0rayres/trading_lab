@@ -8,7 +8,7 @@
 | ISS-002 | fechado | N7 | Catálogo de estratégias sem persistência nem Gate B |
 | ISS-003 | fechado | N8 | `strategy_states` vazia após `ledger-migrate apply` |
 | ISS-004 | fechado | N11 | Feature 1 — critérios de ciclo research ainda `[ ]` em REQUIREMENTS |
-| ISS-005 | parcial | N12 | Feature 5 — submit paper ok; fill limit pendente (P-001b) |
+| ISS-005 | fechado | N12 / N20 | Feature 5 — fill AAPL 2026-10-29 + posição; P-001b fechado 2026-11-11 |
 | ISS-006 | fechado | N14 | Pacotão MVP-DEMO-1.0 — runbook único + smoke + política deploy |
 | ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
@@ -61,7 +61,7 @@
 | ID | Item | Responsável | Bloqueia MVP “operacional”? |
 |----|------|-------------|----------------------------|
 | P-001a | **N12.4 submit** — `PAPER_SUBMITTED`, `orders_sent=1`, jsonl `SUBMITTED`, ordem Alpaca paper visível | Operador | **Não** (trilha demo submit) |
-| P-001b | **Feature 5 fill** — execução limit + posição coerente (ou cancel + novo sinal marketable) | Operador | **Sim** (`REQUIREMENTS` fill `[ ]`) |
+| P-001b | **Feature 5 fill** — AAPL buy @349.85 filled 2026-10-29 + posição qty 1 (evidência 2026-11-11) | Operador | **Fechado** (`REQUIREMENTS` fill `[x]`) |
 | P-002 | **N12.5 docs** — `TEST-EVIDENCE` § N12 operador (sem marcar fill `[x]` até P-001b) | Docs | Parcial (este PR) |
 | P-003 | **Reconcile** — `v4-alpaca-reconcile` + `ledger_apply` (one-shot não grava `paper_orders` Postgres) | Operador | Parcial (`linked:0` esperado no caminho jsonl) |
 | P-004 | **F-003** orb-parity | Backlog | Não (demo `signal_copy`) |
@@ -146,10 +146,10 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | improvement |
-| Sprint | N12 |
-| Status | parcial |
+| Sprint | N12 / N20 |
+| Status | fechado |
 
-**Impacto:** D1–N11 entregaram gates, ledger e homologação D5 (itens 3–7). **Submit paper** `signal_copy` homologado em 2026-11-02 (`PAPER_SUBMITTED`, ordem Alpaca MSFT limit **new**). Critério **fill + posição** em `docs/REQUIREMENTS.md` permanece `[ ]`.
+**Impacto:** D1–N11 entregaram gates, ledger e homologação D5 (itens 3–7). **Submit paper** `signal_copy` homologado em 2026-11-02. **Fill + posição:** AAPL 2026-10-29 filled qty 1 + posição aberta — Feature 5 fill `[x]` (N20.3/N20.4, 2026-11-11). MSFT/NVDA sem fill não contam.
 
 **Critério de fechamento:** trilha **`signal_copy`** via módulos existentes (`signal_paper_runner.py`, `paper_gateway_queue.process_after_gate_b`, `scripts/run.sh signal-paper`); runbook Feature 5 em `docs/HOMOLOGATION.md`; matriz pytest + linha operador redigida em `docs/TEST-EVIDENCE.md`; operador registra fill paper Alpaca + reconcile coerente (sem segredos no Git); checkbox Feature 5 fill `[x]` **somente** após evidência operador; `LIVE_TRADING_ENABLED` false; Collective2 permanece reprovado; **não** promover ORB/mean a paper principal.
 
@@ -157,7 +157,9 @@
 
 **Fontes:** operador `/pmo plan pivot-demo` 2026-11-02; `docs/REQUIREMENTS.md` § Feature 5; `docs/HOMOLOGATION.md` passo opcional Feature 5; ISS-005 aprovado no plano PMO.
 
-**Pendências detalhadas:** § Pendências operacionais (MVP) — P-001b, P-003 parcial.
+**Evidência operador 2026-11-11:** UI Alpaca — AAPL buy limit @349.85 filled 2026-10-29 qty 1; posição AAPL qty 1 avg 349.85; Exec `AAPL qty 1`. P-001b fechado. Tentativa nova AAPL `n20-fill-001` → `DUPLICATE_SYMBOL` (correto).
+
+**Pendências detalhadas:** P-001b fechado; P-003 parcial permanece.
 
 ---
 

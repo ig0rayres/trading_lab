@@ -982,11 +982,11 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N20.1 Resgatar contrato v0.3 e código N19.1–N19.2 do checkpoint local `3d26a13` (sem arquivos de sessão) | `/git` + `/dev` | — |
-| [ ] | P | N20.2 Operador: anotar o SHA da imagem de `trading-lab` e `trading-lab-webhook` no EasyPanel | operador | — |
-| [ ] | P | N20.3 Operador: levar a ordem paper já enviada a fill com posição coerente (ou cancelar e substituir) | operador | — |
-| [ ] | P | N20.4 Marcar o fill da Feature 5 em REQUIREMENTS só com a linha de evidência | docs | N20.3 |
-| [ ] | P | N20.5 Operador: confirmar que o Postgres do EasyPanel tem o ledger (migrate N8) | operador | — |
+| [x] | M | N20.1 Resgatar contrato v0.3 e código N19.1–N19.2 do checkpoint local `3d26a13` (sem arquivos de sessão) | `/git` + `/dev` | — |
+| [ ] | P | N20.2 Operador: anotar o SHA da imagem de `trading-lab` e `trading-lab-webhook` no EasyPanel (parcial: digest Docker trading-lab; falta webhook + SHA Git) | operador | — |
+| [x] | P | N20.3 Operador: fill AAPL 2026-10-29 @349.85 + posição qty 1 (MSFT/NVDA sem fill; `n20-fill-001` → DUPLICATE_SYMBOL) | operador | — |
+| [x] | P | N20.4 Marcar o fill da Feature 5 em REQUIREMENTS só com a linha de evidência | docs | N20.3 |
+| [x] | P | N20.5 Operador: confirmar que o Postgres do EasyPanel tem o ledger (`001` applied; `triggers_applied` false até Onda 1) | operador | — |
 
 **N20.1 — executor_prompt (resumo):** Apply only product paths from `3d26a13` onto a front cut from `main`: REQUIREMENTS v0.3, ARCHITECTURE §12, DATABASE §6, api-spec 0.2.0, DESIGN.md, db-schema.dbml, ISS-009, ROADMAP N19 block, N19 brief, `migrations/002_*`, ledger patches, PATCH trigger routes, `tests/test_ledger_migration.py`, `tests/test_panel_triggers.py`, panel-triggers rule/skill. Exclude `.cursorsession*`, `.beesy/`, `.cursor` caches. Do not implement N19.3–N19.4. `guardrail_contract`: LIVE false; no rebuild; full suite green with `UPSTREAM_DIR` at the pinned vendor SHA.
 

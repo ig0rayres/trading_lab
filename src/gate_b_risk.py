@@ -104,6 +104,16 @@ def evaluate_signed_signal(
         session_now = now
     else:
         session_now = datetime.now(timezone.utc)
+    if os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        from ledger_loss_anchor import gate_b_loss_reject
+
+        loss_code = gate_b_loss_reject(conn_factory=conn_factory, now_utc=session_now)
+        if loss_code:
+            return {
+                'decision': 'rejected',
+                'reject_code': loss_code,
+                'risk_amount_cents': 0,
+            }
     if not within_regular_session(session_now):
         return {'decision': 'rejected', 'reject_code': 'OUTSIDE_SESSION', 'risk_amount_cents': 0}
     cap_code = open_positions_cap_reached(open_positions)

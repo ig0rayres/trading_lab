@@ -1002,9 +1002,9 @@ Nenhum gate trava as Ondas 0–3.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N21.1 Acompanhar a ordem até fill, cancelamento ou expiração (reuso `paper_reconcile` / `ledger_reconcile`) | `/dev` | N19.3 |
-| [ ] | M | N21.2 Calcular perda do dia e da semana só com fill confirmado em real; sem câmbio inventado | `/dev` | N21.1 |
-| [ ] | P | N21.3 Provar que reinício não duplica ordem | `/qa testes` | N21.1 |
+| [x] | M | N21.1 Acompanhar a ordem até fill, cancelamento ou expiração (reuso `paper_reconcile` / `ledger_reconcile`) | `/dev` | N19.3 |
+| [x] | M | N21.2 Calcular perda do dia e da semana só com fill confirmado em real; sem câmbio inventado | `/dev` | N21.1 |
+| [x] | P | N21.3 Provar que reinício não duplica ordem | `/qa testes` | N21.1 |
 
 ---
 

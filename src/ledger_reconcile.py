@@ -6,15 +6,90 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 
-def _price_cents(activity: dict[str, Any]) -> int:
+def _quote_currency(activity: dict[str, Any]) -> str:
+    raw = str(activity.get('quote_currency') or activity.get('currency') or 'USD').upper()
+    return raw[:8]
+
+
+def _fill_price(activity: dict[str, Any], quote: str) -> tuple[int | None, Decimal | None]:
     for key in ('price', 'transaction_price', 'fill_price'):
         if key not in activity:
             continue
         try:
-            return int(Decimal(str(activity[key])) * 100)
+            price = Decimal(str(activity[key]))
         except (InvalidOperation, ValueError, TypeError):
             continue
-    return 0
+        if quote == 'BRL':
+            return int(price * 100), None
+        return None, price
+    return (0, None) if quote == 'BRL' else (None, None)
+
+
+def _ledger_amount_cents(activity: dict[str, Any], quote: str) -> int | None:
+    if quote != 'BRL':
+        return None
+    for key in ('amount_cents_brl', 'pnl_cents_brl'):
+        if key not in activity:
+            continue
+        try:
+            return int(activity[key])
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _has_quote_columns(conn) -> bool:
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT 1 FROM information_schema.columns '
+            "WHERE table_schema = 'public' AND table_name = 'paper_fills' "
+            "AND column_name = 'quote_currency' LIMIT 1",
+        )
+        return cur.fetchone() is not None
+
+
+def _paper_fill_price_cols(
+    conn,
+    quote: str,
+    price_cents: int | None,
+    price_quote: Decimal | None,
+) -> dict[str, Any]:
+    if quote == 'BRL':
+        return {'price_cents': price_cents if price_cents is not None else 0}
+    cols: dict[str, Any] = {'price_cents': 0}
+    if _has_quote_columns(conn):
+        cols['quote_currency'] = quote
+        if price_quote is not None:
+            cols['price_quote'] = price_quote
+    return cols
+
+
+def _append_fill(conn, insert_row, po_id, act: dict[str, Any]) -> None:
+    quote = _quote_currency(act)
+    price_cents, price_quote = _fill_price(act, quote)
+    fill_cols: dict[str, Any] = {
+        'paper_order_id': po_id,
+        'broker_fill_id': str(act['id']).strip(),
+        'qty': act.get('qty') or act.get('quantity') or 1,
+        **_paper_fill_price_cols(conn, quote, price_cents, price_quote),
+    }
+    insert_row(conn, 'paper_fills', fill_cols)
+    amount = _ledger_amount_cents(act, quote)
+    if amount is None:
+        return
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id FROM paper_fills WHERE broker_fill_id = %s',
+            (fill_cols['broker_fill_id'],),
+        )
+        pf_row = cur.fetchone()
+    if not pf_row:
+        return
+    insert_row(
+        conn,
+        'ledger_entries',
+        {'paper_fill_id': pf_row[0], 'amount_cents': amount, 'kind': 'fill'},
+    )
 
 
 def ledger_snapshot(conn_factory=None):
@@ -100,17 +175,8 @@ def apply_from_report(report: dict[str, Any], conn_factory=None) -> dict[str, An
                 if not po_row:
                     skipped += 1
                     continue
-                qty = act.get('qty') or act.get('quantity') or 1
-                insert_row(
-                    conn,
-                    'paper_fills',
-                    {
-                        'paper_order_id': po_row[0],
-                        'broker_fill_id': fill_id,
-                        'qty': qty,
-                        'price_cents': _price_cents(act),
-                    },
-                )
+                act = {**act, 'id': fill_id}
+                _append_fill(conn, insert_row, po_row[0], act)
                 linked += 1
             conn.commit()
     except Exception as exc:

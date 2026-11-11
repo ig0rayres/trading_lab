@@ -21,3 +21,36 @@ class Tests(unittest.TestCase):
         self.assertEqual(reconcile(self.cid,self.env,broken)['status'],'UNKNOWN_BROKER_STATE')
     def test_invalid_id(self):
         self.assertEqual(reconcile('bad',self.env)['status'],'BLOCKED')
+
+    def test_n21_canceled_maps_to_terminal_reconcile(self):
+        def opener(req, timeout):
+            self.assertEqual(req.get_method(), 'GET')
+            payload = {
+                'id': 'broker-cancel-1',
+                'client_order_id': self.cid,
+                'status': 'canceled',
+                'filled_qty': '0',
+            }
+            return FakeResponse(json.dumps(payload).encode())
+
+        result = reconcile(self.cid, self.env, opener)
+        self.assertEqual(result['status'], 'RECONCILED')
+        self.assertEqual(result.get('broker_status'), 'canceled')
+        self.assertEqual(result['orders_sent'], 0)
+        self.assertTrue(result.get('terminal'))
+
+    def test_n21_expired_maps_to_terminal_reconcile(self):
+        def opener(req, timeout):
+            payload = {
+                'id': 'broker-exp-1',
+                'client_order_id': self.cid,
+                'status': 'expired',
+                'filled_qty': '0',
+            }
+            return FakeResponse(json.dumps(payload).encode())
+
+        result = reconcile(self.cid, self.env, opener)
+        self.assertEqual(result['status'], 'RECONCILED')
+        self.assertEqual(result.get('broker_status'), 'expired')
+        self.assertFalse(result.get('treated_as_fill'))
+        self.assertTrue(result.get('terminal'))

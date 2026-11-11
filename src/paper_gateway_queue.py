@@ -7,6 +7,7 @@ from typing import Any
 
 from gate_a_signal import idempotency_key
 from ledger_store import insert_row
+from paper_fill_cycle import track_once as default_track_once
 from signal_paper_runner import make_order, run as paper_run, token
 
 
@@ -171,6 +172,50 @@ def _persist_broker_submitted(
         return
 
 
+def _load_paper_order(client_order_id: str, conn_factory=None) -> dict[str, Any] | None:
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return None
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT client_order_id, broker_order_id, symbol, side, status, qty '
+                    'FROM paper_orders WHERE client_order_id = %s AND deleted_at IS NULL',
+                    (client_order_id,),
+                )
+                row = cur.fetchone()
+        if not row:
+            return None
+        return {
+            'client_order_id': row[0],
+            'broker_order_id': row[1],
+            'symbol': row[2],
+            'side': row[3],
+            'status': row[4],
+            'qty': row[5],
+            'market': 'us_equity',
+        }
+    except Exception:
+        return None
+
+
+def _resume_track_existing(
+    order: dict[str, Any],
+    env: dict[str, str],
+    *,
+    track_fn=None,
+) -> dict[str, Any]:
+    track = track_fn or default_track_once
+    out = dict(track(order, env))
+    out['mode'] = 'RESUMED_AFTER_RESTART'
+    out['orders_sent'] = 0
+    return out
+
+
 def _broker_submitted_persistable(result: dict[str, Any]) -> bool:
     if result.get('status') != 'PAPER_SUBMITTED':
         return False
@@ -189,6 +234,7 @@ def process_after_gate_b(
     *,
     ledger: str | None = None,
     broker_run=paper_run,
+    track_fn=None,
     conn_factory=None,
     queue_idempotency_key: str | None = None,
 ) -> dict[str, Any]:
@@ -202,13 +248,17 @@ def process_after_gate_b(
         code = decision.get('reject_code') or 'RISK_BLOCK'
         return {'status': 'BLOCKED', 'reasons': [code], 'orders_sent': 0}
     queued = queue_intent(signal, decision)
-    persist_intent(
-        signal,
-        decision,
-        queued,
-        conn_factory=conn_factory,
-        queue_idempotency_key=queue_idempotency_key,
-    )
+    existing = _load_paper_order(queued['client_order_id'], conn_factory=conn_factory)
+    if not existing:
+        persist_intent(
+            signal,
+            decision,
+            queued,
+            conn_factory=conn_factory,
+            queue_idempotency_key=queue_idempotency_key,
+        )
+    elif str(existing.get('broker_order_id') or '').strip():
+        return _resume_track_existing(existing, env, track_fn=track_fn)
     if not broker_auto_allowed(env):
         return queued
     result = broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')

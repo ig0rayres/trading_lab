@@ -11,6 +11,14 @@ from urllib.request import Request, urlopen
 from paper_audit import PAPER_URL, validate_env
 
 ID_PATTERN = re.compile(r'(?:nf-[0-9a-f]{24}|demo-[0-9a-f]{20})\Z')
+TERMINAL_BROKER = frozenset({'filled', 'canceled', 'expired', 'rejected', 'done_for_day'})
+
+
+def _terminal_flags(broker_status: str | None) -> dict[str, bool]:
+    status = str(broker_status or '').lower()
+    terminal = status in TERMINAL_BROKER
+    treated = status == 'filled'
+    return {'terminal': terminal, 'treated_as_fill': treated}
 
 
 def reconcile(client_order_id, env, opener=urlopen):
@@ -28,10 +36,11 @@ def reconcile(client_order_id, env, opener=urlopen):
         legs = order.get('legs') or []
         if not isinstance(legs, list):
             return {'status': 'UNKNOWN_BROKER_STATE', 'reason': 'INVALID_LEGS', 'orders_sent': 0}
+        broker_status = order.get('status')
         return {
             'status': 'RECONCILED', 'client_order_id': client_order_id,
             'broker_order_id': order.get('id'), 'symbol': order.get('symbol'),
-            'broker_status': order.get('status'), 'order_class': order.get('order_class'),
+            'broker_status': broker_status, 'order_class': order.get('order_class'),
             'filled_qty': order.get('filled_qty'), 'filled_avg_price': order.get('filled_avg_price'),
             'filled_at': order.get('filled_at'),
             'legs': [{'id': l.get('id'), 'type': l.get('type'), 'side': l.get('side'),
@@ -40,6 +49,7 @@ def reconcile(client_order_id, env, opener=urlopen):
                       'limit_price': l.get('limit_price'), 'stop_price': l.get('stop_price')}
                      for l in legs if isinstance(l, dict)],
             'orders_sent': 0,
+            **_terminal_flags(broker_status),
         }
     except Exception as exc:
         return {'status': 'UNKNOWN_BROKER_STATE', 'reason': type(exc).__name__,

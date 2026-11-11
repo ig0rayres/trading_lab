@@ -9,6 +9,9 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 import paper_gateway_queue as pgq
+from signal_copy import sign
+
+TEST_SIGNAL_COPY_SECRET = 'x' * 32
 
 
 def _signal():
@@ -105,12 +108,12 @@ def _auto_env_with_snapshot(tmp_dir: str) -> dict[str, str]:
         'ALPACA_API_KEY': 'test',
         'ALPACA_SECRET_KEY': 'test',
         'USD_BRL_REFERENCE': '5',
-        'SIGNAL_COPY_SECRET': 'x' * 32,
+        'SIGNAL_COPY_SECRET': TEST_SIGNAL_COPY_SECRET,
         'V4_RISK_SNAPSHOT_FILE': str(snapshot),
     }
 
 
-def _gated_signal(signal_id: str) -> dict:
+def _gated_signal(signal_id: str, *, secret: str = TEST_SIGNAL_COPY_SECRET) -> dict:
     sig = _signal()
     sig['signal_id'] = signal_id
     sig['sent_at_utc'] = datetime.now(timezone.utc).isoformat()
@@ -118,6 +121,7 @@ def _gated_signal(signal_id: str) -> dict:
     sig['entry'] = 100
     sig['stop'] = 99
     sig['target'] = 102
+    sig['provider_signature'] = sign(sig, secret)
     return sig
 
 

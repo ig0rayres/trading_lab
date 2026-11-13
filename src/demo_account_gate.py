@@ -16,7 +16,15 @@ def named_demo_account_configured(market: str) -> bool:
     env_key = _DEMO_PATH_ENV.get(market)
     if not env_key:
         return True
-    return bool(os.environ.get(env_key, '').strip())
+    path = os.environ.get(env_key, '').strip()
+    if not path:
+        return False
+    if market not in ('B3_EQUITY', 'FOREX'):
+        return True
+    from demo_broker_adapters import credentials_block_for_adapter
+
+    blocked, _ = credentials_block_for_adapter(path, dict(os.environ))
+    return not blocked
 
 
 def demo_market_block_reason(market: str) -> str | None:

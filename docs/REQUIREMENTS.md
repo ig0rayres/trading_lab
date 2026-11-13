@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29 · Revisado em: 2026-11-03 (v0.2, operação autônoma)
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-13 (v0.4, G-MKT shortlist de contas demo)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -217,6 +217,16 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - [ ] Host de destino é sempre o paper; existir uma chave live no ambiente não muda isso.
 - [ ] Reinício do serviço retoma a operação sem duplicar ordem.
 
+**G-MKT — corretoras demo nomeadas (2026-11-13, operador):**
+
+| Mercado | Conta demo escolhida | Observação |
+|---------|----------------------|------------|
+| B3 | Clear — Smart Trader API (ambiente **simulado**) | REST/WS; posição, ordem e status. Day trade Clear. **Não** Alpaca. |
+| Cripto | Alpaca Paper (já ligada) | Mantém o caminho paper existente. |
+| Forex | OANDA fxTrade **Practice** (API v20) | REST practice; ordem + fill. **Não** Alpaca. |
+
+O identificador concreto da conta (login/account id) e as chaves ficam só no ambiente EasyPanel — nunca no Git. Enquanto a conta de um mercado não estiver criada/credenciada, esse mercado permanece visível e **barrado** com motivo (`NO_DEMO_ACCOUNT_PATH` ou equivalente). Conta real continua sem botão.
+
 ### Feature 8: Central de controle no painel
 
 - **Persona**: Operador do laboratório
@@ -277,7 +287,9 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 | Sistema | Tipo | Direção | Autenticação | Fallback |
 |---|---|---|---|---|
 | Dados públicos de ação e cripto (Yahoo e Binance citados no MVP) | API de leitura | Entrada | Nenhuma no MVP de pesquisa | Ciclo marcado como falho ou parcial. Sem ordem. |
-| Alpaca Paper | API de corretora paper | Bidirecional | Chave paper, fora do repositório | Sem chave, não há submit. Nunca usar chave live. |
+| Alpaca Paper | API de corretora paper (cripto + ação US já ligada) | Bidirecional | Chave paper, fora do repositório | Sem chave, não há submit. Nunca usar chave live. B3 e forex **não** usam este host. |
+| Clear Smart Trader (simulado) | API de corretora demo B3 | Bidirecional | API_KEY / SECRET / RSA no portal Clear, fora do repositório | Sem credencial simulada, mercado B3 fica barrado com motivo. Nunca apontar URL real com token simulado. |
+| OANDA fxTrade Practice | API de corretora demo forex | Bidirecional | Personal access token practice, fora do repositório | Sem conta Practice, mercado forex fica barrado com motivo. Nunca usar host fxTrade live. |
 | TradingView | Webhook | Entrada | Segredo do webhook | Pedido sem segredo válido é rejeitado no Gate A. |
 | Collective2 | Pesquisa e possível copy | Entrada | Acesso ainda não verificado | Nenhum provedor aprovado. Copy permanece fechado. |
 | News | Feed de notícias | Entrada | Conforme a fonte, sem gravar segredo | Ausência de notícia não autoriza ordem. |
@@ -342,6 +354,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 | 8 | Método do ajuste automático (Feature 11): o que conta como erro, com que frequência ajustar, quando desfazer | Alto | Aberta. Fase de arquitetura. |
 | 9 | Login do painel no lugar do Bearer manual | Alto | Aberta. Fases de arquitetura e DevOps. |
 | 10 | Painel deixa de ser somente leitura e passa a alterar risco e estratégias | Alto | Aberta. Decisão de arquitetura; a regra atual do painel é read-only. |
+| 11 | G-MKT: qual corretora demo por mercado (B3 / cripto / forex) | Alto | Respondida 2026-11-13: Clear Smart Trader simulado (B3); Alpaca Paper (cripto); OANDA Practice (forex). Pendente: abrir/credenciar contas e colocar ids só no env. |
 
 ---
 
@@ -392,3 +405,4 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 |---|---|---|---|
 | 2026-10-29 | 0.1 | Versão inicial a partir do adendo de 29/10/2026 e do snapshot importado | Analista de Requisitos (IA) |
 | 2026-11-03 | 0.2 | Operação autônoma na conta demo; âncoras de risco confirmadas; central de controle no painel; Features 7–11; cadastro de estratégia nova adiado | Analista de Requisitos (IA) com o operador |
+| 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |

@@ -13,6 +13,7 @@
 | ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
+| ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -230,5 +231,23 @@
 **Critério de fechamento:** ordem só na conta demo do mercado, com fill no ledger; mudança de gatilho pelo painel gravada em `trigger_changes`; conta real sem botão; simulador local não conta como fill; `LIVE_TRADING_ENABLED` false.
 
 **Fontes:** operador 2026-11-03; `docs/REQUIREMENTS.md` v0.3; `docs/ARCHITECTURE.md` seção 12 e ADR-010; `docs/DATABASE.md` seção 6; `docs/api-spec.yaml` 0.2.0.
+
+**Nota 2026-11-13:** G-MKT nomeou corretoras em REQUIREMENTS v0.4; adapters ficam em **ISS-010 / N29**. ISS-009 permanece aberto até Feature 7 por mercado homologada.
+
+---
+
+## ISS-010 — Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio |
+| Sprint | N29 |
+| Status | aberto |
+
+**Impacto:** Sem adapters das contas demo escolhidas, N27.2/N27.4 e o laço autônomo (Feature 7) ficam só no papel. B3 e forex não podem ir pela Alpaca (ADR-010).
+
+**Critério de fechamento:** Clear Smart Trader **simulado** (B3) e OANDA fxTrade **Practice** (forex) expõem posição, ordem aberta e fill ao laço; cripto reusa Alpaca paper; mercado sem credencial no env fica visível e barrado com motivo; `LIVE_TRADING_ENABLED=false`; account ids e chaves só no EasyPanel (nunca Git).
+
+**Fontes:** operador `/analista planejar` + `/pmo plan` 2026-11-13; `docs/REQUIREMENTS.md` v0.4 § Feature 7 G-MKT e § Integrações; ADR-010; ISS-009; N27.2.
 
 ---

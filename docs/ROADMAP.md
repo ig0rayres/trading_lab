@@ -52,6 +52,7 @@
 | N25 | N | Tela de sinais com destino, gate e âncora; ranking Prodígio | concluida | 3 | v4_web_dashboard | Onda 3 — Feature 9 | *(abaixo)* |
 | N26 | N | Performance só de fill confirmado; bruto rotulado | concluida | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
 | N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
+| N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
 | N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
@@ -91,6 +92,7 @@
 | N25 | senior+qa | Tela de sinais |
 | N26 | senior+qa | Performance financeira |
 | N27 | comprehensive | Envio autônomo na conta demo |
+| N29 | comprehensive | Adapters Clear + OANDA Practice |
 | N28 | senior+qa | Ajuste automático de parâmetro |
 
 ---
@@ -953,6 +955,7 @@ Onda 1  N19.3–N19.4 + N21  ordem com id da corretora até fill; P&L só de fil
 Onda 2  N22 + N23          âncoras lidas, capital único, sessão B3; worker no v4-ops     ┐
 Onda 3  N24 + N25 + N26    login, Central, sinais com motivo, performance de fill        ┘ MVP-OP-1.3 (1)
 Onda 4  N27                laço autônomo no mercado com conta demo nomeada (G-MKT)       MVP-OP-1.4 (0–1)
+Onda 4b N29                adapters Clear simulado + OANDA Practice (+ Alpaca cripto)     MVP-OP-1.4 (0–1)
 Onda 5  N17 (existente)    Tá Barato / momentum só com fórmula upstream (G-FORM)         MVP-OP-1.1 (0–1)
 Onda 6  N28                ajuste supervisionado (G-AJUSTE + fill real)                  0–1
 ```
@@ -1130,11 +1133,97 @@ Delivered in PR #27 with N24/N25. Maintain: `performance_from_snapshots` counts 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
 | [x] | M | N27.1 Forex no universo e no avaliador de carteira, barrado sem conta | `/dev` | — |
-| [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT |
+| [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT, N29 |
 | [x] | P | N27.3 Teste: mercado sem conta continua visível e barrado com motivo | `/qa testes` | N27.1, N19.4 |
 | [ ] | P | N27.4 Operador: sinal válido vira ordem demo sem ação manual | operador | N27.2, N23.1, N24.2 |
 | [ ] | P | N27.5 Teste: chave live no ambiente não muda o destino paper | `/qa testes` | N27.2 |
 | [ ] | P | N27.6 Teste: restart com laço ligado não duplica | `/qa testes` | N27.4 |
+
+---
+
+## Sprint N29 — Adapters demo G-MKT (Clear + OANDA + Alpaca)
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-13 · fonte ISS-010 · REQUIREMENTS v0.4  
+> titulo_humano: Ligar B3 e forex nas contas demo que você escolheu  
+> Gate: Clear simulado e OANDA Practice devolvem posição/ordem/fill; cripto = Alpaca paper; mercado sem credencial barrado com motivo; B3/FOREX nunca Alpaca; LIVE false; ids só no env  
+> review: comprehensive  
+> Depende de: N27.1, N27.3, REQUIREMENTS G-MKT · Release: **MVP-OP-1.4**
+
+### Em uma frase
+
+A plataforma fala com a Clear (B3) e a OANDA (forex) em modo demo, e mantém a Alpaca só para cripto — sem inventar conta e sem live.
+
+### O que muda para você
+
+- Você cria as contas demo Clear + OANDA e cola as chaves só no EasyPanel
+- O painel mostra B3/forex operáveis quando a credencial existir; senão, motivo claro
+- N27.2/N27.4 podem fechar o laço nos mercados respondidos
+
+| Entrega | Como você confere |
+|---------|-------------------|
+| Clear simulado no laço | Posição/ordem/fill de um símbolo B3 demo sem POST na Alpaca |
+| OANDA Practice no laço | Ordem forex practice com fill/estado legível no ledger/painel |
+| Sem credencial | Mercado visível + `NO_DEMO_ACCOUNT_PATH` (ou equivalente) |
+| Live | Processo recusa se `LIVE_TRADING_ENABLED` ≠ false |
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N29.1 Adapter Clear Smart Trader **simulado** (posição, ordem aberta, fill) | `/dev` | — |
+| [ ] | M | N29.2 Adapter OANDA fxTrade **Practice** (posição, ordem, fill) | `/dev` | — |
+| [ ] | P | N29.3 Ligar `DEMO_ACCOUNT_PATH_*` / env aos três mercados (Clear, Alpaca, OANDA) | `/dev` | N29.1, N29.2 |
+| [ ] | P | N29.4 Teste: B3/FOREX nunca POST Alpaca; sem credencial → barrado com motivo | `/qa testes` | N29.3 |
+| [ ] | P | N29.5 Operador: abrir/credenciar Clear + OANDA; ids só no EasyPanel | operador | N29.3 |
+| [ ] | P | N29.6 Desbloquear N27.2 no ROADMAP após adapters verdes + nota de release | docs | N29.4, N29.5 |
+
+### Task N29.1 — Clear Smart Trader simulado
+
+**Entrega:** Adapter B3 que lê/escreve no ambiente **simulado** da Clear (não URL real).
+**Como conferir:** Mock/integração mostra posição, ordem aberta e fill; nenhum POST a `paper-api.alpaca.markets`.
+**Por quê:** REQUIREMENTS v0.4 G-MKT; ADR-010.
+
+**Detalhe técnico / executor_prompt:**
+```
+estado_atual: demo_account_gate + NO_DEMO_ACCOUNT_PATH; B3 bloqueado na Alpaca (N19.4); sem cliente Clear.
+desejado: módulo adapter Clear simulado (REST/WS conforme docs Clear) atrás da mesma porta de “conta demo do mercado”; credenciais só via env; fail-closed sem chave.
+guardrail: LIVE false; nunca misturar URL real com token simulado; não reimplementar trader-entry/exit.
+testes: unit com HTTP mock — submit → order id; positions; block se env vazio.
+```
+
+### Task N29.2 — OANDA Practice
+
+**Entrega:** Adapter forex na API v20 **Practice**.
+**Como conferir:** Mock/integração cria ordem practice e lê fill/estado; host practice, não fxTrade live.
+**Por quê:** REQUIREMENTS v0.4 G-MKT.
+
+**Detalhe técnico / executor_prompt:**
+```
+estado_atual: FOREX no universo/risco mas sem path de envio.
+desejado: cliente OANDA Practice (api-fxpractice) com account id + token no env; posição/ordem/fill.
+guardrail: LIVE false; nunca api-fxtrade live; B3 não passa por aqui.
+testes: mock REST — order + fill transaction; block se token ausente.
+```
+
+### Task N29.3 — Wiring env por mercado
+
+**Entrega:** `DEMO_ACCOUNT_PATH_B3_EQUITY|CRYPTO|FOREX` (ou equivalente) aponta para Clear / Alpaca / OANDA sem inventar nome.
+**Como conferir:** Com env preenchido, `block_reason` some no painel para aquele mercado; vazio → barrado.
+**Depende de:** N29.1, N29.2.
+
+### Task N29.4 — Testes de regressão
+
+**Entrega:** Suíte prova ADR-010 + fail-closed.
+**Como conferir:** pytest verde; casos B3/FOREX sem Alpaca POST; missing creds → motivo.
+
+### Task N29.5 — Operador credencia
+
+**Entrega:** Contas Clear simulado + OANDA Practice criadas; vars no EasyPanel.
+**Como conferir:** Operador confirma ids (sem colar segredo no chat/Git).
+
+### Task N29.6 — Ponte N27.2
+
+**Entrega:** ROADMAP N27.2 desbloqueado / marcado pronto para implementação do laço pós-adapter.
+**Como conferir:** Checkbox/nota explícita; sem rebuild só por docs.
 
 ---
 

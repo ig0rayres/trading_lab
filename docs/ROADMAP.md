@@ -59,7 +59,7 @@
 | N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
 | N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | concluida | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
-| N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | planejada | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
+| N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -2215,9 +2215,9 @@ DIARY + TEST-EVIDENCE: nodeids of mock submit / no-Alpaca-POST; credentials oper
 
 ## Sprint N35 — Conferir chaves demo sem ver valores, sem fechar homologação
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · pós-N34 · #46 no ar · operador «Vamos em frente» · **não** «creds ok» · fonte ISS-010 / N29.5  
-> Nota: tasks `[x]` no working tree; Status vira `concluida` no closeout pós-PR.  
+> Closeout: PR **#48** merged (`26839bb`); N29.5 continua operador.  
 > titulo_humano: Conferir chaves demo sem ver valores, sem fechar homologação  
 > resumo_humano: Depois que você cola as chaves demo no painel, um relatório diz só se os nomes estão preenchidos e se o mercado está pronto ou barrado. Um roteiro ensina a atestar ordem demo sem colar segredo. A homologação ao vivo continua sua.  
 > Gate: relatório de presença cobre nomes + mercados sem valores e sem HTTP; roteiro operador existe; N29.5/N29.6 `[ ]`; N29 permanece planejada; ISS-010 aberto; LIVE false  

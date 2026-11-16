@@ -4,7 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; pin path; mock CI | 14–28 |
+| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 14–35 |
 | N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 29–55 |
 | N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 38–63 |
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
@@ -22,6 +22,14 @@
 **Honestidade:** ISS-010 permanece **aberto** (homologação ao vivo N29.5); N29 Status **planejada**; adapter submit qty-only sem bracket; preencher EasyPanel sozinho não homologa conta real.
 
 **Decisões:** `LIVE_TRADING_ENABLED=false`; vendor pin inalterado; sem HTTP Clear/OANDA real no CI.
+
+**Prova citada:** PR [**#45**](https://github.com/ig0rayres/trading_lab/pull/45) merge `3aefd4474a99bb96c14125b493bcaf12f0f0abb7` (`2026-11-16T22:45:44Z`); `origin/main` tip `7627b45` (feat `4fc0644`, fix `bbe97b8`, restamp validação). CI test / docker-smoke / docker-build **SUCCESS** (não é fill).
+
+**Finalizer (2026-11-16):** stamp local **APROVADA** (`validation_gate` focal `test_signal_paper_runner` + copy + demo adapters); ROADMAP N34 → `concluida`; N27.2 `[x]` com nodeids `test_n34_*`; N29 **planejada**; homologação ao vivo **N29.5** ainda `[ ]` — **não** alegar Clear/OANDA live.
+
+**Aprendizados:** mock no laço fecha wiring fail-closed sem credencial operador; pytest ≠ homologação em conta demo real; pin path evita cross-market Alpaca.
+
+**Próximo:** `/pmo plan` — lacuna honesta **ISS-011**: homolog Clear/OANDA (**N29.5** / credenciais EasyPanel) *vs* shadow→paper Tá Barato (**N17.2** / G-FORM); `LIVE_TRADING_ENABLED=false`.
 
 ---
 

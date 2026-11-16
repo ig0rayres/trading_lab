@@ -2045,6 +2045,7 @@ P task. `.cursorsession`: after EXECUTE stamps, set `plan_only=false` only when 
 > titulo_humano: Ligar B3 e forex no laço paper sem chave real  
 > resumo_humano: O envio paper passa a usar a conta demo da bolsa brasileira e a de câmbio quando o caminho e as chaves estão no ambiente. Sem chave, barra com motivo. Esses mercados nunca vão para a corretora americana. Homologação ao vivo continua sua.  
 > Gate: runner chama o adaptador demo com path+creds; sem credencial → motivo e zero envio; pytest mock prova zero POST Alpaca; N27.2 `[x]` só com nodeid; N29 permanece planejada; LIVE false  
+> Closeout: PR **#45** merge `3aefd447` (`2026-11-16T22:45:44Z`); main tip `7627b45`; CI test / docker-smoke / docker-build SUCCESS; stamp **APROVADA**  
 > review: comprehensive  
 > Brief: `docs/.briefs/N34.brief.md`  
 > bom_ref: BOM-3  
@@ -2086,6 +2087,8 @@ Maintain: B3_EQUITY / FOREX never POST `paper-api.alpaca.markets`; missing path/
 Maintain: CRYPTO / US_EQUITY Alpaca paper happy path.
 Maintain: N29 Status **planejada**; N29.5 e N29.6 permanecem `[ ]`.
 Avoid: reimplementing adapter HTTP; real Clear/OANDA in CI; stamping N29 `concluida`; closing ISS-010/ISS-011; writing secret values.
+
+**Closeout (2026-11-16):** PR [**#45**](https://github.com/ig0rayres/trading_lab/pull/45) merge `3aefd4474a99bb96c14125b493bcaf12f0f0abb7` (`2026-11-16T22:45:44Z`); `origin/main` tip `7627b45` (`4fc0644` wiring + `bbe97b8` gap fix + restamp); CI test / docker-smoke / docker-build **SUCCESS**; stamp **APROVADA** (unittest focal 33 OK). N27.2 `[x]` com `tests/test_signal_paper_runner.py` `test_n34_*`. Homologação ao vivo Clear/OANDA permanece **N29.5** (operador) — mock/CI **não** fecha ISS-010. ISS-011 aberto: N29.5 + **N17.2** G-FORM. `LIVE_TRADING_ENABLED=false`.
 
 ### Fora de escopo
 

@@ -383,6 +383,12 @@ Operador: **PR #35 merged**; smoke **MSFT** `PAPER_SUBMITTED` ok; **N27.4** fech
 
 > `LIVE_TRADING_ENABLED=false` · HTTP mock apenas · credenciais operador (N29.5) · **não é fill**
 
+| Closeout | Prova |
+|----------|-------|
+| Merge produção | PR [**#45**](https://github.com/ig0rayres/trading_lab/pull/45) `3aefd447` (`2026-11-16T22:45:44Z`); `origin/main` tip `7627b45` |
+| CI | test / docker-smoke / docker-build **SUCCESS** (merge #45) |
+| Stamp sprint | `validation_gate` **APROVADA** — `unittest tests.test_signal_paper_runner tests.test_signal_copy tests.test_demo_broker_adapters -q` (33 testes) |
+
 | Cenário | Nodeid |
 |---------|--------|
 | B3 sem cred → bloqueio | `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_b3_equity_auto_blocked_no_alpaca_post` |

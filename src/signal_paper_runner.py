@@ -25,6 +25,7 @@ from demo_broker_adapters import (
 from paper_audit import PAPER_URL, get_json, validate_env, amount
 from risk_control_flags import brl_from_cents, fetch_control_flags
 from signal_copy import validate, canonical_payload
+from gate_b_risk import kill_switch_active
 from portfolio_risk_v4 import evaluate as evaluate_portfolio_risk
 
 DEFAULT_LEDGER = '/app/reports/paper/signal-orders.jsonl'
@@ -61,14 +62,48 @@ def token(signal):
     return hashlib.sha256(canonical_payload(signal)).hexdigest()[:24]
 
 
-def _parallel_usd_limits(flags, signal, env, fx):
-    cap = brl_from_cents(int(flags['capital_cents'])) / fx
+def _parallel_usd_limits(flags, signal, env, fx, *, price_in_brl=False):
+    cap = brl_from_cents(int(flags['capital_cents']))
     prodigy = signal.get('provider') in set(
         filter(None, env.get('PRODIGY_PROVIDERS', '').split(',')),
     )
     risk_key = 'prodigy_risk_cents' if prodigy else 'max_risk_per_trade_cents'
-    per_trade = brl_from_cents(int(flags[risk_key])) / fx
+    per_trade = brl_from_cents(int(flags[risk_key]))
+    if not price_in_brl:
+        cap = cap / fx
+        per_trade = per_trade / fx
     return cap, per_trade, int(flags['max_open_positions'])
+
+
+def _demo_panel_block(env: dict) -> str | None:
+    """Panel kill switch and demo toggle. Default demo_operation_on is off."""
+    if kill_switch_active(env):
+        return 'KILL_SWITCH'
+    flags = fetch_control_flags()
+    if flags.get('kill_switch_on') is True:
+        return 'KILL_SWITCH'
+    if flags.get('demo_operation_on') is not True:
+        return 'DEMO_OPERATION_OFF'
+    return None
+
+
+def _forex_reconciled_book(env: dict) -> tuple[list, list] | None:
+    """Positions the runner did not read from OANDA. Missing book fails closed."""
+    snapshot_file = env.get('V4_RISK_SNAPSHOT_FILE', '')
+    if not snapshot_file:
+        return None
+    try:
+        snapshot = json.loads(Path(snapshot_file).read_text())
+        stamp = datetime.fromisoformat(str(snapshot['at_utc']).replace('Z', '+00:00'))
+        if stamp.tzinfo is None or abs((datetime.now(timezone.utc) - stamp).total_seconds()) > 120:
+            return None
+        positions = snapshot['forex_positions']
+        open_orders = snapshot['forex_open_orders']
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    if not isinstance(positions, list) or not isinstance(open_orders, list):
+        return None
+    return positions, open_orders
 
 
 def risk_check(signal, account, positions, open_orders, fx, env):
@@ -134,7 +169,9 @@ def demo_market_risk_check(signal, env, fx, adapter, market: str) -> list[str]:
     """Risk anchors for B3/FOREX demo adapters — no Alpaca account GET."""
     reasons: list[str] = []
     flags = fetch_control_flags()
-    cap, per_trade, max_positions = _parallel_usd_limits(flags, signal, env, fx)
+    cap, per_trade, max_positions = _parallel_usd_limits(
+        flags, signal, env, fx, price_in_brl=(market == 'B3_EQUITY'),
+    )
     try:
         entry, stop, target = (amount(signal[k]) for k in ('entry', 'stop', 'target'))
         qty = signal['quantity']
@@ -162,9 +199,23 @@ def demo_market_risk_check(signal, env, fx, adapter, market: str) -> list[str]:
             if any(x.get('symbol') == signal['symbol'] for x in positions):
                 reasons.append('DUPLICATE_SYMBOL')
         elif market == 'FOREX':
-            # OANDA practice adapter has no list_positions — fail-closed on position state.
-            if max_positions < 1:
-                reasons.append('MAX_POSITIONS')
+            # OANDA practice adapter has no list_positions. Do not invent that HTTP call.
+            book = _forex_reconciled_book(env)
+            if book is None:
+                reasons.append('POSITION_STATE_UNAVAILABLE')
+            elif 'INVALID_TICKET' not in reasons:
+                positions, open_orders = book
+                if len(positions) >= max_positions:
+                    reasons.append('MAX_POSITIONS')
+                if open_orders:
+                    reasons.append('OPEN_ORDERS_REQUIRE_REVIEW')
+                if any(
+                    isinstance(row, dict) and (
+                        row.get('symbol') == signal['symbol'] or row.get('instrument') == signal['symbol']
+                    )
+                    for row in positions
+                ):
+                    reasons.append('DUPLICATE_SYMBOL')
     except (ValueError, TypeError, KeyError):
         reasons.append('INVALID_ACCOUNT_OR_SIGNAL')
     return reasons
@@ -227,6 +278,9 @@ def run(
             record={'at':now.isoformat(),'client_order_id':'nf-'+fp,'provider':signal['provider'],
                     'signal_id':signal['signal_id'],'state':'ATTEMPTED_UNKNOWN'}
             if market in DEMO_ADAPTER_MARKETS:
+                panel_block = _demo_panel_block(env)
+                if panel_block:
+                    return {'status': 'BLOCKED', 'reasons': [panel_block], 'orders_sent': 0}
                 adapter_path = adapter_path_for_market(market, env)
                 adapter = build_demo_adapter(adapter_path, env, opener=demo_opener)
                 reasons = demo_market_risk_check(signal, env, fx, adapter, market)

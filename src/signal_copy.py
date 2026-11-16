@@ -14,7 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from paper_audit import amount
 
-ALLOWED = {'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry',
+ALLOWED = {'provider','signal_id','symbol','side','asset_class','market','sent_at_utc','entry',
            'stop','target','quantity','ttl_seconds','provider_signature','strategy_key'}
 DEFAULT_MAX_AGE=30
 
@@ -35,10 +35,27 @@ def validate(signal,secret,fx,now=None):
         errors.append('INVALID_PROVIDER')
     if not re.fullmatch(r'[a-zA-Z0-9_-]{6,100}',str(signal.get('signal_id',''))):
         errors.append('INVALID_SIGNAL_ID')
-    if not re.fullmatch(r'[A-Z]{1,5}',str(signal.get('symbol',''))):
-        errors.append('INVALID_SYMBOL')
-    if signal.get('side')!='buy' or signal.get('asset_class')!='us_equity':
-        errors.append('LONG_US_EQUITY_ONLY')
+    market = signal.get('market', 'US_EQUITY')
+    symbol = str(signal.get('symbol', ''))
+    side = signal.get('side')
+    asset = signal.get('asset_class')
+    if market == 'US_EQUITY':
+        if not re.fullmatch(r'[A-Z]{1,5}', symbol):
+            errors.append('INVALID_SYMBOL')
+        if side != 'buy' or asset != 'us_equity':
+            errors.append('LONG_US_EQUITY_ONLY')
+    elif market == 'B3_EQUITY':
+        if not re.fullmatch(r'[A-Z]{4}\d{1,2}', symbol):
+            errors.append('INVALID_SYMBOL')
+        if side != 'buy' or asset != 'b3_equity':
+            errors.append('LONG_B3_EQUITY_ONLY')
+    elif market == 'FOREX':
+        if not re.fullmatch(r'[A-Z]{3}_[A-Z]{3}', symbol):
+            errors.append('INVALID_SYMBOL')
+        if side != 'buy' or asset != 'forex':
+            errors.append('LONG_FOREX_ONLY')
+    else:
+        errors.append('INVALID_SCHEMA')
     try:
         ts=datetime.fromisoformat(str(signal['sent_at_utc']).replace('Z','+00:00'))
         if ts.tzinfo is None: raise ValueError('timezone missing')
@@ -51,8 +68,14 @@ def validate(signal,secret,fx,now=None):
         qty=signal['quantity']
         if type(qty)!=int or qty<1: errors.append('INVALID_QUANTITY')
         elif not (entry>stop>0 and target>entry): errors.append('INVALID_PRICES')
-        elif qty*(entry-stop)>Decimal('50')/fx or qty*entry>Decimal('5000')/fx:
-            errors.append('RISK_OR_NOTIONAL_LIMIT')
+        else:
+            risk_cap = Decimal('50')
+            notional_cap = Decimal('5000')
+            if market != 'B3_EQUITY':
+                risk_cap = risk_cap / fx
+                notional_cap = notional_cap / fx
+            if qty * (entry - stop) > risk_cap or qty * entry > notional_cap:
+                errors.append('RISK_OR_NOTIONAL_LIMIT')
     except (KeyError,TypeError,ValueError): errors.append('INVALID_PRICE_OR_QTY')
     return errors
 

@@ -379,20 +379,33 @@ class PaperRunnerTests(unittest.TestCase):
         )
         self.env.pop('PAPER_SIGNAL_ACCOUNT_ACK', None)
 
-    @patch('src.signal_paper_runner.validate', return_value=[])
+    def _write_forex_book(self, positions=None, open_orders=None):
+        path = Path(self.env['V4_RISK_SNAPSHOT_FILE'])
+        snapshot = json.loads(path.read_text())
+        snapshot['forex_positions'] = [] if positions is None else positions
+        snapshot['forex_open_orders'] = [] if open_orders is None else open_orders
+        path.write_text(json.dumps(snapshot))
+
+    def _signed(self, **overrides):
+        signal = dict(self.signal, **overrides)
+        signal['provider_signature'] = sign(signal, self.env['SIGNAL_COPY_SECRET'])
+        return signal
+
     @patch('src.signal_paper_runner.fetch_control_flags', create=True)
-    def test_n34_b3_clear_mock_submit_no_alpaca_post(self, mock_flags, _mock_validate):
+    def test_n34_b3_clear_mock_submit_no_alpaca_post(self, mock_flags):
         """N34 scenario 2: B3 with Clear path+creds → adapter POST, zero Alpaca."""
-        mock_flags.return_value = _control_flags()
+        mock_flags.return_value = _control_flags(demo_operation_on=True)
         self._auto_b3_forex_base()
         self.env.update(_clear_env_with_path())
-        b3 = dict(
-            self.signal,
+        b3 = self._signed(
             market='B3_EQUITY',
+            asset_class='b3_equity',
             symbol='ITUB4',
+            entry='32',
+            stop='31',
+            target='34',
             signal_id='N34_B3_MOCK_SUBMIT',
         )
-        b3['provider_signature'] = sign(b3, self.env['SIGNAL_COPY_SECRET'])
         alpaca_posts = []
         clear_calls = []
 
@@ -429,20 +442,22 @@ class PaperRunnerTests(unittest.TestCase):
         self.assertEqual(result.get('adapter_path'), G_MKT_ADAPTER_PATH_CLEAR_SIMULATED)
         self.assertEqual(result['broker_id'], MOCK_CLEAR_ORDER_ID)
 
-    @patch('src.signal_paper_runner.validate', return_value=[])
     @patch('src.signal_paper_runner.fetch_control_flags', create=True)
-    def test_n34_forex_oanda_mock_submit_no_alpaca_post(self, mock_flags, _mock_validate):
-        """N34 scenario 3: FOREX with OANDA creds → practice host only."""
-        mock_flags.return_value = _control_flags()
+    def test_n34_forex_oanda_mock_submit_no_alpaca_post(self, mock_flags):
+        """N34 scenario 3: FOREX with OANDA creds and a reconciled book → practice host only."""
+        mock_flags.return_value = _control_flags(demo_operation_on=True)
         self._auto_b3_forex_base()
+        self._write_forex_book()
         self.env.update(_oanda_env_with_path())
-        fx_sig = dict(
-            self.signal,
+        fx_sig = self._signed(
             market='FOREX',
+            asset_class='forex',
             symbol='EUR_USD',
+            entry='1.10',
+            stop='1.09',
+            target='1.12',
             signal_id='N34_FOREX_MOCK_SUBMIT',
         )
-        fx_sig['provider_signature'] = sign(fx_sig, self.env['SIGNAL_COPY_SECRET'])
         hosts = []
 
         def forbidden_alpaca_post(*_a, **_k):
@@ -533,15 +548,21 @@ class PaperRunnerTests(unittest.TestCase):
         self.assertEqual(result['status'], 'BLOCKED')
         self.assertIn('NO_DEMO_ACCOUNT_PATH', result.get('reasons') or [])
 
-    @patch('src.signal_paper_runner.validate', return_value=[])
     @patch('src.signal_paper_runner.fetch_control_flags', create=True)
-    def test_n34_live_trading_enabled_blocks_demo_submit(self, mock_flags, _mock_validate):
+    def test_n34_live_trading_enabled_blocks_demo_submit(self, mock_flags):
         """N34 scenario 6: LIVE_TRADING_ENABLED true → demo submit blocked."""
-        mock_flags.return_value = _control_flags()
+        mock_flags.return_value = _control_flags(demo_operation_on=True)
         self._auto_b3_forex_base()
         self.env.update({**_clear_env_with_path(), 'LIVE_TRADING_ENABLED': 'true'})
-        b3 = dict(self.signal, market='B3_EQUITY', symbol='ITUB4', signal_id='N34_B3_LIVE_BLOCK')
-        b3['provider_signature'] = sign(b3, self.env['SIGNAL_COPY_SECRET'])
+        b3 = self._signed(
+            market='B3_EQUITY',
+            asset_class='b3_equity',
+            symbol='ITUB4',
+            entry='32',
+            stop='31',
+            target='34',
+            signal_id='N34_B3_LIVE_BLOCK',
+        )
 
         def fail_urlopen(*_a, **_k):
             raise AssertionError('HTTP must not run when LIVE is enabled')
@@ -556,6 +577,136 @@ class PaperRunnerTests(unittest.TestCase):
         )
         self.assertIn(result['status'], ('BLOCKED', 'UNKNOWN_DO_NOT_RETRY'))
         self.assertNotEqual(result.get('orders_sent'), 1)
+
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n34_b3_brl_notional_uses_real_capital(self, mock_flags):
+        """R$2,000 ITUB4 ticket stays inside the R$5,000 BRL capital anchor."""
+        mock_flags.return_value = _control_flags(demo_operation_on=True)
+        self._auto_b3_forex_base()
+        self.env.update(_clear_env_with_path())
+        b3 = self._signed(
+            market='B3_EQUITY',
+            asset_class='b3_equity',
+            symbol='ITUB4',
+            entry='2000',
+            stop='1990',
+            target='2020',
+            signal_id='N34_B3_BRL_CAP',
+        )
+
+        def fake_demo_urlopen(req: Request, timeout=None):  # noqa: ARG001
+            self.assertNotIn('paper-api.alpaca.markets', req.full_url)
+            if req.method == 'GET' and '/positions' in req.full_url:
+                payload = []
+            elif req.method == 'GET' and '/orders/open' in req.full_url:
+                payload = []
+            elif req.method == 'POST' and '/orders' in req.full_url:
+                payload = {'order_id': MOCK_CLEAR_ORDER_ID, 'status': 'accepted'}
+            else:
+                raise HTTPError(req.full_url, 404, 'not found', hdrs=None, fp=None)
+            return _JsonResponse(payload)
+
+        result = x.run(
+            b3,
+            self.env,
+            self.ledger,
+            broker_get=self._broker_getter(),
+            broker_post=lambda *_a, **_k: (_ for _ in ()).throw(AssertionError('no alpaca')),
+            demo_opener=fake_demo_urlopen,
+        )
+        self.assertNotIn('CAPITAL_LIMIT', result.get('reasons') or [])
+        self.assertEqual(result['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(result['orders_sent'], 1)
+
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n34_demo_off_blocks_before_adapter_http(self, mock_flags):
+        mock_flags.return_value = _control_flags(demo_operation_on=False)
+        self._auto_b3_forex_base()
+        self.env.update(_clear_env_with_path())
+        b3 = self._signed(
+            market='B3_EQUITY',
+            asset_class='b3_equity',
+            symbol='ITUB4',
+            entry='32',
+            stop='31',
+            target='34',
+            signal_id='N34_B3_DEMO_OFF',
+        )
+
+        def fail_urlopen(*_a, **_k):
+            raise AssertionError('adapter HTTP must not run while demo is off')
+
+        result = x.run(
+            b3,
+            self.env,
+            self.ledger,
+            broker_get=self._broker_getter(),
+            broker_post=lambda *_a, **_k: (_ for _ in ()).throw(AssertionError('no alpaca')),
+            demo_opener=fail_urlopen,
+        )
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertIn('DEMO_OPERATION_OFF', result['reasons'])
+        self.assertEqual(result['orders_sent'], 0)
+
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n34_kill_switch_blocks_before_adapter_http(self, mock_flags):
+        mock_flags.return_value = _control_flags(demo_operation_on=True, kill_switch_on=True)
+        self._auto_b3_forex_base()
+        self.env.update(_clear_env_with_path())
+        b3 = self._signed(
+            market='B3_EQUITY',
+            asset_class='b3_equity',
+            symbol='ITUB4',
+            entry='32',
+            stop='31',
+            target='34',
+            signal_id='N34_B3_KILL',
+        )
+
+        def fail_urlopen(*_a, **_k):
+            raise AssertionError('adapter HTTP must not run while kill switch is on')
+
+        result = x.run(
+            b3,
+            self.env,
+            self.ledger,
+            broker_get=self._broker_getter(),
+            broker_post=lambda *_a, **_k: (_ for _ in ()).throw(AssertionError('no alpaca')),
+            demo_opener=fail_urlopen,
+        )
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertIn('KILL_SWITCH', result['reasons'])
+        self.assertEqual(result['orders_sent'], 0)
+
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n34_forex_without_book_does_not_submit(self, mock_flags):
+        mock_flags.return_value = _control_flags(demo_operation_on=True)
+        self._auto_b3_forex_base()
+        self.env.update(_oanda_env_with_path())
+        fx_sig = self._signed(
+            market='FOREX',
+            asset_class='forex',
+            symbol='EUR_USD',
+            entry='1.10',
+            stop='1.09',
+            target='1.12',
+            signal_id='N34_FOREX_NO_BOOK',
+        )
+
+        def fail_urlopen(*_a, **_k):
+            raise AssertionError('OANDA HTTP must not run without a position book')
+
+        result = x.run(
+            fx_sig,
+            self.env,
+            self.ledger,
+            broker_get=self._broker_getter(),
+            broker_post=lambda *_a, **_k: (_ for _ in ()).throw(AssertionError('no alpaca')),
+            demo_opener=fail_urlopen,
+        )
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertIn('POSITION_STATE_UNAVAILABLE', result['reasons'])
+        self.assertEqual(result['orders_sent'], 0)
 
 
 if __name__=='__main__':unittest.main()

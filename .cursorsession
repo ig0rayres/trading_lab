@@ -16,7 +16,7 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N31 planejada (ISS-012 G-AJUSTE + TimesFM research-only) — plan_only",
+  "fase_nome": "N28 Feature 11 supervisionado pós-merge N31",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -114,19 +114,19 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "N31 planejada ISS-012: ciclo diário fills+não-fills + TimesFM N31.2 research-only; N28.2-4 após gate N31; LIVE false.",
+  "contexto_rapido": "N31 merged main 681e8c5; N28.2-4 supervised adjustment entregue; LIVE false.",
   "sprint_tasks": [
     {
       "id": "N31.0",
       "title": "Git First: evolution-daily + official TimesFM package",
-      "status": "pending",
+      "status": "done",
       "file": "docs/.briefs/N31-GIT-FIRST-REUSE.md",
       "depends_on": []
     },
     {
       "id": "N31.1",
       "title": "Daily fills+non-fills review to labeled tips",
-      "status": "pending",
+      "status": "done",
       "file": "src/evolution_engine.py",
       "depends_on": [
         "N31.0"
@@ -135,7 +135,7 @@
     {
       "id": "N31.2",
       "title": "Optional TimesFM research-only adapter on daily report",
-      "status": "pending",
+      "status": "done",
       "file": "src/timesfm_context.py",
       "depends_on": [
         "N31.1"
@@ -144,7 +144,7 @@
     {
       "id": "N31.3",
       "title": "Record G-AJUSTE method; unlock N28.2-4 path without scoring",
-      "status": "pending",
+      "status": "done",
       "file": "docs/REQUIREMENTS.md",
       "depends_on": [
         "N31.1"
@@ -153,20 +153,45 @@
     {
       "id": "N31.4",
       "title": "Guardrail tests: tip/forecast never paper; TimesFM fail-closed",
-      "status": "pending",
+      "status": "done",
       "file": "tests/test_n31_g_ajuste_guardrails.py",
       "depends_on": [
         "N31.1",
         "N31.2"
       ]
+    },
+    {
+      "id": "N28.2",
+      "title": "Propose/adjust existing parameters within documented range",
+      "status": "done",
+      "file": "src/supervised_adjustment.py",
+      "depends_on": []
+    },
+    {
+      "id": "N28.3",
+      "title": "Persist before/after/reason; undo via Central API",
+      "status": "done",
+      "file": "src/v4_web_dashboard.py",
+      "depends_on": [
+        "N28.2"
+      ]
+    },
+    {
+      "id": "N28.4",
+      "title": "Test: adjustment never mutates risk anchors",
+      "status": "done",
+      "file": "tests/test_n28_supervised_adjustment.py",
+      "depends_on": [
+        "N28.2"
+      ]
     }
   ],
   "checkpoint": {
-    "phase": "implementation",
-    "sprint": "N31",
+    "phase": "testing",
+    "sprint": "N28",
     "branch": "front/n27-alpaca-loop",
-    "current_task": "N31.0",
-    "plan_only": true,
+    "current_task": "N28.4",
+    "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N31",
@@ -195,8 +220,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "d1d139aa6a21670ef86d656145f16da8c75b81c7",
-      "stamped_at": "2026-11-16T16:47:27Z",
+      "last_validated_sha": "84791eb3739b186c10c47d725f28fb25db5ce139",
+      "stamped_at": "2026-11-16T16:47:40Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
@@ -249,7 +274,6 @@
     "sprint_branch": "front/n27-alpaca-loop"
   },
   "sprint_branch": "front/n27-alpaca-loop",
-  "sprint_nome": "Sprint N31 — ISS-012 G-AJUSTE daily loop + TimesFM research-only",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -293,8 +317,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N30",
-  "sprint_atual": "N31",
+  "previous_sprint": "N31",
+  "sprint_atual": "N28",
+  "sprint_nome": "Sprint N28 — Feature 11 ajuste supervisionado (N28.2–4)",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",

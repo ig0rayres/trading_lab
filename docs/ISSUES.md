@@ -15,7 +15,7 @@
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
 | ISS-011 | aberto | N30 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
-| ISS-012 | aberto (implementado N31 — aguarda PR/CI) | N31 | G-AJUSTE: melhoria contínua diária (fills + não-fills) + TimesFM research-only → Feature 11 |
+| ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 
 ## Release train MVP-OP (visão alvo operacional)
 

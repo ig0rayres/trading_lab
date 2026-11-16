@@ -1,0 +1,26 @@
+{
+  "schema_version": "strategy-parameter-catalog-1",
+  "note": "Ranges documented from existing validators in src/ only; no invented scoring thresholds.",
+  "strategies": {
+    "signal_copy": {
+      "parameters": {
+        "ttl_seconds": {
+          "type": "int",
+          "min": 1,
+          "max": 60,
+          "source": "src/signal_copy.py validate; src/tradingview_webhook.py"
+        }
+      }
+    },
+    "prodigy_15d": {
+      "parameters": {
+        "ttl_seconds": {
+          "type": "int",
+          "min": 1,
+          "max": 60,
+          "source": "src/prodigy_paper_ingest.py DEFAULT_TTL_SECONDS band"
+        }
+      }
+    }
+  }
+}

@@ -35,10 +35,12 @@ try:
     from . import panel_ops_data as _panel_ops
     from . import panel_ops_html as _panel_html
     from .demo_account_gate import demo_market_block_reason
+    from . import supervised_adjustment as _supervised
 except ImportError:
     import panel_ops_data as _panel_ops
     import panel_ops_html as _panel_html
     from demo_account_gate import demo_market_block_reason
+    import supervised_adjustment as _supervised
 
 MODULES = ('market', 'news', 'signals', 'risk', 'paper', 'reconciliation')
 
@@ -441,6 +443,19 @@ def validate_strategy_patch(strategy_key, body):
     return None
 
 
+def fetch_strategy_state_row(conn, strategy_key):
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id, phase FROM strategy_states '
+            'WHERE strategy_key = %s AND deleted_at IS NULL',
+            (strategy_key,),
+        )
+        row = cur.fetchone()
+    if not row:
+        return None
+    return {'id': row[0], 'phase': row[1]}
+
+
 def apply_strategy_patch(conn, strategy_key, body):
     err = validate_strategy_patch(strategy_key, body)
     if err:
@@ -563,6 +578,58 @@ def respond_mutation(handler, kind, code, payload):
         send_json_response(handler, 422, {'reject_code': code})
         return
     send_json_response(handler, 200, payload)
+
+
+def strategy_parameters_get_payload():
+    root = Path(os.environ.get('REPORTS_DIR', '/app/reports'))
+    evo = root / 'evolution'
+    return {
+        'catalog': _supervised.parameter_catalog_public_view(),
+        'history': _supervised.list_adjustment_history(evo),
+        'overrides': _supervised.load_overrides(evo).get('strategies') or {},
+        'execution_authorized': False,
+        'paper_allowed': False,
+        'orders_sent': 0,
+    }
+
+
+def strategy_parameters_post(path: str, body: dict, connect_factory):
+    root = Path(os.environ.get('REPORTS_DIR', '/app/reports')) / 'evolution'
+    audit_hooks = {
+        'conn_factory': connect_factory,
+        'insert_trigger_change': insert_trigger_change,
+        'fetch_strategy_row': fetch_strategy_state_row,
+    }
+    if path == '/api/strategy-parameters/propose':
+        required = ('strategy_key', 'parameter', 'proposed_value', 'reason')
+        if not isinstance(body, dict) or any(k not in body for k in required):
+            return 'reject', 'INVALID_BODY', None
+        row = _supervised.propose_adjustment(
+            strategy_key=body['strategy_key'],
+            parameter=body['parameter'],
+            proposed_value=body['proposed_value'],
+            reason=str(body['reason']),
+            root=root,
+        )
+        return 'ok', None, row
+    if path == '/api/strategy-parameters/apply':
+        pid = body.get('proposal_id') if isinstance(body, dict) else None
+        if not pid:
+            return 'reject', 'INVALID_BODY', None
+        updated, code = _supervised.apply_proposal(str(pid), root=root, **audit_hooks)
+        if code:
+            return 'reject', code, None
+        return 'ok', None, updated
+    if path == '/api/strategy-parameters/undo':
+        aid = body.get('applied_id') if isinstance(body, dict) else None
+        if not aid:
+            return 'reject', 'INVALID_BODY', None
+        reason = str(body.get('reason') or 'operator_undo')
+        updated, code = _supervised.undo_adjustment(str(aid), reason=reason, root=root, **audit_hooks)
+        if code:
+            return 'reject', code, None
+        return 'ok', None, updated
+    return 'not_found', None, None
 
 
 def dispatch_patch(path, body, connect_factory):
@@ -758,6 +825,12 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                     return
                 send_json_response(self, 200, outcome)
                 return
+            if path == '/api/strategy-parameters':
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                send_json_response(self, 200, strategy_parameters_get_payload())
+                return
             if operator_session and operator_panel_route(path):
                 if not operator_session_authorized(self.headers, operator_session):
                     send_redirect(self, '/login')
@@ -786,6 +859,21 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             path = urlsplit(self.path).path
             if path in ('/api/login', '/login'):
                 handle_login_post(self, operator_session)
+                return
+            if path.startswith('/api/strategy-parameters/'):
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                try:
+                    body = read_json_body(self)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                    return
+                kind, code, payload = strategy_parameters_post(path, body, db_connect)
+                if kind == 'not_found':
+                    self.send_error(404)
+                    return
+                respond_mutation(self, kind, code, payload)
                 return
             self.send_error(405, 'Read only')
     return Handler

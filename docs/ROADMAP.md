@@ -1243,9 +1243,11 @@ testes: mock REST — order + fill transaction; block se token ausente.
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
 | [x] | P | N28.1 Sugestão continua rotulada como sugestão | `/dev` | — |
-| [ ] | M | N28.2 Ajustar só parâmetro existente, dentro da faixa original | `/dev` | G-AJUSTE |
-| [ ] | M | N28.3 Registrar antes, depois e motivo, com desfazer na Central | `/dev` | N28.2 |
-| [ ] | P | N28.4 Teste: ajuste nunca altera âncora de risco | `/qa testes` | N28.2 |
+| [x] | M | N28.2 Ajustar só parâmetro existente, dentro da faixa original | `/dev` | G-AJUSTE |
+| [x] | M | N28.3 Registrar antes, depois e motivo, com desfazer na Central | `/dev` | N28.2 |
+| [x] | P | N28.4 Teste: ajuste nunca altera âncora de risco | `/qa testes` | N28.2 |
+
+**Notas N28.2–4 (pós-N31 merge `681e8c5`):** `src/supervised_adjustment.py` + catálogo documentado; ledger append-only `parameter_adjustments.jsonl`; apply/undo via `/api/strategy-parameters/*` (sessão operador); faixa incerta → só `suggestion_only`; âncoras espelham `TRIGGER_PATCH_FIELDS`.
 
 ---
 

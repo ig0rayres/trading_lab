@@ -216,17 +216,18 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "f709cc645342e96168d12f1e1520131fb1a70024",
-      "stamped_at": "2026-11-16T20:32:59Z",
+      "last_validated_sha": "d25741379c6cd39ffb6c41a4630695b5fa4bce8d",
+      "stamped_at": "2026-11-16T20:36:05Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
       "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "011aa41cc3c8f22be171bedeef66defa74172350",
+      "patch_id": "91e2a9fedf03cc33a660505777830fbdca659a97",
       "patch_id_version": 2
     },
     "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N33"
+    "sprint_delivery_sprint": "N33",
+    "validation_gate_ref": ".beesy/sprints/N33.json"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

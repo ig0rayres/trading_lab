@@ -14,7 +14,7 @@ SCRIPTS = {
     'exit': ('trader-exit/exit.py', ('compute', 'parse_stop', 'parse_target')),
     'risk': ('trader-risk/check.py', ('check',)),
     'budget': ('trader-budget/size.py', ('size_trade', 'bracket_order')),
-    'scanner': ('trader-scanner/scan.py', ('orb_hit',)),
+    'scanner': ('trader-scanner/scan.py', ('orb_hit', 'find_setups', 'rsi')),
 }
 
 @dataclass

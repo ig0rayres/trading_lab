@@ -1329,11 +1329,11 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | M | N30.1 Renovar a fotografia de risco no serviço operacional | `/dev` | — |
-| [ ] | M | N30.2 Aceitar sinal cripto Alpaca no mesmo caminho autenticado | `/dev` | N30.1 |
-| [ ] | M | N30.3 Cancelar ordem paper sem fill no prazo, sem reenvio | `/dev` | N30.1 |
-| [ ] | M | N30.4 Parar por perda do dia/semana até o próximo período | `/dev` | N30.1 |
-| [ ] | P | N30.5 Provar host paper com chave live e restart sem duplicata | `/qa testes` | N30.2, N30.3 |
+| [x] | M | N30.1 Renovar a fotografia de risco no serviço operacional | `/dev` | — |
+| [x] | M | N30.2 Aceitar sinal cripto Alpaca no mesmo caminho autenticado | `/dev` | N30.1 |
+| [x] | M | N30.3 Cancelar ordem paper sem fill no prazo, sem reenvio | `/dev` | N30.1 |
+| [x] | M | N30.4 Parar por perda do dia/semana até o próximo período | `/dev` | N30.1 |
+| [x] | P | N30.5 Provar host paper com chave live e restart sem duplicata | `/qa testes` | N30.2, N30.3 |
 
 ### Task N30.1 — Renovar a fotografia de risco no serviço operacional
 

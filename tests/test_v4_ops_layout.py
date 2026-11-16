@@ -11,6 +11,7 @@ class V4OpsLayoutTests(unittest.TestCase):
             self.skipTest('run.sh missing')
         text = run_sh.read_text(encoding='utf-8')
         self.assertIn('v4-ops)', text)
+        self.assertIn('strategy-producer)', text)
 
     def test_ops_main_supervises_dashboard(self):
         ops = _REPO / 'scripts' / 'v4_ops_main.sh'
@@ -26,6 +27,9 @@ class V4OpsLayoutTests(unittest.TestCase):
         self.assertIn('risk-snapshot-refresh', body)
         self.assertIn('RISK_SNAPSHOT_INTERVAL_SEC', body)
         self.assertIn('paper-track-open', body)
+        self.assertIn('strategy-producer', body)
+        self.assertIn('INTERNAL_PRODUCER_AUTOSTART', body)
+        self.assertIn('STRATEGY_PRODUCER_INTERVAL_SEC', body)
 
     def test_worker_supervisor_does_not_replace_scheduler_exec(self):
         ops = _REPO / 'scripts' / 'v4_ops_main.sh'

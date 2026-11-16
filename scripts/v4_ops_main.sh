@@ -49,6 +49,15 @@ _paper_track_supervisor() {
   done
 }
 
+_strategy_producer_supervisor() {
+  interval="${STRATEGY_PRODUCER_INTERVAL_SEC:-900}"
+  while true; do
+    echo "v4-ops: strategy-producer --once (interval ${interval}s)" >&2
+    /app/scripts/run.sh strategy-producer --once || true
+    sleep "${interval}"
+  done
+}
+
 if [ "$(printf '%s' "${DASHBOARD_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _dashboard_supervisor &
 fi
@@ -63,6 +72,10 @@ fi
 
 if [ "$(printf '%s' "${PAPER_TRACK_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _paper_track_supervisor &
+fi
+
+if [ "$(printf '%s' "${INTERNAL_PRODUCER_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
+  _strategy_producer_supervisor &
 fi
 
 exec /app/scripts/run.sh v4-scheduler "$@"

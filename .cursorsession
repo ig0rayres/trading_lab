@@ -184,27 +184,23 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_demo_broker_adapters.EnvPresenceReportTests tests.test_demo_broker_adapters -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_demo_broker_adapters.EnvPresenceReportTests -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [
-        ".env.example",
-        "EASYPANEL.md",
-        "src/demo_account_gate.py",
-        "tests/test_demo_broker_adapters.py",
         ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "93059f5e75845110cd6507104fdb3d3094c04159",
-      "stamped_at": "2026-11-16T23:20:00Z",
+      "last_validated_sha": "71f51da8c22f464c1da3b6fbc0dade44e460246f",
+      "stamped_at": "2026-11-16T23:20:24Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "6051a3b82785e8085e6a3daca51230f0a4f1e75c",
+      "content_hash": "26c350aa4a3eee670f4e6ef4876d4f554b6b548efcb011de29ee3ec9238b4aec",
+      "patch_id": "3f40a61a29390892dace2b9820ed78cabda7c7a8",
       "patch_id_version": 2
     },
     "sprint": "N35",

@@ -74,15 +74,30 @@ class PanelOpsDataTests(unittest.TestCase):
                     'realized_gross_pnl_usd': '99',
                     'strategy_key': 'signal_copy',
                 },
+                {
+                    'client_order_id': 'c',
+                    'status': 'MONITORED',
+                    'entry_qty': 1,
+                    'remaining_qty': 0,
+                    'broker_fill_confirmed': True,
+                    'realized_gross_pnl_usd': '5',
+                    'strategy_key': 'momentum',
+                },
             ]
             (root / 'paper' / 'order-snapshots.jsonl').write_text(
                 '\n'.join(json.dumps(r) for r in rows),
                 encoding='utf-8',
             )
             perf = performance_from_snapshots(root)
-            self.assertEqual(perf['orders_included'], 1)
-            self.assertEqual(perf['total_gross_usd'], '10')
+            self.assertEqual(perf['orders_included'], 2)
+            self.assertEqual(perf['total_gross_usd'], '15')
             self.assertEqual(perf['pnl_label'], PERFORMANCE_LABEL_GROSS)
+            self.assertIn('strategies', perf)
+            by_key = {row['strategy_key']: row for row in perf['strategies']}
+            self.assertEqual(set(by_key), {'momentum', 'signal_copy'})
+            self.assertEqual(by_key['signal_copy']['gross_usd'], '10')
+            self.assertEqual(by_key['momentum']['gross_usd'], '5')
+            self.assertEqual(by_key['signal_copy']['pnl_label'], PERFORMANCE_LABEL_GROSS)
 
 
 class PanelOpsHttpTests(unittest.TestCase):

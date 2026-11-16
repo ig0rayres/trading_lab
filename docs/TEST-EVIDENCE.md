@@ -264,6 +264,8 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
 > Sprint N30 · `docs/REQUIREMENTS.md` Features 8–10 · `LIVE_TRADING_ENABLED=false`  
 > Gate N30.3: marcar `[x]` no REQUIREMENTS **somente** com nodeid em `tests/test_panel_ops.py` ou `tests/test_panel_triggers.py`. Feature 7 inalterada nesta task.
 
+**Feature 10 (lacuna N30.3):** `performance_from_snapshots` e `performance_from_ledger` (`panel_ops_data`) já retornam `strategies[]` só com fills confirmados; `test_performance_excludes_unfilled_orders` passa a assertar breakdown por `strategy_key` (fills `signal_copy` + `momentum`, ordem open excluída).
+
 | Feature | Critério REQUIREMENTS | Evidência pytest (nodeid) | REQUIREMENTS |
 |---------|------------------------|---------------------------|--------------|
 | 8 | Parada geral impede ordem nova | `tests.test_panel_ops.PanelKillSwitchCycleTests.test_kill_switch_from_panel_blocks_next_eval` | `[x]` |
@@ -274,7 +276,7 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
 | 9 | Lista sinais origem/destino/motivo | *(só `test_signal_destination_blocked_vs_queue` no helper)* | `[ ]` |
 | 9 | Ranking Prodígio + copiados | *(sem assert de ranking/copiados)* | `[ ]` |
 | 9 | Barrado com gate e âncora | `tests.test_panel_ops.PanelOpsDataTests.test_blocked_context_exposes_gate_and_anchor` | `[x]` |
-| 10 | Resultado por estratégia + total (fill confirmado) | *(total sim; `strategies[]` não assertado)* | `[ ]` |
+| 10 | Resultado por estratégia + total (fill confirmado) | `tests.test_panel_ops.PanelOpsDataTests.test_performance_excludes_unfilled_orders` (`strategies[]` por `strategy_key`; unfilled PnL 99 excluído) | `[x]` |
 | 10 | Ordem sem fill fora do resultado | `tests.test_panel_ops.PanelOpsDataTests.test_performance_excludes_unfilled_orders` | `[x]` |
 | 10 | Valores brutos rotulados | idem — `pnl_label` gross | `[x]` |
 

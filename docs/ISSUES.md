@@ -14,7 +14,7 @@
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
-| ISS-011 | aberto | N30/N32 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
+| ISS-011 | aberto | N33 closeout Alpaca; restante ISS-010 + N17.2 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -259,8 +259,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | enhancement / epic |
-| Sprint | N30 → N32 (lacuna Feature 7) → N17 → N28 (campanha) |
-| Status | aberto (PR **#35 merged+deployed** 2026-11-16; **N32 concluída** — lacuna `control_flags` no `signal_paper_runner` fechada, critério âncora Feature 7 `[x]`; merge operador **PR #42** pendente; N17/B3/FOREX/Clear/OANDA ainda fora) |
+| Sprint | N33 closeout Alpaca; restante **ISS-010** / **N17.2** |
+| Status | aberto — trilha Alpaca Features 7–11 entregue (N30/N31/N28/N32); PR **#42** merged `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); EasyPanel imagem **#42 no ar** (atestado operador 2026-11-16, **não é fill**). **Restante:** Feature 7 B3/FOREX ordem demo (**ISS-010** / N29.5); homologação shadow→paper Tá Barato (**N17.2** / G-FORM) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); **âncoras no laço paper** (N32.1–N32.3) via `control_flags`; B3/FOREX barrados sem adapter **ISS-010**; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 código N28/N31 nesta frente; Clear/OANDA permanecem fora.
 
@@ -270,11 +270,11 @@
 
 | Ordem | Sprint | Entrega | Estado |
 |-------|--------|---------|--------|
-| 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
-| 1c | **N32** | Feature 7: `signal_paper_runner.risk_check` lê `control_flags` (fecha lacuna 10k/50 USD) | **concluída** (VERIFY green; ROADMAP N32 `concluida`; PR **#42** MERGEABLE — operador mergeia) |
-| 1b | **N31** | G-AJUSTE método: ciclo diário fills+não-fills + TimesFM research-only (ISS-012) | **código entregue** nesta frente (bloco N28 não reescrito) |
-| 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
-| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1–4 **código entregue** nesta frente; bloco N28 não reescrito |
+| 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **concluída** — feat `322318b`; PR **#35** merge `622fbeb` (`2026-11-16T12:47:20Z`); TEST-EVIDENCE N30.1/N30.3b |
+| 1c | **N32** | Feature 7: `signal_paper_runner.risk_check` lê `control_flags` (fecha lacuna 10k/50 USD) | **concluída** — PR **#42** merge `d30689b` (`2026-11-16T19:49:34Z`); `test_n32_*` |
+| 1b | **N31** | G-AJUSTE método: ciclo diário fills+não-fills + TimesFM research-only (ISS-012) | **concluída** — feat `d1d139a`; PR **#38** merge `681e8c5` (`2026-11-16T17:12:28Z`) |
+| 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; **N17.2 operador pendente**) |
+| 3 | **N28** | Feature 11 ajuste supervisionado | **concluída** — feat `71caca1`; PR **#39** merge `5178fff` (`2026-11-16T17:20:14Z`); bloco histórico não reescrito |
 | fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
 | fora | N27.4 | Smoke sinal válido → ordem demo | **done** (smoke MSFT paper 2026-11-16; não substituído por pytest) |
 
@@ -292,7 +292,7 @@
 1. Credenciais e account ids **Clear (B3)** e **OANDA Practice (FOREX)** — EasyPanel; **ISS-010** / sprint N29.5 (fora de N30).
 2. ~~Smoke **N27.4**~~ — **concluído** (MSFT `PAPER_SUBMITTED` na sessão real, 2026-11-16 pós-merge #35).
 3. Retrato de risco consolidado **≤120s** antes de submit em produção (`V4_PORTFOLIO_SNAPSHOT_STALE` se velho).
-4. **Rebuild** EasyPanel se a imagem desta frente ainda não estiver no ar.
+4. ~~**Rebuild** EasyPanel~~ — imagem **#42 no ar** (atestado operador 2026-11-16; **não é fill**).
 5. ~~Definir método **G-AJUSTE** (Feature 11)~~ — **respondido** ISS-012 / N31 (ciclo diário fills+não-fills; TimesFM research-only). N28.2–4 executam o ajuste depois do gate N31; bloco N28 não é reescrito.
 6. Promover `prodigy_15d` a paper no banco **somente** com evidência; default continua research.
 
@@ -304,7 +304,7 @@
 
 **Fontes:** REQUIREMENTS v0.4 Features 7–11 (critério âncora `[x]` N32.3); ROADMAP N22/N30/N32; `docs/TEST-EVIDENCE.md` (N30.1/N30.3, N32.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
 
-**Nota N32 (2026-11-16, closeout):** Sprint **N32 concluída** no ROADMAP — lacuna paralela 10k/50 USD no `risk_check` fechada; paridade `control_flags` + REQUIREMENTS âncora `[x]` (`test_n32_*`). Issue **permanece aberta**: B3/FOREX ordem demo (**ISS-010**), campanha **N17** / **N28**, adapters Clear/OANDA. CI PR **#42** verde; merge e rebuild EasyPanel = operador. Brief: `docs/.briefs/N32.brief.md`.
+**Nota N33 (2026-11-16, closeout docs):** N28/N30/N31 carimbadas `concluida` no ROADMAP com SHA/PR citados. **ISS-011 permanece aberto** somente para B3/FOREX (**ISS-010**) e **N17.2** (G-FORM / homologação Tá Barato paper). PR **#42** na linha principal; EasyPanel **#42 no ar** = atestado operador, não fill.
 
 **Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief N30: `docs/.briefs/N30.brief.md`.
 
@@ -316,7 +316,7 @@
 |-------|--------|
 | Categoria | feature-sem-dominio / enhancement |
 | Sprint | N31 (campanha Feature 11 / N28) |
-| Status | aberto (planejada; brief `docs/.briefs/N31.brief.md`) |
+| Status | fechado — feat `d1d139a`, stamp `84791eb`; PR **#38** merge `681e8c546ab7d6388f8627813e0606a9a347bfee` (`2026-11-16T17:12:28Z`); N28.2–4 entregues `71caca1` / PR **#39** `5178fff` |
 
 **Decisão operador (2026-11-16):** serviço de melhoria contínua que analisa com frequência ordens **executadas e não executadas**; a plataforma se **auto-analisa diariamente** para aprimorar as melhores estratégias (aprendizado a partir do rastro real). Fecha dúvida REQUIREMENTS §9 item **#8** (método do ajuste).
 

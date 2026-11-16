@@ -4,10 +4,25 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 13–38 |
+| N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #42 main + EasyPanel attested | 14–36 |
+| N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 38–63 |
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N33 — Closeout docs ISS-011 (laço americano no papel)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`. **Escopo:** docs/sessão apenas — zero diff em `src/`.
+
+**Entregue (docs):** `docs/.briefs/N33-GIT-FIRST-REUSE.md` confirmado com SHAs/PRs verificados em `origin/main` + `gh pr view`; ROADMAP N28/N30/N31 → Status `concluida` com notas de closeout; ISS-011 honesto (aberto só **ISS-010** B3/FOREX + **N17.2** G-FORM); ISS-012 corpo `fechado`; REQUIREMENTS changelog linha N28.2–4 `[x]`; esta entrada + TEST-EVIDENCE.
+
+**Prova citada:** PR **#42** merge `d30689b` (`2026-11-16T19:49:34Z`); PR **#39** `5178fff`; PR **#35** `622fbeb`; PR **#38** `681e8c5`. EasyPanel imagem **#42 no ar** — atestado operador 2026-11-16 (**não é fill**).
+
+**Decisões:** N33 Status permanece `planejada` até sprint-finalizer/VERIFY; `LIVE_TRADING_ENABLED=false`; sem adapters Clear/OANDA.
+
+**Próximo:** parent finalizer N33; campanha ISS-010 + N17.2 operador.
 
 ---
 

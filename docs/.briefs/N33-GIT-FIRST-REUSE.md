@@ -16,10 +16,10 @@ No vendor upgrade in N33. Do not copy upstream scoring. Do not invent Tá Barato
 
 | Capability | Path / function | Decision | Rationale | Tests / evidence |
 |------------|-----------------|----------|-----------|------------------|
-| N30 Alpaca US+CRYPTO loop | `docs/.briefs/N30.brief.md`, `docs/.briefs/N30-GIT-FIRST-REUSE.md` | **Reuse / cite** | Feature 7 US/CRYPTO already `[x]` | `test_n30_us_equity_demo_on_paper_submitted`; PR **#35** `622fbeb` |
-| N31 G-AJUSTE + TimesFM | `docs/.briefs/N31.brief.md`, `docs/.briefs/N31-GIT-FIRST-REUSE.md` | **Reuse / cite** | Method defined; ISS-012 body still stale | `tests/test_n31_g_ajuste_guardrails.py`; PR **#38** `681e8c5` |
-| N28 Feature 11 apply/undo | ROADMAP N28 notes + `src/supervised_adjustment.py` (do not edit) | **Cite only** | Criteria 2–4 already `[x]` in REQUIREMENTS | `tests/test_n28_supervised_adjustment.py`; feat `71caca1`; stamp `c465724`; PR **#39** `5178fff` |
-| N32 panel âncoras | `docs/.briefs/N32.brief.md`, `docs/.briefs/N32-GIT-FIRST-REUSE.md` | **Reuse / cite** | N32 already `concluida` | `test_n32_*`; PR **#42** merge `d30689bfeb4b009b6297d4bdea8fead233486474` |
+| N30 Alpaca US+CRYPTO loop | `docs/.briefs/N30.brief.md`, `docs/.briefs/N30-GIT-FIRST-REUSE.md` | **Reuse / cite** | Feature 7 US/CRYPTO already `[x]` | feat `322318b`; PR **#35** MERGED `622fbeb786b4e042d2269d60d5c44e7e0f51ab8e` (`2026-11-16T12:47:20Z`); TEST-EVIDENCE N30.1 / N30.3b |
+| N31 G-AJUSTE + TimesFM | `docs/.briefs/N31.brief.md`, `docs/.briefs/N31-GIT-FIRST-REUSE.md` | **Reuse / cite** | Method defined; ISS-012 body synced N33 | feat `d1d139a`, stamp `84791eb`; PR **#38** MERGED `681e8c546ab7d6388f8627813e0606a9a347bfee` (`2026-11-16T17:12:28Z`); `tests/test_n31_g_ajuste_guardrails.py` |
+| N28 Feature 11 apply/undo | ROADMAP N28 notes + `src/supervised_adjustment.py` (do not edit) | **Cite only** | Criteria 2–4 already `[x]` in REQUIREMENTS | `tests/test_n28_supervised_adjustment.py`; feat `71caca1`, stamp `c465724`; PR **#39** MERGED `5178fff04fbf7f4675fb9950580df81fdf732f7f` (`2026-11-16T17:20:14Z`) |
+| N32 panel âncoras | `docs/.briefs/N32.brief.md`, `docs/.briefs/N32-GIT-FIRST-REUSE.md` | **Reuse / cite** | N32 already `concluida` | `test_n32_*`; PR **#42** MERGED `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); tip `main` `9367cdd` |
 | trader-entry/exit/budget/risk/scanner | `src/original.py` | **Do not touch** | MIT loader | `tests/test_vendor_verify.py` |
 | Clear / OANDA | `src/demo_broker_adapters.py` | **Do not touch** | ISS-010 / N29.5 | existing gate tests |
 | Tá Barato | vendor + sprint **N17** | **Defer** | G-FORM; N17.2 remains operador | `docs/TEST-EVIDENCE.md` Sprint N17 |

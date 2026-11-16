@@ -53,9 +53,9 @@
 | N26 | N | Performance só de fill confirmado; bruto rotulado | concluida | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
 | N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
 | N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
-| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
-| N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | em closeout (stamp verifier pendente) | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
-| N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | em execução | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
+| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | concluida | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
+| N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | concluida | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
+| N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | concluida | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
 | N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
 | N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | planejada | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 
@@ -1240,7 +1240,7 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 ## Sprint N28 — Ajuste supervisionado depois do método
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Ajuste registrado e reversível, sem mexer no risco  
 > Gate: G-AJUSTE e fill real; só parâmetro existente na faixa original; histórico com desfazer; âncoras intocadas; LIVE false  
 > review: senior+qa  
@@ -1255,11 +1255,13 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 **Notas N28.2–4 (pós-N31 merge `681e8c5`):** `src/supervised_adjustment.py` + catálogo documentado; ledger append-only `parameter_adjustments.jsonl`; apply/undo via `/api/strategy-parameters/*` (sessão operador); faixa incerta → só `suggestion_only`; âncoras espelham `TRIGGER_PATCH_FIELDS`.
 
+**Closeout N33 (2026-11-16):** feat `71caca1`, stamp `c465724`; PR **#39** merge `5178fff04fbf7f4675fb9950580df81fdf732f7f` (`2026-11-16T17:20:14Z`); Feature 11 critérios 2–4 `[x]` — `tests/test_n28_supervised_adjustment.py` (`test_n28_2_in_range_proposal_can_apply`, `test_n28_3_apply_undo_persist_before_after_reason`, `test_n28_4_never_mutates_risk_anchors`).
+
 ---
 
 ## Sprint N30 — Laço Alpaca (ação US + cripto) e caminho Prodígio
 > Categoria: N  
-> Status: em closeout (N30.4 docs; verifier stamp pendente — não marcar concluída até `/qa validar`)  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 · ISS-007 / ISS-009 abertos · ISS-010 fora  
 > titulo_humano: Alpaca opera sozinha em ação e cripto; Prodígio só com fase liberada  
 > resumo_humano: A conta demo da Alpaca envia sozinha em ação americana e cripto. O ranking Prodígio vira sinal paper só se a fase já estiver liberada. O contrato marca o que o painel já faz. Clear, OANDA e o método de ajuste ficam fora desta rodada.  
@@ -1269,6 +1271,8 @@ testes: mock REST — order + fill transaction; block se token ausente.
 > bom_ref: BOM-3, BOM-4  
 > Depende de: N27 parcial (Alpaca-only) · Release: campanha ISS-011 onda 1  
 > LIVE_TRADING_ENABLED: false
+
+**Closeout N33 (2026-11-16):** feat `322318b`; PR **#35** merge `622fbeb786b4e042d2269d60d5c44e7e0f51ab8e` (`2026-11-16T12:47:20Z`); evidência `docs/TEST-EVIDENCE.md` N30.1 / N30.3b; campanha histórica acima não reescrita.
 
 ### Em uma frase
 
@@ -1496,7 +1500,7 @@ P task. Update ISS-011 with campaign N30 → N17 → N28(blocked). Feature 7 REQ
 
 ## Sprint N31 — Melhoria contínua diária e apoio TimesFM só como pesquisa
 > Categoria: N  
-> Status: em execução  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-012 · N28 **não** reescrita  
 > titulo_humano: Autoanálise diária com dicas; previsão Google só como pesquisa  
 > resumo_humano: O laboratório analisa todo dia o que preencheu e o que não saiu e mostra só dicas rotuladas. O modelo de séries temporais do Google entra como contexto de pesquisa quando estiver no ar. O ajuste de parâmetro continua na sprint já planejada.  
@@ -1534,6 +1538,8 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 | [x] | M | N31.2 Incluir o modelo TimesFM como apoio opcional só de pesquisa no relatório | `/dev` | N31.1 |
 | [x] | P | N31.3 Registrar o método de ajuste e liberar o caminho da sprint já planejada, sem inventar nota | docs | N31.1 |
 | [x] | P | N31.4 Testar que dica e previsão nunca viram ordem e que o modelo ausente não inventa número | `/qa testes` | N31.1, N31.2 |
+
+**Closeout N33 (2026-11-16):** feat `d1d139a`, stamp `84791eb`; PR **#38** merge `681e8c546ab7d6388f8627813e0606a9a347bfee` (`2026-11-16T17:12:28Z`); `tests/test_n31_g_ajuste_guardrails.py` (`N31GAjusteGuardrails.test_review_never_imports_paper_gateway`, `test_timesfm_missing_no_numeric_forecast_in_report`).
 
 ### Campanha ISS-012 (não executar N28.2–4 nesta sprint)
 
@@ -1920,11 +1926,11 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N33.0 Inventariar a prova já entregue antes de carimbar | `/git` | — |
-| [ ] | P | N33.1 Carimbar no plano as três sprints já entregues | docs | N33.0 |
-| [ ] | P | N33.2 Deixar os chamados e o changelog do contrato honestos | docs | N33.1 |
-| [ ] | P | N33.3 Registrar no diário e na evidência o pedido 42 no ar | docs | N33.1 |
-| [ ] | P | N33.4 Atualizar a sessão desta sprint após os carimbos | session | N33.2, N33.3 |
+| [x] | P | N33.0 Inventariar a prova já entregue antes de carimbar | `/git` | — |
+| [x] | P | N33.1 Carimbar no plano as três sprints já entregues | docs | N33.0 |
+| [x] | P | N33.2 Deixar os chamados e o changelog do contrato honestos | docs | N33.1 |
+| [x] | P | N33.3 Registrar no diário e na evidência o pedido 42 no ar | docs | N33.1 |
+| [x] | P | N33.4 Atualizar a sessão desta sprint após os carimbos | session | N33.2, N33.3 |
 
 ### Fora de escopo
 

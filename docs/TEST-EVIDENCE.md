@@ -315,6 +315,8 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest -q \
 
 **Sprint N32.3 — Feature 7 âncora no `signal_paper_runner` (pytest):** `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_tight_defaults_qty1_aapl_paper_submitted`, `test_n32_lowered_capital_cents_blocks_capital_limit`, `test_n32_lowered_max_risk_per_trade_blocks_trade_risk_limit`, `test_n32_risk_check_tight_cap_not_parallel_10k_usd`, `test_n32_b3_equity_auto_blocked_no_alpaca_post`, `test_n32_forex_auto_blocked_no_alpaca_post` → `docs/REQUIREMENTS.md` Feature 7 âncora `[x]`; B3/FOREX ordem demo permanecem `[ ]` (**ISS-010**).
 
+**Sprint N33 (docs closeout):** PR **#42** na linha principal — merge `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); EasyPanel imagem do pedido **#42 no ar** (atestado operador chat 2026-11-16). **Não é fill** — painel no ar ≠ ordem executada na corretora.
+
 ## Sprint N17 — MVP-OP-1.1 Tá Barato (G-FORM blocked; shadow homolog)
 
 > Sprint N17 · `LIVE_TRADING_ENABLED=false` · vendor pin `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd`  

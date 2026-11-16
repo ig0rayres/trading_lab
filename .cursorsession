@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N33 planejada",
+  "fase_nome": "N33 implementação concluída (aguarda finalizer)",
   "sprint_pending_merge": null,
   "sprint_pr": 42,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T17:20:00-03:00",
+  "ultimo_update": "2026-11-16T20:30:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Parent Fable / plan-verifier em docs/.briefs/N33.brief.md (plan_only=true)",
-    "Rock EXECUTE /pmo sprint N33 nesta frente após verifier PASS: onda 0 N33.0; onda 1 N33.1; onda 2 N33.2∥N33.3; onda 3 N33.4",
-    "Não implementar Clear/OANDA; não inventar scoring; LIVE false; não reescrever tabela de tasks N17"
+    "Parent sprint-finalizer N33 após VERIFY (não marcar ROADMAP N33 Status concluida aqui)",
+    "Campanha restante ISS-011: ISS-010 B3/FOREX + N17.2 G-FORM (operador)",
+    "Não implementar Clear/OANDA; não inventar scoring; LIVE false"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -116,13 +116,13 @@
     "/pmo sprint N18",
     "/pmo plan N33"
   ],
-  "contexto_rapido": "N33 plan_only: closeout docs N28/N30/N31 Status + ISS-011 restante B3/FOREX/N17.2; PR #42 merged d30689b; EasyPanel #42 no ar (operador). LIVE false.",
+  "contexto_rapido": "N33 EXECUTE docs done N33.0–N33.4; ROADMAP N28/N30/N31 concluida; ISS-011 aberto só ISS-010+N17.2; PR #42 main d30689b; EasyPanel #42 no ar (operador, não fill). LIVE false.",
   "sprint_tasks": [
     {
       "id": "N33.0",
       "title": "Inventariar a prova já entregue antes de carimbar",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [],
       "files": [
         "docs/.briefs/N33-GIT-FIRST-REUSE.md"
@@ -132,7 +132,7 @@
       "id": "N33.1",
       "title": "Carimbar no plano as três sprints já entregues",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N33.0"
       ],
@@ -144,7 +144,7 @@
       "id": "N33.2",
       "title": "Deixar os chamados e o changelog do contrato honestos",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N33.1"
       ],
@@ -157,7 +157,7 @@
       "id": "N33.3",
       "title": "Registrar no diário e na evidência o pedido 42 no ar",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N33.1"
       ],
@@ -170,7 +170,7 @@
       "id": "N33.4",
       "title": "Atualizar a sessão desta sprint após os carimbos",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N33.2",
         "N33.3"
@@ -181,12 +181,12 @@
     }
   ],
   "checkpoint": {
-    "phase": "planning",
+    "phase": "testing",
     "sprint": "N33",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N32.3",
-    "plan_only": true,
+    "last_completed_task": "N33.4",
+    "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N32",
@@ -225,8 +225,8 @@
       "patch_id": "d2aee5fda6bf7e8fdadece6e70e80c26f1a6a88c",
       "patch_id_version": 2
     },
-    "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N32"
+    "sprint_delivery": "implementation_complete",
+    "sprint_delivery_sprint": "N33"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -271,7 +271,7 @@
   },
   "sprint_branch": "front/n27-alpaca-loop",
   "sprint_categoria": "N",
-  "plan_only": true,
+  "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",

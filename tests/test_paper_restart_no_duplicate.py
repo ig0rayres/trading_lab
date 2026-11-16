@@ -8,6 +8,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 import paper_gateway_queue as pgq
+from demo_broker_adapters import G_MKT_ADAPTER_PATH_ALPACA_PAPER
+from unittest.mock import patch
 
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
@@ -40,6 +42,7 @@ class PaperRestartNoDuplicateTest(unittest.TestCase):
             'PAPER_SIGNAL_AUTO_ENABLED': 'true',
             'PAPER_EXECUTION_ENABLED': 'true',
             'PAPER_SIGNAL_ACCOUNT_ACK': 'I_AUTHORIZE_ALPACA_PAPER_ONLY',
+            'DEMO_ACCOUNT_PATH_CRYPTO': G_MKT_ADAPTER_PATH_ALPACA_PAPER,
         }
         queued = pgq.queue_intent(signal, decision)
         with store.connect() as conn:
@@ -83,15 +86,27 @@ class PaperRestartNoDuplicateTest(unittest.TestCase):
                 'orders_sent': 0,
             }
 
-        with patch.object(pgq, 'paper_run', side_effect=fake_broker_run):
-            first = pgq.process_after_gate_b(signal, decision, env, track_fn=fake_track)
+        import ledger_store as store_flags
+
+        with store_flags.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE control_flags SET demo_operation_on = TRUE '
+                    'WHERE deleted_at IS NULL'
+                )
+            conn.commit()
+
+        with patch('risk_control_flags.demo_send_allowed', return_value=(True, None)):
+            with patch.object(pgq, 'paper_run', side_effect=fake_broker_run):
+                first = pgq.process_after_gate_b(signal, decision, env, track_fn=fake_track)
         self.assertEqual(first['mode'], 'RESUMED_AFTER_RESTART')
         self.assertEqual(first['orders_sent'], 0)
         self.assertEqual(broker_calls, [])
         self.assertEqual(track_calls, [client_order_id])
 
-        with patch.object(pgq, 'paper_run', side_effect=fake_broker_run) as broker:
-            second = pgq.process_after_gate_b(signal, decision, env, track_fn=fake_track)
+        with patch('risk_control_flags.demo_send_allowed', return_value=(True, None)):
+            with patch.object(pgq, 'paper_run', side_effect=fake_broker_run) as broker:
+                second = pgq.process_after_gate_b(signal, decision, env, track_fn=fake_track)
         broker.assert_not_called()
         self.assertEqual(second['mode'], 'RESUMED_AFTER_RESTART')
         self.assertEqual(second['orders_sent'], 0)

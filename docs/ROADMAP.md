@@ -41,7 +41,7 @@
 | N14 | N | Pacotão MVP-DEMO-1.0 runbook + smoke + deploy policy | concluida | 4 | docs, observability | Release único MVP demo | *(abaixo)* |
 | N15 | N | MVP-OP-0.9 — submit copy paper homologado | em execucao | 2 | operador, docs | Submit `signal_copy` | *(abaixo)* |
 | N16 | N | MVP-OP-1.0 — Prodígio paper + Command Panel v1 | concluida | 9 | prodigy, v4_web_dashboard | Plataforma operacional v1 | *(abaixo)* |
-| N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | planejada | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
+| N17 | N | MVP-OP-1.1 — Tá Barato upstream + painel família | substituida (N31) | 5 | vendor, strategy-catalog | Multi-estratégia | *(abaixo)* |
 | N18 | N | Command Panel always-on (`v4-ops`) + runbook ops | em execucao | 4 | observability, docs | Painel 8765 sem nohup | *(abaixo)* |
 | N19 | N | Laço demo: gatilho no painel e ciclo da ordem no ledger | em execucao | 4 | observability, paper-gateway | Operar B3, cripto e forex | *(abaixo)* |
 | N20 | N | Contrato v0.3 + N19.1–N19.2 publicados; fill P-001b; SHA imagem; 0 rebuild | em execucao | 5 | docs, ledger, observability | Onda 0 — resgate | *(abaixo)* |
@@ -51,9 +51,14 @@
 | N24 | N | Login + Central de controle; dia a dia sem Exec | concluida | 4 | v4_web_dashboard | Onda 3 — Feature 8 | *(abaixo)* |
 | N25 | N | Tela de sinais com destino, gate e âncora; ranking Prodígio | concluida | 3 | v4_web_dashboard | Onda 3 — Feature 9 | *(abaixo)* |
 | N26 | N | Performance só de fill confirmado; bruto rotulado | concluida | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
-| N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
-| N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
-| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
+| N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada* | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
+| N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada* | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
+| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | substituida (N34) | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
+| N30 | N | Snapshot de risco fresco, cripto no mesmo laço, cancelamento sem fill, parada por perda | planejada | 5 | paper-gateway, observability | CONTRACT-CLOSEOUT onda 1 | *(abaixo)* |
+| N31 | N | Produtores internos momentum e Tá Barato via scanner upstream | planejada | 5 | vendor, strategy-catalog | CONTRACT-CLOSEOUT onda 2 | *(abaixo)* |
+| N32 | N | Produtores Prodígio e News First + sombra ORB visível | planejada | 4 | prodigy, news-first | CONTRACT-CLOSEOUT onda 3 | *(abaixo)* |
+| N33 | N | Interruptor demo na Central e conferência Features 7–10 | planejada | 4 | v4_web_dashboard, docs | CONTRACT-CLOSEOUT onda 4 | *(abaixo)* |
+| N34 | N | Ajuste supervisionado reversível (Feature 11) | planejada | 5 | strategy-catalog, v4_web_dashboard | CONTRACT-CLOSEOUT onda 5 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -82,7 +87,7 @@
 | N13 | senior+qa | Matriz homolog estratégias; F-003 congelado até N12 |
 | N15 | skip | Operador + docs; 0 rebuild |
 | N16 | senior+qa | Prodígio paper + dashboard v1 (`v4_web_dashboard`) |
-| N17 | senior+qa | Tá Barato upstream + extensão painel |
+| N17 | senior+qa | Tá Barato upstream + extensão painel (substituída por N31) |
 | N19 | senior+qa | Escrita de gatilho + rastro da ordem |
 | N20 | senior+qa | Resgate de contrato e código N19.1–N19.2 |
 | N21 | senior+qa | Ciclo da ordem e P&L de fill |
@@ -93,7 +98,12 @@
 | N26 | senior+qa | Performance financeira |
 | N27 | comprehensive | Envio autônomo na conta demo |
 | N29 | comprehensive | Adapters Clear + OANDA Practice |
-| N28 | senior+qa | Ajuste automático de parâmetro |
+| N28 | senior+qa | Ajuste automático de parâmetro (substituída por N34) |
+| N30 | comprehensive | Laço demo fail-closed (snapshot, cripto, cancel, perda) |
+| N31 | senior+qa | Produtores internos via scanner upstream |
+| N32 | senior+qa | Prodígio, News First, sombra visível |
+| N33 | senior+qa | Central demo + evidência Features 7–10 |
+| N34 | senior+qa | Ajuste supervisionado (Feature 11) |
 
 ---
 
@@ -876,11 +886,12 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 
 ## Sprint N17 — Release MVP-OP-1.1 (Tá Barato + momentum upstream)
 > Categoria: N  
-> Status: planejada  
+> Status: substituida (N31) — 2026-11-15 CONTRACT-CLOSEOUT  
 > titulo_humano: Tá Barato com regras upstream homologadas em shadow/paper  
 > Gate: fórmulas/limites de `ta_barato` (e momentum se escopo) recuperadas em vendor — **senão** sprint permanece blocked e documenta gap; homolog pytest; LIVE false  
 > review: senior+qa  
-> Release tag: `MVP-OP-1.1`
+> Release tag: `MVP-OP-1.1`  
+> **Não executar.** O escopo aberto (scanner upstream `find_setups`, produtores internos, fases research até o operador promover) passou para **N31**. Tasks abaixo ficam históricas.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
@@ -1133,11 +1144,11 @@ Delivered in PR #27 with N24/N25. Maintain: `performance_from_snapshots` counts 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
 | [x] | M | N27.1 Forex no universo e no avaliador de carteira, barrado sem conta | `/dev` | — |
-| [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT, N29 |
+| [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT, N29 — **B3/FOREX excluded — third-party not homologated (operator 2026-11-15)**; cripto Alpaca já coberto em N27.1/N27.3 |
 | [x] | P | N27.3 Teste: mercado sem conta continua visível e barrado com motivo | `/qa testes` | N27.1, N19.4 |
-| [ ] | P | N27.4 Operador: sinal válido vira ordem demo sem ação manual | operador | N27.2, N23.1, N24.2 |
-| [ ] | P | N27.5 Teste: chave live no ambiente não muda o destino paper | `/qa testes` | N27.2 |
-| [ ] | P | N27.6 Teste: restart com laço ligado não duplica | `/qa testes` | N27.4 |
+| [ ] | P | N27.4 Operador: sinal válido vira ordem demo sem ação manual | operador | N27.2, N23.1, N24.2 — **B3/FOREX excluded — third-party not homologated (operator 2026-11-15)**; US/cripto absorvido por N30/N33 |
+| [ ] | P | N27.5 Teste: chave live no ambiente não muda o destino paper | `/qa testes` | N27.2 — **absorvido por N30.5** (há teste parcial `test_n27_5_live_looking_key_keeps_paper_alpaca_host`) |
+| [ ] | P | N27.6 Teste: restart com laço ligado não duplica | `/qa testes` | N27.4 — **absorvido por N30.5** (N21.3 existe; falta laço `demo_operation_on`) |
 
 ---
 
@@ -1173,8 +1184,8 @@ A plataforma fala com a Clear (B3) e a OANDA (forex) em modo demo, e mantém a A
 | [x] | M | N29.2 Adapter OANDA fxTrade **Practice** (posição, ordem, fill) | `/dev` | — |
 | [x] | P | N29.3 Ligar `DEMO_ACCOUNT_PATH_*` / env aos três mercados (Clear, Alpaca, OANDA) | `/dev` | N29.1, N29.2 |
 | [x] | P | N29.4 Teste: B3/FOREX nunca POST Alpaca; sem credencial → barrado com motivo | `/qa testes` | N29.3 |
-| [ ] | P | N29.5 Operador: abrir/credenciar Clear + OANDA; ids só no EasyPanel | operador | N29.3 |
-| [ ] | P | N29.6 Desbloquear N27.2 no ROADMAP após adapters verdes + nota de release | docs | N29.4, N29.5 |
+| [ ] | P | N29.5 Operador: abrir/credenciar Clear + OANDA; ids só no EasyPanel | operador | N29.3 — **excluded — third-party not homologated (operator 2026-11-15)** |
+| [ ] | P | N29.6 Desbloquear N27.2 no ROADMAP após adapters verdes + nota de release | docs | N29.4, N29.5 — **excluded — third-party not homologated (operator 2026-11-15)** |
 
 ### Task N29.1 — Clear Smart Trader simulado
 
@@ -1229,11 +1240,12 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 ## Sprint N28 — Ajuste supervisionado depois do método
 > Categoria: N  
-> Status: planejada  
+> Status: substituida (N34) — 2026-11-15 CONTRACT-CLOSEOUT  
 > titulo_humano: Ajuste registrado e reversível, sem mexer no risco  
 > Gate: G-AJUSTE e fill real; só parâmetro existente na faixa original; histórico com desfazer; âncoras intocadas; LIVE false  
 > review: senior+qa  
-> Depende de: N20.3, N21
+> Depende de: N20.3, N21  
+> **Não executar.** Feature 11 (Should) passou para **N34**: rótulo de sugestão, histórico com desfazer, âncoras intocadas, e ajuste automático conservador **desligado** até o operador ligar. G-AJUSTE permanece aberto para revisão do operador.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
@@ -1241,6 +1253,748 @@ testes: mock REST — order + fill transaction; block se token ausente.
 | [ ] | M | N28.2 Ajustar só parâmetro existente, dentro da faixa original | `/dev` | G-AJUSTE |
 | [ ] | M | N28.3 Registrar antes, depois e motivo, com desfazer na Central | `/dev` | N28.2 |
 | [ ] | P | N28.4 Teste: ajuste nunca altera âncora de risco | `/qa testes` | N28.2 |
+
+---
+
+## Programa CONTRACT-CLOSEOUT
+
+> Planejado em 2026-11-15 via `/pmo plan` (Rock PLAN, `plan_only`).  
+> Auditoria: `docs/.briefs/CONTRACT-CLOSEOUT.intake.md` (lista de gaps soberana). Contrato: `docs/REQUIREMENTS.md` v0.4.  
+> Base: `origin/main` `376434e`. Frente: `front/contract-closeout`. Upstream pin: `3d0f4ef` (= main do `day-trader-skill` em 2026-11-15).  
+> Invariantes: `LIVE_TRADING_ENABLED=false`; só paper/demo; um único caminho de ordem (Gate A → fila → Gate B → `paper_gateway_queue` → `signal_paper_runner`); sem limiar inventado; ORB e mean reversion só em sombra; Collective2 copy permanece fechado; B3/Clear e forex/OANDA **barrados** (terceiro não homologado).
+
+```text
+Onda 1  N30   laço operacional: snapshot ≤120s, cripto, cancel sem fill, parada por perda, N27.5/N27.6
+Onda 2  N31   produtores internos + momentum + ta_barato via find_setups (substitui N17)
+Onda 3  N32   Prodígio (C2 leitura) + news_first com confirmação de preço + sombra visível
+Onda 4  N33   interruptor demo na Central + conferência Features 7–10 (TEST-EVIDENCE)
+Onda 5  N34   Feature 11 infra supervisionada (substitui N28)
+```
+
+Caminho crítico Must-have: **N30 → N31 → N32 → N33**. Feature 11 (Should) é N34 e não trava 7–10.
+
+### Exclusões aceitas pelo operador (2026-11-15)
+
+| Item | Tratamento |
+|------|------------|
+| B3 via Clear Smart Trader | Continua visível e **barrado** com motivo. N27.2/N27.4 (parte B3), N29.5, N29.6 fora. |
+| Forex via OANDA Practice | Idem. Sem credencial, sem adapter no laço. |
+| ORB / mean reversion em paper | Proibido. Sombra deve continuar e aparecer no painel (N32.3). |
+| LIVE | Fora. |
+| Collective2 paper-copy | `approved_for_paper_copy` permanece falso. Prodígio usa o feed C2 só como pesquisa → sinal interno da família `prodigy_15d`. |
+
+### Pendências do operador (não bloqueiam o plano)
+
+1. Confirmar o mapeamento momentum ↔ `breakout_20d|bull_flag|reclaim_ma20` e ta_barato ↔ `oversold|oversold_bounce`, depois promover fases na Central.
+2. Método G-AJUSTE (o que conta como erro, frequência, desfazer) — N34 entrega infra conservadora **desligada**.
+3. Rebuild EasyPanel depois do merge (agente não publica).
+4. Chave C2 no ambiente para o feed ao vivo do Prodígio (se ainda não estiver).
+5. N20.2 SHA da imagem dos dois serviços.
+
+---
+
+## Sprint N30 — Laço demo fail-closed (snapshot, cripto, cancel, perda)
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: O laço demo para sozinho se o risco estiver velho, estourado ou sem fill  
+> resumo_humano: O serviço operacional passa a renovar sozinho a fotografia de risco com dados reais da corretora paper e do ledger. Sem fotografia fresca ou P&L conferido, nenhuma ordem nova sai. Cripto usa o mesmo caminho da ação americana. Ordem sem fill no prazo é cancelada e não volta sozinha. Perda do dia ou da semana para até o período seguinte.  
+> Gate: fotografia de risco com idade ≤120s no worker; P&L não verificado ⇒ recusa; cripto assinado aceito sem afrouxar autenticidade; TTL cancela e `may_auto_resubmit` falso; `DAILY_LOSS_HALT`/`WEEKLY_LOSS_HALT` até o próximo período; chave live não muda o host paper; restart com laço ligado não duplica; LIVE false  
+> review: comprehensive  
+> Depende de: N23, N27.1, N27.3  
+> Gerado via: `/pmo plan` — CONTRACT-CLOSEOUT 2026-11-15  
+> Brief: `docs/.briefs/N30.brief.md`
+
+### Em uma frase
+
+O laço demo só envia ordem paper quando a fotografia de risco está fresca e verdadeira; cripto entra no mesmo caminho, e ordem sem fill ou perda no teto param sozinhas.
+
+### O que muda para você
+
+- Você não precisa renovar a fotografia de risco no Exec: o serviço operacional faz isso sozinho
+- Sem P&L conferido, o laço recusa ordem nova em vez de inventar “verificado”
+- Cripto paper (Alpaca) usa o mesmo caminho da ação americana, ainda com assinatura e prazo
+- Ordem que não preenche no prazo some da corretora paper e não é reenviada
+- Estouro de perda do dia ou da semana segura até o dia ou a semana seguinte, com motivo visível
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Fotografia de risco renovada sozinha | No painel, ordem nova só passa com fotografia recente; fotografia velha ou P&L não conferido barra com motivo |
+| 2 | Sinal cripto no mesmo laço | Um sinal cripto assinado segue o mesmo caminho da ação; sessão 24h; autenticação continua obrigatória |
+| 3 | Cancelamento sem fill | Ordem paper aberta além do prazo some na corretora e não volta sozinha |
+| 4 | Parada por perda do período | Com perda do dia/semana no teto, ordem nova recusa até o período seguinte |
+| 5 | Chave live e restart | Chave com cara de live continua no host paper; reinício com laço ligado não abre ordem duplicada |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | M | N30.1 Renovar a fotografia de risco no serviço operacional | `/dev` | — |
+| [x] | M | N30.2 Aceitar sinal cripto Alpaca no mesmo caminho autenticado | `/dev` | N30.1 |
+| [x] | M | N30.3 Cancelar ordem paper sem fill no prazo, sem reenvio | `/dev` | N30.1 |
+| [x] | M | N30.4 Parar por perda do dia/semana até o próximo período | `/dev` | N30.1 |
+| [x] | P | N30.5 Provar host paper com chave live e restart sem duplicata | `/qa testes` | N30.2, N30.3 |
+
+### Task N30.1 — Renovar a fotografia de risco no serviço operacional
+
+**Entrega:** O serviço operacional grava sozinho uma fotografia de risco com idade máxima de dois minutos, feita com P&L do ledger e contagens reais da corretora paper.
+**Como conferir:** Com a fotografia velha ou P&L não conferido, a ordem paper é recusada com motivo; com fotografia fresca e P&L conferido, o laço deixa de travar só por arquivo ausente.
+**Por quê:** Hoje o envio paper exige esse arquivo fresco e nada no serviço operacional o atualiza — o laço autônomo fica parado.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: signal_paper_runner.risk_check exige V4_RISK_SNAPSHOT_FILE com at_utc ≤120s, alpaca_positions_count e alpaca_open_orders_count iguais ao GET Alpaca; ledger_loss_anchor.portfolio_risk_snapshot não traz esses campos; v4_broker_snapshot nunca marca complete/verified; v4_ops_main.sh só supervisiona dashboard + tv-worker; risk_check ainda recusa com DAILY_RISK_NOT_CONFIRMED se PAPER_DAILY_RISK_CONFIRMED≠true (contradiz o comentário de não inferir P&L de boolean de env).
+desejado: loop no v4-ops (intervalo ≤60s) grava V4_RISK_SNAPSHOT_FILE mesclando portfolio_risk_snapshot + GET Alpaca (contagens e posições); at_utc UTC; sem verified=true hardcoded — complete/daily_pnl_verified/weekly_pnl_verified/broker_reconciled só quando o ledger realmente conferiu; risk_check deixa de usar o boolean de env e passa a ler os flags da fotografia; B3/FOREX fora da fotografia (mercados excluídos).
+guardrail: LIVE false; host só paper-api.alpaca.markets; GET allowlist existente; não inventar P&L; não POST de ordem neste módulo.
+testes: fotografia ausente/stale/mismatch ⇒ V4_PORTFOLIO_SNAPSHOT_*; P&L não verificado ⇒ LOSS_DATA_NOT_VERIFIED; idade ≤120s + counts iguais ⇒ não há STALE; loop v4-ops presente no script (espelhar test_v4_ops_layout).
+files:
+  - src/risk_snapshot_refresh.py
+  - scripts/v4_ops_main.sh
+  - src/signal_paper_runner.py
+  - tests/test_risk_snapshot_refresh.py
+  - tests/test_signal_paper_runner.py
+reuse_targets:
+  - component: src/ledger_loss_anchor.py portfolio_risk_snapshot
+    reuse_as: call
+    convergence_check: rg "portfolio_risk_snapshot" src/risk_snapshot_refresh.py
+  - component: src/v4_broker_snapshot.py collect/get_json
+    reuse_as: call
+    convergence_check: rg "alpaca_positions_count|alpaca_open_orders_count" src/risk_snapshot_refresh.py
+guardrail_contract:
+  - class: secrets
+    check: rg -n "ALPACA_|C2_|SIGNAL_COPY" src/risk_snapshot_refresh.py scripts/v4_ops_main.sh | rg -v "environ|env.get|os.environ"
+    pass_condition: no hardcoded credentials
+  - class: caller-level
+    convergence_check: pytest -q tests/test_risk_snapshot_refresh.py tests/test_v4_ops_layout.py
+depends_on: []
+```
+
+### Task N30.2 — Aceitar sinal cripto Alpaca no mesmo caminho autenticado
+
+**Entrega:** Sinal cripto da Alpaca paper (símbolo no formato da corretora, sessão contínua) passa no mesmo caminho autenticado da ação americana.
+**Como conferir:** Sinal cripto sem assinatura, atrasado ou com schema errado continua recusado; sinal válido não cai mais na recusa “só ação americana”.
+**Por quê:** A conta paper já cobre cripto, mas a validação do sinal só aceita ação americana e símbolos de até cinco letras — `BTCUSD` nem entra.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: signal_copy.validate exige asset_class==us_equity e symbol [A-Z]{1,5} (BTCUSD tem 6; BTC/USD tem barra); risk_check exige qty int; make_order usa time_in_force day; tradingview_webhook espelha us_equity; gate_b_session já trata CRYPTO como 24/7; paper_gateway_queue já roteia CRYPTO pela Alpaca paper quando DEMO_ACCOUNT_PATH_CRYPTO está setado.
+desejado: asset_class crypto permitido com símbolo Alpaca (BTCUSD ou BTC/USD) sem afrouxar HMAC, ttl 1–60s, schema, lado buy, frescor; qty fracionária só CRYPTO; TIF gtc só CRYPTO; US equity permanece [A-Z]{1,5} + tif day + qty int. Não aceitar B3/FOREX neste caminho.
+guardrail: não relaxar AUTH_FAILED / ttl / schema; LIVE false; Gate A checks intactos.
+testes: crypto válido assinado aceito; crypto sem assinatura AUTH_FAILED; AAPL continua us_equity; símbolo de 6 letras em us_equity continua INVALID_SYMBOL; sessão crypto fora do NYSE não dá OUTSIDE_SESSION.
+files:
+  - src/signal_copy.py
+  - src/signal_paper_runner.py
+  - src/tradingview_webhook.py
+  - tests/test_signal_copy.py
+  - tests/test_signal_paper_runner.py
+depends_on: [N30.1]
+```
+
+### Task N30.3 — Cancelar ordem paper sem fill no prazo, sem reenvio
+
+**Entrega:** Ordem paper que não preenche no prazo é cancelada na corretora, registrada, e o mesmo sinal não é reenviado sozinho.
+**Como conferir:** No teste, a corretora paper recebe o cancelamento, o ledger mostra cancelado por prazo, e uma segunda passagem do worker não abre ordem nova.
+**Por quê:** O contrato Feature 7 exige isso; a função de acompanhamento já sabe cancelar se receber o gancho, mas o laço nunca passa o gancho nem guarda o prazo na ordem.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: paper_fill_cycle.track_once cancela só se cancel_fn e broker_id existirem; process_after_gate_b chama track_once no resume sem cancel_fn; _load_paper_order não lê ttl_seconds/submitted_at_utc; paper_audit é GET-only (sem cancel); may_auto_resubmit já retorna False; v4-ops não tem loop de acompanhamento.
+desejado: cancel DELETE/POST só no host paper, injetado como cancel_fn; persistir ttl e submitted_at no paper_orders (coluna existente ou campo já no JSON — sem inventar prazo novo além do ttl do sinal); loop curto no v4-ops chama track_once nas abertas; sem auto-resend.
+guardrail: LIVE false; cancel nunca no host live; may_auto_resubmit permanece False; não segundo cliente broker.
+testes: TTL expirado ⇒ cancel_fn chamado + TRACKED_CANCELLED_TTL + orders_sent 0; may_auto_resubmit False; resume após restart não re-POST.
+files:
+  - src/paper_fill_cycle.py
+  - src/paper_gateway_queue.py
+  - src/signal_paper_runner.py
+  - scripts/v4_ops_main.sh
+  - tests/test_paper_fill_cycle.py
+depends_on: [N30.1]
+```
+
+### Task N30.4 — Parar por perda do dia/semana até o próximo período
+
+**Entrega:** Quando a perda do dia ou da semana atinge o teto, nenhuma ordem nova sai até o próximo dia ou semana UTC, e o motivo aparece para o operador.
+**Como conferir:** Depois do teto, uma ordem nova no mesmo período é recusada com o motivo de perda; no período seguinte a recusa dessa parada some (outras âncoras continuam valendo).
+**Por quê:** O avaliador de carteira já calcula a perda, mas a parada não fica presa ao período e o painel não mapeia o código de recusa à âncora.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: portfolio_risk_v4 emite DAILY_LOSS_HALT/WEEKLY_LOSS_HALT por avaliação pontual (P&L pode “destravar” no mesmo dia); gate_b_loss_reject só barra fill sem conversão BRL; panel_ops_data.ANCHOR_FIELD_BY_REJECT não inclui DAILY_LOSS_HALT/WEEKLY_LOSS_HALT.
+desejado: ao atingir o teto, persistir halt até o início do próximo dia/semana UTC (não coluna de âncora editável pelo operador); Gate B e risk_check honram o halt; mapear os códigos no painel para max_daily_loss_cents / max_weekly_loss_cents.
+guardrail: não afrouxar âncoras; não inventar FX; LIVE false.
+testes: teto diário ⇒ halt no mesmo dia; avanço de relógio para o dia seguinte ⇒ halt diário some; sem P&L verificado continua fail-closed (não halt falso).
+files:
+  - src/ledger_loss_anchor.py
+  - src/portfolio_risk_v4.py
+  - src/gate_b_risk.py
+  - src/panel_ops_data.py
+  - tests/test_ledger_loss_anchor.py
+depends_on: [N30.1]
+```
+
+### Task N30.5 — Provar host paper com chave live e restart sem duplicata
+
+**Entrega:** Testes mostram que chave com cara de live não muda o destino paper e que reinício com o laço ligado não duplica ordem.
+**Como conferir:** A suíte falha se algum POST for para o host live, ou se o segundo ciclo do worker enviar de novo a mesma ordem.
+**Por quê:** Feature 7 ainda está em aberto nesses dois critérios; já existe teste parcial da chave e teste de restart da N21 sem o laço demo ligado.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: test_n27_5_live_looking_key_keeps_paper_alpaca_host existe; paper_audit.validate_env já exige ALPACA_BASE_URL==paper; test_paper_restart_no_duplicate cobre N21.3 sem demo_operation_on / worker loop.
+desejado: caso BASE_URL live ⇒ fail-closed zero POST live; restart com demo_operation_on true + auto flags não chama broker_run de novo se broker_order_id já existe.
+guardrail: LIVE false; não enfraquecer validate_env.
+testes: estender os dois arquivos citados; nodeids estáveis para N33/TEST-EVIDENCE.
+files:
+  - tests/test_paper_gateway_queue.py
+  - tests/test_paper_restart_no_duplicate.py
+depends_on: [N30.2, N30.3]
+```
+
+---
+
+## Sprint N31 — Produtores internos momentum e Tá Barato
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Momentum e Tá Barato passam a emitir sinal interno pelas regras originais  
+> resumo_humano: As famílias internas passam a gerar sinal assinado no mesmo caminho do copy, usando só os setups do scanner original. Elas nascem em pesquisa: virar paper é só você ligar a família na Central. Nenhum número novo de estratégia é inventado aqui.  
+> Gate: original.py exige find_setups (+ rsi); produtores emitem sinal com strategy_key e provider dedicado, assinados; fase default research ⇒ Gate B STRATEGY_PHASE_BLOCKED até PATCH do operador; zero POST broker no produtor; LIVE false; N17 marcada substituída  
+> review: senior+qa  
+> Depende de: N30, N7  
+> Gerado via: `/pmo plan` — CONTRACT-CLOSEOUT 2026-11-15  
+> Brief: `docs/.briefs/N31.brief.md`
+
+### Em uma frase
+
+Momentum e Tá Barato passam a gerar sinais internos com as regras do scanner original, ainda em pesquisa até você promover no painel.
+
+### O que muda para você
+
+- As duas famílias deixam de ser só nome no catálogo: elas produzem sinal de verdade
+- A promoção para paper continua só na Central — o código não sobe a fase sozinho
+- Você ainda precisa confirmar se os setups originais são mesmo essas duas famílias
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Scanner original exposto | A carga do vendor recusa se faltar a função de setups do scanner |
+| 2 | Sinal interno assinado | Cada família grava um sinal com origem própria no mesmo caminho do copy |
+| 3 | Momentum pelos setups de força | Setup de rompimento/bandeira/média 20 vira sinal da família momentum |
+| 4 | Tá Barato pelos setups de oversold | Setup oversold / oversold bounce vira sinal da família ta_barato |
+| 5 | Pesquisa não envia paper | Com a fase ainda em pesquisa, o gate de risco barra paper com motivo de fase |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N31.1 Expor find_setups (e rsi) no carregador original | `/dev` | — |
+| [x] | M | N31.2 Criar o emissor de sinal interno assinado | `/dev` | N31.1 |
+| [x] | M | N31.3 Emitir momentum só com setups de força do scanner | `/dev` | N31.2 |
+| [x] | M | N31.4 Emitir Tá Barato só com setups oversold do scanner | `/dev` | N31.3 |
+| [x] | P | N31.5 Ligar os produtores no serviço operacional em pesquisa | `/dev` | N31.3, N31.4 |
+
+### Task N31.1 — Expor find_setups no carregador original
+
+**Entrega:** O carregador do vendor passa a exigir as funções de setup do scanner original, sem copiar a fórmula.
+**Como conferir:** Se o scanner original perder `find_setups`, a carga falha; o teste de vendor confirma o contrato.
+**Por quê:** Sem esse contrato, o próximo passo copiaria a lógica em vez de reutilizar.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: original.SCRIPTS scanner required=('orb_hit',); find_setups e rsi existem em trader-scanner/scan.py e já são chamados por multistrategy via orig.scanner.find_setups, mas não estão no contrato de API.
+desejado: required += find_setups e rsi; sem copiar o corpo de find_setups.
+guardrail: não editar vendor/; LIVE false.
+testes: load_original falha se find_setups ausente (monkeypatch); vendor_verify ou teste novo lista o atributo.
+files:
+  - src/original.py
+  - tests/test_original_scanner_api.py
+depends_on: []
+```
+
+### Task N31.2 — Criar o emissor de sinal interno assinado
+
+**Entrega:** Um único emissor grava sinal interno assinado na mesma fila do copy, com origem própria e família preenchida.
+**Como conferir:** Sinal sem família, sem assinatura ou com segredo curto não entra na fila; sinal válido aparece como evento autenticado, sem ordem na corretora neste passo.
+**Por quê:** Feature 4 exige um só caminho de ordem; sem isso cada família inventaria um segundo cliente.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: só signal_copy/TradingView escrevem a fila TV_QUEUE_DIR; tradingview_worker chama signal_copy.validate e process_after_gate_b; strategy_key obrigatório no Gate B.
+desejado: módulo que monta payload ALLOWED, preenche strategy_key + provider dedicado (lab_momentum, lab_ta_barato, lab_prodigy, lab_news_first), assina com SIGNAL_COPY_SECRET (env, ≥24), persiste Gate A (maybe_persist) e escreve o mesmo pending dir; sem importar cliente broker.
+guardrail: LIVE false; HMAC obrigatório; sem segundo broker; fases não sobem sozinhas.
+testes: falta strategy_key ⇒ não enfileira; assinatura ruim ⇒ AUTH_FAILED no worker; provider dedicado ≠ tradingview.
+files:
+  - src/internal_signal_producer.py
+  - src/tradingview_worker.py
+  - src/gate_a_signal.py
+  - tests/test_internal_signal_producer.py
+depends_on: [N31.1]
+```
+
+### Task N31.3 — Emitir momentum só com setups de força do scanner
+
+**Entrega:** A família momentum só emite sinal quando o scanner original marca rompimento de 20 dias, bandeira de alta ou retomada da média 20.
+**Como conferir:** Fixture com esses setups gera sinal momentum; fixture só oversold não gera momentum; nenhum limiar numérico novo aparece no código da família.
+**Por quê:** O contrato proíbe inventar regra de momentum; o scanner original já tem essas três marcas.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: N17 nunca começou; catálogo tem momentum em research; find_setups tags breakout_20d, bull_flag, reclaim_ma20.
+desejado: produtor chama load_original().scanner.find_setups(closes) — mapping MOMENTUM_SETUPS = {breakout_20d, bull_flag, reclaim_ma20} rotulado ASSUMPTION_OPERATOR_REVIEW; stop/target via original.entry/exit/budget, não números inventados; emite via N31.2; fase permanece research.
+guardrail: não copiar find_setups; não PATCH de fase; LIVE false.
+testes: tags momentum ⇒ um sinal strategy_key=momentum; tag só oversold ⇒ zero momentum; orders_sent 0 no produtor.
+files:
+  - src/scanner_family_producer.py
+  - src/internal_signal_producer.py
+  - tests/test_scanner_family_producer.py
+depends_on: [N31.2]
+```
+
+### Task N31.4 — Emitir Tá Barato só com setups oversold do scanner
+
+**Entrega:** A família Tá Barato só emite sinal quando o scanner original marca oversold ou oversold bounce — não “caiu, compra”.
+**Como conferir:** Fixture oversold gera sinal ta_barato; fixture só de rompimento não gera; o contrato de “não inventar percentil” continua visível no teste.
+**Por quê:** A fórmula recuperada no vendor é RSI Wilder 14 < 30 e o bounce; qualquer outro gatilho seria invenção.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: ta_barato no catálogo em research, sem produtor.
+desejado: no mesmo scanner_family_producer, TA_BARATO_SETUPS = {oversold, oversold_bounce} rotulado ASSUMPTION_OPERATOR_REVIEW; reusa find_setups; não implementar RSI local.
+guardrail: não “caiu, compra”; não limiar novo; LIVE false.
+testes: oversold ⇒ strategy_key=ta_barato; breakout_20d sozinho ⇒ zero ta_barato.
+files:
+  - src/scanner_family_producer.py
+  - tests/test_scanner_family_producer.py
+depends_on: [N31.3]
+```
+
+### Task N31.5 — Ligar os produtores no serviço operacional em pesquisa
+
+**Entrega:** O serviço operacional dispara os produtores internos em intervalo, ainda em pesquisa, sem envio paper até você promover.
+**Como conferir:** Com fase research, o worker da fila recusa paper com motivo de fase; o scheduler de pesquisa continua sem importar corretora.
+**Por quê:** O contrato pede produtores ponta a ponta para a promoção na Central ser o único passo que falta.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: v4_ops_main.sh = dashboard + tv-worker + exec v4-scheduler.
+desejado: supervisor opcional INTERNAL_PRODUCER_AUTOSTART (default true) chama o produtor de famílias em intervalo; v4_scheduler permanece sem broker.
+guardrail: LIVE false; research cycle orders_sent 0; STRATEGY_PHASE_BLOCKED até PATCH.
+testes: layout script contém o produtor; fase research ⇒ paper_allowed falso.
+files:
+  - scripts/v4_ops_main.sh
+  - tests/test_v4_ops_layout.py
+depends_on: [N31.3, N31.4]
+```
+
+---
+
+## Sprint N32 — Prodígio, News First e sombra visível
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Prodígio e notícia viram sinal interno; sombra de ORB continua visível  
+> resumo_humano: O ranking Prodígio que já existe passa a emitir sinal interno a partir do feed somente leitura da Collective2, com teto de risco menor e sem promoção automática. Notícia só vira sinal se a evidência passar e a entrada original confirmar o preço; senão permanece sem negócio. ORB e retorno à média continuam só em sombra, agora visíveis no painel.  
+> Gate: prodigy_rank.calculate intacto; C2 key só env; teto Prodígio R$20; news_first só com verifier pass AND entry.evaluate status triggered; ORB/mean_reversion nunca paper_allowed; sombra visível; LIVE false  
+> review: senior+qa  
+> Depende de: N31  
+> Gerado via: `/pmo plan` — CONTRACT-CLOSEOUT 2026-11-15  
+> Brief: `docs/.briefs/N32.brief.md`
+
+### Em uma frase
+
+Prodígio e notícia só viram sinal interno com as regras já existentes; ORB permanece sombra visível, nunca paper.
+
+### O que muda para você
+
+- Prodígio deixa de ser só ranking na tela: pode gerar sinal da família prodigy, ainda em pesquisa
+- Notícia continua “não é compra pelo tom”; só vira sinal com evidência e confirmação de preço
+- Você vê ORB e retorno à média rodando em sombra, sem botão de paper
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Sinal Prodígio a partir do feed C2 | Ranking inalterado; sem chave C2 não há sinal; teto de risco menor na família |
+| 2 | News First só com preço confirmado | Sem evidência ou sem gatilho da entrada original, a decisão permanece sem negócio |
+| 3 | Sombra visível | Painel mostra ORB/retorno à média em sombra e recusa promoção a paper |
+| 4 | Produtores no serviço operacional | Os dois produtores rodam no mesmo serviço, sem segundo caminho de corretora |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N32.1 Emitir sinal Prodígio a partir do feed C2 e do ranking existente | `/dev` | — |
+| [ ] | M | N32.2 Emitir News First só com evidência e confirmação de preço | `/dev` | — |
+| [ ] | P | N32.3 Manter ORB e retorno à média visíveis só em sombra | `/dev` | — |
+| [ ] | P | N32.4 Ligar Prodígio e News First no serviço operacional | `/dev` | N32.1, N32.2 |
+
+### Task N32.1 — Emitir sinal Prodígio a partir do feed C2 e do ranking existente
+
+**Entrega:** A família Prodígio emite sinal interno usando a pontuação que já existe e o feed somente leitura da Collective2, com teto de risco menor e sem subir de fase sozinha.
+**Como conferir:** Sem chave no ambiente, zero sinal e zero ordem; o arquivo de pontuação não muda a fórmula; provedor não aprovado para copy continua fora do copy.
+**Por quê:** Feature 4 pede Prodígio 15d com risco inicial menor, sem promoção automática e sem inventar score.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: prodigy_rank.calculate já implementa a heurística 15d; c2_signal_feed é read-only (não sintetiza ticket); approved_for_paper_copy permanece false; portfolio_risk_v4 já tem prodigy_risk_cents e motivo DEFAULT_TRADE_RISK; signal_paper_runner usa PRODIGY_PROVIDERS para teto 20.
+desejado: produtor lê snapshot C2 + calculate() as-is; só PRODIGY_CANDIDATE_RESEARCH pode virar sinal interno strategy_key=prodigy_15d provider=lab_prodigy; C2 key só env; sem PATCH de fase; copy C2 continua fechado.
+guardrail: não editar a fórmula de calculate; não paper-copy C2; LIVE false; chave ausente ⇒ NO_TRADE / skip, não crash com ordem.
+testes: score function unchanged (hash/snapshot do calculate); sem key ⇒ 0 sinais; candidato research ⇒ sinal assinado + fase research bloqueia paper; planned risk > 20 ⇒ DEFAULT_TRADE_RISK.
+files:
+  - src/prodigy_signal_producer.py
+  - src/internal_signal_producer.py
+  - src/c2_signal_feed.py
+  - tests/test_prodigy_signal_producer.py
+depends_on: []
+```
+
+### Task N32.2 — Emitir News First só com evidência e confirmação de preço
+
+**Entrega:** Candidato de notícia só vira sinal interno se a evidência passar e a função de entrada original disparar no preço; caso contrário permanece sem negócio.
+**Como conferir:** Sem atestados de evidência, zero sinal de paper; com evidência e status triggered da entrada original, nasce um sinal news_first ainda em pesquisa.
+**Por quê:** O simulador hoje marca todos como sem negócio; o avaliador de evento nunca passa — e não podemos virar isso para verdadeiro à força.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: news_first_sim sempre decision=NO_TRADE; event_verifier.assess hardcode event_status UNVERIFIED, strategy_eligible False, verified counters 0; original.entry.evaluate já exposto (status triggered).
+desejado: função fail-closed passes(event, evidence) verdadeira só se todos verification_requirements estiverem atestados no payload de evidência (não flipar assess); E evaluate(chart, now, setup='level', ...) status=='triggered' (nível = último close completo já no chart, sem limiar inventado); senão permanece NO_TRADE; sinal interno strategy_key=news_first provider=lab_news_first.
+guardrail: não inventar tom→lado; não marcar verified=true sem evidência; LIVE false.
+testes: sem evidence ⇒ NO_TRADE; evidence completa + evaluate waiting ⇒ NO_TRADE; evidence + triggered ⇒ sinal assinado orders_sent 0.
+files:
+  - src/news_first_sim.py
+  - src/event_verifier.py
+  - tests/test_news_first_sim.py
+  - tests/test_event_verifier.py
+depends_on: []
+```
+
+### Task N32.3 — Manter ORB e retorno à média visíveis só em sombra
+
+**Entrega:** ORB e retorno à média continuam rodando em sombra e aparecem no painel, sem caminho paper.
+**Como conferir:** No painel as duas famílias mostram fase sombra e recusa de promoção a paper; o diário de sombra recebe linha nova no ciclo de pesquisa.
+**Por quê:** O contrato manda sombra viva e visível, nunca paper.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: NEVER_PAPER_KEYS já barra paper; Central (panel_ops_html) não lista famílias; shadow_journal existe mas o ciclo v4_run_once não o destaca no panel_ops.
+desejado: Central/sinais mostram orb e mean_reversion como sombra (não selecionáveis para paper); ciclo de pesquisa continua a gravar sombra (reuso shadow_journal / multistrategy, sem novo motor).
+guardrail: NEVER_PAPER_KEYS intacto; LIVE false.
+testes: PATCH paper_limited em orb ⇒ recusa; página Central contém as duas chaves em sombra.
+files:
+  - src/panel_ops_html.py
+  - src/panel_ops_data.py
+  - tests/test_panel_ops.py
+depends_on: []
+```
+
+### Task N32.4 — Ligar Prodígio e News First no serviço operacional
+
+**Entrega:** Os dois produtores novos rodam no mesmo serviço operacional, no mesmo caminho de fila.
+**Como conferir:** O script de layout cita os dois produtores; o scheduler de pesquisa segue sem cliente de corretora.
+**Por quê:** Sem o laço, os produtores existem só no pytest.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: v4-ops após N31 tem produtor de scanner.
+desejado: mesmo supervisor dispara prodigy + news_first (flags AUTOSTART, default true, skip se C2 key ausente).
+guardrail: LIVE false; sem segundo broker.
+testes: test_v4_ops_layout contém os nomes dos produtores.
+files:
+  - scripts/v4_ops_main.sh
+  - tests/test_v4_ops_layout.py
+depends_on: [N32.1, N32.2]
+```
+
+---
+
+## Sprint N33 — Central demo e conferência do contrato 7–10
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ligar o demo pelo painel e marcar o contrato só com prova  
+> resumo_humano: A Central ganha o interruptor de operação demo que hoje só existe na API (e que você teve de mudar no banco). Cada família aparece para ligar ou desligar. Os critérios das Features 7 a 10 só são marcados no contrato quando houver linha de teste ou evidência sua; o que depender de produção fica em aberto com nota.  
+> Gate: toggle demo_operation_on na Central; famílias visíveis com PATCH existente; TEST-EVIDENCE com nodeids; REQUIREMENTS 7–10 [x] só com evidência; critérios de operador permanecem [ ] + 'pending operator evidence'; LIVE false  
+> review: senior+qa  
+> Depende de: N30, N32, N24  
+> Gerado via: `/pmo plan` — CONTRACT-CLOSEOUT 2026-11-15  
+> Brief: `docs/.briefs/N33.brief.md`
+
+### Em uma frase
+
+Você liga ou desliga o demo e cada família na Central, e o contrato 7–10 só fecha critério com prova.
+
+### O que muda para você
+
+- O interruptor de operação demo deixa de exigir SQL ou Exec
+- Cada estratégia existente aparece na Central para ligar ou desligar (ORB continua sem paper)
+- Features 7–10 só recebem visto quando o teste ou a sua evidência existir
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Interruptor demo na Central | Na Central, ligar/desligar operação demo grava histórico e a próxima ordem obedece |
+| 2 | Famílias ligáveis na Central | Cada família mostra fase; ORB/retorno à média recusam paper |
+| 3 | Caderno de evidência 7–10 | Cada critério tem linha de teste ou nota de evidência pendente sua |
+| 4 | Contrato atualizado com honestidade | Só critério com prova vira feito; o resto fica aberto com a nota combinada |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | M | N33.1 Colocar o interruptor de operação demo na Central | `/dev` | — |
+| [ ] | M | N33.2 Mostrar e ligar/desligar cada família na Central | `/dev` | N33.1 |
+| [ ] | P | N33.3 Registrar evidência de teste das Features 7–10 | docs | N33.1, N33.2 |
+| [ ] | P | N33.4 Marcar Features 7–10 no contrato só com prova | docs | N33.3 |
+
+### Task N33.1 — Colocar o interruptor de operação demo na Central
+
+**Entrega:** A Central mostra e altera o interruptor de operação demo, com o mesmo histórico das outras âncoras.
+**Como conferir:** Um clique grava o valor anterior e o novo; com o interruptor desligado a próxima ordem não sai.
+**Por quê:** A API já aceita o campo; a tela da Central não tem o botão — em 2026-11-15 foi preciso SQL.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: TRIGGER_PATCH_FIELDS inclui demo_operation_on; test_panel_triggers PATCH funciona; render_central_page só tem kill switch + âncoras de centavos + mercados, sem demo_operation_on.
+desejado: toggle na Central (PATCH /api/triggers) com valor anterior em trigger_changes; LIVE sem botão.
+guardrail: sessão de operador obrigatória; bearer sozinho 401; LIVE false.
+testes: HTML contém o controle; PATCH demo_operation_on True/False roundtrip; demo off ⇒ DEMO_OPERATION_OFF.
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+  - tests/test_panel_ops.py
+  - tests/test_panel_triggers.py
+depends_on: []
+```
+
+### Task N33.2 — Mostrar e ligar/desligar cada família na Central
+
+**Entrega:** A Central lista cada família existente e permite mudar a fase (ligar/desligar paper) pelo PATCH que já existe.
+**Como conferir:** Momentum/Tá Barato/Prodígio/News First aparecem; ORB recusa ir para paper; a mudança grava valor anterior.
+**Por quê:** Feature 8 pede ligar ou desligar cada estratégia no painel, sem cadastrar família nova.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: PATCH /api/strategies/{key} existe; load_trigger_snapshot não inclui strategy_states; Central não lista famílias (só o HTML legado do Command Panel v1).
+desejado: Central mostra strategy_key, fase, paper_allowed; controles chamam o PATCH existente; NEVER_PAPER_KEYS sem controle paper.
+guardrail: sem cadastro de família nova; sem auto-promoção; LIVE false.
+testes: GET Central contém as chaves do catálogo; PATCH orb paper_limited ⇒ 4xx; PATCH momentum paper_limited (quando operador) grava trigger_changes.
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+  - tests/test_panel_ops.py
+  - tests/test_panel_triggers.py
+depends_on: [N33.1]
+```
+
+### Task N33.3 — Registrar evidência de teste das Features 7–10
+
+**Entrega:** O caderno de evidência ganha uma linha por critério das Features 7–10, com teste ou nota de evidência pendente sua.
+**Como conferir:** Cada critério aponta nodeid de pytest ou a frase combinada de evidência pendente do operador.
+**Por quê:** Código das ondas 3–4 existe; os checkboxes do contrato ainda estão vazios.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: REQUIREMENTS Features 7–10 todos [ ]; N24–N26 merged; N30–N32 planejadas.
+desejado: seção CONTRACT-CLOSEOUT em TEST-EVIDENCE.md; Feature 8/9/10 critérios cobertos por testes de painel já existentes + N33.1/N33.2; Feature 7: snapshot/cancel/halt/crypto/N27.5/N27.6 via N30; “sinal válido vira ordem sem ação manual” e fill em produção = pending operator evidence se não houver pytest ponta a ponta com broker real.
+guardrail: não marcar [x] nesta task (só evidência); não inventar fill.
+files:
+  - docs/TEST-EVIDENCE.md
+depends_on: [N33.1, N33.2]
+```
+
+### Task N33.4 — Marcar Features 7–10 no contrato só com prova
+
+**Entrega:** Os critérios 7–10 no contrato só viram feitos com a linha de evidência correspondente; o restante fica aberto com a nota combinada.
+**Como conferir:** Abrir o contrato: visto apenas onde TEST-EVIDENCE cita teste; os outros têm “pending operator evidence”.
+**Por quê:** O contrato v0.4 exige honestidade de evidência, não HTTP 200.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: Features 7–10 5+5+3+3 checkboxes [ ].
+desejado: [x] somente com citação TEST-EVIDENCE; demais [ ] + nota 'pending operator evidence'. EasyPanel rebuild e fill demo real do operador não são [x] de pytest.
+guardrail: não marcar Feature 11 aqui; LIVE false.
+files:
+  - docs/REQUIREMENTS.md
+  - docs/TEST-EVIDENCE.md
+depends_on: [N33.3]
+```
+
+---
+
+## Sprint N34 — Ajuste supervisionado (Feature 11)
+
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Sugestão rotulada, ajuste reversível, risco intocado  
+> resumo_humano: Sugestões aparecem como sugestão, nunca como ordem. Ajuste automático nasce desligado e só mexe em parâmetro que já existe na estratégia original, na faixa original. Cada mudança tem antes, depois e motivo, e você desfaz na Central. Âncoras de risco não entram nesse caminho. O método fino (o que é erro, de quanto em quanto) continua aberto para você.  
+> Gate: rótulo sugestão; auto-tune default OFF; só flags/setups já no vendor (ex. --min-volume, seleção de setup); trigger_changes-like undo; âncoras intocadas; G-AJUSTE flagado; N28 substituída; LIVE false  
+> review: senior+qa  
+> Depende de: N33, N21  
+> Gerado via: `/pmo plan` — CONTRACT-CLOSEOUT 2026-11-15  
+> Brief: `docs/.briefs/N34.brief.md`
+
+### Em uma frase
+
+Sugestão não é ordem; qualquer ajuste automático nasce desligado, é reversível e não mexe nas âncoras de risco.
+
+### O que muda para você
+
+- O que for sugestão vem com o rótulo de sugestão
+- Você vê antes/depois/motivo e pode desfazer na Central
+- O ajuste automático só liga se você ligar; o método fino continua à sua escolha
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Rótulo de sugestão | Item de sugestão não abre ordem só por existir |
+| 2 | Histórico com desfazer | Cada ajuste mostra antes, depois e motivo; desfazer volta o valor |
+| 3 | Auto-ajuste conservador desligado | Default off; só parâmetros originais na faixa original |
+| 4 | Âncoras intocadas | Teste prova que capital/perda/posições não mudam por esse caminho |
+| 5 | Método em aberto | A dúvida do contrato sobre o método permanece visível para você |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N34.1 Rotular sugestão como sugestão, nunca como ordem | `/dev` | — |
+| [ ] | M | N34.2 Registrar antes, depois e motivo com desfazer na Central | `/dev` | N34.1 |
+| [ ] | M | N34.3 Ajuste automático conservador, desligado por padrão | `/dev` | N34.2 |
+| [ ] | P | N34.4 Provar que ajuste nunca altera âncora de risco | `/qa testes` | N34.3 |
+| [ ] | P | N34.5 Deixar o método de ajuste visível para o operador | docs | N34.3 |
+
+### Task N34.1 — Rotular sugestão como sugestão, nunca como ordem
+
+**Entrega:** Toda sugestão de estratégia aparece marcada como sugestão e não autoriza ordem por si só.
+**Como conferir:** No painel o item diz que é sugestão; o caminho de ordem exige sinal assinado como nas outras famílias.
+**Por quê:** Feature 11 critério 1; o ranking Prodígio já tem aviso semelhante.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: Prodígio page já avisa research; opportunities não rotulam “sugestão” de forma genérica para Feature 11.
+desejado: campo suggestion=true / label visível; produtor de sugestão não chama paper_gateway_queue.
+guardrail: LIVE false; sugestão ≠ paper_allowed.
+testes: HTML contém rótulo de sugestão; clique/API de sugestão não insere paper_orders.
+files:
+  - src/panel_ops_html.py
+  - tests/test_panel_ops.py
+depends_on: []
+```
+
+### Task N34.2 — Registrar antes, depois e motivo com desfazer na Central
+
+**Entrega:** Cada ajuste de parâmetro de estratégia grava antes, depois e motivo, e a Central oferece desfazer.
+**Como conferir:** Depois de um ajuste, o histórico mostra os três campos; desfazer restaura o valor anterior sem tocar âncora de risco.
+**Por quê:** Feature 11 critério 3; N28.3 absorvido aqui.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: DATABASE.md §6.6 adia tabela de ajuste automático; trigger_changes cobre control_flags/market_controls/strategy_states (fase), não parâmetros de estratégia.
+desejado: migration append-only strategy_parameter_changes (strategy_key, param_name, old_value, new_value, reason, changed_at) + PATCH undo na Central; sem soft-delete de histórico.
+guardrail: LIVE false; não escrever control_flags por esse PATCH.
+testes: insert + undo restaura; trigger/parameter log append-only.
+files:
+  - migrations/003_strategy_parameter_changes_up.sql
+  - src/supervised_tune.py
+  - src/v4_web_dashboard.py
+  - src/panel_ops_html.py
+  - tests/test_supervised_tune.py
+depends_on: [N34.1]
+```
+
+### Task N34.3 — Ajuste automático conservador, desligado por padrão
+
+**Entrega:** Um ajuste automático opcional, desligado por padrão, só altera parâmetro que já existe na estratégia original e só dentro da faixa original (por exemplo volume mínimo ou escolha de setup do scanner).
+**Como conferir:** Com a flag desligada, zero mudança; ligada, tenta só `--min-volume` / seleção de setup já documentados no scanner original, nunca um limiar novo.
+**Por quê:** G-AJUSTE está em aberto; o contrato permite auto-ajuste só na faixa original. Método marcado para a sua revisão.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: G-AJUSTE aberto (REQUIREMENTS §9 #8); trader-scanner CLI já tem --min-volume e seleção de setup; não há motor de tune.
+desejado: flag supervised_tune_on default false (control_flags ou env, default off); quando on, candidato a ajuste SOMENTE min-volume (faixa do argparse original) ou subset dos setups já em find_setups; nunca RSI/percentil/score novos; nunca âncoras; rotular DEFAULT_CONSERVATIVE_AWAITING_G_AJUSTE.
+guardrail: off by default; não inventar parâmetro; LIVE false.
+testes: default off ⇒ zero writes; on + min-volume dentro da faixa ⇒ log before/after; valor fora da faixa ⇒ reject.
+files:
+  - src/supervised_tune.py
+  - src/risk_control_flags.py
+  - tests/test_supervised_tune.py
+depends_on: [N34.2]
+```
+
+### Task N34.4 — Provar que ajuste nunca altera âncora de risco
+
+**Entrega:** Teste prova que o caminho de ajuste não altera capital, perda, posições nem as outras âncoras.
+**Como conferir:** O teste falha se qualquer âncora de `control_flags` mudar depois do ajuste.
+**Por quê:** Feature 11 critério 4 / N28.4.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: sem teste de isolamento âncora vs tune.
+desejado: fixture aplica undo/auto-tune; control_flags âncoras idênticas.
+guardrail: LIVE false.
+testes: pytest nodeid estável para N33/N34 evidência.
+files:
+  - tests/test_supervised_tune.py
+  - src/supervised_tune.py
+depends_on: [N34.3]
+```
+
+### Task N34.5 — Deixar o método de ajuste visível para o operador
+
+**Entrega:** A dúvida do contrato sobre o método de ajuste permanece aberta, agora apontando o default conservador desligado que a plataforma passou a oferecer.
+**Como conferir:** No contrato, a linha do método cita o default (volume mínimo / setups originais, desligado) e pede a sua confirmação.
+**Por quê:** Planejar infra sem fingir que G-AJUSTE foi decidido.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```
+estado_atual: REQUIREMENTS §9 #8 Status Aberta.
+desejado: atualizar a linha com o default conservador OFF e pedido de revisão; Feature 11 critérios [x] só os cobertos por N34.1–N34.4 testes; auto-ajuste fino permanece [ ] se G-AJUSTE não respondido.
+guardrail: não inventar método; não marcar tudo [x].
+files:
+  - docs/REQUIREMENTS.md
+  - docs/TEST-EVIDENCE.md
+depends_on: [N34.3]
+```
 
 ---
 

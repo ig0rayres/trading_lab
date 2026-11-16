@@ -17,6 +17,8 @@ ANCHOR_FIELD_BY_REJECT = {
     'MAX_WEEKLY_LOSS': 'max_weekly_loss_cents',
     'LOSS_DAILY': 'max_daily_loss_cents',
     'LOSS_WEEKLY': 'max_weekly_loss_cents',
+    'DAILY_LOSS_HALT': 'max_daily_loss_cents',
+    'WEEKLY_LOSS_HALT': 'max_weekly_loss_cents',
     'KILL_SWITCH': 'kill_switch_on',
 }
 EXCLUDED_PNL_ORDER_STATUSES = frozenset({

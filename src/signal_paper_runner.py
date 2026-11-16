@@ -10,12 +10,13 @@ import hashlib
 import json
 import os
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from demo_account_gate import NO_DEMO_ACCOUNT_PATH, demo_market_block_reason
+from gate_b_session import market_from_signal
 from paper_audit import PAPER_URL, get_json, validate_env, amount
 from signal_copy import validate, canonical_payload
 from portfolio_risk_v4 import evaluate as evaluate_portfolio_risk
@@ -37,14 +38,30 @@ def token(signal):
     return hashlib.sha256(canonical_payload(signal)).hexdigest()[:24]
 
 
+def _signal_market(signal: dict) -> str:
+    return market_from_signal(signal)
+
+
+def _quantity_valid(signal: dict) -> bool:
+    qty = signal['quantity']
+    asset = str(signal.get('asset_class', 'us_equity')).lower()
+    if asset == 'crypto':
+        try:
+            q = Decimal(str(qty))
+            return q > 0 and q.is_finite()
+        except (ValueError, TypeError, InvalidOperation):
+            return False
+    return type(qty) is int and qty >= 1
+
+
 def risk_check(signal, account, positions, open_orders, fx, env):
     reasons=[]
     cap=Decimal('10000')/fx
     per_trade=Decimal('20' if signal.get('provider') in set(filter(None,env.get('PRODIGY_PROVIDERS','').split(','))) else '50')/fx
     try:
         entry, stop, target = (amount(signal[k]) for k in ('entry','stop','target'))
-        qty=signal['quantity']
-        if type(qty)!=int or qty<1 or entry<=stop or stop<=0 or target<=entry:
+        qty=amount(signal['quantity'])
+        if not _quantity_valid(signal) or entry<=stop or stop<=0 or target<=entry:
             reasons.append('INVALID_TICKET')
         else:
             if qty*(entry-stop)>per_trade: reasons.append('TRADE_RISK_LIMIT')
@@ -63,9 +80,6 @@ def risk_check(signal, account, positions, open_orders, fx, env):
         if amount(account.get('equity',0))<entry*qty: reasons.append('INSUFFICIENT_EQUITY')
         if account.get('pattern_day_trader') and amount(account.get('equity',0))<Decimal('25000'):
             reasons.append('PDT_ACCOUNT_REVIEW')
-        # Do not claim consolidated daily loss enforcement without verified P&L.
-        if env.get('PAPER_DAILY_RISK_CONFIRMED','false').lower()!='true':
-            reasons.append('DAILY_RISK_NOT_CONFIRMED')
         # A separate, fresh, externally reconciled multi-market snapshot is mandatory.
         # The Alpaca positions endpoint alone cannot establish B3/crypto exposure.
         # Never infer verified P&L from an environment boolean.
@@ -82,7 +96,7 @@ def risk_check(signal, account, positions, open_orders, fx, env):
                 # A snapshot must be anchored to the currently observed US broker state.
                 if snapshot.get('alpaca_positions_count') != len(positions) or snapshot.get('alpaca_open_orders_count') != len(open_orders):
                     reasons.append('V4_BROKER_SNAPSHOT_MISMATCH')
-                candidate = {'market':'US_EQUITY', 'symbol':signal['symbol'], 'side':'buy',
+                candidate = {'market': _signal_market(signal), 'symbol':signal['symbol'], 'side':'buy',
                              'verified':True, 'trading_mode':'PAPER', 'quantity':qty,
                              'entry_brl':str(entry*fx), 'stop_brl':str(stop*fx),
                              'prodigy':signal.get('provider') in set(filter(None,env.get('PRODIGY_PROVIDERS','').split(',')))}
@@ -96,12 +110,25 @@ def risk_check(signal, account, positions, open_orders, fx, env):
 
 
 def make_order(signal, fp):
-    return {'symbol':signal['symbol'],'qty':str(signal['quantity']),
-            'side':'buy','type':'limit','limit_price':str(signal['entry']),
-            'time_in_force':'day','order_class':'bracket',
-            'take_profit':{'limit_price':str(signal['target'])},
-            'stop_loss':{'stop_price':str(signal['stop'])},
-            'client_order_id':'nf-'+fp}
+    asset = str(signal.get('asset_class', 'us_equity')).lower()
+    base = {
+        'symbol': signal['symbol'],
+        'qty': str(signal['quantity']),
+        'side': 'buy',
+        'type': 'limit',
+        'limit_price': str(signal['entry']),
+        'client_order_id': 'nf-' + fp,
+    }
+    if asset == 'crypto':
+        base['time_in_force'] = 'gtc'
+        return base
+    return {
+        **base,
+        'time_in_force': 'day',
+        'order_class': 'bracket',
+        'take_profit': {'limit_price': str(signal['target'])},
+        'stop_loss': {'stop_price': str(signal['stop'])},
+    }
 
 
 def submit(body,env,opener=urlopen):

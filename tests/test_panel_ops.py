@@ -51,6 +51,23 @@ class PanelOpsDataTests(unittest.TestCase):
         self.assertEqual(ctx['anchor_field'], 'max_open_positions')
         self.assertEqual(ctx['anchor_value'], 3)
 
+    def test_ver003_loss_halt_blocked_context_maps_anchors(self):
+        flags = {
+            'max_daily_loss_cents': 20_000,
+            'max_weekly_loss_cents': 50_000,
+        }
+        daily = blocked_context('DAILY_LOSS_HALT', flags)
+        self.assertEqual(daily['gate'], 'gate_b')
+        self.assertEqual(daily['reject_code'], 'DAILY_LOSS_HALT')
+        self.assertEqual(daily['anchor_field'], 'max_daily_loss_cents')
+        self.assertEqual(daily['anchor_value'], 20_000)
+
+        weekly = blocked_context('WEEKLY_LOSS_HALT', flags)
+        self.assertEqual(weekly['gate'], 'gate_b')
+        self.assertEqual(weekly['reject_code'], 'WEEKLY_LOSS_HALT')
+        self.assertEqual(weekly['anchor_field'], 'max_weekly_loss_cents')
+        self.assertEqual(weekly['anchor_value'], 50_000)
+
     def test_performance_excludes_unfilled_orders(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)

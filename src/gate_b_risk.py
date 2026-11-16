@@ -73,8 +73,22 @@ def signal_to_bracket_order(signal: dict[str, Any]) -> dict[str, Any]:
     entry = float(amount(signal['entry']))
     stop = float(amount(signal['stop']))
     target = float(amount(signal['target']))
-    qty = int(signal['quantity'])
     sym = str(signal['symbol']).upper()
+    asset = str(signal.get('asset_class', 'us_equity')).lower()
+    if asset == 'crypto':
+        qty = amount(signal['quantity'])
+        if qty <= 0:
+            raise ValueError('invalid crypto quantity')
+        return {
+            'symbol': sym,
+            'side': 'buy',
+            'qty': _format_decimal_qty(qty),
+            'type': 'limit',
+            'time_in_force': 'gtc',
+            'limit_price': '%.2f' % entry,
+            'plan': {'entry': entry, 'stop': stop, 'target': target},
+        }
+    qty = int(signal['quantity'])
     return {
         'symbol': sym,
         'side': 'buy',
@@ -87,6 +101,13 @@ def signal_to_bracket_order(signal: dict[str, Any]) -> dict[str, Any]:
         'stop_loss_stop_price': '%.2f' % stop,
         'plan': {'entry': entry, 'stop': stop, 'target': target},
     }
+
+
+def _format_decimal_qty(qty: Decimal) -> str:
+    text = format(qty.normalize(), 'f')
+    if '.' in text:
+        text = text.rstrip('0').rstrip('.')
+    return text or '0'
 
 
 def evaluate_signed_signal(

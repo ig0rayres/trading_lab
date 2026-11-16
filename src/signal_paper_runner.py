@@ -17,6 +17,7 @@ from urllib.request import Request, urlopen
 
 from demo_account_gate import NO_DEMO_ACCOUNT_PATH, demo_market_block_reason
 from paper_audit import PAPER_URL, get_json, validate_env, amount
+from risk_control_flags import brl_from_cents, fetch_control_flags
 from signal_copy import validate, canonical_payload
 from portfolio_risk_v4 import evaluate as evaluate_portfolio_risk
 
@@ -37,10 +38,20 @@ def token(signal):
     return hashlib.sha256(canonical_payload(signal)).hexdigest()[:24]
 
 
+def _parallel_usd_limits(flags, signal, env, fx):
+    cap = brl_from_cents(int(flags['capital_cents'])) / fx
+    prodigy = signal.get('provider') in set(
+        filter(None, env.get('PRODIGY_PROVIDERS', '').split(',')),
+    )
+    risk_key = 'prodigy_risk_cents' if prodigy else 'max_risk_per_trade_cents'
+    per_trade = brl_from_cents(int(flags[risk_key])) / fx
+    return cap, per_trade, int(flags['max_open_positions'])
+
+
 def risk_check(signal, account, positions, open_orders, fx, env):
     reasons=[]
-    cap=Decimal('10000')/fx
-    per_trade=Decimal('20' if signal.get('provider') in set(filter(None,env.get('PRODIGY_PROVIDERS','').split(','))) else '50')/fx
+    flags = fetch_control_flags()
+    cap, per_trade, max_positions = _parallel_usd_limits(flags, signal, env, fx)
     try:
         entry, stop, target = (amount(signal[k]) for k in ('entry','stop','target'))
         qty=signal['quantity']
@@ -53,7 +64,8 @@ def risk_check(signal, account, positions, open_orders, fx, env):
             return ['INVALID_BROKER_RESPONSE']
         if account.get('status')!='ACTIVE' or account.get('currency')!='USD' or account.get('trading_blocked'):
             reasons.append('ACCOUNT_NOT_ACTIVE')
-        if len(positions)>=3: reasons.append('MAX_POSITIONS')
+        if len(positions) >= max_positions:
+            reasons.append('MAX_POSITIONS')
         if open_orders: reasons.append('OPEN_ORDERS_REQUIRE_REVIEW')
         if any(x.get('symbol')==signal['symbol'] for x in positions): reasons.append('DUPLICATE_SYMBOL')
         if any(x.get('side')!='long' for x in positions): reasons.append('SHORT_EXPOSURE')

@@ -145,3 +145,5 @@ Evidência redigida: coluna **Status homolog** em `docs/TEST-EVIDENCE.md` § Spr
 - Ledger reconcile: `tests/test_ledger_reconcile.py` (com `LEDGER_DATABASE_URL` no job CI).
 
 Fill real na corretora com P&L verificado continua **passo operador** com chaves paper reais.
+
+**Feature 7 — âncoras no envio paper (N32.3, pytest only):** `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_tight_defaults_qty1_aapl_paper_submitted`, `test_n32_lowered_capital_cents_blocks_capital_limit`, `test_n32_lowered_max_risk_per_trade_blocks_trade_risk_limit`, `test_n32_risk_check_tight_cap_not_parallel_10k_usd`, `test_n32_b3_equity_auto_blocked_no_alpaca_post`, `test_n32_forex_auto_blocked_no_alpaca_post` — não substitui homolog B3/FOREX (**ISS-010**).

@@ -20,7 +20,7 @@
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T15:50:00-03:00",
+  "ultimo_update": "2026-11-16T19:25:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -114,19 +114,19 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "N32 planejada: signal_paper_runner.risk_check lê control_flags (lacuna Feature 7 10k/50 USD). N28/N31 código entregue; Clear/OANDA fora. LIVE false.",
+  "contexto_rapido": "N32 done: control_flags no risk_check; pytest n32_* green; contrato Feature 7 âncora [x]; B3/FOREX ISS-010. LIVE false.",
   "sprint_tasks": [
     {
       "id": "N32.0",
       "title": "Confirm reuse of panel anchors already read by Gate B",
-      "status": "pending",
+      "status": "done",
       "file": "docs/.briefs/N32-GIT-FIRST-REUSE.md",
       "depends_on": []
     },
     {
       "id": "N32.1",
       "title": "Wire paper runner capital/per-trade caps to control_flags",
-      "status": "pending",
+      "status": "done",
       "file": "src/signal_paper_runner.py",
       "depends_on": [
         "N32.0"
@@ -135,7 +135,7 @@
     {
       "id": "N32.2",
       "title": "Prove lowered flags block paper; TIGHT_DEFAULTS still allow",
-      "status": "pending",
+      "status": "done",
       "file": "tests/test_signal_paper_runner.py",
       "depends_on": [
         "N32.1"
@@ -144,7 +144,7 @@
     {
       "id": "N32.3",
       "title": "Mark Feature 7 anchor checkbox only after pytest proof",
-      "status": "pending",
+      "status": "done",
       "file": "docs/REQUIREMENTS.md",
       "depends_on": [
         "N32.2"
@@ -152,11 +152,11 @@
     }
   ],
   "checkpoint": {
-    "phase": "planning",
+    "phase": "implementation",
     "sprint": "N32",
     "branch": "front/n27-alpaca-loop",
-    "current_task": "N32.0",
-    "plan_only": true,
+    "current_task": null,
+    "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N28",
@@ -240,7 +240,7 @@
   },
   "sprint_branch": "front/n27-alpaca-loop",
   "sprint_categoria": "N",
-  "plan_only": true,
+  "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",
@@ -379,5 +379,6 @@
     ]
   },
   "rock_auto": true,
-  "rock_mandate": "full"
+  "rock_mandate": "full",
+  "active_automation": null
 }

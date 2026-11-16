@@ -299,9 +299,9 @@ Git First (N30.0): `docs/.briefs/N30-GIT-FIRST-REUSE.md` · vendor pin/local SHA
 | CRYPTO candidato de risco honesto + submit | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_crypto_risk_candidate_uses_signal_market` | `[x]` |
 | CRYPTO gateway auto submit | `tests.test_paper_gateway_queue.N30Feature7AlpacaPaperLoopTest.test_n30_gateway_crypto_risk_candidate_market_is_crypto` | `[x]` |
 | CRYPTO sem path nomeado barrado | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_crypto_without_named_path_blocked_no_post` | `[x]` barrado |
-| Snapshot risco >120s | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_stale_v4_portfolio_snapshot_still_blocked` | lacuna âncoras |
+| Snapshot risco >120s | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_stale_v4_portfolio_snapshot_still_blocked` | `[x]` Feature 7 stale |
 | Refresh snapshot ops | `tests.test_risk_snapshot_refresh` | `scripts/run.sh risk-snapshot-refresh` |
-| Âncoras control_flags (portfolio) | `tests.test_feature7_anchor_ceilings.Feature7PortfolioAnchorTests` | parcial Feature 7 |
+| Âncoras control_flags (portfolio) | `tests.test_feature7_anchor_ceilings.Feature7PortfolioAnchorTests` | `[x]` + N32 runner abaixo |
 | Chave live-looking → host paper | `tests.test_paper_gateway_queue.N27AlpacaOnlyGateBWiringTest.test_n27_5_live_looking_key_keeps_paper_alpaca_host` | `[x]` |
 | Reinício laço demo sem 2º POST | `tests.test_paper_restart_no_duplicate.PaperRestartNoDuplicateTest.test_n30_demo_operation_on_restart_no_second_broker_post` | `[x]` |
 | B3/FOREX zero POST Alpaca | `tests.test_paper_gateway_queue.N27AlpacaOnlyGateBWiringTest.test_n27_gateway_b3_equity_blocked_no_alpaca_post`; `tests.test_paper_gateway_queue.N27AlpacaOnlyPaperRunnerMarketTest.test_n27_forex_runner_never_posts_alpaca_paper_host` | B3/FOREX `[ ]` ISS-010 |
@@ -312,6 +312,8 @@ Comando local (escopo N30.1):
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest -q \
   tests/test_signal_paper_runner.py tests/test_paper_gateway_queue.py tests/test_paper_restart_no_duplicate.py -k 'n30 or n27_5 or n27_gateway_b3 or n27_forex_runner'
 ```
+
+**Sprint N32.3 — Feature 7 âncora no `signal_paper_runner` (pytest):** `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_tight_defaults_qty1_aapl_paper_submitted`, `test_n32_lowered_capital_cents_blocks_capital_limit`, `test_n32_lowered_max_risk_per_trade_blocks_trade_risk_limit`, `test_n32_risk_check_tight_cap_not_parallel_10k_usd`, `test_n32_b3_equity_auto_blocked_no_alpaca_post`, `test_n32_forex_auto_blocked_no_alpaca_post` → `docs/REQUIREMENTS.md` Feature 7 âncora `[x]`; B3/FOREX ordem demo permanecem `[ ]` (**ISS-010**).
 
 ## Sprint N17 — MVP-OP-1.1 Tá Barato (G-FORM blocked; shadow homolog)
 

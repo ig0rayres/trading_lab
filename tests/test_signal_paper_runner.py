@@ -5,11 +5,20 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+from decimal import Decimal
+
 from src import signal_paper_runner as x
 from src.demo_broker_adapters import G_MKT_ADAPTER_PATH_ALPACA_PAPER
+from src.risk_control_flags import TIGHT_DEFAULTS
 from src.signal_copy import sign
 
 ALPACA_PAPER_HOST = 'https://paper-api.alpaca.markets'
+
+
+def _control_flags(**overrides):
+    flags = dict(TIGHT_DEFAULTS)
+    flags.update(overrides)
+    return flags
 
 class PaperRunnerTests(unittest.TestCase):
     def setUp(self):
@@ -208,6 +217,120 @@ class PaperRunnerTests(unittest.TestCase):
         result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=forbidden_post)
         self.assertEqual(result['status'], 'BLOCKED')
         self.assertIn('V4_PORTFOLIO_SNAPSHOT_STALE', result.get('reasons') or [])
+
+    def _broker_getter(self):
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                        'cash': '5000', 'equity': '5000'}
+            return []
+        return getter
+
+    def _tracking_poster(self):
+        calls = []
+
+        def poster(body, post_env, opener=None):
+            calls.append(True)
+            return {'id': 'must-not-submit', 'status': 'accepted'}
+
+        return calls, poster
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    @patch('src.risk_control_flags.demo_send_allowed', return_value=(True, None))
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n32_tight_defaults_qty1_aapl_paper_submitted(self, mock_flags, _demo, _validate):
+        """N32.2 scenario 1: TIGHT_DEFAULTS + qty=1 AAPL stays on PAPER_SUBMITTED path."""
+        mock_flags.return_value = _control_flags()
+        self._auto_env_with_snapshot()
+        self.assertEqual(self.env.get('LIVE_TRADING_ENABLED'), 'false')
+        getter = self._broker_getter()
+        post_called, poster = self._tracking_poster()
+        result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertEqual(result['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(result['orders_sent'], 1)
+        self.assertTrue(post_called)
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    @patch('src.risk_control_flags.demo_send_allowed', return_value=(True, None))
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n32_lowered_capital_cents_blocks_capital_limit(self, mock_flags, _demo, _validate):
+        """N32.2 scenario 2: lowered capital_cents → BLOCKED, CAPITAL_LIMIT, no POST."""
+        mock_flags.return_value = _control_flags(capital_cents=5_000)
+        self._auto_env_with_snapshot()
+        getter = self._broker_getter()
+        post_calls, poster = self._tracking_poster()
+        result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertEqual(result.get('orders_sent'), 0)
+        self.assertFalse(post_calls, 'poster must not run when capital anchor blocks')
+        reasons = result.get('reasons') or []
+        self.assertTrue('CAPITAL_LIMIT' in reasons or 'TOTAL_CAP_EXCEEDED' in reasons)
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    @patch('src.risk_control_flags.demo_send_allowed', return_value=(True, None))
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    def test_n32_lowered_max_risk_per_trade_blocks_trade_risk_limit(
+        self, mock_flags, _demo, _validate,
+    ):
+        """N32.2 scenario 3: lowered max_risk_per_trade_cents → TRADE_RISK_LIMIT."""
+        mock_flags.return_value = _control_flags(max_risk_per_trade_cents=50)
+        self._auto_env_with_snapshot()
+        getter = self._broker_getter()
+        post_calls, poster = self._tracking_poster()
+        result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertEqual(result.get('orders_sent'), 0)
+        self.assertFalse(post_calls, 'poster must not run when trade risk anchor blocks')
+        self.assertIn('TRADE_RISK_LIMIT', result.get('reasons') or [])
+
+    @patch('src.signal_paper_runner.fetch_control_flags', create=True)
+    @patch.object(x, 'evaluate_portfolio_risk', return_value={'reasons': []})
+    def test_n32_risk_check_tight_cap_not_parallel_10k_usd(self, _mock_eval, mock_flags):
+        """N32.2 scenario 4: parallel cap follows TIGHT (R$5k), not hardcoded 10k USD."""
+        mock_flags.return_value = _control_flags()
+        self._auto_env_with_snapshot()
+        fx = Decimal(self.env['USD_BRL_REFERENCE'])
+        account = {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                   'cash': '5000', 'equity': '5000'}
+        ticket = dict(self.signal, entry=1500, stop=1499, target=1510, quantity=1)
+        reasons = x.risk_check(ticket, account, [], [], fx, self.env)
+        self.assertIn('CAPITAL_LIMIT', reasons)
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    def test_n32_b3_equity_auto_blocked_no_alpaca_post(self, _mock_validate):
+        """N32.2 scenario 5a: B3_EQUITY stays NO_DEMO_ACCOUNT_PATH, orders_sent=0."""
+        self._auto_env_with_snapshot()
+        b3 = dict(self.signal, market='B3_EQUITY', symbol='ITUB4', signal_id='N32_B3_RUNNER')
+        b3['provider_signature'] = sign(b3, self.env['SIGNAL_COPY_SECRET'])
+        getter = self._broker_getter()
+        post_calls, poster = self._tracking_poster()
+        result = x.run(b3, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertFalse(post_calls)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertEqual(result.get('orders_sent'), 0)
+        reasons = result.get('reasons') or []
+        reject = result.get('reject_code')
+        self.assertTrue(
+            reject == 'NO_DEMO_ACCOUNT_PATH' or 'NO_DEMO_ACCOUNT_PATH' in reasons,
+        )
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    def test_n32_forex_auto_blocked_no_alpaca_post(self, _mock_validate):
+        """N32.2 scenario 5b: FOREX stays NO_DEMO_ACCOUNT_PATH, orders_sent=0."""
+        self._auto_env_with_snapshot()
+        fx_sig = dict(self.signal, market='FOREX', symbol='EURUSD', signal_id='N32_FOREX_RUNNER')
+        fx_sig['provider_signature'] = sign(fx_sig, self.env['SIGNAL_COPY_SECRET'])
+        getter = self._broker_getter()
+        post_calls, poster = self._tracking_poster()
+        result = x.run(fx_sig, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertFalse(post_calls)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertEqual(result.get('orders_sent'), 0)
+        reasons = result.get('reasons') or []
+        reject = result.get('reject_code')
+        self.assertTrue(
+            reject == 'NO_DEMO_ACCOUNT_PATH' or 'NO_DEMO_ACCOUNT_PATH' in reasons,
+        )
 
 
 if __name__=='__main__':unittest.main()

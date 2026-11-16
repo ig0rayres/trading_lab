@@ -14,6 +14,8 @@ from gate_b_risk import evaluate_signed_signal
 from panel_ops_data import (
     PERFORMANCE_LABEL_GROSS,
     blocked_context,
+    build_panel_bundle,
+    load_panel_signals,
     performance_from_snapshots,
     signal_destination,
 )
@@ -37,6 +39,15 @@ def _get(url, *, session=None):
     if session:
         headers['Cookie'] = 'trading_lab_session=' + session
     return Request(url, headers=headers)
+
+
+def _write_webhook_journal(root: Path, rows: list[dict]) -> None:
+    wh = root / 'webhooks'
+    wh.mkdir(parents=True, exist_ok=True)
+    (wh / 'journal.jsonl').write_text(
+        '\n'.join(json.dumps(r) for r in rows),
+        encoding='utf-8',
+    )
 
 
 class PanelOpsDataTests(unittest.TestCase):
@@ -98,6 +109,87 @@ class PanelOpsDataTests(unittest.TestCase):
             self.assertEqual(by_key['signal_copy']['gross_usd'], '10')
             self.assertEqual(by_key['momentum']['gross_usd'], '5')
             self.assertEqual(by_key['signal_copy']['pnl_label'], PERFORMANCE_LABEL_GROSS)
+
+    def test_load_panel_signals_exposes_origin_destination_and_reject_reason(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_webhook_journal(
+                root,
+                [
+                    {
+                        'payload': {'provider': 'tradingview', 'symbol': 'MSFT', 'market': 'US_EQUITY'},
+                        'result': {'status': 'rejected', 'reject_code': 'KILL_SWITCH'},
+                        'received_at': '2026-11-16T12:00:00+00:00',
+                    },
+                    {
+                        'payload': {'provider': 'prodigy', 'symbol': 'NVDA'},
+                        'result': {'status': 'QUEUED'},
+                        'received_at': '2026-11-16T13:00:00+00:00',
+                    },
+                ],
+            )
+            flags = {'kill_switch_on': True, 'max_open_positions': 3}
+            items = load_panel_signals(root, None, flags)
+            self.assertGreaterEqual(len(items), 2)
+            blocked = next(i for i in items if i['symbol'] == 'MSFT')
+            self.assertEqual(blocked['origin'], 'tradingview')
+            self.assertEqual(blocked['destination'], 'blocked')
+            self.assertEqual(blocked['reject_reason'], 'KILL_SWITCH')
+            queued = next(i for i in items if i['symbol'] == 'NVDA')
+            self.assertEqual(queued['origin'], 'prodigy')
+            self.assertEqual(queued['destination'], 'queue')
+
+    def test_snapshot_panel_ops_prodigy_ranking_and_copied_signals(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            intel = root / 'intelligence'
+            intel.mkdir()
+            (intel / 'prodigy-top10-latest.json').write_text(
+                json.dumps(
+                    {
+                        'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
+                        'top_10_research': [
+                            {'provider': 'prov-a', 'status': 'watch', 'prodigy_score': 9},
+                        ],
+                    }
+                ),
+                encoding='utf-8',
+            )
+            evo = root / 'evolution'
+            evo.mkdir()
+            (evo / 'decisions.jsonl').write_text(
+                json.dumps(
+                    {
+                        'kind': 'signal_copy',
+                        'provider': 'prov-a',
+                        'symbol': 'AAPL',
+                        'signal_id': 'SIG-1',
+                    }
+                ),
+                encoding='utf-8',
+            )
+            data = build_snapshot(root)
+            prodigy = data['panel_ops']['prodigy']
+            ranking = prodigy['ranking']
+            self.assertIsInstance(ranking, dict)
+            self.assertEqual(ranking['items'][0]['provider'], 'prov-a')
+            copied = prodigy['copied_signals']
+            self.assertEqual(len(copied), 1)
+            self.assertEqual(copied[0]['provider'], 'prov-a')
+            self.assertEqual(copied[0]['symbol'], 'AAPL')
+
+    def test_build_panel_bundle_prodigy_copied_signals_structure(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            evo = root / 'evolution'
+            evo.mkdir()
+            (evo / 'decisions.jsonl').write_text(
+                json.dumps({'kind': 'signal_copy', 'provider': 'p1', 'symbol': 'TSLA'}),
+                encoding='utf-8',
+            )
+            bundle = build_panel_bundle(root, conn_factory=None)
+            self.assertIn('copied_signals', bundle['prodigy'])
+            self.assertEqual(bundle['prodigy']['copied_signals'][0]['symbol'], 'TSLA')
 
 
 class PanelOpsHttpTests(unittest.TestCase):
@@ -179,6 +271,33 @@ class PanelOpsHttpTests(unittest.TestCase):
             data = build_snapshot(d)
             self.assertIn('panel_ops', data)
             self.assertIn('performance_panel', data)
+
+    def test_api_signals_json_origin_destination_reject_reason(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_webhook_journal(
+                root,
+                [
+                    {
+                        'payload': {'provider': 'tradingview', 'symbol': 'AAPL'},
+                        'result': {'reject_code': 'MAX_POSITIONS'},
+                        'received_at': '2026-11-16T10:00:00+00:00',
+                    },
+                ],
+            )
+            server, thread, base = self._server(str(root))
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                signals = payload['signals']
+                self.assertEqual(len(signals), 1)
+                row = signals[0]
+                self.assertEqual(row['origin'], 'tradingview')
+                self.assertEqual(row['destination'], 'blocked')
+                self.assertEqual(row['reject_reason'], 'MAX_POSITIONS')
+            finally:
+                self._shutdown(server, thread)
 
 
 class PanelKillSwitchCycleTests(unittest.TestCase):

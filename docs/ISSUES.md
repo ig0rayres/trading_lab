@@ -259,7 +259,7 @@
 |-------|--------|
 | Categoria | enhancement / epic |
 | Sprint | N30 → N17 → N28 (campanha) |
-| Status | aberto (N30+N17 PR [#35](https://github.com/ig0rayres/trading_lab/pull/35) CI **green** + mergeable; N17 G-FORM blocked; N28.1 done; N28.2–4 blocked G-AJUSTE) |
+| Status | aberto (PR **#35 merged+deployed** 2026-11-16; smoke MSFT `PAPER_SUBMITTED` ok; Features 8–9 contrato `[x]` via N30.3b; N17 G-FORM blocked; N28.1 done; N28.2–4 blocked G-AJUSTE) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); B3/FOREX barrados sem adapter ISS-010; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 e Clear/OANDA permanecem fora.
 
@@ -273,7 +273,7 @@
 | 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
 | 3 | **N28** | Feature 11 ajuste supervisionado | N28.1 **done**; N28.2–4 **blocked** até G-AJUSTE + fill real |
 | fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
-| fora | N27.4 | Smoke sinal válido → ordem demo | pendência operador |
+| fora | N27.4 | Smoke sinal válido → ordem demo | **done** (smoke MSFT paper 2026-11-16; não substituído por pytest) |
 
 **Estratégias (N30.4 — sem promoção nesta sprint):**
 
@@ -287,7 +287,7 @@
 **Pendências operador (somente humano / EasyPanel):**
 
 1. Credenciais e account ids **Clear (B3)** e **OANDA Practice (FOREX)** — EasyPanel; **ISS-010** / sprint N29.5 (fora de N30).
-2. Smoke **N27.4**: sinal válido → ordem demo na sessão real (não substituído por pytest).
+2. ~~Smoke **N27.4**~~ — **concluído** (MSFT `PAPER_SUBMITTED` na sessão real, 2026-11-16 pós-merge #35).
 3. Retrato de risco consolidado **≤120s** antes de submit em produção (`V4_PORTFOLIO_SNAPSHOT_STALE` se velho).
 4. **Rebuild** EasyPanel se a imagem desta frente ainda não estiver no ar.
 5. Definir método **G-AJUSTE** (Feature 11) — sem isso **N28** permanece blocked.
@@ -295,7 +295,7 @@
 
 **Pendências operador (push/CI):**
 
-7. **PR #35** (`front/n27-alpaca-loop`, N30+N17): CI **fully green** + mergeable (2026-11-16); merge **somente operador** (repo produto). N28.1 segue nesta frente após green.
+7. ~~**PR #35**~~ — **merged** (2026-11-16). Closeout Features 8–9: `tests/test_panel_ops.py` + `tests/test_panel_triggers.py` (N30.3b).
 
 **Fora de escopo agora:** N28 até G-AJUSTE; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
 

@@ -271,10 +271,10 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
 | 8 | Parada geral impede ordem nova | `tests.test_panel_ops.PanelKillSwitchCycleTests.test_kill_switch_from_panel_blocks_next_eval` | `[x]` |
 | 8 | Dia a dia sem Exec | `tests.test_panel_ops.PanelOpsRunbookTest.test_daily_runbook_points_to_panel_not_exec` | `[x]` |
 | 8 | Acesso exige autenticação | `tests.test_panel_ops.PanelOpsHttpTests.test_root_redirects_to_login_without_cookie`, `test_login_sets_cookie_and_opens_central`, `test_api_signals_requires_session`, `test_bearer_alone_still_401_on_patch`; `tests.test_panel_triggers.PanelTriggerHttpTests.test_patch_triggers_bearer_only_is_401` | `[x]` |
-| 8 | Alteração registrada com valor anterior + data | *(audit parcial em `test_patch_triggers_with_cookie_updates_audit`)* | `[ ]` |
-| 8 | Plataforma nunca afrouxa âncora sozinha | *(sem teste nomeado)* | `[ ]` |
-| 9 | Lista sinais origem/destino/motivo | *(só `test_signal_destination_blocked_vs_queue` no helper)* | `[ ]` |
-| 9 | Ranking Prodígio + copiados | *(sem assert de ranking/copiados)* | `[ ]` |
+| 8 | Alteração registrada com valor anterior + data | `tests.test_panel_triggers.PanelTriggerHttpTests.test_patch_triggers_with_cookie_updates_audit`; `PanelTriggerUnitTests.test_apply_trigger_patch_appends_audit` (`old_value`, `new_value`, `changed_at`) | `[x]` |
+| 8 | Plataforma nunca afrouxa âncora sozinha | `tests.test_panel_triggers.PanelTriggerHttpTests.test_loosening_anchor_without_operator_cookie_is_401_and_no_audit`; `PanelTriggerUnitTests.test_platform_never_loosens_anchors_when_db_unavailable` | `[x]` |
+| 9 | Lista sinais origem/destino/motivo | `tests.test_panel_ops.PanelOpsDataTests.test_load_panel_signals_exposes_origin_destination_and_reject_reason`; `PanelOpsHttpTests.test_api_signals_json_origin_destination_reject_reason` | `[x]` |
+| 9 | Ranking Prodígio + copiados | `tests.test_panel_ops.PanelOpsDataTests.test_snapshot_panel_ops_prodigy_ranking_and_copied_signals`; `test_build_panel_bundle_prodigy_copied_signals_structure` | `[x]` |
 | 9 | Barrado com gate e âncora | `tests.test_panel_ops.PanelOpsDataTests.test_blocked_context_exposes_gate_and_anchor` | `[x]` |
 | 10 | Resultado por estratégia + total (fill confirmado) | `tests.test_panel_ops.PanelOpsDataTests.test_performance_excludes_unfilled_orders` (`strategies[]` por `strategy_key`; unfilled PnL 99 excluído) | `[x]` |
 | 10 | Ordem sem fill fora do resultado | `tests.test_panel_ops.PanelOpsDataTests.test_performance_excludes_unfilled_orders` | `[x]` |
@@ -348,6 +348,19 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
 ```bash
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_n28_suggestion_labels -q
 ```
+
+## Sprint N30.3b — Features 8–9 lacunas (ISS-011 onda 2)
+
+> `LIVE_TRADING_ENABLED=false` · escopo `test_panel_ops` + `test_panel_triggers` · 6 casos novos · **29** testes no par (2026-11-16)
+
+| Lacuna Feature 8–9 | Nodeid |
+|--------------------|--------|
+| Audit `old_value` + timestamp | `PanelTriggerHttpTests.test_patch_triggers_with_cookie_updates_audit`; `PanelTriggerUnitTests.test_apply_trigger_patch_appends_audit` |
+| Sem afrouxar âncora sozinha | `PanelTriggerHttpTests.test_loosening_anchor_without_operator_cookie_is_401_and_no_audit`; `PanelTriggerUnitTests.test_platform_never_loosens_anchors_when_db_unavailable` |
+| `/api/signals` origem/destino/motivo | `PanelOpsDataTests.test_load_panel_signals_exposes_origin_destination_and_reject_reason`; `PanelOpsHttpTests.test_api_signals_json_origin_destination_reject_reason` |
+| Ranking Prodígio + `copied_signals` | `PanelOpsDataTests.test_snapshot_panel_ops_prodigy_ranking_and_copied_signals`; `test_build_panel_bundle_prodigy_copied_signals_structure` |
+
+Operador: **PR #35 merged**; smoke **MSFT** `PAPER_SUBMITTED` ok; **N27.4** fechado como done (smoke real, fora de pytest).
 
 ## Sprint N30.4 — Campanha ISS-011 e pendências operador
 

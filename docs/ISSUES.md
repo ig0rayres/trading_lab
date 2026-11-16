@@ -262,7 +262,7 @@
 |-------|--------|
 | Categoria | enhancement / epic |
 | Sprint | N33 closeout Alpaca; restante **ISS-010** / **N17.2** |
-| Status | aberto — trilha Alpaca Features 7–11 entregue (N30/N31/N28/N32); PR **#42** merged `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); EasyPanel imagem **#42 no ar** (atestado operador 2026-11-16, **não é fill**). **N34:** laço paper B3/FOREX ligado fail-closed no código (mock CI). **Restante:** homologação ao vivo Clear/OANDA (**ISS-010** / **N29.5**); homologação shadow→paper Tá Barato (**N17.2** / G-FORM) |
+| Status | aberto — trilha Alpaca Features 7–11 entregue (N30/N31/N28/N32); **N34** wiring B3/FOREX fail-closed (PR **#45**); EasyPanel tip **#46 no ar** (`d99b332`, atestado operador 2026-11-16, **não é fill**, **não** fecha N29.5). **Restante:** credenciar + homologar Clear/OANDA (**ISS-010** / **N29.5**); homologação shadow→paper Tá Barato (**N17.2** / G-FORM) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); **âncoras no laço paper** (N32.1–N32.3) via `control_flags`; B3/FOREX barrados sem adapter **ISS-010**; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 código N28/N31 nesta frente; Clear/OANDA permanecem fora.
 
@@ -294,7 +294,7 @@
 1. Credenciais e account ids **Clear (B3)** e **OANDA Practice (FOREX)** — EasyPanel; **ISS-010** / sprint N29.5 (fora de N30).
 2. ~~Smoke **N27.4**~~ — **concluído** (MSFT `PAPER_SUBMITTED` na sessão real, 2026-11-16 pós-merge #35).
 3. Retrato de risco consolidado **≤120s** antes de submit em produção (`V4_PORTFOLIO_SNAPSHOT_STALE` se velho).
-4. ~~**Rebuild** EasyPanel~~ — imagem **#42 no ar** (atestado operador 2026-11-16; **não é fill**).
+4. ~~**Rebuild** EasyPanel~~ — tip **#46 no ar** (`d99b332`, atestado operador 2026-11-16; **não é fill**; cobre N34/#45). Credenciais Clear/OANDA ainda item 1.
 5. ~~Definir método **G-AJUSTE** (Feature 11)~~ — **respondido** ISS-012 / N31 (ciclo diário fills+não-fills; TimesFM research-only). N28.2–4 executam o ajuste depois do gate N31; bloco N28 não é reescrito.
 6. Promover `prodigy_15d` a paper no banco **somente** com evidência; default continua research.
 

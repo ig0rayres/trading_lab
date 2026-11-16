@@ -179,14 +179,15 @@
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N33",
+      "sprint": "N34",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T20:32:49Z",
+      "recorded_at": "2026-11-16T21:27:36Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N33 docs closeout; no src; ROADMAP stamps verified",
-      "full_suite_ran": false,
+      "notes": "N34 wiring: 33 unittest OK; mock Clear/OANDA; zero Alpaca POST for B3/FOREX",
+      "full_suite_ran": true,
+      "first_pass": true,
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -196,7 +197,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_signal_paper_runner.py -k n32 -q --tb=no",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_demo_broker_adapters -q",
           "exit_code": 0
         }
       ],
@@ -206,17 +207,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "d25741379c6cd39ffb6c41a4630695b5fa4bce8d",
-      "stamped_at": "2026-11-16T20:36:05Z",
+      "last_validated_sha": "4fc0644ab5275129241a28e220036ff67a66db22",
+      "stamped_at": "2026-11-16T21:27:37Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "91e2a9fedf03cc33a660505777830fbdca659a97",
+      "content_hash": "d0df5e4f1985478c9ddf984f5ba4b5567537ab854526c2ee40b016b87683808b",
+      "patch_id": "ca4155c3626a83a52d692846b29e4eff0d6fba7d",
       "patch_id_version": 2
     },
-    "sprint_delivery": "verify_green",
-    "sprint_delivery_sprint": "N33",
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N34",
     "validation_gate_ref": ".beesy/sprints/N33.json"
   },
   "artefatos_gerados": [

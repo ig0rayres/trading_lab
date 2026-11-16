@@ -281,9 +281,9 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 
 **Critérios de aceite:**
 - [x] Sugestão aparece marcada como sugestão e nunca é tratada como ordem autorizada por si só (`tests/test_n28_suggestion_labels.py` `N28SuggestionSurfaceTests.test_command_panel_suggestion_surfaces_self_check`, `test_rank_row_without_ticket_blocks_before_paper_gateway`).
-- [ ] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define. *Método G-AJUSTE definido em ISS-012/N31 (ciclo diário fills+não-fills, suggestion-first). Execução permanece N28.2.*
-- [ ] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel. *Método definido (N31); execução N28.3 após N28.2.*
-- [ ] Ajuste automático nunca altera as âncoras de risco. *Método definido (N31); execução N28.4 após N28.2.*
+- [x] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define (`tests/test_n28_supervised_adjustment.py` `N28SupervisedAdjustmentTests.test_n28_2_in_range_proposal_can_apply`, `test_n28_2_out_of_range_rejected`; catálogo `config/strategy_parameter_catalog.json`).
+- [x] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel (`tests/test_n28_supervised_adjustment.py` `N28SupervisedAdjustmentTests.test_n28_3_apply_undo_persist_before_after_reason`; API Central `POST /api/strategy-parameters/{propose,apply,undo}`).
+- [x] Ajuste automático nunca altera as âncoras de risco (`tests/test_n28_supervised_adjustment.py` `N28SupervisedAdjustmentTests.test_n28_4_never_mutates_risk_anchors`).
 
 ---
 

@@ -6,7 +6,12 @@ from collections import Counter
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-SUGGESTION_SURFACE_KEYS = ('opportunities', 'ta_barato_shadow', 'continuous_improvement')
+SUGGESTION_SURFACE_KEYS = (
+    'opportunities',
+    'ta_barato_shadow',
+    'continuous_improvement',
+    'supervised_adjustments',
+)
 SUGGESTION_ITEM_LABELS = frozenset({'research_tip', 'continuous_improvement', 'shadow_suggestion'})
 
 
@@ -218,6 +223,27 @@ def _latest_evolution_daily_tips(root: Path, limit: int = 8) -> list[dict]:
     return out
 
 
+def _load_supervised_adjustments(root, limit=8):
+    try:
+        from supervised_adjustment import list_adjustment_history, load_overrides
+
+        evo = Path(root) / 'evolution'
+        recent = list_adjustment_history(evo, limit=limit)
+        return _apply_suggestion_surface(
+            {
+                'count': len(recent),
+                'recent': recent,
+                'override_keys': list((load_overrides(evo).get('strategies') or {}).keys()),
+            },
+            'continuous_improvement',
+        )
+    except ImportError:
+        return _apply_suggestion_surface(
+            {'count': 0, 'recent': [], 'status': 'UNAVAILABLE'},
+            'continuous_improvement',
+        )
+
+
 def _load_evolution_recent(root, limit=8):
     rows = read_jsonl(Path(root) / 'evolution' / 'decisions.jsonl')
     recent = []
@@ -281,6 +307,7 @@ def command_panel(root):
         'opportunities': _load_prodigy_opportunities(root),
         'ta_barato_shadow': _load_ta_barato_shadow(root),
         'continuous_improvement': _load_evolution_recent(root),
+        'supervised_adjustments': _load_supervised_adjustments(root),
         'history': {'postgres_ledger_counts': ledger},
     }
     violations = validate_command_panel_suggestions(panel)

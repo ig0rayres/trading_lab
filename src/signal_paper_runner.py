@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from demo_account_gate import NO_DEMO_ACCOUNT_PATH
+from demo_account_gate import NO_DEMO_ACCOUNT_PATH, demo_market_block_reason
 from paper_audit import PAPER_URL, get_json, validate_env, amount
 from signal_copy import validate, canonical_payload
 from portfolio_risk_v4 import evaluate as evaluate_portfolio_risk
@@ -24,10 +24,12 @@ DEFAULT_LEDGER = '/app/reports/paper/signal-orders.jsonl'
 ALPACA_PAPER_BLOCKED_MARKETS = frozenset({'B3_EQUITY', 'FOREX'})
 
 
-def _market_blocks_alpaca_paper(signal: dict) -> str | None:
+def _market_blocks_alpaca_paper(signal: dict, env: dict) -> str | None:
     market = signal.get('market')
     if market in ALPACA_PAPER_BLOCKED_MARKETS:
         return NO_DEMO_ACCOUNT_PATH
+    if market == 'CRYPTO':
+        return demo_market_block_reason('CRYPTO', env)
     return None
 
 
@@ -125,7 +127,7 @@ def run(signal,env,ledger=DEFAULT_LEDGER,broker_get=get_json,broker_post=submit,
             return {'status':'BLOCKED','reasons':['PAPER_EXECUTION_NOT_ENABLED'],'orders_sent':0}
         if env.get('PAPER_SIGNAL_ACCOUNT_ACK','')!='I_AUTHORIZE_ALPACA_PAPER_ONLY':
             return {'status':'BLOCKED','reasons':['EXPLICIT_PAPER_ACK_REQUIRED'],'orders_sent':0}
-        blocked = _market_blocks_alpaca_paper(signal)
+        blocked = _market_blocks_alpaca_paper(signal, env)
         if blocked:
             return {'status': 'BLOCKED', 'reasons': [blocked], 'orders_sent': 0}
         path=Path(ledger);path.parent.mkdir(parents=True,exist_ok=True)

@@ -31,12 +31,25 @@ _tv_worker_supervisor() {
   done
 }
 
+_evolution_daily_supervisor() {
+  interval="${EVOLUTION_DAILY_INTERVAL_SEC:-86400}"
+  while true; do
+    echo "v4-ops: evolution-daily (interval ${interval}s)" >&2
+    /app/scripts/run.sh evolution-daily || true
+    sleep "${interval}"
+  done
+}
+
 if [ "$(printf '%s' "${DASHBOARD_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _dashboard_supervisor &
 fi
 
 if [ "$(printf '%s' "${TV_WORKER_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _tv_worker_supervisor &
+fi
+
+if [ "$(printf '%s' "${EVOLUTION_DAILY_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
+  _evolution_daily_supervisor &
 fi
 
 exec /app/scripts/run.sh v4-scheduler "$@"

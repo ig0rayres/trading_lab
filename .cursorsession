@@ -169,13 +169,13 @@
     "plan_only": true,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N17",
+      "sprint": "N31",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T12:44:09Z",
+      "recorded_at": "2026-11-16T16:47:25Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N28.1 suggestion labels; 539 pytest",
+      "notes": "N31 G-AJUSTE+TimesFM research-only; 9 focused tests",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -185,7 +185,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops -q'",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_timesfm_context.py tests/test_n31_g_ajuste_guardrails.py tests/test_evolution_engine.py -q --tb=no'",
           "exit_code": 0
         }
       ],
@@ -195,17 +195,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "b42f7dc33a3454e1c4cf970a4a130f36ad65db99",
-      "stamped_at": "2026-11-16T16:03:34Z",
+      "last_validated_sha": "d1d139aa6a21670ef86d656145f16da8c75b81c7",
+      "stamped_at": "2026-11-16T16:47:27Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "4d181e5ffdf74139a4d135fd4b4d8c0cddf2701434a6896250b044683b5199eb",
-      "patch_id": "4941fde35d0d67aa64f4443b0740fbc3832da6e2",
+      "content_hash": "6e56eb14b938c255abd4391daa9e9a4e92e0b03ce6d4bc8803d8ebde2053244c",
+      "patch_id": "3f5eeaaf1c2c9d19be4d0ebbb96d5f357789e52d",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N17"
+    "sprint_delivery_sprint": "N31"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

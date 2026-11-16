@@ -412,3 +412,4 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-11-03 | 0.2 | Operação autônoma na conta demo; âncoras de risco confirmadas; central de controle no painel; Features 7–11; cadastro de estratégia nova adiado | Analista de Requisitos (IA) com o operador |
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
 | 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |
+| 2026-11-16 | 0.4 | Feature 11 critérios 2–4 `[x]` após N28.2–4 (`tests/test_n28_supervised_adjustment.py`); closeout papel N33 — sem bump de versão de contrato | Sprint N33 docs |

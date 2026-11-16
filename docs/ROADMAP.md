@@ -53,10 +53,11 @@
 | N26 | N | Performance só de fill confirmado; bruto rotulado | concluida | 3 | v4_web_dashboard, ledger | Onda 3 — Feature 10 | *(abaixo)* |
 | N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
 | N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
-| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
-| N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | em closeout (stamp verifier pendente) | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
-| N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | em execução | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
+| N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | concluida | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
+| N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | concluida | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
+| N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | concluida | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
 | N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
+| N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | planejada | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -100,6 +101,7 @@
 | N30 | senior+qa | Laço Alpaca US+cripto + ingestão Prodígio |
 | N31 | senior+qa | Melhoria contínua diária + TimesFM research-only |
 | N32 | senior+qa | Âncoras do painel no envio paper |
+| N33 | skip | Closeout docs ISS-011 (Alpaca); sem `src/` |
 
 ---
 
@@ -966,6 +968,7 @@ Onda 5  N17 (existente)    Tá Barato / momentum só com fórmula upstream (G-FO
 Onda 6  N31                melhoria contínua diária (fills+não-fills) + TimesFM research  ISS-012
 Onda 6b N28                ajuste supervisionado (método N31; execução N28.2–4)           0–1
 Onda 6c N32                Feature 7: envio paper lê âncoras do painel (lacuna 10k USD)   ISS-011
+Onda 6d N33                closeout docs: Status N28/N30/N31 + ISS-011 restante honesto  ISS-011
 ```
 
 Caminho crítico Must-have: **0 → 1 → 2 → 3 → 4**. Envio autônomo permanece desligado até a Onda 4.
@@ -1237,7 +1240,7 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 ## Sprint N28 — Ajuste supervisionado depois do método
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > titulo_humano: Ajuste registrado e reversível, sem mexer no risco  
 > Gate: G-AJUSTE e fill real; só parâmetro existente na faixa original; histórico com desfazer; âncoras intocadas; LIVE false  
 > review: senior+qa  
@@ -1252,11 +1255,13 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 **Notas N28.2–4 (pós-N31 merge `681e8c5`):** `src/supervised_adjustment.py` + catálogo documentado; ledger append-only `parameter_adjustments.jsonl`; apply/undo via `/api/strategy-parameters/*` (sessão operador); faixa incerta → só `suggestion_only`; âncoras espelham `TRIGGER_PATCH_FIELDS`.
 
+**Closeout N33 (2026-11-16):** feat `71caca1`, stamp `c465724`; PR **#39** merge `5178fff04fbf7f4675fb9950580df81fdf732f7f` (`2026-11-16T17:20:14Z`); Feature 11 critérios 2–4 `[x]` — `tests/test_n28_supervised_adjustment.py` (`test_n28_2_in_range_proposal_can_apply`, `test_n28_3_apply_undo_persist_before_after_reason`, `test_n28_4_never_mutates_risk_anchors`).
+
 ---
 
 ## Sprint N30 — Laço Alpaca (ação US + cripto) e caminho Prodígio
 > Categoria: N  
-> Status: em closeout (N30.4 docs; verifier stamp pendente — não marcar concluída até `/qa validar`)  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 · ISS-007 / ISS-009 abertos · ISS-010 fora  
 > titulo_humano: Alpaca opera sozinha em ação e cripto; Prodígio só com fase liberada  
 > resumo_humano: A conta demo da Alpaca envia sozinha em ação americana e cripto. O ranking Prodígio vira sinal paper só se a fase já estiver liberada. O contrato marca o que o painel já faz. Clear, OANDA e o método de ajuste ficam fora desta rodada.  
@@ -1266,6 +1271,8 @@ testes: mock REST — order + fill transaction; block se token ausente.
 > bom_ref: BOM-3, BOM-4  
 > Depende de: N27 parcial (Alpaca-only) · Release: campanha ISS-011 onda 1  
 > LIVE_TRADING_ENABLED: false
+
+**Closeout N33 (2026-11-16):** feat `322318b`; PR **#35** merge `622fbeb786b4e042d2269d60d5c44e7e0f51ab8e` (`2026-11-16T12:47:20Z`); evidência `docs/TEST-EVIDENCE.md` N30.1 / N30.3b; campanha histórica acima não reescrita.
 
 ### Em uma frase
 
@@ -1493,7 +1500,7 @@ P task. Update ISS-011 with campaign N30 → N17 → N28(blocked). Feature 7 REQ
 
 ## Sprint N31 — Melhoria contínua diária e apoio TimesFM só como pesquisa
 > Categoria: N  
-> Status: em execução  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-012 · N28 **não** reescrita  
 > titulo_humano: Autoanálise diária com dicas; previsão Google só como pesquisa  
 > resumo_humano: O laboratório analisa todo dia o que preencheu e o que não saiu e mostra só dicas rotuladas. O modelo de séries temporais do Google entra como contexto de pesquisa quando estiver no ar. O ajuste de parâmetro continua na sprint já planejada.  
@@ -1531,6 +1538,8 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 | [x] | M | N31.2 Incluir o modelo TimesFM como apoio opcional só de pesquisa no relatório | `/dev` | N31.1 |
 | [x] | P | N31.3 Registrar o método de ajuste e liberar o caminho da sprint já planejada, sem inventar nota | docs | N31.1 |
 | [x] | P | N31.4 Testar que dica e previsão nunca viram ordem e que o modelo ausente não inventa número | `/qa testes` | N31.1, N31.2 |
+
+**Closeout N33 (2026-11-16):** feat `d1d139a`, stamp `84791eb`; PR **#38** merge `681e8c546ab7d6388f8627813e0606a9a347bfee` (`2026-11-16T17:12:28Z`); `tests/test_n31_g_ajuste_guardrails.py` (`N31GAjusteGuardrails.test_review_never_imports_paper_gateway`, `test_timesfm_missing_no_numeric_forecast_in_report`).
 
 ### Campanha ISS-012 (não executar N28.2–4 nesta sprint)
 
@@ -1879,6 +1888,140 @@ P task. Extend `tests/test_signal_paper_runner.py` and/or `tests/test_feature7_a
 **Detalhe técnico**
 
 P task. In `docs/REQUIREMENTS.md` Feature 7, mark “Nenhuma ordem sai com qualquer âncora estourada” `[x]` **only** after N32.2 pytest nodeids exist; keep B3/FOREX `[ ]` with ISS-010. Replace the lacuna sentence about `Decimal('10000')`/50 USD. One-liner in `docs/TEST-EVIDENCE.md` and `docs/HOMOLOGATION.md` — not a second implementation. Do not mark N28/N30/N31 Status concluida. LIVE false.
+
+---
+
+## Sprint N33 — Fechar no papel o laço americano já entregue
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 restante após N32 + PR #42 merged · N17 tabela de tasks **não** reescrita  
+> titulo_humano: Fechar no papel o laço americano já entregue  
+> resumo_humano: O laço da conta demo americana, o ajuste supervisionado e a autoanálise diária já estão no código e no pedido 42. Esta sprint só alinha o plano e os chamados, e deixa claro que bolsa brasileira, câmbio e a homologação da fórmula Tá Barato continuam fora.  
+> Gate: N28/N30/N31 Status `concluida` só com SHA/PR/nodeid citados; ISS-011 aberto só B3/FOREX + N17.2/G-FORM; ISS-012 corpo fechado; DIARY N33; TEST-EVIDENCE pedido 42 na linha principal + painel no ar atestado; zero `src/`; LIVE false  
+> review: skip  
+> Brief: `docs/.briefs/N33.brief.md`  
+> bom_ref: BOM-3, BOM-4  
+> Depende de: N32 concluida · Release: campanha ISS-011 closeout docs  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+O plano passa a mostrar como concluído o laço da conta demo americana, o ajuste supervisionado e a autoanálise diária, e deixa explícito o que ainda falta: bolsa brasileira, câmbio e a homologação humana da fórmula Tá Barato.
+
+### O que muda para você
+
+- As três sprints já entregues no código (ajuste, laço americano, autoanálise) passam a aparecer como concluídas no plano, cada uma com prova citada
+- O chamado das funcionalidades 7 a 11 do lado americano fecha o que o teste já prova; o chamado permanece aberto só para bolsa brasileira, câmbio e a homologação da fórmula Tá Barato
+- A folha de evidência registra que o pedido 42 está na linha principal e o painel já está no ar, segundo o que você atestou hoje
+- Dinheiro real continua desligado; nenhuma corretora terceira entra nesta rodada
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Três sprints antigas carimbadas como concluídas | Abrir o plano e ver status concluída só onde houver prova (código, teste e pedido de revisão citados) |
+| 2 | Chamado do contrato americano honesto | Abrir a lista de problemas e ver restante só bolsa brasileira, câmbio e homologação da fórmula Tá Barato |
+| 3 | Chamado da autoanálise diária fechado | Ver o chamado do método de ajuste como fechado, alinhado ao código já entregue |
+| 4 | Nota do painel no ar | Ler a folha de evidência: pedido 42 na linha principal e painel no ar, atestado por você |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N33.0 Inventariar a prova já entregue antes de carimbar | `/git` | — |
+| [x] | P | N33.1 Carimbar no plano as três sprints já entregues | docs | N33.0 |
+| [x] | P | N33.2 Deixar os chamados e o changelog do contrato honestos | docs | N33.1 |
+| [x] | P | N33.3 Registrar no diário e na evidência o pedido 42 no ar | docs | N33.1 |
+| [x] | P | N33.4 Atualizar a sessão desta sprint após os carimbos | session | N33.2, N33.3 |
+
+### Fora de escopo
+
+- Adapters Clear / OANDA (ISS-010 / N29.5)
+- Reescrever tabela de tasks N17 (nota opcional: N17.2 permanece operador/G-FORM)
+- Inventar limiar Tá Barato / momentum / Prodígio
+- `LIVE_TRADING_ENABLED=true`
+- Qualquer `src/`
+- Fechar ISS-011 por completo
+
+### Task N33.0 — Inventariar a prova já entregue antes de carimbar
+
+**Entrega:** Inventário curto dizendo o que já tem prova (código, teste, pedido de revisão) e o que não pode ser carimbado.
+**Como conferir:** O inventário cita as três sprints, o pedido 42 na linha principal, e deixa Tá Barato e corretoras terceiras de fora.
+**Por quê:** Sem essa lista, o carimbo no plano inventaria entrega.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N33-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs local checkout; do not bump; if GitHub main is unreachable, keep fail-closed note. Do not touch `src/`. Do not invent fills.
+
+Cite:
+- N28: `71caca1` feat; `c465724` stamp; PR **#39** `5178fff`; `tests/test_n28_supervised_adjustment.py` `test_n28_2_in_range_proposal_can_apply`, `test_n28_2_out_of_range_rejected`, `test_n28_3_apply_undo_persist_before_after_reason`, `test_n28_4_never_mutates_risk_anchors`
+- N30: `322318b` feat; PR **#35** `622fbeb`; TEST-EVIDENCE N30.1 / N30.3b
+- N31: `d1d139a` feat; `84791eb` stamp; PR **#38** `681e8c5`; `tests/test_n31_g_ajuste_guardrails.py` `N31GAjusteGuardrails`
+- N32: already `concluida`; PR **#42** MERGED `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`)
+- N17.2 remains `[ ]` — do not stamp N17 `concluida`
+
+### Task N33.1 — Carimbar no plano as três sprints já entregues
+
+**Entrega:** No plano, as sprints de ajuste, laço americano e autoanálise diária passam a constar como concluídas, cada uma apontando a prova.
+**Como conferir:** Abrir o índice e o bloco de cada sprint e ver status concluída, sem mudar as linhas de tarefa já marcadas.
+**Por quê:** O código já está na linha principal; o plano ainda diz que essas sprints estão planejadas ou em execução.
+
+**Detalhe técnico**
+
+P task. Edit **only Status lines + index rows + optional one-liners**. Do **not** rewrite task tables of N17/N28/N29/N30/N31/N32.
+
+1. `## Sprint N28` `> Status: planejada` → `concluida`. Index row N28 Status → `concluida`. Optional one-liner after existing N28 notes citing `71caca1` / PR #39 / Feature 11 `[x]`.
+2. `## Sprint N30` `> Status: em closeout (...)` → `concluida`. Index row N30 → `concluida`. Do not rewrite the campaign table inside N30 (historical).
+3. `## Sprint N31` `> Status: em execução` → `concluida`. Index row N31 → `concluida`. Cite PR #38 / `d1d139a`.
+4. Optional one-liner under N17 Status (do not change checkboxes): N17.2 remains operador/G-FORM.
+5. Optional honesty in the waves `G-AJUSTE` “Sem resposta” cell if it still says Feature 11 critérios 2–4 `[ ]` until N28.2–4 — those boxes are already `[x]` in REQUIREMENTS.
+6. Do not mark N17 or N29 `concluida`. LIVE false.
+
+### Task N33.2 — Deixar os chamados e o changelog do contrato honestos
+
+**Entrega:** O chamado das funcionalidades 7 a 11 fica aberto só para bolsa brasileira, câmbio e homologação da fórmula Tá Barato; o chamado da autoanálise diária fecha; o histórico do contrato deixa de dizer que o ajuste ainda está em aberto.
+**Como conferir:** Abrir a lista de problemas e o histórico do contrato e ver o restante explícito, sem fechar o chamado americano por completo.
+**Por quê:** O índice já diz uma coisa e o corpo do chamado diz outra; o changelog ficou defasado depois do ajuste entregue.
+
+**Detalhe técnico**
+
+P task. Files: `docs/ISSUES.md`, `docs/REQUIREMENTS.md` (changelog only).
+
+ISS-011:
+- Keep **aberto**. Prefer split remaining over closing the epic.
+- Remaining **only**: Feature 7 B3/FOREX `[ ]` → ISS-010 / N29.5; N17.2 operator homolog / G-FORM (Tá Barato paper blocked upstream).
+- Update body: PR **#42** merged `d30689b` (`2026-11-16T19:49:34Z`); EasyPanel #42 no ar (operator-attested 2026-11-16, **not** a fill); N32/N30/N31/N28 Alpaca track delivered; campaign table rows N30/N31/N28/N32 → concluída with citations.
+- Index sprint column: `N33 closeout Alpaca; restante ISS-010 + N17.2`.
+- Do not claim Tá Barato paper homolog. Do not invent fills.
+
+ISS-012:
+- Index already `fechado`; sync **body** Status to `fechado` citing PR **#38** `681e8c5` and N28.2–4 `71caca1`.
+
+REQUIREMENTS:
+- Feature 11 lines 283–286 already `[x]` — do not touch those boxes.
+- Fix stale changelog line 414 (“critérios 2–4 seguem `[ ]` até N28.2–4”): keep N31 historical sense **or** add an N33 row that critérios 2–4 are `[x]` after N28.2–4 (`tests/test_n28_supervised_adjustment.py`). Do not bump a fake contract version. Do not invent scoring.
+
+### Task N33.3 — Registrar no diário e na evidência o pedido 42 no ar
+
+**Entrega:** Uma entrada curta no diário desta sprint e uma linha na folha de evidência dizendo que o pedido 42 está na linha principal e o painel já está no ar, segundo o que você atestou.
+**Como conferir:** Ler diário e evidência; a linha não trata o painel no ar como ordem preenchida.
+**Por quê:** Sem esse registro, o closeout some do histórico operacional.
+
+**Detalhe técnico**
+
+P task. Files: `docs/DIARY.md`, `docs/TEST-EVIDENCE.md`.
+
+DIARY: short `## Sprint N33` + index row. Record: PR #42 merged `d30689b`; N28/N30/N31 Status stamps; ISS-011 remains open for ISS-010 + N17.2; LIVE false; no `src/`.
+
+TEST-EVIDENCE one-liner (operator-attested chat 2026-11-16): PR **#42** is on `main` (`d30689bfeb4b009b6297d4bdea8fead233486474`, merged `2026-11-16T19:49:34Z`); EasyPanel image of #42 **no ar**. Explicit: **not a fill**. Do not add homolog rows that invent broker execution.
+
+### Task N33.4 — Atualizar a sessão desta sprint após os carimbos
+
+**Entrega:** A sessão aponta para esta sprint de closeout, ainda só como plano até o parent iniciar a execução.
+**Como conferir:** Ver sprint atual N33 e a marca de plano-somente até o EXECUTE.
+**Por quê:** Sem sessão alinhada, o próximo agente reabre a sprint anterior.
+
+**Detalhe técnico**
+
+P task. `.cursorsession`: after EXECUTE stamps, set `plan_only=false` only when parent `/pmo sprint` starts work; at PLAN time fields are already `sprint_atual=N33`, `plan_only=true`, `checkpoint.phase=planning`. Preserve `autopilot`. Update `contexto_rapido` / `proximos_passos` after stamps. Do not enable live. Do not commit from the subagent.
 
 ---
 

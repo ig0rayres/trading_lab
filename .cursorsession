@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N32 validada",
+  "fase_nome": "N33 implementação concluída (aguarda finalizer)",
   "sprint_pending_merge": null,
   "sprint_pr": 42,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T16:35:00-03:00",
+  "ultimo_update": "2026-11-16T20:30:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Parent Fable / plan-verifier em docs/.briefs/N32.brief.md (plan_only=true)",
-    "Rock EXECUTE /pmo sprint N32 nesta frente após verifier PASS: onda 0 N32.0; onda 1 N32.1; onda 2 N32.2; onda 3 N32.3",
-    "Não reescrever blocos N17/N28/N29/N30/N31; não planejar Clear/OANDA; LIVE false"
+    "Parent sprint-finalizer N33 após VERIFY (não marcar ROADMAP N33 Status concluida aqui)",
+    "Campanha restante ISS-011: ISS-010 B3/FOREX + N17.2 G-FORM (operador)",
+    "Não implementar Clear/OANDA; não inventar scoring; LIVE false"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -113,26 +113,89 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo sprint N18"
+    "/pmo sprint N18",
+    "/pmo plan N33"
   ],
-  "contexto_rapido": "N32 concluída no ROADMAP; PR #42 MERGEABLE CI green; ISS-011 aberto (B3/FOREX/N17). LIVE false.",
-  "sprint_tasks": [],
+  "contexto_rapido": "N33 EXECUTE docs done N33.0–N33.4; ROADMAP N28/N30/N31 concluida; ISS-011 aberto só ISS-010+N17.2; PR #42 main d30689b; EasyPanel #42 no ar (operador, não fill). LIVE false.",
+  "sprint_tasks": [
+    {
+      "id": "N33.0",
+      "title": "Inventariar a prova já entregue antes de carimbar",
+      "size": "P",
+      "status": "done",
+      "depends_on": [],
+      "files": [
+        "docs/.briefs/N33-GIT-FIRST-REUSE.md"
+      ]
+    },
+    {
+      "id": "N33.1",
+      "title": "Carimbar no plano as três sprints já entregues",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N33.0"
+      ],
+      "files": [
+        "docs/ROADMAP.md"
+      ]
+    },
+    {
+      "id": "N33.2",
+      "title": "Deixar os chamados e o changelog do contrato honestos",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N33.1"
+      ],
+      "files": [
+        "docs/ISSUES.md",
+        "docs/REQUIREMENTS.md"
+      ]
+    },
+    {
+      "id": "N33.3",
+      "title": "Registrar no diário e na evidência o pedido 42 no ar",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N33.1"
+      ],
+      "files": [
+        "docs/DIARY.md",
+        "docs/TEST-EVIDENCE.md"
+      ]
+    },
+    {
+      "id": "N33.4",
+      "title": "Atualizar a sessão desta sprint após os carimbos",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N33.2",
+        "N33.3"
+      ],
+      "files": [
+        ".cursorsession"
+      ]
+    }
+  ],
   "checkpoint": {
-    "phase": "validated",
-    "sprint": "N32",
+    "phase": "testing",
+    "sprint": "N33",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N32.3",
+    "last_completed_task": "N33.4",
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N32",
+      "sprint": "N33",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T19:25:33Z",
+      "recorded_at": "2026-11-16T20:32:49Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N32 control_flags parity; 25 passed test_signal_paper_runner+feature7_anchor_ceilings; parent pytest evidence",
+      "notes": "N33 docs closeout; no src; ROADMAP stamps verified",
       "full_suite_ran": false,
       "senior_status": "PASS"
     },
@@ -153,17 +216,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "7e2fdf77adc033bbd2d3bdb621ad3aa36630407f",
-      "stamped_at": "2026-11-16T19:27:43Z",
+      "last_validated_sha": "f709cc645342e96168d12f1e1520131fb1a70024",
+      "stamped_at": "2026-11-16T20:32:59Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "98228f885af30bece4c4136f458881f606abd1146dbcbb0cf9b71e3e011fa4f4",
-      "patch_id": "d2aee5fda6bf7e8fdadece6e70e80c26f1a6a88c",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "011aa41cc3c8f22be171bedeef66defa74172350",
       "patch_id_version": 2
     },
-    "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N32"
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N33"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -251,8 +314,8 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N32",
-  "sprint_atual": null,
-  "sprint_nome": null,
+  "sprint_atual": "N33",
+  "sprint_nome": "Closeout docs ISS-011 Alpaca",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -342,6 +405,24 @@
         "timestamp": "2026-11-16T15:50:00-03:00",
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N32; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T17:20:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-011 exists); sprint_id=N33; zero M tasks",
+        "rationale": "Parent classified N / docs closeout; max existing N is 32; autopilot no AskQuestion; conservative"
+      },
+      {
+        "timestamp": "2026-11-16T17:20:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "stamp N28/N30/N31 Status concluida only with cited SHA/PR/nodeid; keep ISS-011 aberto for B3/FOREX and N17.2/G-FORM; do not implement Clear/OANDA; do not rewrite N17 task table",
+        "rationale": "Operator/parent mandate; Alpaca Feature 7-11 already [x]; prefer split remaining vs close ISS-011"
+      },
+      {
+        "timestamp": "2026-11-16T17:20:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N33; checkpoint.phase=planning; preserve autopilot",
         "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
       }
     ]

@@ -1,1 +1,2 @@
 {"ts": "2026-11-16T18:57:51.258289+00:00", "event": "sprint_planned", "sprint": "N32", "branch": "front/n27-alpaca-loop", "sha": "d38046976be09ee390bb58cb64311a51795c2b19", "via": "/pmo plan", "details": ""}
+{"ts": "2026-11-16T20:17:01.672487+00:00", "event": "sprint_planned", "sprint": "N33", "branch": "front/n27-alpaca-loop", "sha": "2ebe79711e23b5e214e2a72c3923e769bfe4a04c", "via": "/pmo plan", "details": ""}

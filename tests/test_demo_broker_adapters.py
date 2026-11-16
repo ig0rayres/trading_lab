@@ -169,6 +169,35 @@ class OandaPracticeAdapterTests(unittest.TestCase):
         self.assertEqual(reason, NO_DEMO_ACCOUNT_REJECT)
 
 
+class N27AlpacaOnlyDemoPathGateTests(unittest.TestCase):
+    """N27 partial: only CRYPTO may name Alpaca paper; B3/FOREX stay fail-closed."""
+
+    def test_n27_crypto_without_named_path_not_configured(self):
+        env = {'LIVE_TRADING_ENABLED': 'false'}
+        with patch.dict(os.environ, env, clear=True):
+            self.assertFalse(named_demo_account_configured('CRYPTO'))
+            self.assertEqual(demo_market_block_reason('CRYPTO'), NO_DEMO_ACCOUNT_REJECT)
+
+    def test_n27_crypto_only_alpaca_paper_path_counts_as_configured(self):
+        env = {
+            'LIVE_TRADING_ENABLED': 'false',
+            'DEMO_ACCOUNT_PATH_CRYPTO': G_MKT_ADAPTER_PATH_ALPACA_PAPER,
+        }
+        with patch.dict(os.environ, env, clear=True):
+            self.assertTrue(named_demo_account_configured('CRYPTO'))
+            self.assertIsNone(demo_market_block_reason('CRYPTO'))
+
+    def test_n27_crypto_non_alpaca_named_path_fail_closed(self):
+        """Alpaca-only loop: Clear/OANDA paths must not unlock CRYPTO demo send."""
+        env = {
+            'LIVE_TRADING_ENABLED': 'false',
+            'DEMO_ACCOUNT_PATH_CRYPTO': G_MKT_ADAPTER_PATH_CLEAR_SIMULATED,
+        }
+        with patch.dict(os.environ, env, clear=True):
+            self.assertFalse(named_demo_account_configured('CRYPTO'))
+            self.assertEqual(demo_market_block_reason('CRYPTO'), NO_DEMO_ACCOUNT_REJECT)
+
+
 class DemoAccountPathWiringTests(unittest.TestCase):
     def test_named_path_env_selects_g_mkt_adapter_per_market(self):
         env = _wiring_env()

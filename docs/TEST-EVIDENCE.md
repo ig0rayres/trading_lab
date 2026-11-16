@@ -300,6 +300,8 @@ Git First (N30.0): `docs/.briefs/N30-GIT-FIRST-REUSE.md` · vendor pin/local SHA
 | CRYPTO gateway auto submit | `tests.test_paper_gateway_queue.N30Feature7AlpacaPaperLoopTest.test_n30_gateway_crypto_risk_candidate_market_is_crypto` | `[x]` |
 | CRYPTO sem path nomeado barrado | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_crypto_without_named_path_blocked_no_post` | `[x]` barrado |
 | Snapshot risco >120s | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_stale_v4_portfolio_snapshot_still_blocked` | lacuna âncoras |
+| Refresh snapshot ops | `tests.test_risk_snapshot_refresh` | `scripts/run.sh risk-snapshot-refresh` |
+| Âncoras control_flags (portfolio) | `tests.test_feature7_anchor_ceilings.Feature7PortfolioAnchorTests` | parcial Feature 7 |
 | Chave live-looking → host paper | `tests.test_paper_gateway_queue.N27AlpacaOnlyGateBWiringTest.test_n27_5_live_looking_key_keeps_paper_alpaca_host` | `[x]` |
 | Reinício laço demo sem 2º POST | `tests.test_paper_restart_no_duplicate.PaperRestartNoDuplicateTest.test_n30_demo_operation_on_restart_no_second_broker_post` | `[x]` |
 | B3/FOREX zero POST Alpaca | `tests.test_paper_gateway_queue.N27AlpacaOnlyGateBWiringTest.test_n27_gateway_b3_equity_blocked_no_alpaca_post`; `tests.test_paper_gateway_queue.N27AlpacaOnlyPaperRunnerMarketTest.test_n27_forex_runner_never_posts_alpaca_paper_host` | B3/FOREX `[ ]` ISS-010 |

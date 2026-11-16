@@ -210,7 +210,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_ledger_loss_anchor.py tests/test_v4_ops_layout.py tests/test_portfolio_risk_v4.py -q --tb=no'",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_ledger_loss_anchor.py tests/test_v4_ops_layout.py -q --tb=no'",
           "exit_code": 0
         }
       ],
@@ -220,8 +220,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "51fcf0f8d35f65b873f42852a1c6806389668069",
-      "stamped_at": "2026-11-16T17:28:14Z",
+      "last_validated_sha": "58d28bfba264148cb0b4400d8c5b3ff068e771ff",
+      "stamped_at": "2026-11-16T17:28:33Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

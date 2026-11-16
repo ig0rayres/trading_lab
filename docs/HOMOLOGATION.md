@@ -90,6 +90,7 @@ Fill real na Alpaca Paper (aceite, fill parcial/cheio, P&L reconciliado) **não*
 - `strategy_states`: `signal_copy` em fase que permite paper (`paper_limited` após seed N8).
 - Credenciais **Alpaca Paper** só no EasyPanel (nunca no Git).
 - Snapshot de risco consolidado: arquivo JSON apontado por **`V4_RISK_SNAPSHOT_FILE`** (ver `signal_paper_runner.risk_check` — stale >120s bloqueia).
+- **Atualizar snapshot (ops, leitura paper):** `scripts/run.sh risk-snapshot-refresh --output /app/data/risk-snapshot.json` — GETs Alpaca paper + `at_utc` fresco; opcional no worker com `RISK_SNAPSHOT_AUTO_REFRESH=true` (default `false`).
 
 ### Caminho A — one-shot (`signal-paper`)
 

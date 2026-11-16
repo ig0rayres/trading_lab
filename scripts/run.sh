@@ -219,6 +219,10 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/paper_audit.py "$@"
    ;;
+ risk-snapshot-refresh)
+   shift
+   exec python3 /app/src/risk_snapshot_refresh.py "$@"
+   ;;
  test-local)
    exec python3 -m unittest discover -s /app/tests -v
    ;;

@@ -262,6 +262,9 @@ def process_after_gate_b(
         return _resume_track_existing(existing, env, track_fn=track_fn)
     if not broker_auto_allowed(env):
         return queued
+    from risk_snapshot_refresh import maybe_auto_refresh_risk_snapshot
+
+    maybe_auto_refresh_risk_snapshot(env)
     from risk_control_flags import demo_send_allowed
 
     allowed_demo, demo_reason = demo_send_allowed(conn_factory=conn_factory)

@@ -56,6 +56,7 @@
 | N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
 | N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | em closeout (stamp verifier pendente) | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
 | N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | em execução | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
+| N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | planejada | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -98,6 +99,7 @@
 | N28 | senior+qa | Ajuste automático de parâmetro |
 | N30 | senior+qa | Laço Alpaca US+cripto + ingestão Prodígio |
 | N31 | senior+qa | Melhoria contínua diária + TimesFM research-only |
+| N32 | senior+qa | Âncoras do painel no envio paper |
 
 ---
 
@@ -963,6 +965,7 @@ Onda 4b N29                adapters Clear simulado + OANDA Practice (+ Alpaca cr
 Onda 5  N17 (existente)    Tá Barato / momentum só com fórmula upstream (G-FORM)         MVP-OP-1.1 (0–1)
 Onda 6  N31                melhoria contínua diária (fills+não-fills) + TimesFM research  ISS-012
 Onda 6b N28                ajuste supervisionado (método N31; execução N28.2–4)           0–1
+Onda 6c N32                Feature 7: envio paper lê âncoras do painel (lacuna 10k USD)   ISS-011
 ```
 
 Caminho crítico Must-have: **0 → 1 → 2 → 3 → 4**. Envio autônomo permanece desligado até a Onda 4.
@@ -1715,6 +1718,166 @@ P task (docs-only). Update Feature 11 gap notes from “blocked until G-AJUSTE�
 **Detalhe técnico**
 
 P task. Add `tests/test_n31_g_ajuste_guardrails.py` (or extend existing if overlap is cleaner — prefer new file). Assert: review/tips never mock-call `process_after_gate_b`; TimesFM missing → no numeric forecast; labels in `{research_tip, suggestion, continuous_improvement}`; `LIVE_TRADING_ENABLED` remains false in Dockerfile/run.sh. Do not weaken N28.1 tests.
+
+---
+
+## Sprint N32 — Âncoras do painel no laço paper
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 lacuna Feature 7 · N17/N28/N29/N30/N31 **não** reescritos  
+> titulo_humano: Ordem paper obedece ao teto do painel, não a um limite paralelo  
+> resumo_humano: O envio paper deixa de usar um teto paralelo de dez mil dólares e passa a respeitar capital e risco por operação gravados no painel. Ticket de teste conhecido continua passando com os tetos de partida. Bolsa brasileira e câmbio seguem fora.  
+> Gate: pytest — teto apertado recusa paper sem envio; tetos de partida ainda aceitam o ticket conhecido; LIVE false; B3/FOREX sem POST Alpaca; caixa Feature 7 da âncora só `[x]` com prova; B3/FOREX `[ ]`  
+> review: senior+qa  
+> Brief: `docs/.briefs/N32.brief.md`  
+> bom_ref: BOM-4  
+> Depende de: N22.1, N30.1 · Release: campanha ISS-011  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+O envio paper passa a usar os tetos de capital e de risco por operação gravados no painel, e uma ordem deixa de sair quando qualquer teto estiver estourado.
+
+### O que muda para você
+
+- Se você apertar o teto no painel, a ordem paper é recusada com motivo, sem envio
+- Com os tetos de partida atuais, o ticket de teste que já passava continua passando
+- Dinheiro real continua desligado
+- Contas da bolsa brasileira e de câmbio continuam fora deste laço
+- A caixa do contrato só fecha quando o teste provar a lacuna fechada; bolsa brasileira e câmbio ficam em aberto
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Recusa paper quando o teto do painel está apertado | Pedir o teste com teto baixo e ver a ordem bloqueada, sem envio |
+| 2 | Ticket conhecido ainda passa com os tetos de partida | Pedir o teste com tetos iguais aos de hoje e ver a ordem paper aceita |
+| 3 | Contrato da âncora atualizado só com prova | Abrir o contrato e ver a caixa marcada, com bolsa brasileira e câmbio ainda em aberto |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N32.0 Confirmar o reuso dos tetos já lidos na recusa de risco antes de escrever código | `/git` | — |
+| [ ] | M | N32.1 Ligar os tetos de capital e risco do painel no envio paper | `/dev` + `paper-order-gate` | N32.0 |
+| [ ] | P | N32.2 Provar que teto apertado recusa e teto de partida ainda permite | `/qa testes` | N32.1 |
+| [ ] | P | N32.3 Marcar no contrato a âncora só com prova de teste | docs | N32.2 |
+
+### Campanha ISS-011 (não executar N17/N28/N29/N30/N31 nesta sprint)
+
+| Ordem | Sprint | Nota |
+|-------|--------|------|
+| 1 | N30 | Já no ROADMAP — **não editar o bloco** |
+| 1c | N32 | Esta sprint — âncoras do painel no envio paper |
+| 1b | N31 | Código entregue — **não editar o bloco** |
+| 2 | N17 | Tá Barato / G-FORM — **não planejar aqui** |
+| 3 | N28 | Feature 11 código entregue nesta frente — **não editar o bloco** |
+| fora | N29.5 | Clear + OANDA — pendência operador ISS-010 |
+
+### Pendências operador
+
+- Credenciais Clear / OANDA — ISS-010
+- Fórmula Tá Barato / momentum — N17 / G-FORM
+- Rebuild EasyPanel
+- Closeout N28/N30/N31 — sprint-finalizer / VERIFY (não marcar concluída aqui)
+
+### Task N32.0 — Confirmar o reuso dos tetos já lidos na recusa de risco antes de escrever código
+
+**Entrega:** Inventário curto dizendo o que já lê as âncoras do painel e o que o envio paper ainda ignora — sem copiar motor de risco.
+**Como conferir:** O inventário cita o leitor de âncoras, o Gate B, a carteira, e a decisão de reusar ou estender cada peça, inclusive o pin do vendor.
+**Por quê:** A regra do laboratório é reusar o que já está no pacote antes de escrever caminho novo.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N32-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs local checkout; do not bump; if GitHub main is unreachable, keep fail-closed note. Confirm `risk_control_flags.fetch_control_flags` + `brl_from_cents`, `gate_b_risk.config_for_fx`, `portfolio_risk_v4.resolve_limits`. Record that `signal_paper_runner.risk_check` still uses `Decimal('10000')` / 50 USD. Do not invent FX CLI. Do not touch Clear/OANDA.
+
+### Task N32.1 — Ligar os tetos de capital e risco do painel no envio paper
+
+**Entrega:** O envio paper recusa a ordem quando o teto de capital, o risco por operação ou o número de posições do painel estiver estourado, usando os mesmos valores que já recusam o sinal antes da fila.
+**Como conferir:** Com teto apertado a ordem paper não sai; com tetos de partida o ticket conhecido ainda sai; dinheiro real permanece desligado.
+**Por quê:** Hoje o envio paper ainda aceita um teto paralelo mais folgado do que o painel mostra, então a âncora do contrato não é honesta.
+
+**Detalhe técnico**
+
+**Arquivo(s):** `src/signal_paper_runner.py`
+
+**executor_prompt**:
+
+```yaml
+id: N32.1
+size: M
+bom_ref: BOM-4
+depends_on: ["N32.0"]
+files:
+  - src/signal_paper_runner.py
+reuse_targets:
+  - component: src/risk_control_flags.py
+    reuse_as: call
+    convergence_check: rg "fetch_control_flags" src/signal_paper_runner.py && rg "brl_from_cents" src/risk_control_flags.py
+  - component: src/gate_b_risk.py
+    reuse_as: call
+    convergence_check: rg "config_for_fx" src/gate_b_risk.py && rg "fetch_control_flags" src/gate_b_risk.py
+  - component: src/portfolio_risk_v4.py
+    reuse_as: call
+    convergence_check: rg "resolve_limits" src/portfolio_risk_v4.py
+  - component: src/original.py
+    reuse_as: call
+    convergence_check: rg "load_original" src/original.py
+guardrail_contract:
+  - class: secrets
+    id: n32-1-no-secrets
+    target: src/signal_paper_runner.py
+    check: python3 -c "from pathlib import Path; t=Path('src/signal_paper_runner.py').read_text(); assert 'ALPACA_API_SECRET' not in t; assert 'sk_live' not in t.lower()"
+    pass_condition: no broker secrets hardcoded in runner
+  - class: subagent-safety
+    id: n32-1-live-false
+    target: src/signal_paper_runner.py
+    check: rg "LIVE_TRADING_ENABLED" src/signal_paper_runner.py && rg "fetch_control_flags" src/signal_paper_runner.py
+    pass_condition: live flag stays in runner; capital/per-trade read control_flags
+```
+
+### Quality Brief (Sprint N32)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; no live broker path.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX remain NO_DEMO_ACCOUNT_PATH with zero Alpaca POST (ISS-010).
+Maintain: fetch_control_flags fail-closed to TIGHT_DEFAULTS (R$ 5.000 / R$ 50 / 3 positions) when DB is missing.
+Avoid: second risk engine; FX conversion CLI; Clear/OANDA adapters; rewriting N17/N28/N29/N30/N31 ROADMAP blocks.
+[ABORDAGEM] Call fetch_control_flags + brl_from_cents, then divide by existing fx (same as gate_b_risk.config_for_fx). Replace Decimal('10000') / Decimal('50'|'20') and hardcoded >=3 positions. Keep evaluate_portfolio_risk as the cross-market snapshot path — do not duplicate it.
+[RISCO] Existing PAPER_SUBMITTED tests use qty=1 AAPL @100 with fx=5 (R$ 500 notional, R$ 5 risk). TIGHT_DEFAULTS still allow that ticket. A leftover 10k USD cap would still allow tickets the panel would reject.
+[OPORTUNIDADE] portfolio_risk_v4.evaluate already reads control_flags (N22). N32 only closes the parallel hardcaps in risk_check before that call.
+EXPIRES at end of Sprint N32.
+
+Melhoria: wire signal_paper_runner.risk_check capital/per-trade/max positions to control_flags (ISS-011 Feature 7 remaining gap).
+Contexto: N22 made gate_b_risk and portfolio_risk_v4 read control_flags. risk_check still uses cap=Decimal('10000')/fx and per_trade Decimal('50'|'20')/fx plus len(positions)>=3. REQUIREMENTS Feature 7 criterion "Nenhuma ordem sai com qualquer âncora estourada" is still [ ]. B3/FOREX stay out (ISS-010).
+Objetivo: (1) fetch_control_flags(conn_factory=...) inside risk_check; capital_cents and max_risk_per_trade_cents via brl_from_cents then /fx. (2) prodigy uses prodigy_risk_cents the same way portfolio_risk_v4 does. (3) max_open_positions replaces hardcoded 3. (4) DB missing → TIGHT_DEFAULTS (existing pattern), never 10k USD. (5) Do not add FX conversion CLI. (6) Do not implement Clear/OANDA. (7) Do not edit ROADMAP Sprint N17/N28/N29/N30/N31. LIVE false.
+Arquivos: src/signal_paper_runner.py.
+Critério de pronto: rg shows fetch_control_flags and brl_from_cents in signal_paper_runner.py; rg Decimal('10000') in that file is empty; existing qty=1 AAPL auto-submit still conceptually allowed under TIGHT_DEFAULTS (tests land in N32.2).
+Cenários de teste (implement in N32.2; keep runner callable here):
+1. Caso normal: TIGHT_DEFAULTS + existing qty=1 AAPL ticket → no CAPITAL_LIMIT / TRADE_RISK_LIMIT from the parallel cap.
+2. Caso normal: lowered capital_cents blocks with CAPITAL_LIMIT (or equivalent existing reason) and orders_sent=0.
+3. Edge case: lowered max_risk_per_trade_cents blocks TRADE_RISK_LIMIT.
+4. Edge case: flags unavailable → TIGHT_DEFAULTS, not 10k USD.
+5. Regressão: B3_EQUITY / FOREX still NO_DEMO_ACCOUNT_PATH, zero Alpaca POST.
+6. Regressão: LIVE_TRADING_ENABLED remains false; no Clear/OANDA adapter files.
+
+### Task N32.2 — Provar que teto apertado recusa e teto de partida ainda permite
+
+**Entrega:** Testes mostram recusa paper com teto apertado, aceite com tetos de partida, dinheiro real desligado e mercados sem conta demo ainda barrados.
+**Como conferir:** Pedir essa bateria e ver falha se o envio paper ignorar o teto do painel ou se bolsa brasileira/câmbio postarem na Alpaca.
+**Por quê:** Sem prova no caminho paper, o contrato da âncora continuaria parcial.
+
+**Detalhe técnico**
+
+P task. Extend `tests/test_signal_paper_runner.py` and/or `tests/test_feature7_anchor_ceilings.py` (prefer existing files; 1–2 files). Patch `fetch_control_flags`: (1) lowered `capital_cents` / `max_risk_per_trade_cents` → auto paper path BLOCKED, `orders_sent=0`, poster not called, reason CAPITAL_LIMIT or TRADE_RISK_LIMIT; (2) flags matching TIGHT_DEFAULTS (prior intended panel behavior) still allow existing qty=1 AAPL PAPER_SUBMITTED; (3) LIVE_TRADING_ENABLED false in env; (4) existing B3/FOREX no-POST tests still pass. Do not weaken N30.1 US/CRYPTO tests. Do not add Clear/OANDA fixtures.
+
+### Task N32.3 — Marcar no contrato a âncora só com prova de teste
+
+**Entrega:** A caixa da âncora no contrato fecha só se o teste da sprint passar; bolsa brasileira e câmbio continuam em aberto; uma linha de evidência registra o nodeid.
+**Como conferir:** Abrir o contrato e a evidência e ver a caixa marcada com o nome do teste, sem adapters novos e sem live.
+**Por quê:** O critério Feature 7 não pode virar feito no papel enquanto a lacuna do envio paper existir.
+
+**Detalhe técnico**
+
+P task. In `docs/REQUIREMENTS.md` Feature 7, mark “Nenhuma ordem sai com qualquer âncora estourada” `[x]` **only** after N32.2 pytest nodeids exist; keep B3/FOREX `[ ]` with ISS-010. Replace the lacuna sentence about `Decimal('10000')`/50 USD. One-liner in `docs/TEST-EVIDENCE.md` and `docs/HOMOLOGATION.md` — not a second implementation. Do not mark N28/N30/N31 Status concluida. LIVE false.
 
 ---
 

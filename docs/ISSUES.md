@@ -14,7 +14,7 @@
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
-| ISS-011 | aberto | N30 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
+| ISS-011 | aberto | N30/N32 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -259,10 +259,10 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | enhancement / epic |
-| Sprint | N30 → N17 → N28 (campanha) |
-| Status | aberto (PR **#35 merged+deployed** 2026-11-16; smoke MSFT `PAPER_SUBMITTED` ok; Features 8–9 contrato `[x]` via N30.3b; N17 G-FORM blocked; N28.1 done; N28.2–4 blocked G-AJUSTE) |
+| Sprint | N30 → N32 (lacuna Feature 7) → N17 → N28 (campanha) |
+| Status | aberto (PR **#35 merged+deployed** 2026-11-16; N28/N31 código entregue nesta frente; N32 planejada para paridade `control_flags` no `signal_paper_runner`; Clear/OANDA ainda fora) |
 
-**Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); B3/FOREX barrados sem adapter ISS-010; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 e Clear/OANDA permanecem fora.
+**Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); B3/FOREX barrados sem adapter ISS-010; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 código N28/N31 nesta frente; **lacuna restante:** `signal_paper_runner.risk_check` ainda usa tetos hardcoded 10k/50 USD paralelos a `control_flags` (N32); Clear/OANDA permanecem fora.
 
 **Critério de fechamento:** Feature 7 conferível em US/CRYPTO (Alpaca paper) sem ação manual; Prodígio e Tá Barato com caminho paper homologado quando upstream permitir; Features 8–10 critérios fecháveis no painel; Feature 11 (N28) entregue ou blocked com gap documentado; Clear/OANDA **fora** (pendência operador ISS-010/N29.5).
 
@@ -271,9 +271,10 @@
 | Ordem | Sprint | Entrega | Estado |
 |-------|--------|---------|--------|
 | 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
-| 1b | **N31** | G-AJUSTE método: ciclo diário fills+não-fills + TimesFM research-only (ISS-012) | **planejada** (não reescreve N28) |
+| 1c | **N32** | Feature 7: `signal_paper_runner.risk_check` lê `control_flags` (fecha lacuna 10k/50 USD) | **planejada** (brief `docs/.briefs/N32.brief.md`; blocos N17/N28/N29/N30/N31 intocados) |
+| 1b | **N31** | G-AJUSTE método: ciclo diário fills+não-fills + TimesFM research-only (ISS-012) | **código entregue** nesta frente (bloco N28 não reescrito) |
 | 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
-| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1 **done**; N28.2–4 após gate **N31** (método definido; bloco N28 não reescrito) |
+| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1–4 **código entregue** nesta frente; bloco N28 não reescrito |
 | fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
 | fora | N27.4 | Smoke sinal válido → ordem demo | **done** (smoke MSFT paper 2026-11-16; não substituído por pytest) |
 
@@ -299,11 +300,13 @@
 
 7. ~~**PR #35**~~ — **merged** (2026-11-16). Closeout Features 8–9: `tests/test_panel_ops.py` + `tests/test_panel_triggers.py` (N30.3b).
 
-**Fora de escopo agora:** N28.2–4 até gate N31; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
+**Fora de escopo agora:** adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring; reescrever blocos N17/N28/N29/N30/N31.
 
-**Fontes:** REQUIREMENTS v0.4 Features 7–11; ROADMAP N17/N27/N28/N30; `docs/TEST-EVIDENCE.md` (N30.1/N30.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
+**Fontes:** REQUIREMENTS v0.4 Features 7–11 (critério âncora ainda `[ ]`); ROADMAP N22/N30/N32; `docs/TEST-EVIDENCE.md` (N30.1/N30.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
 
-**Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief: `docs/.briefs/N30.brief.md`.
+**Nota N32 (2026-11-16 `/pmo plan`):** N32 planejada para paridade Feature 7 `control_flags` em `signal_paper_runner.risk_check` (teto paralelo 10k/50 USD). N28/N31 código entregue nesta frente; Clear/OANDA ainda fora (ISS-010). Brief: `docs/.briefs/N32.brief.md`.
+
+**Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief N30: `docs/.briefs/N30.brief.md`.
 
 ---
 

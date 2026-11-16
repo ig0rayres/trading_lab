@@ -16,11 +16,11 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N28 Feature 11 supervisionado pós-merge N31",
+  "fase_nome": "N32 Feature 7 âncoras no laço paper",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T16:50:00-03:00",
+  "ultimo_update": "2026-11-16T15:50:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -77,9 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Parent Fable / plan-verifier em docs/.briefs/N31.brief.md (status PENDING_PARENT_REVIEW)",
-    "Rock EXECUTE N31 nesta frente após verifier PASS: onda 0 N31.0; onda 1 N31.1; onda 2 N31.2+N31.3; onda 3 N31.4",
-    "Não reescrever bloco N28; não executar N28.2-4 nesta rodada"
+    "Parent Fable / plan-verifier em docs/.briefs/N32.brief.md (plan_only=true)",
+    "Rock EXECUTE /pmo sprint N32 nesta frente após verifier PASS: onda 0 N32.0; onda 1 N32.1; onda 2 N32.2; onda 3 N32.3",
+    "Não reescrever blocos N17/N28/N29/N30/N31; não planejar Clear/OANDA; LIVE false"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -114,84 +114,49 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "N31 merged main 681e8c5; N28.2-4 supervised adjustment entregue; LIVE false.",
+  "contexto_rapido": "N32 planejada: signal_paper_runner.risk_check lê control_flags (lacuna Feature 7 10k/50 USD). N28/N31 código entregue; Clear/OANDA fora. LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N31.0",
-      "title": "Git First: evolution-daily + official TimesFM package",
-      "status": "done",
-      "file": "docs/.briefs/N31-GIT-FIRST-REUSE.md",
+      "id": "N32.0",
+      "title": "Confirm reuse of panel anchors already read by Gate B",
+      "status": "pending",
+      "file": "docs/.briefs/N32-GIT-FIRST-REUSE.md",
       "depends_on": []
     },
     {
-      "id": "N31.1",
-      "title": "Daily fills+non-fills review to labeled tips",
-      "status": "done",
-      "file": "src/evolution_engine.py",
+      "id": "N32.1",
+      "title": "Wire paper runner capital/per-trade caps to control_flags",
+      "status": "pending",
+      "file": "src/signal_paper_runner.py",
       "depends_on": [
-        "N31.0"
+        "N32.0"
       ]
     },
     {
-      "id": "N31.2",
-      "title": "Optional TimesFM research-only adapter on daily report",
-      "status": "done",
-      "file": "src/timesfm_context.py",
+      "id": "N32.2",
+      "title": "Prove lowered flags block paper; TIGHT_DEFAULTS still allow",
+      "status": "pending",
+      "file": "tests/test_signal_paper_runner.py",
       "depends_on": [
-        "N31.1"
+        "N32.1"
       ]
     },
     {
-      "id": "N31.3",
-      "title": "Record G-AJUSTE method; unlock N28.2-4 path without scoring",
-      "status": "done",
+      "id": "N32.3",
+      "title": "Mark Feature 7 anchor checkbox only after pytest proof",
+      "status": "pending",
       "file": "docs/REQUIREMENTS.md",
       "depends_on": [
-        "N31.1"
-      ]
-    },
-    {
-      "id": "N31.4",
-      "title": "Guardrail tests: tip/forecast never paper; TimesFM fail-closed",
-      "status": "done",
-      "file": "tests/test_n31_g_ajuste_guardrails.py",
-      "depends_on": [
-        "N31.1",
-        "N31.2"
-      ]
-    },
-    {
-      "id": "N28.2",
-      "title": "Propose/adjust existing parameters within documented range",
-      "status": "done",
-      "file": "src/supervised_adjustment.py",
-      "depends_on": []
-    },
-    {
-      "id": "N28.3",
-      "title": "Persist before/after/reason; undo via Central API",
-      "status": "done",
-      "file": "src/v4_web_dashboard.py",
-      "depends_on": [
-        "N28.2"
-      ]
-    },
-    {
-      "id": "N28.4",
-      "title": "Test: adjustment never mutates risk anchors",
-      "status": "done",
-      "file": "tests/test_n28_supervised_adjustment.py",
-      "depends_on": [
-        "N28.2"
+        "N32.2"
       ]
     }
   ],
   "checkpoint": {
-    "phase": "testing",
-    "sprint": "N28",
+    "phase": "planning",
+    "sprint": "N32",
     "branch": "front/n27-alpaca-loop",
-    "current_task": "N28.4",
-    "plan_only": false,
+    "current_task": "N32.0",
+    "plan_only": true,
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N28",
@@ -210,7 +175,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_risk_snapshot_refresh.py tests/test_feature7_anchor_ceilings.py -q --tb=no'",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_risk_snapshot_refresh.py -q --tb=no'",
           "exit_code": 0
         }
       ],
@@ -220,8 +185,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "72cffc2c0a602c2d000e15854fbed27a9d3c7987",
-      "stamped_at": "2026-11-16T17:40:59Z",
+      "last_validated_sha": "7904de5dba933751a45080d2b900d00ffe63f4d7",
+      "stamped_at": "2026-11-16T17:41:12Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
@@ -275,7 +240,7 @@
   },
   "sprint_branch": "front/n27-alpaca-loop",
   "sprint_categoria": "N",
-  "plan_only": false,
+  "plan_only": true,
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",
@@ -317,9 +282,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N31",
-  "sprint_atual": "N28",
-  "sprint_nome": "Sprint N28 — Feature 11 ajuste supervisionado (N28.2–4)",
+  "previous_sprint": "N28",
+  "sprint_atual": "N32",
+  "sprint_nome": "Sprint N32 — Âncoras do painel no laço paper (Feature 7)",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -386,6 +351,30 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N31; checkpoint.phase=planning; preserve autopilot",
         "rationale": "Deliverable list asked sprint_atual=N31; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-011 exists); sprint_id=N32",
+        "rationale": "Parent already classified N / feature-sem-dominio; max existing N is 31; autopilot no AskQuestion; conservative"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not rewrite N17/N28/N29/N30/N31 blocks; do not plan Clear/OANDA; LIVE stays false",
+        "rationale": "Operator/parent scope; ISS-010 remains operator pendency"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": "src/signal_paper_runner.py",
+        "decision": "reuse fetch_control_flags + brl_from_cents + existing fx; TIGHT_DEFAULTS fail-closed; no new FX CLI; no new scoring thresholds",
+        "rationale": "Git First / REUSE FIRST; N22 already wired Gate B and portfolio_risk_v4"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N32; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
       }
     ]
   },

@@ -243,8 +243,8 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 3. Liga ou desliga cada estratégia existente e aciona a parada geral.
 
 **Critérios de aceite:**
-- [ ] Toda alteração vale a partir da próxima ordem e fica registrada com data e valor anterior. *Lacuna (N30.3): `trigger_changes` é gravado em `test_patch_triggers_with_cookie_updates_audit` / `test_apply_trigger_patch_appends_audit`, mas nenhum pytest asserta `old_value` nem timestamp.*
-- [ ] A plataforma nunca afrouxa uma âncora sozinha; só o operador altera. *Lacuna (N30.3): sem caso nomeado em `test_panel_ops.py` / `test_panel_triggers.py`.*
+- [x] Toda alteração vale a partir da próxima ordem e fica registrada com data e valor anterior (`tests/test_panel_triggers.py` `PanelTriggerHttpTests.test_patch_triggers_with_cookie_updates_audit` — `old_value`/`new_value`/`changed_at`; `PanelTriggerUnitTests.test_apply_trigger_patch_appends_audit`).
+- [x] A plataforma nunca afrouxa uma âncora sozinha; só o operador altera (`tests/test_panel_triggers.py` `PanelTriggerHttpTests.test_loosening_anchor_without_operator_cookie_is_401_and_no_audit`; `PanelTriggerUnitTests.test_platform_never_loosens_anchors_when_db_unavailable` — falha de ledger usa `TIGHT_DEFAULTS`, sem PATCH autônomo).
 - [x] Parada geral pelo painel impede ordem nova em até um ciclo (`tests/test_panel_ops.py` `PanelKillSwitchCycleTests.test_kill_switch_from_panel_blocks_next_eval`).
 - [x] Nenhuma operação do dia a dia exige Exec no EasyPanel (`tests/test_panel_ops.py` `PanelOpsRunbookTest.test_daily_runbook_points_to_panel_not_exec`).
 - [x] Acesso exige autenticação; o painel não abre sem login (`tests/test_panel_ops.py` `PanelOpsHttpTests.test_root_redirects_to_login_without_cookie`, `test_login_sets_cookie_and_opens_central`, `test_api_signals_requires_session`, `test_bearer_alone_still_401_on_patch`; `tests/test_panel_triggers.py` `PanelTriggerHttpTests.test_patch_triggers_bearer_only_is_401`).
@@ -255,8 +255,8 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - **Prioridade**: Must-have
 
 **Critérios de aceite:**
-- [ ] Lista de sinais recebidos com origem, destino (ordem, barrado, fila) e motivo da rejeição. *Lacuna (N30.3): só `test_signal_destination_blocked_vs_queue` cobre o helper; não há pytest da lista `/api/signals` com origem/destino/motivo.*
-- [ ] Ranking Prodígio dos provedores e quais sinais ele copiou. *Lacuna (N30.3): `test_snapshot_includes_panel_ops` não asserta ranking nem `copied_signals`.*
+- [x] Lista de sinais recebidos com origem, destino (ordem, barrado, fila) e motivo da rejeição (`tests/test_panel_ops.py` `PanelOpsDataTests.test_load_panel_signals_exposes_origin_destination_and_reject_reason`; `PanelOpsHttpTests.test_api_signals_json_origin_destination_reject_reason`).
+- [x] Ranking Prodígio dos provedores e quais sinais ele copiou (`tests/test_panel_ops.py` `PanelOpsDataTests.test_snapshot_panel_ops_prodigy_ranking_and_copied_signals`; `test_build_panel_bundle_prodigy_copied_signals_structure`).
 - [x] Sinal barrado mostra qual gate e qual âncora barrou (`tests/test_panel_ops.py` `PanelOpsDataTests.test_blocked_context_exposes_gate_and_anchor`).
 
 ### Feature 10: Performance

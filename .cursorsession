@@ -128,33 +128,43 @@
       "title": "Gate B / research reuse; UPSTREAM_FORMULA_BLOCKED_KEYS",
       "status": "done",
       "file": "src/strategy_catalog.py",
-      "depends_on": ["N17.0"]
+      "depends_on": [
+        "N17.0"
+      ]
     },
     {
       "id": "N17.2",
       "title": "Homolog operador shadow to paper limitado",
       "status": "pending",
-      "depends_on": ["N17.1"]
+      "depends_on": [
+        "N17.1"
+      ]
     },
     {
       "id": "N17.3",
       "title": "TEST-EVIDENCE and RELEASE MVP-OP-1.1 matrix",
       "status": "done",
       "file": "docs/TEST-EVIDENCE.md",
-      "depends_on": ["N17.1"]
+      "depends_on": [
+        "N17.1"
+      ]
     },
     {
       "id": "N17.4",
       "title": "F-003 orb-parity reprioritize (optional)",
       "status": "skipped",
-      "depends_on": ["N17.1"]
+      "depends_on": [
+        "N17.1"
+      ]
     },
     {
       "id": "N17.5",
       "title": "Painel read-only Tá Barato shadow homolog",
       "status": "done",
       "file": "src/trading_dashboard_data.py",
-      "depends_on": ["N17.1"]
+      "depends_on": [
+        "N17.1"
+      ]
     }
   ],
   "checkpoint": {
@@ -165,13 +175,13 @@
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N30",
+      "sprint": "N17",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T09:21:34Z",
+      "recorded_at": "2026-11-16T09:29:14Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "532 pytest N30 Alpaca US/CRYPTO + prodigy ingest; Clear/OANDA out",
+      "notes": "536 pytest; G-FORM blocked honest for ta_barato paper",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -191,16 +201,16 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "836300953834e7d771dcc1ada4e8879d7c7cdcdf",
-      "stamped_at": "2026-11-16T09:23:10Z",
+      "last_validated_sha": "a454e6712db4c7d444411071efc02bf0dd23ac03",
+      "stamped_at": "2026-11-16T09:29:28Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "52ad90df4287e955a42fc414ef332b6383818bcb6c66a23b6b4247615bb480bb",
-      "patch_id": "0093cefd581a8b762c21107f30a8631c39c59375",
+      "content_hash": "4ffba392b69d3512e26421a94315130fdb2ac3d9f7539137415fd2de0ccab7ea",
+      "patch_id": "795b466b25e25b02b79d08f28da0f6206ded6d2f",
       "patch_id_version": 2
     },
-    "sprint_delivery": "pending",
+    "sprint_delivery": "stamped",
     "sprint_delivery_sprint": "N17"
   },
   "artefatos_gerados": [

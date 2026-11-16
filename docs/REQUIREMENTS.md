@@ -277,13 +277,13 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 **Fluxo principal:**
 1. As estratégias encontram oportunidades; o painel mostra como sugestão, com a estratégia de origem.
 2. A plataforma registra cada erro (perda, ordem barrada, sinal sem fill) ligado à estratégia.
-3. A partir desses registros, ajusta parâmetros das estratégias.
+3. A partir desses registros, o ciclo diário (ISS-012 / N31) produz **dicas rotuladas**; ajuste de parâmetro só na faixa original, via N28.2–4, suggestion-first se a nota for incerta. TimesFM, se disponível, entra só como contexto de pesquisa.
 
 **Critérios de aceite:**
 - [x] Sugestão aparece marcada como sugestão e nunca é tratada como ordem autorizada por si só (`tests/test_n28_suggestion_labels.py` `N28SuggestionSurfaceTests.test_command_panel_suggestion_surfaces_self_check`, `test_rank_row_without_ticket_blocks_before_paper_gateway`).
-- [ ] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define. *Lacuna (N28.2): **blocked** até operador definir **G-AJUSTE**.*
-- [ ] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel. *Lacuna (N28.3): **blocked** até **G-AJUSTE** + N28.2.*
-- [ ] Ajuste automático nunca altera as âncoras de risco. *Lacuna (N28.4): **blocked** até **G-AJUSTE** + N28.2.*
+- [ ] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define. *Método G-AJUSTE definido em ISS-012/N31 (ciclo diário fills+não-fills, suggestion-first). Execução permanece N28.2.*
+- [ ] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel. *Método definido (N31); execução N28.3 após N28.2.*
+- [ ] Ajuste automático nunca altera as âncoras de risco. *Método definido (N31); execução N28.4 após N28.2.*
 
 ---
 
@@ -356,7 +356,7 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 | 5 | Commit pinado do `day-trader-skill` em `vendor/` | Alto | Aberta. |
 | 6 | Prazo de calendário para a homologação paper | Médio | Respondida 2026-11-03: operação autônoma na conta demo nas próximas semanas, sem data fixa. |
 | 7 | Postgres: há migration e dado, ou só intenção de infra | Médio | Aberta. |
-| 8 | Método do ajuste automático (Feature 11): o que conta como erro, com que frequência ajustar, quando desfazer | Alto | Aberta. Fase de arquitetura. |
+| 8 | Método do ajuste automático (Feature 11): o que conta como erro, com que frequência ajustar, quando desfazer | Alto | Respondida 2026-11-16 (ISS-012 + TimesFM research-only): erro = fill com perda **ou** ordem/sinal não executado; frequência = ciclo diário (`evolution-daily`); desfazer = N28.3; se scoring incerto → só sugerir. TimesFM é contexto de previsão rotulado (`research_tip`), fail-closed se indisponível, sem autorizar ordem e sem inventar limiar Tá Barato/momentum. Aplicação de parâmetro permanece N28.2–4. |
 | 9 | Login do painel no lugar do Bearer manual | Alto | Aberta. Fases de arquitetura e DevOps. |
 | 10 | Painel deixa de ser somente leitura e passa a alterar risco e estratégias | Alto | Aberta. Decisão de arquitetura; a regra atual do painel é read-only. |
 | 11 | G-MKT: qual corretora demo por mercado (B3 / cripto / forex) | Alto | Respondida 2026-11-13: Clear Smart Trader simulado (B3); Alpaca Paper (cripto); OANDA Practice (forex). Pendente: abrir/credenciar contas e colocar ids só no env. |
@@ -411,3 +411,4 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-10-29 | 0.1 | Versão inicial a partir do adendo de 29/10/2026 e do snapshot importado | Analista de Requisitos (IA) |
 | 2026-11-03 | 0.2 | Operação autônoma na conta demo; âncoras de risco confirmadas; central de controle no painel; Features 7–11; cadastro de estratégia nova adiado | Analista de Requisitos (IA) com o operador |
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
+| 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |

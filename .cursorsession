@@ -16,11 +16,11 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N28.1 done — N28.2+ blocked G-AJUSTE — campanha ISS-011",
+  "fase_nome": "N31 planejada (ISS-012 G-AJUSTE + TimesFM research-only) — plan_only",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T18:30:00Z",
+  "ultimo_update": "2026-11-16T16:50:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -77,9 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Parent Fable / plan-verifier em docs/.briefs/N30.brief.md",
-    "Rock EXECUTE N30 nesta frente (onda 0: N30.0+N30.3; onda 1: N30.1+N30.2; onda 2: N30.4)",
-    "Não executar N17/N28/N29.5 nesta rodada"
+    "Parent Fable / plan-verifier em docs/.briefs/N31.brief.md (status PENDING_PARENT_REVIEW)",
+    "Rock EXECUTE N31 nesta frente após verifier PASS: onda 0 N31.0; onda 1 N31.1; onda 2 N31.2+N31.3; onda 3 N31.4",
+    "Não reescrever bloco N28; não executar N28.2-4 nesta rodada"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -114,99 +114,59 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "PR #35 CI green; N28.1 suggestion labels done; N28.2-4 blocked G-AJUSTE; N17 G-FORM blocked; ISS-010 fora.",
+  "contexto_rapido": "N31 planejada ISS-012: ciclo diário fills+não-fills + TimesFM N31.2 research-only; N28.2-4 após gate N31; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N17.0",
-      "title": "Git First upstream paths ta_barato/momentum (G-FORM)",
-      "status": "done",
-      "file": "docs/.briefs/N17-GIT-FIRST-REUSE.md",
+      "id": "N31.0",
+      "title": "Git First: evolution-daily + official TimesFM package",
+      "status": "pending",
+      "file": "docs/.briefs/N31-GIT-FIRST-REUSE.md",
       "depends_on": []
     },
     {
-      "id": "N17.1",
-      "title": "Gate B / research reuse; UPSTREAM_FORMULA_BLOCKED_KEYS",
-      "status": "done",
-      "file": "src/strategy_catalog.py",
-      "depends_on": [
-        "N17.0"
-      ]
-    },
-    {
-      "id": "N17.2",
-      "title": "Homolog operador shadow to paper limitado",
+      "id": "N31.1",
+      "title": "Daily fills+non-fills review to labeled tips",
       "status": "pending",
+      "file": "src/evolution_engine.py",
       "depends_on": [
-        "N17.1"
+        "N31.0"
       ]
     },
     {
-      "id": "N17.3",
-      "title": "TEST-EVIDENCE and RELEASE MVP-OP-1.1 matrix",
-      "status": "done",
-      "file": "docs/TEST-EVIDENCE.md",
-      "depends_on": [
-        "N17.1"
-      ]
-    },
-    {
-      "id": "N17.4",
-      "title": "F-003 orb-parity reprioritize (optional)",
-      "status": "skipped",
-      "depends_on": [
-        "N17.1"
-      ]
-    },
-    {
-      "id": "N17.5",
-      "title": "Painel read-only Tá Barato shadow homolog",
-      "status": "done",
-      "file": "src/trading_dashboard_data.py",
-      "depends_on": [
-        "N17.1"
-      ]
-    },
-    {
-      "id": "N28.1",
-      "title": "Sugestão continua rotulada como sugestão",
-      "status": "done",
-      "file": "src/trading_dashboard_data.py",
-      "depends_on": []
-    },
-    {
-      "id": "N28.2",
-      "title": "Ajuste só parâmetro existente (G-AJUSTE)",
+      "id": "N31.2",
+      "title": "Optional TimesFM research-only adapter on daily report",
       "status": "pending",
+      "file": "src/timesfm_context.py",
       "depends_on": [
-        "N28.1"
-      ],
-      "blocked_reason": "G-AJUSTE"
+        "N31.1"
+      ]
     },
     {
-      "id": "N28.3",
-      "title": "Histórico ajuste com desfazer",
+      "id": "N31.3",
+      "title": "Record G-AJUSTE method; unlock N28.2-4 path without scoring",
       "status": "pending",
+      "file": "docs/REQUIREMENTS.md",
       "depends_on": [
-        "N28.2"
-      ],
-      "blocked_reason": "G-AJUSTE"
+        "N31.1"
+      ]
     },
     {
-      "id": "N28.4",
-      "title": "Teste: ajuste nunca altera âncora",
+      "id": "N31.4",
+      "title": "Guardrail tests: tip/forecast never paper; TimesFM fail-closed",
       "status": "pending",
+      "file": "tests/test_n31_g_ajuste_guardrails.py",
       "depends_on": [
-        "N28.2"
-      ],
-      "blocked_reason": "G-AJUSTE"
+        "N31.1",
+        "N31.2"
+      ]
     }
   ],
   "checkpoint": {
-    "phase": "testing",
-    "sprint": "N17",
+    "phase": "implementation",
+    "sprint": "N31",
     "branch": "front/n27-alpaca-loop",
-    "current_task": "N17.5",
-    "plan_only": false,
+    "current_task": "N31.0",
+    "plan_only": true,
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N17",
@@ -235,8 +195,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "8eebd974f8ac167c83ab7f71e9b61d16472c5b0d",
-      "stamped_at": "2026-11-16T16:03:32Z",
+      "last_validated_sha": "b42f7dc33a3454e1c4cf970a4a130f36ad65db99",
+      "stamped_at": "2026-11-16T16:03:34Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
@@ -289,7 +249,7 @@
     "sprint_branch": "front/n27-alpaca-loop"
   },
   "sprint_branch": "front/n27-alpaca-loop",
-  "sprint_nome": "Sprint N28 — Feature 11 N28.1 done; N28.2-4 blocked G-AJUSTE",
+  "sprint_nome": "Sprint N31 — ISS-012 G-AJUSTE daily loop + TimesFM research-only",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -334,7 +294,7 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N30",
-  "sprint_atual": "N17",
+  "sprint_atual": "N31",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -371,6 +331,36 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N30; checkpoint.phase=planning; preserve autopilot",
         "rationale": "Rock PLAN writes plan then parent EXECUTE; operator absent so no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-012 exists)",
+        "rationale": "Operator demanded N alta + ISS-012 already on disk; no new table/screen; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "sprint_id=N31 (max existing N30); do not rewrite N28 task block",
+        "rationale": "next free N >30; N28.1-4 stay historical; N31 defines G-AJUSTE method and TimesFM research-only"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "TimesFM dedicated task N31.2; optional fail-closed; labels research_tip; no required image dep; prefer license-safe checkpoint in N31.0",
+        "rationale": "Git First official PyPI timesfm / google-research/timesfm; suggestion≠order; 3.0 weights may be non-commercial"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "docs/REQUIREMENTS.md",
+        "decision": "dúvida #8 Respondida ISS-012+TimesFM research-only; Feature 11 critérios 2-4 remain [ ] until N28.2-4; suggestion-first if scoring uncertain",
+        "rationale": "Operator closed G-AJUSTE method without authorizing paper or invented thresholds"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N31; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N31; EXECUTE waits parent Fable/plan-verifier; operator absent"
       }
     ]
   },

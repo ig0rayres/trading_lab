@@ -55,6 +55,7 @@
 | N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
 | N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
 | N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | em closeout (stamp verifier pendente) | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
+| N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | em execução | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -96,6 +97,7 @@
 | N29 | comprehensive | Adapters Clear + OANDA Practice |
 | N28 | senior+qa | Ajuste automático de parâmetro |
 | N30 | senior+qa | Laço Alpaca US+cripto + ingestão Prodígio |
+| N31 | senior+qa | Melhoria contínua diária + TimesFM research-only |
 
 ---
 
@@ -959,7 +961,8 @@ Onda 3  N24 + N25 + N26    login, Central, sinais com motivo, performance de fil
 Onda 4  N27                laço autônomo no mercado com conta demo nomeada (G-MKT)       MVP-OP-1.4 (0–1)
 Onda 4b N29                adapters Clear simulado + OANDA Practice (+ Alpaca cripto)     MVP-OP-1.4 (0–1)
 Onda 5  N17 (existente)    Tá Barato / momentum só com fórmula upstream (G-FORM)         MVP-OP-1.1 (0–1)
-Onda 6  N28                ajuste supervisionado (G-AJUSTE + fill real)                  0–1
+Onda 6  N31                melhoria contínua diária (fills+não-fills) + TimesFM research  ISS-012
+Onda 6b N28                ajuste supervisionado (método N31; execução N28.2–4)           0–1
 ```
 
 Caminho crítico Must-have: **0 → 1 → 2 → 3 → 4**. Envio autônomo permanece desligado até a Onda 4.
@@ -970,7 +973,7 @@ Caminho crítico Must-have: **0 → 1 → 2 → 3 → 4**. Envio autônomo perma
 |----|---------|----------|--------------|
 | G-MKT | Nome da conta demo de B3, de cripto e de forex (ou "fica barrado") | N27.2, N27.4 | Mercado barrado com motivo visível; nome nunca inventado (ADR-010) |
 | G-FORM | Onde está a fórmula de Tá Barato e de momentum no upstream (ou "não existe") | N17.1+ | Família fica fora de paper |
-| G-AJUSTE | Método do ajuste (erro, frequência, desfazer) | N28.2 | Feature 11 fica `[ ]` |
+| G-AJUSTE | Método: ciclo diário fills+não-fills → dicas; TimesFM só pesquisa; suggestion-first se incerto (ISS-012 / N31) | N31 define o método; N28.2–4 executam o ajuste | Feature 11 critérios 2–4 ficam `[ ]` até N28.2–4 |
 
 Nenhum gate trava as Ondas 0–3.
 
@@ -1480,6 +1483,236 @@ P task. Edit `docs/REQUIREMENTS.md` Features 8–10 checkboxes only when a named
 **Detalhe técnico**
 
 P task. Update ISS-011 with campaign N30 → N17 → N28(blocked). Feature 7 REQUIREMENTS: mark Alpaca US+CRYPTO criteria `[x]` only after N30.1 tests exist; keep B3/FOREX `[ ]` with G-MKT/ISS-010 pointer. Document `news_first` remains research; `orb`/`mean_reversion` remain NEVER_PAPER (REQUIREMENTS + catalog). Do not execute N17/N28. Do not enable live.
+
+---
+
+## Sprint N31 — Melhoria contínua diária e apoio TimesFM só como pesquisa
+> Categoria: N  
+> Status: em execução  
+> Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-012 · N28 **não** reescrita  
+> titulo_humano: Autoanálise diária com dicas; previsão Google só como pesquisa  
+> resumo_humano: O laboratório analisa todo dia o que preencheu e o que não saiu e mostra só dicas rotuladas. O modelo de séries temporais do Google entra como contexto de pesquisa quando estiver no ar. O ajuste de parâmetro continua na sprint já planejada.  
+> Gate: pytest — relatório diário com fills e não-fills, dicas rotuladas, orders_sent=0, TimesFM ausente omite forecast, tip nunca chama gateway paper, LIVE false, bloco N28 intocado  
+> review: senior+qa  
+> Brief: `docs/.briefs/N31.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N28.1 (rótulos) · Release: campanha ISS-012  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+O laboratório passa a se autoanalisar todo dia com o que foi executado e o que não foi, gera só dicas rotuladas, e usa o modelo de séries temporais do Google só como contexto de pesquisa quando estiver disponível.
+
+### O que muda para você
+
+- Todo dia a área de melhoria contínua mostra dicas a partir de ordens preenchidas e das que não saíram
+- A previsão do modelo do Google, se existir, aparece como dica de pesquisa — nunca como ordem
+- Se o modelo não estiver instalado, o relatório diário continua e a previsão some, sem número inventado
+- O ajuste de parâmetro da Feature 11 continua na sprint já planejada; esta rodada só define o método e as dicas
+- Tá Barato e momentum não ganham limiar novo a partir desta análise
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Relatório diário com dicas a partir do que preencheu e do que não saiu | Pedir o ciclo do dia e ver dicas rotuladas, sem envio de ordem |
+| 2 | Apoio opcional do modelo de séries temporais do Google no mesmo relatório | Ver a previsão só como dica de pesquisa, ou ausente se o modelo não estiver no ar |
+| 3 | Caminho liberado para o ajuste supervisionado, sem nota inventada | Ler que o método está respondido e que a sprint de ajuste já existente pode seguir sem reescrita |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N31.0 Validar reuso do ciclo diário e do pacote oficial TimesFM antes de escrever código | `/git` | — |
+| [x] | M | N31.1 Estender o ciclo diário para dicas a partir do que preencheu e do que não saiu | `/dev` | N31.0 |
+| [x] | M | N31.2 Incluir o modelo TimesFM como apoio opcional só de pesquisa no relatório | `/dev` | N31.1 |
+| [x] | P | N31.3 Registrar o método de ajuste e liberar o caminho da sprint já planejada, sem inventar nota | docs | N31.1 |
+| [x] | P | N31.4 Testar que dica e previsão nunca viram ordem e que o modelo ausente não inventa número | `/qa testes` | N31.1, N31.2 |
+
+### Campanha ISS-012 (não executar N28.2–4 nesta sprint)
+
+| Ordem | Sprint | Nota |
+|-------|--------|------|
+| 1 | N31 | Esta sprint — método G-AJUSTE + TimesFM research-only |
+| 2 | N28 | Já planejada — **não editar o bloco**; N28.2–4 depois do gate N31 |
+| fora | N17 | Tá Barato / momentum — G-FORM; sem limiar inventado aqui |
+| fora | N29.5 | Clear + OANDA — pendência operador |
+
+### Pendências operador
+
+- Aplicar (ou desfazer) ajuste de parâmetro no catálogo — N28.2–4
+- Instalar o modelo TimesFM na imagem, se quiser previsão no relatório (sem isso o ciclo diário segue)
+- Fórmula Tá Barato / momentum — N17 / G-FORM
+- Contas Clear / OANDA — ISS-010
+
+### Task N31.0 — Validar reuso do ciclo diário e do pacote oficial TimesFM antes de escrever código
+
+**Entrega:** Inventário curto dizendo o que já existe no ciclo de melhoria contínua e qual pacote oficial do modelo Google reusar — sem copiar o modelo.
+**Como conferir:** O inventário cita o ciclo diário já ligado, os rótulos de dica, e a decisão de reusar ou adaptar cada peça, inclusive licença do checkpoint.
+**Por quê:** A regra do laboratório é reusar o que já está no pacote e a API oficial, antes de escrever caminho novo.
+
+**Detalhe técnico**
+
+P task (docs-only). Write `docs/.briefs/N31-GIT-FIRST-REUSE.md`. Confirm `src/evolution_engine.py` `review` / `add_decision`, `scripts/run.sh evolution-daily`, N28.1 labels, `panel_ops_data` fill vs unfilled. For TimesFM: inspect official PyPI `timesfm` and `google-research/timesfm` (do not vendor-copy weights into this repo). Record package version, import path (`timesfm` / `timesfm3`), checkpoint id, license (prefer Apache-2.0 2.5 if 3.0 is non-commercial). Fail-closed if GitHub/PyPI unreachable — do not claim current main. Do not bump vendor `day-trader-skill` pin.
+
+### Task N31.1 — Estender o ciclo diário para dicas a partir do que preencheu e do que não saiu
+
+**Entrega:** O ciclo do dia lê o que foi preenchido e o que não saiu e devolve dicas rotuladas, sem enviar ordem e sem mudar parâmetro de estratégia.
+**Como conferir:** Pedir o relatório de um dia com fill e com rejeição e ver dicas rotuladas, envio de ordem zero, e nenhuma mudança aplicada.
+**Por quê:** O método combinado é aprender com o rastro real — inclusive o que a plataforma recusou — sem tratar dica como autorização.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```yaml
+id: N31.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N31.0"]
+files:
+  - src/evolution_engine.py
+  - src/trading_dashboard_data.py
+  - tests/test_evolution_engine.py
+reuse_targets:
+  - component: src/evolution_engine.py
+    reuse_as: extend
+    convergence_check: rg "READ_ONLY_NO_ORDER_SUBMISSION" src/evolution_engine.py && rg "orders_sent" src/evolution_engine.py
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: rg "EXCLUDED_PNL_ORDER_STATUSES" src/panel_ops_data.py && rg "performance_from_ledger\\|performance_from_snapshots" src/evolution_engine.py src/panel_ops_data.py
+  - component: src/trading_dashboard_data.py
+    reuse_as: extend
+    convergence_check: rg "continuous_improvement" src/trading_dashboard_data.py && rg "surface_kind" src/trading_dashboard_data.py
+  - component: scripts/run.sh
+    reuse_as: call
+    convergence_check: rg "evolution-daily" scripts/run.sh
+guardrail_contract:
+  - class: secrets
+    id: n31-1-no-secrets
+    target: src/evolution_engine.py
+    check: python3 -c "from pathlib import Path; t=Path('src/evolution_engine.py').read_text(); assert 'ALPACA_API_SECRET' not in t; assert 'sk_live' not in t.lower()"
+    pass_condition: no broker secrets in evolution_engine
+  - class: subagent-safety
+    id: n31-1-no-order
+    target: src/evolution_engine.py
+    check: rg "READ_ONLY_NO_ORDER_SUBMISSION" src/evolution_engine.py && rg "changes_applied" src/evolution_engine.py && rg "orders_sent" src/evolution_engine.py
+    pass_condition: review remains read-only; orders_sent stays 0
+  - class: caller-level
+    id: n31-1-cli-daily
+    target: src/evolution_engine.py
+    check: python3 -m unittest tests.test_evolution_engine -q
+    pass_condition: CLI/review path covered; report written with orders_sent=0
+executor_prompt: |
+  ### Quality Brief (Sprint N31)
+sprint: N31
+Maintain: evolution_engine.review stays READ_ONLY_NO_ORDER_SUBMISSION; changes_applied=0; orders_sent=0.
+Maintain: N28.1 labels — continuous_improvement surface_kind=suggestion, paper_allowed=false, execution_authorized=false.
+Maintain: LIVE_TRADING_ENABLED=false; tip/forecast never calls process_after_gate_b or paper submit.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent Tá Barato/momentum/Prodigy thresholds.
+Avoid: stub TimesFM numbers; mutating strategy_states; rewriting Sprint N28 tasks; adding a third EasyPanel app; required TimesFM image dependency.
+[ABORDAGEM] Extend review() to classify fills vs non-fills from existing ledger/journal/decisions.jsonl; keep TimesFM behind an optional context provider that returns labeled research tips only.
+[RISCO] TimesFM 3.0 weights may be non-commercial; N31.0 must pin the official PyPI package and a license-safe checkpoint. Missing import/checkpoint = omit forecast, never a fake series.
+[OPORTUNIDADE] scripts/run.sh evolution-daily already execs evolution_engine.py; N28.1 already labels the panel surface — extend, do not fork a second dashboard.
+EXPIRES at end of Sprint N31.
+
+Melhoria: daily self-analysis of executed fills AND non-fills into labeled tips (ISS-012 / REQUIREMENTS §9 #8).
+Contexto: evolution_engine.review already reads journal.jsonl, decisions.jsonl, outcomes.jsonl but does not classify broker fills vs unfilled/rejected as tips. Panel continuous_improvement is suggestion-only (N28.1). G-AJUSTE was blocked because the method (what is error, how often, when to undo) was unanswered.
+Objetivo: (1) review(day) counts confirmed fills and non-fills (REJECTED/BLOCKED/unfilled queue) per strategy_id. (2) recommendations/tips labeled research_tip or suggestion; never execution_authorized. (3) changes_applied=0; do not write strategy_states. (4) orders_sent=0; do not import or call paper_gateway_queue.process_after_gate_b. (5) Leave an optional context_providers hook (empty default) for N31.2. (6) Surface new tips on command_panel.continuous_improvement without dropping N28.1 labels. Do not implement TimesFM here. Do not edit ROADMAP Sprint N28 tasks. LIVE false.
+Arquivos: src/evolution_engine.py, src/trading_dashboard_data.py, tests/test_evolution_engine.py.
+Critério de pronto: unittest nodeids show a day with one fill + one REJECTED produces tips, orders_sent=0, changes_applied=0; panel surface_kind=suggestion paper_allowed=false; rg shows no process_after_gate_b in evolution_engine.py; CLI evolution-daily still writes reports/evolution/daily/<date>.json.
+Cenários de teste:
+  1. Caso normal: fill confirmado + REJECTED no mesmo dia → relatório com ambos e pelo menos uma tip rotulada.
+  2. Caso normal: só não-fills (journal BLOCKED) → tips existem; performance_metrics_available continua false se outcomes ausentes.
+  3. Edge case: dia vazio → dica de amostra vazia; não inferir qualidade de estratégia.
+  4. Edge case: decisions.jsonl incompleto (linha JSON quebrada) → resto do dia preservado (comportamento atual).
+  5. Regressão: orders_sent=0 e changes_applied=0; N28.1 self_check_ok permanece.
+  6. Regressão: scripts/run.sh evolution-daily ainda aponta para evolution_engine.py.
+```
+
+### Task N31.2 — Incluir o modelo TimesFM como apoio opcional só de pesquisa no relatório
+
+**Entrega:** Quando o modelo oficial de séries temporais do Google estiver no ar, o relatório do dia ganha um bloco de previsão rotulado como dica de pesquisa; se faltar, o relatório segue sem inventar número.
+**Como conferir:** Ver o bloco de previsão ausente ou rotulado como pesquisa, e confirmar que nenhum caminho de ordem paper foi chamado.
+**Por quê:** O operador pediu o modelo no ciclo de melhoria contínua como contexto, não como autorização nem como limiar novo.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```yaml
+id: N31.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N31.1"]
+files:
+  - src/timesfm_context.py
+  - tests/test_timesfm_context.py
+  - src/evolution_engine.py
+reuse_targets:
+  - component: src/evolution_engine.py
+    reuse_as: extend
+    convergence_check: rg "timesfm" src/evolution_engine.py src/timesfm_context.py
+  - component: src/trading_dashboard_data.py
+    reuse_as: call
+    convergence_check: rg "research_tip\\|surface_kind" src/timesfm_context.py src/trading_dashboard_data.py src/evolution_engine.py
+guardrail_contract:
+  - class: secrets
+    id: n31-2-no-secrets
+    target: src/timesfm_context.py
+    check: python3 -c "from pathlib import Path; t=Path('src/timesfm_context.py').read_text(); assert 'HF_TOKEN' not in t; assert 'sk_live' not in t.lower()"
+    pass_condition: no huggingface/broker secrets hardcoded
+  - class: subagent-safety
+    id: n31-2-research-only
+    target: src/timesfm_context.py
+    check: rg "research_tip\\|UNAVAILABLE\\|suggestion" src/timesfm_context.py && rg "process_after_gate_b" src/timesfm_context.py; test $? -ne 0
+    pass_condition: labeled research; no paper gateway call in adapter
+  - class: caller-level
+    id: n31-2-optional-hook
+    target: src/evolution_engine.py
+    check: python3 -m unittest tests.test_timesfm_context tests.test_evolution_engine -q
+    pass_condition: daily CLI/review with TimesFM missing still writes report; status UNAVAILABLE
+executor_prompt: |
+  ### Quality Brief (Sprint N31)
+sprint: N31
+Maintain: evolution_engine.review stays READ_ONLY_NO_ORDER_SUBMISSION; changes_applied=0; orders_sent=0.
+Maintain: N28.1 labels — continuous_improvement surface_kind=suggestion, paper_allowed=false, execution_authorized=false.
+Maintain: LIVE_TRADING_ENABLED=false; tip/forecast never calls process_after_gate_b or paper submit.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent Tá Barato/momentum/Prodigy thresholds.
+Avoid: stub TimesFM numbers; mutating strategy_states; rewriting Sprint N28 tasks; adding a third EasyPanel app; required TimesFM image dependency.
+[ABORDAGEM] Extend review() to classify fills vs non-fills from existing ledger/journal/decisions.jsonl; keep TimesFM behind an optional context provider that returns labeled research tips only.
+[RISCO] TimesFM 3.0 weights may be non-commercial; N31.0 must pin the official PyPI package and a license-safe checkpoint. Missing import/checkpoint = omit forecast, never a fake series.
+[OPORTUNIDADE] scripts/run.sh evolution-daily already execs evolution_engine.py; N28.1 already labels the panel surface — extend, do not fork a second dashboard.
+EXPIRES at end of Sprint N31.
+
+Melhoria: optional TimesFM (Google time-series foundation model) context block on the daily continuous-improvement report (ISS-012 adendo).
+Contexto: N31.1 delivers fills+non-fills tips. Operator asked TimesFM as forecast/context support. Git First: official google-research/timesfm or PyPI timesfm — reuse API, do not reimplement the model. Forecast must not authorize paper and must not become a Tá Barato/momentum threshold.
+Objetivo: (1) New src/timesfm_context.py adapter using the official import recorded in N31-GIT-FIRST-REUSE.md. (2) Wire into review() via the N31.1 context_providers hook. (3) Output labeled research_tip / suggestion; paper_allowed false. (4) If import/checkpoint/runtime fails OR TIMESFM not enabled: timesfm_status=UNAVAILABLE, omit numeric forecast, still return the N31.1 report. (5) Do not add timesfm to the required Dockerfile/requirements.txt runtime set — optional extra only if N31.0 documents a extras line; default image stays fail-closed. (6) Do not call paper gateway. Do not invent RSI/percentil/score. Do not edit Sprint N28 tasks. LIVE false.
+Arquivos: src/timesfm_context.py, tests/test_timesfm_context.py, src/evolution_engine.py.
+Critério de pronto: unittest with timesfm missing → UNAVAILABLE and no fake forecast keys with numbers; report still has N31.1 tips; rg timesfm_context has research_tip and no process_after_gate_b; official package name cited from N31.0 (timesfm, not a local rewrite of attention/decoder).
+Cenários de teste:
+  1. Caso normal (se fixture oficial mockável): adapter returns labeled research_tip with timesfm_status=OK without calling process_after_gate_b.
+  2. Edge case: ImportError / checkpoint missing → UNAVAILABLE, no invented series, daily report still written.
+  3. Edge case: TIMESFM disabled/default off → same as unavailable; N31.1 tips unchanged.
+  4. Regressão: orders_sent=0; suggestion surfaces still self_check_ok.
+  5. Regressão: no Tá Barato/momentum threshold constants introduced from forecast quantiles.
+```
+
+### Task N31.3 — Registrar o método de ajuste e liberar o caminho da sprint já planejada, sem inventar nota
+
+**Entrega:** O método de ajuste fica escrito: o que conta como erro, a frequência diária, e que sem nota segura só se sugere — a sprint de ajuste já existente pode seguir sem ser reescrita.
+**Como conferir:** Abrir o contrato e o issue e ver a dúvida do método respondida, com ponte para a sprint de ajuste e sem mudança nas tarefas antigas dessa sprint.
+**Por quê:** Sem o método registrado, o ajuste supervisionado continuava parado; com ele, o caminho existe e o scoring incerto não vira número inventado.
+
+**Detalhe técnico**
+
+P task (docs-only). Update Feature 11 gap notes from “blocked until G-AJUSTE” to “method defined in ISS-012/N31; execute N28.2–4 later”. Keep `## Sprint N28` task rows **unchanged**. Do not invent scoring. Document suggestion-first when a parameter change would require a new threshold. Point undo to N28.3. LIVE false.
+
+### Task N31.4 — Testar que dica e previsão nunca viram ordem e que o modelo ausente não inventa número
+
+**Entrega:** Uma bateria curta prova que dica e previsão não disparam ordem paper e que, sem o modelo, ninguém inventa forecast.
+**Como conferir:** Pedir os testes de guarda desta sprint e ver falha se houver chamada ao envio paper ou número de previsão fabricado.
+**Por quê:** Sugestão não é ordem; fail-closed é o contrato do TimesFM.
+
+**Detalhe técnico**
+
+P task. Add `tests/test_n31_g_ajuste_guardrails.py` (or extend existing if overlap is cleaner — prefer new file). Assert: review/tips never mock-call `process_after_gate_b`; TimesFM missing → no numeric forecast; labels in `{research_tip, suggestion, continuous_improvement}`; `LIVE_TRADING_ENABLED` remains false in Dockerfile/run.sh. Do not weaken N28.1 tests.
 
 ---
 

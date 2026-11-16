@@ -225,7 +225,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false UPSTREAM_DIR=/home/igor/cursor/trading-lab/vendor/day-trader-skill PYTHONPATH=src /usr/bin/python3 -m pytest -q --tb=no'",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false UPSTREAM_DIR=/home/igor/cursor/trading-lab/vendor/day-trader-skill PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q --tb=no'",
           "exit_code": 0
         }
       ],
@@ -235,13 +235,13 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "b538c95b75400173557597bb4a8a739b85cd2e94",
-      "stamped_at": "2026-11-16T12:44:20Z",
+      "last_validated_sha": "f36b292f10417b542c60278e4d733226a25a325f",
+      "stamped_at": "2026-11-16T15:49:52Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "dca8843cac0ac6341da0b278e26520d4fc6e7609b29707a3ab45bf671ef241d5",
-      "patch_id": "7ee5f42781d81ed8eceb7845b8842cc3e776b156",
+      "content_hash": "e0265bf83389a58358f441143afd469bca75ae6e3eddd41d35c18a2580788f1d",
+      "patch_id": "b610b9d9f8ecf608a8d24a0d9aac17cd4d3de4eb",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",

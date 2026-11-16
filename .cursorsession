@@ -213,10 +213,9 @@
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T12:40:36Z",
-      "recorded_by": "b361c780-9252-40b9-abd3-cb4e98d8fa7d",
-      "notes": "539 pytest; N28.1 suggestion labels",
-      "full_suite_ran": true,
+      "recorded_at": "2026-11-16T12:44:09Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N28.1 suggestion labels; 539 pytest",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -231,22 +230,18 @@
         }
       ],
       "dirty_production_paths": [
-        "src/panel_ops_html.py",
-        "src/trading_dashboard_data.py",
-        "src/v4_web_dashboard.py",
-        "tests/test_n28_suggestion_labels.py",
         ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "fa4a17c8839e3558d4404f70255681ebdb0f4645",
-      "stamped_at": "2026-11-16T12:43:21Z",
+      "last_validated_sha": "b538c95b75400173557597bb4a8a739b85cd2e94",
+      "stamped_at": "2026-11-16T12:44:20Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "6aeb147d6b5b63dc6e5e51bee3dd2be2ebf13d1554815ba642dcca3efecf5f58",
-      "patch_id": "dff508b122817995417f7f1d7a282b98d376c4af",
+      "content_hash": "dca8843cac0ac6341da0b278e26520d4fc6e7609b29707a3ab45bf671ef241d5",
+      "patch_id": "7ee5f42781d81ed8eceb7845b8842cc3e776b156",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",

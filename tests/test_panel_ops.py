@@ -273,31 +273,32 @@ class PanelOpsHttpTests(unittest.TestCase):
             self.assertIn('performance_panel', data)
 
     def test_api_signals_json_origin_destination_reject_reason(self):
-        with tempfile.TemporaryDirectory() as d:
-            root = Path(d)
-            _write_webhook_journal(
-                root,
-                [
-                    {
-                        'payload': {'provider': 'tradingview', 'symbol': 'AAPL'},
-                        'result': {'reject_code': 'MAX_POSITIONS'},
-                        'received_at': '2026-11-16T10:00:00+00:00',
-                    },
-                ],
-            )
-            server, thread, base = self._server(str(root))
-            try:
-                req = _get(base + '/api/signals', session='panel-secret')
-                with urlopen(req, timeout=3) as resp:
-                    payload = json.load(resp)
-                signals = payload['signals']
-                self.assertEqual(len(signals), 1)
-                row = signals[0]
-                self.assertEqual(row['origin'], 'tradingview')
-                self.assertEqual(row['destination'], 'blocked')
-                self.assertEqual(row['reject_reason'], 'MAX_POSITIONS')
-            finally:
-                self._shutdown(server, thread)
+        with patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False):
+            with tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                _write_webhook_journal(
+                    root,
+                    [
+                        {
+                            'payload': {'provider': 'tradingview', 'symbol': 'AAPL'},
+                            'result': {'reject_code': 'MAX_POSITIONS'},
+                            'received_at': '2026-11-16T10:00:00+00:00',
+                        },
+                    ],
+                )
+                server, thread, base = self._server(str(root))
+                try:
+                    req = _get(base + '/api/signals', session='panel-secret')
+                    with urlopen(req, timeout=3) as resp:
+                        payload = json.load(resp)
+                    signals = payload['signals']
+                    self.assertEqual(len(signals), 1)
+                    row = signals[0]
+                    self.assertEqual(row['origin'], 'tradingview')
+                    self.assertEqual(row['destination'], 'blocked')
+                    self.assertEqual(row['reject_reason'], 'MAX_POSITIONS')
+                finally:
+                    self._shutdown(server, thread)
 
 
 class PanelKillSwitchCycleTests(unittest.TestCase):

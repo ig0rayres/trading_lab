@@ -197,7 +197,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_demo_broker_adapters -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_signal_copy tests.test_demo_broker_adapters -q",
           "exit_code": 0
         }
       ],
@@ -207,13 +207,13 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "4fc0644ab5275129241a28e220036ff67a66db22",
-      "stamped_at": "2026-11-16T21:27:37Z",
+      "last_validated_sha": "bbe97b82c648fe29b109fea5e28e566f589efe40",
+      "stamped_at": "2026-11-16T22:36:47Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "d0df5e4f1985478c9ddf984f5ba4b5567537ab854526c2ee40b016b87683808b",
-      "patch_id": "ca4155c3626a83a52d692846b29e4eff0d6fba7d",
+      "content_hash": "4786357720bd43baea302e59ec150ba3d61b44088ba97ff22ca7963c8381c75a",
+      "patch_id": "ddec4f73acafc82ef4415be17aaae3da022b57b0",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",

@@ -1496,11 +1496,11 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N31.1 Expor find_setups (e rsi) no carregador original | `/dev` | — |
-| [ ] | M | N31.2 Criar o emissor de sinal interno assinado | `/dev` | N31.1 |
-| [ ] | M | N31.3 Emitir momentum só com setups de força do scanner | `/dev` | N31.2 |
-| [ ] | M | N31.4 Emitir Tá Barato só com setups oversold do scanner | `/dev` | N31.3 |
-| [ ] | P | N31.5 Ligar os produtores no serviço operacional em pesquisa | `/dev` | N31.3, N31.4 |
+| [x] | P | N31.1 Expor find_setups (e rsi) no carregador original | `/dev` | — |
+| [x] | M | N31.2 Criar o emissor de sinal interno assinado | `/dev` | N31.1 |
+| [x] | M | N31.3 Emitir momentum só com setups de força do scanner | `/dev` | N31.2 |
+| [x] | M | N31.4 Emitir Tá Barato só com setups oversold do scanner | `/dev` | N31.3 |
+| [x] | P | N31.5 Ligar os produtores no serviço operacional em pesquisa | `/dev` | N31.3, N31.4 |
 
 ### Task N31.1 — Expor find_setups no carregador original
 

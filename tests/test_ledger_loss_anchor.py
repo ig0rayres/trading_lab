@@ -61,6 +61,34 @@ class LossAnchorPureTest(unittest.TestCase):
                 third = la._sync_period_halts(improved, now_utc=next_day)
                 self.assertFalse(third['daily_loss_halt_active'])
 
+    def test_ver004_weekly_halt_latches_until_next_utc_week(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as td:
+            halt_path = Path(td) / 'halts.json'
+            now = datetime(2026, 11, 11, 15, 0, tzinfo=timezone.utc)
+            from risk_control_flags import TIGHT_DEFAULTS, brl_from_cents
+
+            max_weekly = brl_from_cents(int(TIGHT_DEFAULTS['max_weekly_loss_cents']))
+            anchor = {
+                'daily_pnl_brl': '0',
+                'weekly_pnl_brl': str(-max_weekly - Decimal('1')),
+                'daily_pnl_verified': True,
+                'weekly_pnl_verified': True,
+                'blocks_new_order': False,
+            }
+            with patch.dict(os.environ, {'LOSS_PERIOD_HALT_FILE': str(halt_path)}):
+                first = la._sync_period_halts(anchor, now_utc=now)
+                self.assertTrue(first['weekly_loss_halt_active'])
+                self.assertIsNotNone(first.get('weekly_halt_until_utc'))
+                improved = dict(anchor, weekly_pnl_brl='0')
+                still_week = datetime(2026, 11, 15, 23, 59, tzinfo=timezone.utc)
+                second = la._sync_period_halts(improved, now_utc=still_week)
+                self.assertTrue(second['weekly_loss_halt_active'])
+                next_week = datetime(2026, 11, 16, 0, 0, tzinfo=timezone.utc)
+                third = la._sync_period_halts(improved, now_utc=next_week)
+                self.assertFalse(third['weekly_loss_halt_active'])
+
     def test_unverified_pnl_does_not_trigger_halt(self):
         import tempfile
         with tempfile.TemporaryDirectory() as td:

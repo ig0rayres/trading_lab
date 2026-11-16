@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N33 implementação concluída (aguarda finalizer)",
+  "fase_nome": "N33 concluída; campanha ISS-011 restante (ISS-010 + N17.2)",
   "sprint_pending_merge": null,
-  "sprint_pr": 42,
+  "sprint_pr": 43,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T20:30:00-03:00",
+  "ultimo_update": "2026-11-16T20:40:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Parent sprint-finalizer N33 após VERIFY (não marcar ROADMAP N33 Status concluida aqui)",
-    "Campanha restante ISS-011: ISS-010 B3/FOREX + N17.2 G-FORM (operador)",
-    "Não implementar Clear/OANDA; não inventar scoring; LIVE false"
+    "/pmo plan — ISS-010 B3/FOREX (N29) e/ou N17.2 G-FORM quando priorizado",
+    "ISS-011 permanece aberto só B3/FOREX + homologação Tá Barato paper",
+    "LIVE_TRADING_ENABLED=false; não implementar Clear/OANDA sem sprint própria"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -116,7 +116,7 @@
     "/pmo sprint N18",
     "/pmo plan N33"
   ],
-  "contexto_rapido": "N33 EXECUTE docs done N33.0–N33.4; ROADMAP N28/N30/N31 concluida; ISS-011 aberto só ISS-010+N17.2; PR #42 main d30689b; EasyPanel #42 no ar (operador, não fill). LIVE false.",
+  "contexto_rapido": "N33 finalize PR #43 fe80f161 main; ROADMAP N33 concluida; N28/N30/N31 carimbadas; ISS-011 aberto ISS-010+N17.2; PR #42/EasyPanel attested (não fill). LIVE false.",
   "sprint_tasks": [
     {
       "id": "N33.0",
@@ -181,7 +181,7 @@
     }
   ],
   "checkpoint": {
-    "phase": "testing",
+    "phase": "validated",
     "sprint": "N33",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
@@ -216,17 +216,18 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "f709cc645342e96168d12f1e1520131fb1a70024",
-      "stamped_at": "2026-11-16T20:32:59Z",
+      "last_validated_sha": "d25741379c6cd39ffb6c41a4630695b5fa4bce8d",
+      "stamped_at": "2026-11-16T20:36:05Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
       "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "011aa41cc3c8f22be171bedeef66defa74172350",
+      "patch_id": "91e2a9fedf03cc33a660505777830fbdca659a97",
       "patch_id_version": 2
     },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N33"
+    "sprint_delivery": "finalized",
+    "sprint_delivery_sprint": "N33",
+    "validation_gate_ref": ".beesy/sprints/N33.json"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -313,8 +314,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N32",
-  "sprint_atual": "N33",
+  "previous_sprint": "N33",
+  "sprint_atual": null,
   "sprint_nome": "Closeout docs ISS-011 Alpaca",
   "autopilot": {
     "active": true,

@@ -14,7 +14,7 @@
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
-| ISS-011 | aberto | N33 closeout Alpaca; restante ISS-010 + N17.2 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
+| ISS-011 | aberto | ISS-010 B3/FOREX + N17.2 G-FORM (pós-N33) | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -304,7 +304,7 @@
 
 **Fontes:** REQUIREMENTS v0.4 Features 7–11 (critério âncora `[x]` N32.3); ROADMAP N22/N30/N32; `docs/TEST-EVIDENCE.md` (N30.1/N30.3, N32.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
 
-**Nota N33 (2026-11-16, closeout docs):** N28/N30/N31 carimbadas `concluida` no ROADMAP com SHA/PR citados. **ISS-011 permanece aberto** somente para B3/FOREX (**ISS-010**) e **N17.2** (G-FORM / homologação Tá Barato paper). PR **#42** na linha principal; EasyPanel **#42 no ar** = atestado operador, não fill.
+**Nota N33 (2026-11-16, closeout docs):** N28/N30/N31 carimbadas `concluida` no ROADMAP com SHA/PR citados; sprint N33 `concluida` via PR **#43** merge `fe80f161` (`2026-11-16T20:34:39Z`). **ISS-011 permanece aberto** somente para B3/FOREX (**ISS-010**) e **N17.2** (G-FORM / homologação Tá Barato paper). PR **#42** na linha principal; EasyPanel **#42 no ar** = atestado operador, não fill.
 
 **Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief N30: `docs/.briefs/N30.brief.md`.
 

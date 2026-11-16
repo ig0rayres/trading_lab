@@ -57,7 +57,7 @@
 | N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | concluida | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
 | N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | concluida | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
 | N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
-| N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | planejada | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
+| N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | concluida | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -1893,8 +1893,9 @@ P task. In `docs/REQUIREMENTS.md` Feature 7, mark “Nenhuma ordem sai com qualq
 
 ## Sprint N33 — Fechar no papel o laço americano já entregue
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 restante após N32 + PR #42 merged · N17 tabela de tasks **não** reescrita  
+> Closeout: PR **#43** merge `fe80f161a314d215ece48b93b66f6e0d3e37593f` (`2026-11-16T20:34:39Z`); stamp local **APROVADA**; CI test / docker-smoke / docker-build SUCCESS  
 > titulo_humano: Fechar no papel o laço americano já entregue  
 > resumo_humano: O laço da conta demo americana, o ajuste supervisionado e a autoanálise diária já estão no código e no pedido 42. Esta sprint só alinha o plano e os chamados, e deixa claro que bolsa brasileira, câmbio e a homologação da fórmula Tá Barato continuam fora.  
 > Gate: N28/N30/N31 Status `concluida` só com SHA/PR/nodeid citados; ISS-011 aberto só B3/FOREX + N17.2/G-FORM; ISS-012 corpo fechado; DIARY N33; TEST-EVIDENCE pedido 42 na linha principal + painel no ar atestado; zero `src/`; LIVE false  
@@ -1931,6 +1932,14 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 | [x] | P | N33.2 Deixar os chamados e o changelog do contrato honestos | docs | N33.1 |
 | [x] | P | N33.3 Registrar no diário e na evidência o pedido 42 no ar | docs | N33.1 |
 | [x] | P | N33.4 Atualizar a sessão desta sprint após os carimbos | session | N33.2, N33.3 |
+
+### Quality Brief (Sprint N33)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; docs-only sprint — zero diff em `src/`; não inventar fill nem limiar de scoring.
+Maintain: carimbar N28/N30/N31 **somente** com SHA/PR/nodeid citados; não reescrever blocos históricos N17/N28/N29/N30/N31/N32.
+Maintain: **ISS-011 aberto** só para B3/FOREX (**ISS-010** / N29.5) e **N17.2** G-FORM; **ISS-012** corpo `fechado` alinhado ao PR #38.
+Avoid: adapters Clear/OANDA; fechar ISS-011 por completo; tratar EasyPanel no ar como ordem executada.
+**Closeout (2026-11-16):** stamp **APROVADA** (`validation_gate` focal `test_signal_paper_runner -k n32`); PR **#43** na linha principal (`fe80f161`, merged `2026-11-16T20:34:39Z`); CI test + docker-smoke + docker-build SUCCESS. ROADMAP/DIARY/ISSUES/REQUIREMENTS alinhados; PR #42 permanece prova N32/EasyPanel (não fill).
 
 ### Fora de escopo
 

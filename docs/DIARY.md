@@ -4,7 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #42 main + EasyPanel attested | 14–36 |
+| N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 14–40 |
 | N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 38–63 |
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
@@ -22,7 +22,11 @@
 
 **Decisões:** N33 Status permanece `planejada` até sprint-finalizer/VERIFY; `LIVE_TRADING_ENABLED=false`; sem adapters Clear/OANDA.
 
-**Próximo:** parent finalizer N33; campanha ISS-010 + N17.2 operador.
+**Finalizer (2026-11-16):** PR [**#43**](https://github.com/ig0rayres/trading_lab/pull/43) merge `fe80f161a314d215ece48b93b66f6e0d3e37593f` (`2026-11-16T20:34:39Z`); stamp local **APROVADA**; CI test / docker-smoke / docker-build SUCCESS. ROADMAP N33 → `concluida`; sessão `sprint_atual=null`, `checkpoint.phase=validated`, `sprint_delivery=finalized`.
+
+**Aprendizados:** closeout em papel exige separar prova de código (PRs #35–#42) do PR de docs (#43); painel no ar ≠ fill.
+
+**Próximo:** `/pmo plan` campanha **ISS-010** (B3/FOREX) e **N17.2** G-FORM (operador); LIVE false.
 
 ---
 

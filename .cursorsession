@@ -176,7 +176,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_signal_paper_runner.py tests/test_feature7_anchor_ceilings.py -q --tb=no",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_signal_paper_runner.py -k n32 -q --tb=no",
           "exit_code": 0
         }
       ],
@@ -186,8 +186,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "41b04e7df11ce9511181b0913b6a9474a31763dd",
-      "stamped_at": "2026-11-16T19:26:00Z",
+      "last_validated_sha": "7e2fdf77adc033bbd2d3bdb621ad3aa36630407f",
+      "stamped_at": "2026-11-16T19:27:43Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

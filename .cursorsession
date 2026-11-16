@@ -189,13 +189,13 @@
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N32",
+      "sprint": "N33",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T19:25:33Z",
+      "recorded_at": "2026-11-16T20:32:49Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N32 control_flags parity; 25 passed test_signal_paper_runner+feature7_anchor_ceilings; parent pytest evidence",
+      "notes": "N33 docs closeout; no src; ROADMAP stamps verified",
       "full_suite_ran": false,
       "senior_status": "PASS"
     },
@@ -216,16 +216,16 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "7e2fdf77adc033bbd2d3bdb621ad3aa36630407f",
-      "stamped_at": "2026-11-16T19:27:43Z",
+      "last_validated_sha": "ddbcdddb48c9f7c985192cad71331119a5128c13",
+      "stamped_at": "2026-11-16T20:32:50Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "98228f885af30bece4c4136f458881f606abd1146dbcbb0cf9b71e3e011fa4f4",
-      "patch_id": "d2aee5fda6bf7e8fdadece6e70e80c26f1a6a88c",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "011aa41cc3c8f22be171bedeef66defa74172350",
       "patch_id_version": 2
     },
-    "sprint_delivery": "implementation_complete",
+    "sprint_delivery": "stamped",
     "sprint_delivery_sprint": "N33"
   },
   "artefatos_gerados": [

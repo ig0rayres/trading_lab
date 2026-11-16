@@ -16,9 +16,9 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N35 implementation — env presence + homolog roteiro",
+  "fase_nome": "N35 concluida; restante N29.5 operator + N17.2 G-FORM",
   "sprint_pending_merge": null,
-  "sprint_pr": 45,
+  "sprint_pr": 48,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
   "ultimo_update": "2026-11-16T20:08:00-03:00",
@@ -119,107 +119,15 @@
     "/pmo plan N35"
   ],
   "contexto_rapido": "N35 plan_only; N34 concluída (N27.2 [x], PR #45); EasyPanel #46 no ar ≠ creds ok ≠ fill; N29.5/N29.6 [ ]; N29 planejada; LIVE false.",
-  "sprint_tasks": [
-    {
-      "id": "N35.0",
-      "file": "docs/.briefs/N35-GIT-FIRST-REUSE.md",
-      "files": [
-        "docs/.briefs/N35-GIT-FIRST-REUSE.md"
-      ],
-      "depends_on": [],
-      "status": "pending"
-    },
-    {
-      "id": "N35.1",
-      "file": "src/demo_account_gate.py, tests/test_demo_broker_adapters.py",
-      "files": [
-        "src/demo_account_gate.py",
-        "tests/test_demo_broker_adapters.py"
-      ],
-      "depends_on": [
-        "N35.0"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "N35.2",
-      "file": "docs/HOMOLOGATION.md, EASYPANEL.md",
-      "files": [
-        "docs/HOMOLOGATION.md",
-        "EASYPANEL.md"
-      ],
-      "depends_on": [
-        "N35.0"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "N35.3",
-      "file": "docs/ISSUES.md, docs/ROADMAP.md, docs/DIARY.md, docs/TEST-EVIDENCE.md, .env.example",
-      "files": [
-        "docs/ISSUES.md",
-        "docs/ROADMAP.md",
-        "docs/DIARY.md",
-        "docs/TEST-EVIDENCE.md",
-        ".env.example"
-      ],
-      "depends_on": [
-        "N35.1",
-        "N35.2"
-      ],
-      "status": "pending"
-    }
-  ],
+  "sprint_tasks": [],
   "checkpoint": {
-    "phase": "implementation",
+    "phase": "validated",
     "current_task": null,
-    "last_completed_task": null,
-    "validation_gate_ref": ".beesy/sprints/N34.json",
+    "last_completed_task": "N35.3",
+    "validation_gate_ref": ".beesy/sprints/N35.json",
+    "sprint_delivery": "finalized",
     "sprint_delivery_sprint": "N35",
-    "last_validated_sha": "7627b45",
-    "validation_gate": {
-      "produced_by": "validation-stamp.py",
-      "result": "APROVADA",
-      "validation_mode": "full",
-      "gates": [
-        {
-          "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_demo_broker_adapters.EnvPresenceReportTests -q",
-          "exit_code": 0
-        }
-      ],
-      "dirty_production_paths": [
-        ".beesy/",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
-      "missing_backends": [],
-      "last_validated_sha": "71f51da8c22f464c1da3b6fbc0dade44e460246f",
-      "stamped_at": "2026-11-16T23:20:24Z",
-      "validation_gate_keys": [
-        "cmd_0"
-      ],
-      "content_hash": "26c350aa4a3eee670f4e6ef4876d4f554b6b548efcb011de29ee3ec9238b4aec",
-      "patch_id": "3f40a61a29390892dace2b9820ed78cabda7c7a8",
-      "patch_id_version": 2
-    },
-    "sprint": "N35",
-    "branch": "front/n27-alpaca-loop",
-    "plan_only": false,
-    "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N35",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS",
-      "findings_registered": [],
-      "recorded_at": "2026-11-16T23:19:59Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N35 env_presence_report + 6 tests OK; homolog runbook; N29.5 still open",
-      "full_suite_ran": true,
-      "first_pass": true,
-      "senior_status": "PASS"
-    },
-    "sprint_delivery": "stamped"
+    "last_validated_sha": "e785433"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -262,7 +170,7 @@
     "branch": "front/n27-alpaca-loop",
     "sprint_branch": "front/n27-alpaca-loop"
   },
-  "sprint_branch": "front/n27-alpaca-loop",
+  "sprint_branch": null,
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -306,8 +214,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N34",
-  "sprint_atual": "N35",
+  "previous_sprint": "N35",
+  "sprint_atual": null,
   "sprint_nome": "Conferir chaves demo sem ver valores, sem fechar homologação",
   "autopilot": {
     "active": true,

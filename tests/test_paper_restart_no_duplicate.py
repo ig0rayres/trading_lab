@@ -164,6 +164,7 @@ class PaperRestartNoDuplicateTest(unittest.TestCase):
             conn.commit()
 
         broker_calls = []
+        track_calls = []
 
         def fake_broker_run(sig, e, ledger=None, **kwargs):
             broker_calls.append(sig['signal_id'])
@@ -174,12 +175,22 @@ class PaperRestartNoDuplicateTest(unittest.TestCase):
                 'broker_id': broker_id,
             }
 
+        def fake_track(order, e, **kwargs):
+            track_calls.append(order['client_order_id'])
+            return {
+                'status': 'TRACKED_FILLED',
+                'terminal': True,
+                'treated_as_fill': False,
+                'orders_sent': 0,
+            }
+
         with patch.object(pgq, 'paper_run', side_effect=fake_broker_run) as broker:
-            out = pgq.process_after_gate_b(signal, decision, env)
+            out = pgq.process_after_gate_b(signal, decision, env, track_fn=fake_track)
         broker.assert_not_called()
         self.assertEqual(out['mode'], 'RESUMED_AFTER_RESTART')
         self.assertEqual(out['orders_sent'], 0)
         self.assertEqual(broker_calls, [])
+        self.assertEqual(track_calls, [client_order_id])
 
         with store.connect() as conn:
             with conn.cursor() as cur:

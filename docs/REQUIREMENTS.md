@@ -265,7 +265,7 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - **Prioridade**: Must-have
 
 **Critérios de aceite:**
-- [ ] Resultado por estratégia e total, calculado só a partir de fill confirmado na corretora. *Lacuna (N30.3): `test_performance_excludes_unfilled_orders` valida total com fill confirmado, mas não asserta o array `strategies[]`.*
+- [x] Resultado por estratégia e total, calculado só a partir de fill confirmado na corretora (`tests/test_panel_ops.py` `PanelOpsDataTests.test_performance_excludes_unfilled_orders` — `strategies[]` por `strategy_key`, ordem sem fill fora do total e do breakdown).
 - [x] Ordem sem fill não entra no resultado (`tests/test_panel_ops.py` `PanelOpsDataTests.test_performance_excludes_unfilled_orders`).
 - [x] Indicação de quais valores ainda são brutos (sem custo completo) (`tests/test_panel_ops.py` `PanelOpsDataTests.test_performance_excludes_unfilled_orders` — `pnl_label` = `PERFORMANCE_LABEL_GROSS`).
 

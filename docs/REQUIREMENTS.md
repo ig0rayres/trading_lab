@@ -280,10 +280,10 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 3. A partir desses registros, ajusta parâmetros das estratégias.
 
 **Critérios de aceite:**
-- [ ] Sugestão aparece marcada como sugestão e nunca é tratada como ordem autorizada por si só.
-- [ ] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define.
-- [ ] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel.
-- [ ] Ajuste automático nunca altera as âncoras de risco.
+- [x] Sugestão aparece marcada como sugestão e nunca é tratada como ordem autorizada por si só (`tests/test_n28_suggestion_labels.py` `N28SuggestionSurfaceTests.test_command_panel_suggestion_surfaces_self_check`, `test_rank_row_without_ticket_blocks_before_paper_gateway`).
+- [ ] Ajuste automático só altera parâmetros que já existem na estratégia original, dentro da faixa que ela define. *Lacuna (N28.2): **blocked** até operador definir **G-AJUSTE**.*
+- [ ] Todo ajuste fica registrado com antes, depois e motivo, e pode ser desfeito pelo painel. *Lacuna (N28.3): **blocked** até **G-AJUSTE** + N28.2.*
+- [ ] Ajuste automático nunca altera as âncoras de risco. *Lacuna (N28.4): **blocked** até **G-AJUSTE** + N28.2.*
 
 ---
 

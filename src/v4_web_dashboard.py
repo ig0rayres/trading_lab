@@ -188,23 +188,28 @@ def render_page(data):
         f'<td>{"sim" if s.get("paper_allowed") else "não"}</td></tr>'
         for s in strategies
     ) or '<tr><td colspan="3">Catálogo indisponível (ledger)</td></tr>'
-    opps = panel.get('opportunities', {}).get('items') or []
+    prodigy_surface = panel.get('opportunities') or {}
+    opps = prodigy_surface.get('items') or []
+    prodigy_disclaimer = esc(prodigy_surface.get('disclaimer') or 'Sugestão de pesquisa — não autoriza ordem.')
     opp_rows = ''.join(
         f'<tr><td>{esc(o.get("provider",""))}</td><td>{esc(o.get("status",""))}</td>'
-        f'<td>{esc(o.get("prodigy_score",""))}</td></tr>'
+        f'<td>{esc(o.get("prodigy_score",""))}</td><td>{esc(o.get("label","research_tip"))}</td></tr>'
         for o in opps
-    ) or '<tr><td colspan="3">Execute prodigy-rank ou aguarde relatório</td></tr>'
+    ) or '<tr><td colspan="4">Execute prodigy-rank ou aguarde relatório</td></tr>'
     tb = panel.get('ta_barato_shadow') or {}
     tb_rows = ''.join(
         f'<tr><td>{esc(o.get("market",""))}</td><td>{esc(o.get("symbol",""))}</td>'
-        f'<td>{esc(o.get("drop_pct",""))}</td><td>{"sim" if o.get("radar_candidate") else "não"}</td></tr>'
+        f'<td>{esc(o.get("drop_pct",""))}</td><td>{"sim" if o.get("radar_candidate") else "não"}</td>'
+        f'<td>{esc(o.get("label","shadow_suggestion"))}</td></tr>'
         for o in (tb.get('items') or [])
-    ) or '<tr><td colspan="4">Execute v4-cycle com --opportunity-input ou aguarde relatório</td></tr>'
+    ) or '<tr><td colspan="5">Execute v4-cycle com --opportunity-input ou aguarde relatório</td></tr>'
     tb_upstream = esc(tb.get('upstream_formula', 'BLOCKED'))
     tb_note = esc(tb.get('local_shadow_note', ''))
     evo = panel.get('continuous_improvement', {}).get('recent') or []
     evo_items = ''.join(
-        f'<li><span class="muted">{esc(e.get("at",""))}</span> — {esc(e.get("summary") or e.get("kind") or "—")}</li>'
+        f'<li><span class="muted">{esc(e.get("at",""))}</span> '
+        f'<code>{esc(e.get("label","continuous_improvement"))}</code> — '
+        f'{esc(e.get("summary") or e.get("kind") or "—")}</li>'
         for e in evo
     ) or '<li>Nenhum evento em evolution/decisions.jsonl</li>'
     health = panel.get('financial_health') or {}
@@ -217,7 +222,7 @@ def render_page(data):
         health_line += ' · <b>queued ≠ fill</b>'
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Trading Lab — Command Panel</title><style>
     :root{{color-scheme:dark}}body{{font:16px system-ui;background:#0c1322;color:#eef3fa;max-width:1040px;margin:auto;padding:40px 20px}}h1{{font-size:32px}}h2{{margin-top:28px;font-size:20px}}.muted,small{{color:#a6b4c5}}.warning{{background:#30251a;border:1px solid #765124;border-radius:12px;padding:14px;margin:20px 0}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}}article{{background:#182337;border:1px solid #2c3c56;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}}strong{{font-size:24px}}footer{{margin-top:32px;color:#a6b4c5}}a{{color:#9bc5fa}}table{{width:100%;border-collapse:collapse;margin-top:10px}}td,th{{border:1px solid #2c3c56;padding:8px;text-align:left}}th{{color:#a6b4c5;font-weight:600}}
-    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div><p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (research)</h2><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Tá Barato (<code>ta_barato</code>) — sombra / homolog</h2><p class="muted">Upstream ({tb_upstream} @ pin vendor) · {tb_note}</p><table><thead><tr><th>Mercado</th><th>Símbolo</th><th>Queda % (5 barras)</th><th>Radar</th></tr></thead><tbody>{tb_rows}</tbody></table><p class="muted">Fase catálogo: research — Gate B bloqueia paper até fórmula upstream (G-FORM).</p><h2>Melhoria contínua</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
+    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div><p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (sugestão / research)</h2><p class="muted">{prodigy_disclaimer}</p><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th><th>Rótulo</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Tá Barato (<code>ta_barato</code>) — sombra / homolog</h2><p class="muted">Upstream ({tb_upstream} @ pin vendor) · {tb_note}</p><table><thead><tr><th>Mercado</th><th>Símbolo</th><th>Queda % (5 barras)</th><th>Radar</th><th>Rótulo</th></tr></thead><tbody>{tb_rows}</tbody></table><p class="muted">Fase catálogo: research — Gate B bloqueia paper até fórmula upstream (G-FORM).</p><h2>Melhoria contínua (sugestão)</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
 
 
 def default_connect():

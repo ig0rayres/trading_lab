@@ -118,11 +118,13 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
 
 def render_prodigy_page(bundle: dict[str, Any], opportunities: dict[str, Any]) -> str:
     items = (opportunities or {}).get('items') or []
+    disclaimer = esc((opportunities or {}).get('disclaimer') or 'Sugestão de pesquisa — não autoriza ordem.')
     rank_rows = ''.join(
         f'<tr><td>{esc(o.get("provider"))}</td><td>{esc(o.get("status"))}</td>'
-        f'<td class="mono">{esc(o.get("prodigy_score"))}</td></tr>'
+        f'<td class="mono">{esc(o.get("prodigy_score"))}</td>'
+        f'<td><code>{esc(o.get("label", "research_tip"))}</code></td></tr>'
         for o in items
-    ) or '<tr><td colspan="3">Execute prodigy-rank (research)</td></tr>'
+    ) or '<tr><td colspan="4">Execute prodigy-rank (research)</td></tr>'
     copied = bundle.get('prodigy', {}).get('copied_signals') or []
     copy_rows = ''.join(
         f'<tr><td>{esc(c.get("provider"))}</td><td>{esc(c.get("symbol"))}</td>'
@@ -132,7 +134,8 @@ def render_prodigy_page(bundle: dict[str, Any], opportunities: dict[str, Any]) -
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Prodígio</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("prodigy")}<main class="main">
 <h1>Prodígio</h1><p class="warn">Ranking e cópias são pesquisa — não autorizam ordem.</p>
-<h2>Ranking</h2><table><tbody>{rank_rows}</tbody></table>
+<p class="muted">{disclaimer}</p>
+<h2>Ranking (rótulo <code>research_tip</code>)</h2><table><tbody>{rank_rows}</tbody></table>
 <h2>Sinais copiados</h2><table><tbody>{copy_rows}</tbody></table></main></div></body></html>'''
 
 

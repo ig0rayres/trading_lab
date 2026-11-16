@@ -6,6 +6,65 @@ from collections import Counter
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+SUGGESTION_SURFACE_KEYS = ('opportunities', 'ta_barato_shadow', 'continuous_improvement')
+SUGGESTION_ITEM_LABELS = frozenset({'research_tip', 'continuous_improvement', 'shadow_suggestion'})
+
+
+def suggestion_surface_meta(content_label: str) -> dict:
+    """Contract fields for read-only tips — never authorize broker submission."""
+    return {
+        'surface_kind': 'suggestion',
+        'content_label': content_label,
+        'execution_authorized': False,
+        'paper_allowed': False,
+        'orders_sent': 0,
+    }
+
+
+def _apply_suggestion_surface(surface: dict, content_label: str) -> dict:
+    merged = {**surface, **suggestion_surface_meta(content_label)}
+    merged.setdefault(
+        'disclaimer',
+        'Research suggestion only; does not authorize orders or paper submission.',
+    )
+    return merged
+
+
+def validate_command_panel_suggestions(panel: dict) -> list[str]:
+    """Return human-readable violations; empty list means all suggestion surfaces are labeled."""
+    if not isinstance(panel, dict):
+        return ['command_panel must be a dict']
+    violations: list[str] = []
+    for key in SUGGESTION_SURFACE_KEYS:
+        surface = panel.get(key)
+        if not isinstance(surface, dict):
+            violations.append(f'{key}: missing or not a dict')
+            continue
+        if surface.get('surface_kind') != 'suggestion':
+            violations.append(f'{key}: surface_kind must be suggestion')
+        if surface.get('paper_allowed') is True:
+            violations.append(f'{key}: paper_allowed must not be true on suggestions')
+        if surface.get('execution_authorized') is True:
+            violations.append(f'{key}: execution_authorized must not be true on suggestions')
+        if int(surface.get('orders_sent') or 0) != 0:
+            violations.append(f'{key}: orders_sent must be 0 on suggestions')
+        for idx, row in enumerate(surface.get('items') or []):
+            if not isinstance(row, dict):
+                continue
+            label = row.get('label')
+            if label not in SUGGESTION_ITEM_LABELS:
+                violations.append(f'{key}.items[{idx}]: label {label!r} not in suggestion set')
+            if row.get('paper_allowed') is True or row.get('paper_approved') is True:
+                violations.append(f'{key}.items[{idx}]: must not claim paper approval')
+        for idx, row in enumerate(surface.get('recent') or []):
+            if not isinstance(row, dict):
+                continue
+            label = row.get('label')
+            if label not in SUGGESTION_ITEM_LABELS:
+                violations.append(f'{key}.recent[{idx}]: label {label!r} not in suggestion set')
+    return violations
+
+
 def read_jsonl(path):
     if not path.exists(): return []
     rows=[]
@@ -43,13 +102,22 @@ def _load_ta_barato_shadow(root):
     }
     path = Path(root) / 'research' / 'opportunities-latest.json'
     if not path.is_file():
-        return {**base, 'status': 'NOT_RUN', 'items': [], 'mode': 'SHADOW_ONLY'}
+        return _apply_suggestion_surface(
+            {**base, 'status': 'NOT_RUN', 'items': [], 'mode': 'SHADOW_ONLY'},
+            'research_tip',
+        )
     try:
         payload = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError, TypeError):
-        return {**base, 'status': 'UNREADABLE', 'items': [], 'mode': 'SHADOW_ONLY'}
+        return _apply_suggestion_surface(
+            {**base, 'status': 'UNREADABLE', 'items': [], 'mode': 'SHADOW_ONLY'},
+            'research_tip',
+        )
     if not isinstance(payload, dict) or payload.get('mode') != 'SHADOW_ONLY':
-        return {**base, 'status': 'UNTRUSTED', 'items': [], 'mode': 'SHADOW_ONLY'}
+        return _apply_suggestion_surface(
+            {**base, 'status': 'UNTRUSTED', 'items': [], 'mode': 'SHADOW_ONLY'},
+            'research_tip',
+        )
     opps = payload.get('opportunities') or []
     items = []
     for row in opps[:12]:
@@ -63,27 +131,40 @@ def _load_ta_barato_shadow(root):
                 'radar_candidate': row.get('radar_candidate'),
                 'mode': row.get('mode', 'SHADOW_ONLY'),
                 'paper_approved': False,
+                'label': 'shadow_suggestion',
             }
         )
-    return {
-        **base,
-        'status': 'OK',
-        'as_of': payload.get('schema_version'),
-        'items': items,
-        'mode': 'SHADOW_ONLY',
-    }
+    return _apply_suggestion_surface(
+        {
+            **base,
+            'status': 'OK',
+            'as_of': payload.get('schema_version'),
+            'items': items,
+            'mode': 'SHADOW_ONLY',
+        },
+        'research_tip',
+    )
 
 
 def _load_prodigy_opportunities(root):
     path = Path(root) / 'intelligence' / 'prodigy-top10-latest.json'
     if not path.is_file():
-        return {'status': 'NOT_RUN', 'items': [], 'disclaimer': 'Research rank only; does not authorize orders.'}
+        return _apply_suggestion_surface(
+            {'status': 'NOT_RUN', 'items': [], 'disclaimer': 'Research rank only; does not authorize orders.'},
+            'research_tip',
+        )
     try:
         payload = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError, TypeError):
-        return {'status': 'UNREADABLE', 'items': [], 'disclaimer': 'Research rank only; does not authorize orders.'}
+        return _apply_suggestion_surface(
+            {'status': 'UNREADABLE', 'items': [], 'disclaimer': 'Research rank only; does not authorize orders.'},
+            'research_tip',
+        )
     if not isinstance(payload, dict) or payload.get('mode') != 'PRODIGY_RANK_RESEARCH_ONLY':
-        return {'status': 'UNTRUSTED', 'items': [], 'disclaimer': 'Research rank only; does not authorize orders.'}
+        return _apply_suggestion_surface(
+            {'status': 'UNTRUSTED', 'items': [], 'disclaimer': 'Research rank only; does not authorize orders.'},
+            'research_tip',
+        )
     top = payload.get('top_10_research') or payload.get('providers') or []
     items = []
     for row in top[:10]:
@@ -97,13 +178,15 @@ def _load_prodigy_opportunities(root):
                 'label': 'research_tip',
             }
         )
-    return {
-        'status': 'OK',
-        'as_of': payload.get('as_of'),
-        'items': items,
-        'disclaimer': str(payload.get('score_warning') or 'Research rank only; does not authorize orders.'),
-        'execution_authorized': False,
-    }
+    return _apply_suggestion_surface(
+        {
+            'status': 'OK',
+            'as_of': payload.get('as_of'),
+            'items': items,
+            'disclaimer': str(payload.get('score_warning') or 'Research rank only; does not authorize orders.'),
+        },
+        'research_tip',
+    )
 
 def _load_evolution_recent(root, limit=8):
     rows = read_jsonl(Path(root) / 'evolution' / 'decisions.jsonl')
@@ -119,7 +202,10 @@ def _load_evolution_recent(root, limit=8):
                 'label': 'continuous_improvement',
             }
         )
-    return {'count': len(rows), 'recent': recent}
+    return _apply_suggestion_surface(
+        {'count': len(rows), 'recent': recent, 'items': []},
+        'continuous_improvement',
+    )
 
 def _load_strategy_catalog():
     try:
@@ -145,8 +231,13 @@ def command_panel(root):
     if isinstance(ledger, dict):
         fills = int(ledger.get('paper_fills') or 0)
     queued = int(ledger.get('paper_queued_intent') or 0) if isinstance(ledger, dict) else 0
-    return {
+    panel = {
         'schema_version': 'command-panel-v1',
+        'suggestion_policy': {
+            'surface_keys': list(SUGGESTION_SURFACE_KEYS),
+            'never_fields': ['paper_allowed', 'order_authorized'],
+            'note': 'Dashboard tips are suggestions only; broker path requires signed signal + Gate B.',
+        },
         'financial_health': {
             'ledger_connected': isinstance(ledger, dict) and ledger.get('status') != 'LEDGER_UNAVAILABLE',
             'paper_fills_recorded': fills,
@@ -160,6 +251,11 @@ def command_panel(root):
         'continuous_improvement': _load_evolution_recent(root),
         'history': {'postgres_ledger_counts': ledger},
     }
+    violations = validate_command_panel_suggestions(panel)
+    panel['suggestion_policy']['self_check_ok'] = not violations
+    if violations:
+        panel['suggestion_policy']['self_check_violations'] = violations
+    return panel
 
 def summary(root):
     root=Path(root)

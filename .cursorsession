@@ -16,7 +16,7 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N17 código done (G-FORM blocked) — campanha ISS-011",
+  "fase_nome": "N28.1 done — N28.2+ blocked G-AJUSTE — campanha ISS-011",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
@@ -114,7 +114,7 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "N17 G-FORM blocked; painel ta_barato_shadow; N30 push bloqueado GFX.2b; próximo N28 blocked G-AJUSTE; ISS-010 fora.",
+  "contexto_rapido": "PR #35 CI green; N28.1 suggestion labels done; N28.2-4 blocked G-AJUSTE; N17 G-FORM blocked; ISS-010 fora.",
   "sprint_tasks": [
     {
       "id": "N17.0",
@@ -165,6 +165,40 @@
       "depends_on": [
         "N17.1"
       ]
+    },
+    {
+      "id": "N28.1",
+      "title": "Sugestão continua rotulada como sugestão",
+      "status": "done",
+      "file": "src/trading_dashboard_data.py",
+      "depends_on": []
+    },
+    {
+      "id": "N28.2",
+      "title": "Ajuste só parâmetro existente (G-AJUSTE)",
+      "status": "pending",
+      "depends_on": [
+        "N28.1"
+      ],
+      "blocked_reason": "G-AJUSTE"
+    },
+    {
+      "id": "N28.3",
+      "title": "Histórico ajuste com desfazer",
+      "status": "pending",
+      "depends_on": [
+        "N28.2"
+      ],
+      "blocked_reason": "G-AJUSTE"
+    },
+    {
+      "id": "N28.4",
+      "title": "Teste: ajuste nunca altera âncora",
+      "status": "pending",
+      "depends_on": [
+        "N28.2"
+      ],
+      "blocked_reason": "G-AJUSTE"
     }
   ],
   "checkpoint": {
@@ -179,9 +213,10 @@
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T09:29:14Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "536 pytest; G-FORM blocked honest for ta_barato paper",
+      "recorded_at": "2026-11-16T12:40:36Z",
+      "recorded_by": "b361c780-9252-40b9-abd3-cb4e98d8fa7d",
+      "notes": "539 pytest; N28.1 suggestion labels",
+      "full_suite_ran": true,
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -196,13 +231,17 @@
         }
       ],
       "dirty_production_paths": [
+        "src/panel_ops_html.py",
+        "src/trading_dashboard_data.py",
+        "src/v4_web_dashboard.py",
+        "tests/test_n28_suggestion_labels.py",
         ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "23f4fb1da6dd55b90f2617a13fc59e35353aa18b",
-      "stamped_at": "2026-11-16T09:33:48Z",
+      "last_validated_sha": "fa4a17c8839e3558d4404f70255681ebdb0f4645",
+      "stamped_at": "2026-11-16T12:43:21Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
@@ -255,7 +294,7 @@
     "sprint_branch": "front/n27-alpaca-loop"
   },
   "sprint_branch": "front/n27-alpaca-loop",
-  "sprint_nome": "Sprint N17 — MVP-OP-1.1 Tá Barato (G-FORM blocked; shadow homolog)",
+  "sprint_nome": "Sprint N28 — Feature 11 N28.1 done; N28.2-4 blocked G-AJUSTE",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {

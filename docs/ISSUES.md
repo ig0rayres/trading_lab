@@ -259,7 +259,7 @@
 |-------|--------|
 | Categoria | enhancement / epic |
 | Sprint | N30 → N17 → N28 (campanha) |
-| Status | aberto (N30 código done; push PR bloqueado GFX.2b; N17 código done G-FORM blocked; N28 pendente) |
+| Status | aberto (N30+N17 PR [#35](https://github.com/ig0rayres/trading_lab/pull/35) CI **green** + mergeable; N17 G-FORM blocked; N28.1 done; N28.2–4 blocked G-AJUSTE) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); B3/FOREX barrados sem adapter ISS-010; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 e Clear/OANDA permanecem fora.
 
@@ -271,7 +271,7 @@
 |-------|--------|---------|--------|
 | 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
 | 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
-| 3 | **N28** | Feature 11 ajuste supervisionado | **blocked** até G-AJUSTE + fill real (**não executar**) |
+| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1 **done**; N28.2–4 **blocked** até G-AJUSTE + fill real |
 | fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
 | fora | N27.4 | Smoke sinal válido → ordem demo | pendência operador |
 
@@ -295,7 +295,7 @@
 
 **Pendências operador (push/CI):**
 
-7. **N30 push/PR** bloqueado pelo hook `validation-gate` GFX.2b (`patch_id`/refspec) — commits locais `322318b`, `8363009` na frente; operador reconcilia stamp/refspec antes do push (sem bypass).
+7. **PR #35** (`front/n27-alpaca-loop`, N30+N17): CI **fully green** + mergeable (2026-11-16); merge **somente operador** (repo produto). N28.1 segue nesta frente após green.
 
 **Fora de escopo agora:** N28 até G-AJUSTE; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
 

@@ -1239,7 +1239,7 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N28.1 Sugestão continua rotulada como sugestão | `/dev` | — |
+| [x] | P | N28.1 Sugestão continua rotulada como sugestão | `/dev` | — |
 | [ ] | M | N28.2 Ajustar só parâmetro existente, dentro da faixa original | `/dev` | G-AJUSTE |
 | [ ] | M | N28.3 Registrar antes, depois e motivo, com desfazer na Central | `/dev` | N28.2 |
 | [ ] | P | N28.4 Teste: ajuste nunca altera âncora de risco | `/qa testes` | N28.2 |

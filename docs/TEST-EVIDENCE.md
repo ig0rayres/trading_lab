@@ -333,6 +333,20 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
   tests.test_n17_ta_barato tests.test_strategy_homolog_traceability tests.test_v4_capabilities -q
 ```
 
+## Sprint N28.1 — Sugestões rotuladas (Feature 11 critério 1)
+
+> `LIVE_TRADING_ENABLED=false` · painel read-only · rank/tips **não** disparam paper sozinhos
+
+| Verificação | Teste / artefato | Status |
+|-------------|------------------|--------|
+| Superfícies `opportunities` / `ta_barato_shadow` / `continuous_improvement` com `surface_kind=suggestion` | `tests.test_n28_suggestion_labels.N28SuggestionSurfaceTests.test_command_panel_suggestion_surfaces_self_check` | ok |
+| Rank sem ticket bloqueia antes de `process_after_gate_b` | `tests.test_n28_suggestion_labels.N28SuggestionSurfaceTests.test_rank_row_without_ticket_blocks_before_paper_gateway` | ok |
+| HTML painel expõe rótulo `research_tip` | `tests.test_n28_suggestion_labels.N28SuggestionSurfaceTests.test_dashboard_html_exposes_suggestion_labels` | ok |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_n28_suggestion_labels -q
+```
+
 ## Sprint N30.4 — Campanha ISS-011 e pendências operador
 
 > Docs-only · campanha **N30 → N17 → N28 (blocked)** · `news_first` research · `orb`/`mean_reversion` NEVER_PAPER · sem live

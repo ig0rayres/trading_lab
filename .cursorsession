@@ -16,9 +16,9 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N34 planejada; ligar Clear/OANDA no laço paper fail-closed (N27.2)",
+  "fase_nome": "N34 concluída; campanha ISS-011 restante (N29.5 creds + N17.2 G-FORM)",
   "sprint_pending_merge": null,
-  "sprint_pr": null,
+  "sprint_pr": 45,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
   "ultimo_update": "2026-11-16T18:07:00-03:00",
@@ -118,78 +118,15 @@
     "/pmo plan N34"
   ],
   "contexto_rapido": "N34 plan_only rewrite; N27.2 wiring Clear/OANDA no laço fail-closed; build_demo_adapter ainda sem caller de produção; N29 planejada; N29.5 operador; LIVE false.",
-  "sprint_tasks": [
-    {
-      "id": "N34.0",
-      "title": "Inventariar o reuso do laço e dos adaptadores",
-      "size": "P",
-      "status": "pending",
-      "depends_on": [],
-      "files": [
-        "docs/.briefs/N34-GIT-FIRST-REUSE.md"
-      ]
-    },
-    {
-      "id": "N34.1",
-      "title": "Ligar bolsa brasileira e câmbio no envio paper",
-      "size": "M",
-      "status": "pending",
-      "depends_on": [
-        "N34.0"
-      ],
-      "files": [
-        "src/signal_paper_runner.py"
-      ]
-    },
-    {
-      "id": "N34.2",
-      "title": "Provar envio mock e bloqueio sem chave",
-      "size": "P",
-      "status": "pending",
-      "depends_on": [
-        "N34.1"
-      ],
-      "files": [
-        "tests/test_signal_paper_runner.py"
-      ]
-    },
-    {
-      "id": "N34.3",
-      "title": "Atualizar chamados e o plano com honestidade",
-      "size": "P",
-      "status": "pending",
-      "depends_on": [
-        "N34.2"
-      ],
-      "files": [
-        "docs/ISSUES.md",
-        "docs/ROADMAP.md",
-        "EASYPANEL.md",
-        "docs/DIARY.md",
-        "docs/TEST-EVIDENCE.md"
-      ]
-    }
-  ],
+  "sprint_tasks": [],
   "checkpoint": {
-    "phase": "implementation",
-    "sprint": "N34",
-    "branch": "front/n27-alpaca-loop",
+    "phase": "validated",
     "current_task": null,
     "last_completed_task": "N34.3",
-    "plan_only": false,
-    "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N34",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS",
-      "findings_registered": [],
-      "recorded_at": "2026-11-16T21:27:36Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N34 wiring: 33 unittest OK; mock Clear/OANDA; zero Alpaca POST for B3/FOREX",
-      "full_suite_ran": true,
-      "first_pass": true,
-      "senior_status": "PASS"
-    },
+    "validation_gate_ref": ".beesy/sprints/N34.json",
+    "sprint_delivery": "finalized",
+    "sprint_delivery_sprint": "N34",
+    "last_validated_sha": "7627b45",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
       "result": "APROVADA",
@@ -197,7 +134,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_signal_copy tests.test_demo_broker_adapters -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_demo_broker_adapters -q",
           "exit_code": 0
         }
       ],
@@ -207,18 +144,15 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "bbe97b82c648fe29b109fea5e28e566f589efe40",
-      "stamped_at": "2026-11-16T22:36:47Z",
+      "last_validated_sha": "8e32abb9b18db4eb642b75ace72f8b1be1ec8eed",
+      "stamped_at": "2026-11-16T22:49:13Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "4786357720bd43baea302e59ec150ba3d61b44088ba97ff22ca7963c8381c75a",
-      "patch_id": "ddec4f73acafc82ef4415be17aaae3da022b57b0",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "f33c7456e4217e3df10abc93d73e6f6e399958c3",
       "patch_id_version": 2
-    },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N34",
-    "validation_gate_ref": ".beesy/sprints/N33.json"
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -261,7 +195,7 @@
     "branch": "front/n27-alpaca-loop",
     "sprint_branch": "front/n27-alpaca-loop"
   },
-  "sprint_branch": "front/n27-alpaca-loop",
+  "sprint_branch": null,
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -305,8 +239,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N33",
-  "sprint_atual": "N34",
+  "previous_sprint": "N34",
+  "sprint_atual": null,
   "sprint_nome": "Ligar B3 e forex no laço paper sem chave real",
   "autopilot": {
     "active": true,
@@ -457,5 +391,6 @@
   },
   "rock_auto": true,
   "rock_mandate": "full",
-  "active_automation": null
+  "active_automation": null,
+  "journal": []
 }

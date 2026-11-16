@@ -250,7 +250,7 @@
 
 **Critério de fechamento:** Clear Smart Trader **simulado** (B3) e OANDA fxTrade **Practice** (forex) expõem posição, ordem aberta e fill ao laço; cripto reusa Alpaca paper; mercado sem credencial no env fica visível e barrado com motivo; `LIVE_TRADING_ENABLED=false`; account ids e chaves só no EasyPanel (nunca Git).
 
-**Estado N34 (2026-11-16):** Adaptadores mock existiam desde PR **#32**; sprint **N34** passou a chamar `build_demo_adapter` em `signal_paper_runner.run()` fail-closed (pin B3→`clear_smart_trader_simulated`, FOREX→`oanda_fxtrade_practice`; zero POST Alpaca). `submit_order` nos adaptadores é **symbol/side/qty only** (sem bracket stop/target no envio demo). Pytest mock **não** fecha esta issue — homologação ao vivo permanece **N29.5** (operador).
+**Estado N34 (2026-11-16):** Adaptadores mock existiam desde PR **#32**; sprint **N34** passou a chamar `build_demo_adapter` em `signal_paper_runner.run()` fail-closed (pin B3→`clear_smart_trader_simulated`, FOREX→`oanda_fxtrade_practice`; zero POST Alpaca). Merge produção PR **#45** `3aefd447` / main `7627b45`. `submit_order` nos adaptadores é **symbol/side/qty only** (sem bracket stop/target no envio demo). Pytest mock **não** fecha esta issue — homologação ao vivo permanece **N29.5** (operador).
 
 **Fontes:** operador `/analista planejar` + `/pmo plan` 2026-11-13; `docs/REQUIREMENTS.md` v0.4 § Feature 7 G-MKT e § Integrações; ADR-010; ISS-009; N27.2.
 

@@ -12,15 +12,15 @@
       "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
     }
   ],
-  "fase_atual": "9",
-  "beesy_version": "4.104.20",
+  "fase_atual": "10",
+  "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "fase_nome": "N28.1 done — N28.2+ blocked G-AJUSTE — campanha ISS-011",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T14:51:42-03:00",
+  "ultimo_update": "2026-11-16T18:30:00Z",
   "modulos": [
     {
       "nome": "market-data",
@@ -77,9 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Executar N10.1–N10.4 na frente n10-closeout",
-    "/qa validar N10",
-    "PR merge + /git front finish"
+    "Parent Fable / plan-verifier em docs/.briefs/N30.brief.md",
+    "Rock EXECUTE N30 nesta frente (onda 0: N30.0+N30.3; onda 1: N30.1+N30.2; onda 2: N30.4)",
+    "Não executar N17/N28/N29.5 nesta rodada"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -114,110 +114,138 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "Sprint N18: v4-ops autostart dashboard 8765; branch front/n16-8-panel; N18.3 operador rebuild; ISS-008.",
-  "sprint_atual": "N18",
+  "contexto_rapido": "PR #35 CI green; N28.1 suggestion labels done; N28.2-4 blocked G-AJUSTE; N17 G-FORM blocked; ISS-010 fora.",
   "sprint_tasks": [
     {
-      "id": "N18.1",
-      "title": "Layout v4-ops (run.sh, v4_ops_main.sh, Dockerfile, tests)",
-      "size": "M",
+      "id": "N17.0",
+      "title": "Git First upstream paths ta_barato/momentum (G-FORM)",
       "status": "done",
-      "depends_on": [],
-      "files": [
-        "scripts/v4_ops_main.sh",
-        "scripts/run.sh",
-        "Dockerfile",
-        "Dockerfile.demo",
-        "tests/test_v4_ops_layout.py"
-      ]
+      "file": "docs/.briefs/N17-GIT-FIRST-REUSE.md",
+      "depends_on": []
     },
     {
-      "id": "N18.2",
-      "title": "Runbook DASHBOARD-OPERATIONS + EASYPANEL/COMMAND-PANEL/MVP-DEMO",
-      "size": "P",
+      "id": "N17.1",
+      "title": "Gate B / research reuse; UPSTREAM_FORMULA_BLOCKED_KEYS",
       "status": "done",
+      "file": "src/strategy_catalog.py",
       "depends_on": [
-        "N18.1"
-      ],
-      "files": [
-        "docs/DASHBOARD-OPERATIONS.md",
-        "EASYPANEL.md",
-        "docs/COMMAND-PANEL.md",
-        "docs/HOMOLOGATION-N16.8-PANEL.md",
-        "docs/MVP-DEMO-RUNBOOK.md"
+        "N17.0"
       ]
     },
     {
-      "id": "N18.3",
-      "title": "Operador: rebuild trading-lab + TEST-EVIDENCE N18",
-      "size": "P",
-      "status": "todo",
+      "id": "N17.2",
+      "title": "Homolog operador shadow to paper limitado",
+      "status": "pending",
       "depends_on": [
-        "N18.2"
-      ],
-      "files": [],
-      "owner": "operador"
+        "N17.1"
+      ]
     },
     {
-      "id": "N18.4",
-      "title": "Closeout ROADMAP N16 concluida",
-      "size": "P",
-      "status": "todo",
+      "id": "N17.3",
+      "title": "TEST-EVIDENCE and RELEASE MVP-OP-1.1 matrix",
+      "status": "done",
+      "file": "docs/TEST-EVIDENCE.md",
       "depends_on": [
-        "N18.3"
-      ],
-      "files": [
-        "docs/ROADMAP.md"
+        "N17.1"
       ]
+    },
+    {
+      "id": "N17.4",
+      "title": "F-003 orb-parity reprioritize (optional)",
+      "status": "skipped",
+      "depends_on": [
+        "N17.1"
+      ]
+    },
+    {
+      "id": "N17.5",
+      "title": "Painel read-only Tá Barato shadow homolog",
+      "status": "done",
+      "file": "src/trading_dashboard_data.py",
+      "depends_on": [
+        "N17.1"
+      ]
+    },
+    {
+      "id": "N28.1",
+      "title": "Sugestão continua rotulada como sugestão",
+      "status": "done",
+      "file": "src/trading_dashboard_data.py",
+      "depends_on": []
+    },
+    {
+      "id": "N28.2",
+      "title": "Ajuste só parâmetro existente (G-AJUSTE)",
+      "status": "pending",
+      "depends_on": [
+        "N28.1"
+      ],
+      "blocked_reason": "G-AJUSTE"
+    },
+    {
+      "id": "N28.3",
+      "title": "Histórico ajuste com desfazer",
+      "status": "pending",
+      "depends_on": [
+        "N28.2"
+      ],
+      "blocked_reason": "G-AJUSTE"
+    },
+    {
+      "id": "N28.4",
+      "title": "Teste: ajuste nunca altera âncora",
+      "status": "pending",
+      "depends_on": [
+        "N28.2"
+      ],
+      "blocked_reason": "G-AJUSTE"
     }
   ],
   "checkpoint": {
-    "sprint": "N18",
-    "phase": "implementation",
-    "branch": "front/n16-8-panel",
-    "last_completed_task": "N18.2",
-    "current_task": "N18.3",
-    "timestamp": "2026-11-03T19:52:00-03:00",
-    "relevant_paths": [
-      "scripts/v4_ops_main.sh",
-      "scripts/run.sh",
-      "Dockerfile",
-      "src/v4_web_dashboard.py",
-      "docs/DASHBOARD-OPERATIONS.md",
-      "EASYPANEL.md"
-    ],
+    "phase": "testing",
+    "sprint": "N17",
+    "branch": "front/n27-alpaca-loop",
+    "current_task": "N17.5",
+    "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N18",
+      "sprint": "N17",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
-      "senior_status": "PASS",
       "findings_registered": [],
-      "findings_found": 0,
-      "findings_disposition": [],
-      "recorded_at": "2026-11-03T19:59:00Z",
-      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
-      "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
-      "round": 1,
-      "full_suite_ran": false
+      "recorded_at": "2026-11-16T12:44:09Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N28.1 suggestion labels; 539 pytest",
+      "senior_status": "PASS"
     },
     "validation_gate": {
       "produced_by": "validation-stamp.py",
-      "result": "BLOQUEADA_ARVORE_SUJA",
-      "validation_mode": "blocked",
-      "gates": [],
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false UPSTREAM_DIR=/home/igor/cursor/trading-lab/vendor/day-trader-skill PYTHONPATH=src /usr/bin/python3 -m pytest -q --tb=no'",
+          "exit_code": 0
+        }
+      ],
       "dirty_production_paths": [
-        ".cursor/router-state.json",
-        ".cursor/session-state-cache.json",
+        ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "012649666d0c9b318dd84f9c690fe9b34d29bf94",
-      "stamped_at": "2026-11-03T20:01:22Z",
-      "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
+      "last_validated_sha": "b538c95b75400173557597bb4a8a739b85cd2e94",
+      "stamped_at": "2026-11-16T12:44:20Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "dca8843cac0ac6341da0b278e26520d4fc6e7609b29707a3ab45bf671ef241d5",
+      "patch_id": "7ee5f42781d81ed8eceb7845b8842cc3e776b156",
       "patch_id_version": 2
-    }
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N17"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -232,33 +260,36 @@
     "docs/VENDOR-PIN.md",
     ".github/workflows/ci.yml",
     "requirements-dev.txt",
-    ".dockerignore"
+    ".dockerignore",
+    ".cursor/rules/30-triggers.mdc",
+    ".cursor/rules/40-markets.mdc",
+    ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-tarefas",
-    "phase": "Sprint N9 implementation",
-    "intent": "Homologação D5 itens 3–7: runbook + evidência; operador EasyPanel.",
-    "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
-    "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
-    "next_steps": "N9.1 expand Gate A runbook in HOMOLOGATION.md",
-    "updated_at": "2026-10-30T14:51:42-03:00"
+    "persona": "tech-lead",
+    "phase": "Rules de gatilho e mercado; sprint N18 segue registrada",
+    "intent": "Travar no agente o contrato de gatilho no painel e os mercados B3, cripto e forex.",
+    "changes_made": ".cursor/rules/30-triggers.mdc, .cursor/rules/40-markets.mdc, .cursor/skills/panel-triggers/SKILL.md.",
+    "decisions": "Rules antigas não foram reescritas. PATCH não cria ordem. Simulador local não é fill. Alpaca não recebe B3 nem forex.",
+    "next_steps": "Sprint do laço via /pmo plan. Migration 002 só nessa sprint. /devops planejar se for mexer em CI ou no processo.",
+    "updated_at": "2026-11-03T22:54:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-11-03T19:30:21Z",
-    "usage_percent": 90.752,
-    "messages_lost": 337
+    "compacted_at": "2026-11-04T02:00:04Z",
+    "usage_percent": 95.121875,
+    "messages_lost": 423
   },
-  "compact_count": 9,
-  "previous_sprint": "N16",
+  "compact_count": 11,
   "front": {
-    "slug": "n16-8-panel",
+    "slug": "n27-alpaca-loop",
     "kind": "agent",
-    "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab",
-    "branch": "front/n16-8-panel"
+    "parent_root": "/home/igor/cursor/trading-lab",
+    "worktree": "/home/igor/cursor/trading-lab.fronts/n27-alpaca-loop",
+    "branch": "front/n27-alpaca-loop",
+    "sprint_branch": "front/n27-alpaca-loop"
   },
-  "sprint_branch": "front/n16-8-panel",
-  "sprint_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "sprint_branch": "front/n27-alpaca-loop",
+  "sprint_nome": "Sprint N28 — Feature 11 N28.1 done; N28.2-4 blocked G-AJUSTE",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -301,5 +332,48 @@
     ],
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
-  }
+  },
+  "previous_sprint": "N30",
+  "sprint_atual": "N17",
+  "autopilot": {
+    "active": true,
+    "started_at": "2026-11-16T08:59:06.336014+00:00",
+    "mandate": "full",
+    "operator_absent": true,
+    "note": "Deliver contracted Features 7-11 minus Clear/OANDA; no pause; pendencias for operator-only",
+    "auto_decisions": [
+      {
+        "timestamp": "2026-11-16T08:59:06.336014+00:00",
+        "file": "pmo-plan",
+        "decision": "category=N feature-sem-dominio; skip Passo2 (REQUIREMENTS v0.4 already defines Features 7-11); exclude Clear/OANDA",
+        "rationale": "Operator: Nao pare; entregar contrato exceto plataformas 3os nao homologadas"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "docs/ROADMAP.md",
+        "decision": "sprint_id=N30 (max existing N29); do not rewrite N17/N28/N29",
+        "rationale": "next available N >29; N17 and N28 already planned — campaign queue only"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "pmo-plan",
+        "decision": "feature-sem-dominio; skip Passo2 phase review; skip ISSUES preview (ISS-011 exists)",
+        "rationale": "autopilot conservative; REQUIREMENTS v0.4 already specifies Features 7-11; no new table/screen"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "docs/ROADMAP.md",
+        "decision": "review=senior+qa; N28 remains blocked on G-AJUSTE; news_first stays research; orb/mean_reversion NEVER_PAPER",
+        "rationale": "G-AJUSTE unanswered; contract does not require news_first paper; REQUIREMENTS forbids ORB paper"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N30; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Rock PLAN writes plan then parent EXECUTE; operator absent so no AskQuestion"
+      }
+    ]
+  },
+  "rock_auto": true,
+  "rock_mandate": "full"
 }

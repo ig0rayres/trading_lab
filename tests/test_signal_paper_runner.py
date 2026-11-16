@@ -1,12 +1,15 @@
-import hmac
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
+
 from src import signal_paper_runner as x
+from src.demo_broker_adapters import G_MKT_ADAPTER_PATH_ALPACA_PAPER
 from src.signal_copy import sign
+
+ALPACA_PAPER_HOST = 'https://paper-api.alpaca.markets'
 
 class PaperRunnerTests(unittest.TestCase):
     def setUp(self):
@@ -102,5 +105,109 @@ class PaperRunnerTests(unittest.TestCase):
         self.signal['side']='sell'
         self.signal['provider_signature']=sign(self.signal,self.env['SIGNAL_COPY_SECRET'])
         self.assertEqual(x.run(self.signal,self.env,self.ledger)['status'],'BLOCKED')
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    @patch('src.risk_control_flags.demo_send_allowed', return_value=(True, None))
+    def test_n30_us_equity_demo_on_paper_submitted(self, _mock_demo, _mock_validate):
+        """N30.1 scenario 1: signed US_EQUITY signal submits on Alpaca paper."""
+        self._auto_env_with_snapshot()
+        self.signal['market'] = 'US_EQUITY'
+        self.signal['provider_signature'] = sign(self.signal, self.env['SIGNAL_COPY_SECRET'])
+        post_hosts = []
+
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                        'cash': '5000', 'equity': '5000'}
+            return []
+
+        def poster(body, post_env, opener=None):
+            post_hosts.append(post_env.get('ALPACA_BASE_URL', '').rstrip('/'))
+            return {'id': 'n30-us-order', 'status': 'accepted'}
+
+        result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertEqual(result['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(result['orders_sent'], 1)
+        self.assertEqual(post_hosts, [ALPACA_PAPER_HOST])
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    @patch('src.risk_control_flags.demo_send_allowed', return_value=(True, None))
+    def test_n30_crypto_risk_candidate_uses_signal_market(self, _mock_demo, _mock_validate):
+        """N30.1 scenario 2: portfolio candidate market follows CRYPTO on the signal."""
+        self._auto_env_with_snapshot()
+        self.env['DEMO_ACCOUNT_PATH_CRYPTO'] = G_MKT_ADAPTER_PATH_ALPACA_PAPER
+        crypto = dict(self.signal, market='CRYPTO', symbol='BTCUSD',
+                      signal_id='N30_CRYPTO_RISK_MKT')
+        crypto['provider_signature'] = sign(crypto, self.env['SIGNAL_COPY_SECRET'])
+        seen = {}
+
+        def capture_eval(candidate, snapshot):
+            seen['market'] = candidate.get('market')
+            return {'allowed': True, 'reasons': []}
+
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                        'cash': '5000', 'equity': '5000'}
+            return []
+
+        def poster(body, post_env, opener=None):
+            return {'id': 'n30-crypto-order', 'status': 'accepted'}
+
+        with patch.object(x, 'evaluate_portfolio_risk', side_effect=capture_eval):
+            result = x.run(crypto, self.env, self.ledger, broker_get=getter, broker_post=poster)
+        self.assertEqual(seen.get('market'), 'CRYPTO')
+        self.assertEqual(result['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(result['orders_sent'], 1)
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    def test_n30_crypto_without_named_path_blocked_no_post(self, _mock_validate):
+        """N30.1 scenario 3: CRYPTO without demo path — no broker POST."""
+        self._auto_env_with_snapshot()
+        crypto = dict(self.signal, market='CRYPTO', symbol='BTCUSD',
+                      signal_id='N30_CRYPTO_NOPATH')
+        crypto['provider_signature'] = sign(crypto, self.env['SIGNAL_COPY_SECRET'])
+
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                        'cash': '5000', 'equity': '5000'}
+            return []
+
+        def forbidden_post(*_a, **_k):
+            raise AssertionError('Alpaca POST must not run without named CRYPTO demo path')
+
+        result = x.run(crypto, self.env, self.ledger, broker_get=getter, broker_post=forbidden_post)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertEqual(result.get('orders_sent'), 0)
+        reasons = result.get('reasons') or []
+        reject = result.get('reject_code')
+        self.assertTrue(reject == 'NO_DEMO_ACCOUNT_PATH' or 'NO_DEMO_ACCOUNT_PATH' in reasons)
+
+    @patch('src.signal_paper_runner.validate', return_value=[])
+    def test_n30_stale_v4_portfolio_snapshot_still_blocked(self, _mock_validate):
+        """N30.1 scenario 7: snapshot older than 120s → V4_PORTFOLIO_SNAPSHOT_STALE."""
+        self._auto_env_with_snapshot()
+        snap_path = Path(self.env['V4_RISK_SNAPSHOT_FILE'])
+        snap = json.loads(snap_path.read_text())
+        stale_at = (datetime.now(timezone.utc) - timedelta(seconds=181)).isoformat()
+        snap['at_utc'] = stale_at
+        snap_path.write_text(json.dumps(snap))
+        self.signal['market'] = 'US_EQUITY'
+        self.signal['provider_signature'] = sign(self.signal, self.env['SIGNAL_COPY_SECRET'])
+
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                        'cash': '5000', 'equity': '5000'}
+            return []
+
+        def forbidden_post(*_a, **_k):
+            raise AssertionError('Order must not post when V4 snapshot is stale')
+
+        result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=forbidden_post)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertIn('V4_PORTFOLIO_SNAPSHOT_STALE', result.get('reasons') or [])
+
 
 if __name__=='__main__':unittest.main()

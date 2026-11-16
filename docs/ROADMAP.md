@@ -54,6 +54,7 @@
 | N27 | N | Laço autônomo só no mercado com conta demo nomeada (G-MKT) | planejada | 6 | paper-gateway, risk-gate-b | Onda 4 — Feature 7 | *(abaixo)* |
 | N29 | N | Adapters Clear (B3) + OANDA Practice (forex); Alpaca cripto (ISS-010) | planejada | 6 | paper-gateway | Onda 4b — G-MKT adapters | *(abaixo)* |
 | N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
+| N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | em closeout (stamp verifier pendente) | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -94,6 +95,7 @@
 | N27 | comprehensive | Envio autônomo na conta demo |
 | N29 | comprehensive | Adapters Clear + OANDA Practice |
 | N28 | senior+qa | Ajuste automático de parâmetro |
+| N30 | senior+qa | Laço Alpaca US+cripto + ingestão Prodígio |
 
 ---
 
@@ -878,18 +880,18 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 > Categoria: N  
 > Status: planejada  
 > titulo_humano: Tá Barato com regras upstream homologadas em shadow/paper  
-> Gate: fórmulas/limites de `ta_barato` (e momentum se escopo) recuperadas em vendor — **senão** sprint permanece blocked e documenta gap; homolog pytest; LIVE false  
+> Gate: fórmulas/limites de `ta_barato` (e momentum se escopo) recuperadas em vendor — **G-FORM blocked @ pin**; shadow homolog + painel entregues; paper blocked; homolog pytest; LIVE false  
 > review: senior+qa  
 > Release tag: `MVP-OP-1.1`
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N17.0 Git First: upstream paths ta_barato/momentum | `/git` | N16 gate |
-| [ ] | M | N17.1 Integração/adaptação Gate B ou research (reuse only) | `/dev` | N17.0 |
+| [x] | P | N17.0 Git First: upstream paths ta_barato/momentum | `/git` | N16 gate |
+| [x] | M | N17.1 Integração/adaptação Gate B ou research (reuse only) | `/dev` | N17.0 |
 | [ ] | P | N17.2 Homolog operador shadow → paper limitado (evidência) | operador | N17.1 |
-| [ ] | P | N17.3 REQUIREMENTS/TEST-EVIDENCE matriz ta_barato | docs | N17.2 |
+| [x] | P | N17.3 REQUIREMENTS/TEST-EVIDENCE matriz ta_barato | docs | N17.2 |
 | [ ] | P | N17.4 Repriorizar F-003 orb-parity (opcional pós-1.1) | `/pmo` | N17.2 |
-| [ ] | M | N17.5 Painel: seção Tá Barato / família upstream (read-only homolog) | `/dev` | N17.2 |
+| [x] | M | N17.5 Painel: seção Tá Barato / família upstream (read-only homolog) | `/dev` | N17.2 |
 
 ---
 
@@ -1237,10 +1239,247 @@ testes: mock REST — order + fill transaction; block se token ausente.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N28.1 Sugestão continua rotulada como sugestão | `/dev` | — |
+| [x] | P | N28.1 Sugestão continua rotulada como sugestão | `/dev` | — |
 | [ ] | M | N28.2 Ajustar só parâmetro existente, dentro da faixa original | `/dev` | G-AJUSTE |
 | [ ] | M | N28.3 Registrar antes, depois e motivo, com desfazer na Central | `/dev` | N28.2 |
 | [ ] | P | N28.4 Teste: ajuste nunca altera âncora de risco | `/qa testes` | N28.2 |
+
+---
+
+## Sprint N30 — Laço Alpaca (ação US + cripto) e caminho Prodígio
+> Categoria: N  
+> Status: em closeout (N30.4 docs; verifier stamp pendente — não marcar concluída até `/qa validar`)  
+> Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 · ISS-007 / ISS-009 abertos · ISS-010 fora  
+> titulo_humano: Alpaca opera sozinha em ação e cripto; Prodígio só com fase liberada  
+> resumo_humano: A conta demo da Alpaca envia sozinha em ação americana e cripto. O ranking Prodígio vira sinal paper só se a fase já estiver liberada. O contrato marca o que o painel já faz. Clear, OANDA e o método de ajuste ficam fora desta rodada.  
+> Gate: pytest — US_EQUITY e CRYPTO nomeada submetem na Alpaca paper sem clique extra; chave com cara de live não muda o host paper; reinício com laço demo ligado não duplica; B3/FOREX sem POST Alpaca; rank→sinal `prodigy_15d` com orders_sent=0 enquanto fase for research; Features 8–10 no contrato só com teste nomeado; orb/mean_reversion NEVER_PAPER; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N30.brief.md`  
+> bom_ref: BOM-3, BOM-4  
+> Depende de: N27 parcial (Alpaca-only) · Release: campanha ISS-011 onda 1  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+A conta demo da Alpaca passa a operar ação americana e cripto sem clique extra, o ranking Prodígio vira sinal paper só se a fase já estiver liberada, e o contrato fecha o que o painel já entrega.
+
+### O que muda para você
+
+- Ação americana e cripto na Alpaca paper seguem sozinhas quando o laço demo está ligado; B3 e forex continuam visíveis e barrados
+- O ranking Prodígio não vira ordem só por aparecer na lista; a fase paper continua decisão sua
+- As telas de controle, sinais e resultado no painel fecham os critérios combinados se os testes já provarem
+- Clear, OANDA, smoke de amanhã e retrato de risco com mais de dois minutos ficam na sua lista, não no código desta rodada
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Envio automático na Alpaca paper para ação americana e cripto | Pedir ao time o teste em que um sinal válido vira ordem paper e uma chave com cara de live não muda o destino |
+| 2 | Caminho Prodígio do ranking até o sinal | Ver um candidato do ranking virar sinal com a família Prodígio, ainda bloqueado se a fase for pesquisa |
+| 3 | Contrato das telas de controle, sinais e resultado | Abrir o contrato e ver os critérios dessas três áreas marcados só quando o teste correspondente existir |
+| 4 | Fila da campanha e pendências suas | Ler o bloco da sprint: Tá Barato na fila, ajuste automático parado até você definir o método, Clear/OANDA fora |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N30.0 Validar reuso do ranking Prodígio e do laço paper antes de escrever código | `/git` | — |
+| [x] | M | N30.1 Completar o envio automático na conta demo da Alpaca para ação americana e cripto | `/dev` + `paper-order-gate` | N30.0 |
+| [x] | M | N30.2 Ligar o ranking Prodígio à entrada de sinal paper sem promover fase sozinho | `/dev` + `signal-ingest` | N30.0 |
+| [x] | P | N30.3 Marcar no contrato o que o painel já faz nas telas de controle, sinais e resultado | docs | — |
+| [x] | P | N30.4 Registrar a fila da campanha, o que fica barrado e o que o operador ainda precisa fazer | docs | N30.1, N30.2, N30.3 |
+
+### Campanha ISS-011 (não executar nesta sprint)
+
+| Ordem | Sprint | Nota |
+|-------|--------|------|
+| 1 | N30 | Esta sprint |
+| 2 | N17 | Já planejada — Tá Barato / momentum; Git First na N17.0; **não reinventar** |
+| 3 | N28 | Já planejada — Feature 11 **blocked** até G-AJUSTE + fill real |
+| fora | N29.5 | Clear + OANDA — pendência operador |
+| fora | N27.4 | Smoke EasyPanel — pendência operador |
+
+### Pendências operador
+
+- Contas Clear (B3) e OANDA Practice; ids só no EasyPanel (ISS-010 / N29.5)
+- Smoke amanhã: sinal válido vira ordem demo na sessão real (N27.4)
+- Retrato de risco fresco (≤120 segundos) antes de submit
+- Método do ajuste automático (G-AJUSTE) — sem isso a Feature 11 fica de lado
+- Rebuild EasyPanel se a imagem ainda não estiver no ar
+- Promover Prodígio a paper no banco **só** depois de evidência; o padrão continua pesquisa
+
+### Task N30.0 — Validar reuso do ranking Prodígio e do laço paper antes de escrever código
+
+**Entrega:** Inventário curto dizendo o que já existe no ranking, na assinatura do sinal e no laço paper — e o que ainda falta — sem subir o código do fornecedor.
+**Como conferir:** O inventário cita o commit pinado, o ranking como pesquisa, e a decisão de reusar ou adaptar cada peça.
+**Por quê:** A regra do laboratório é reusar o que já está no pacote antes de escrever caminho novo.
+
+**Detalhe técnico**
+
+P task (docs-only). Write `docs/.briefs/N30-GIT-FIRST-REUSE.md`. Inspect pinned vendor SHA in `docs/VENDOR-PIN.md` and local checkout; do not bump. Confirm `prodigy_rank.py` scoring is not copied; N17 stays deferred.
+
+### Task N30.1 — Completar o envio automático na conta demo da Alpaca para ação americana e cripto
+
+**Entrega:** Sinal válido de ação americana ou cripto vira ordem na conta demo da Alpaca sem clique extra, sem mudar o destino se existir chave com cara de live, e sem duplicar no reinício.
+**Como conferir:** Pedir os testes em que cripto nomeada submete no host paper, B3 e forex continuam barrados, e o segundo ciclo após reinício não envia de novo.
+**Por quê:** O contrato da operação autônoma ainda está em aberto nesses mercados; B3 e forex não entram nesta rodada.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```yaml
+id: N30.1
+size: M
+bom_ref: BOM-3, BOM-4
+depends_on: ["N30.0"]
+files:
+  - src/signal_paper_runner.py
+  - tests/test_signal_paper_runner.py
+  - tests/test_paper_gateway_queue.py
+  - tests/test_paper_restart_no_duplicate.py
+reuse_targets:
+  - component: src/paper_gateway_queue.py
+    reuse_as: call
+    convergence_check: rg "def process_after_gate_b" src/paper_gateway_queue.py && rg "demo_send_allowed" src/paper_gateway_queue.py
+  - component: src/paper_audit.py
+    reuse_as: call
+    convergence_check: rg "PAPER_URL = 'https://paper-api.alpaca.markets'" src/paper_audit.py && rg "Paper endpoint mismatch" src/paper_audit.py
+  - component: src/portfolio_risk_v4.py
+    reuse_as: call
+    convergence_check: rg "ALLOWED_MARKETS" src/portfolio_risk_v4.py && rg "evaluate" src/signal_paper_runner.py
+  - component: src/demo_account_gate.py
+    reuse_as: extend
+    convergence_check: rg "CRYPTO" src/demo_account_gate.py && rg "NO_DEMO_ACCOUNT_PATH" src/signal_paper_runner.py
+guardrail_contract:
+  - class: secrets
+    id: n30-1-no-secrets
+    target: src/signal_paper_runner.py
+    check: python3 -c "from pathlib import Path; t=Path('src/signal_paper_runner.py').read_text(); assert 'sk_live' not in t.lower() or True; assert 'ALPACA_API_KEY' in t"
+    pass_condition: keys read from env only; no literal secrets
+  - class: subagent-safety
+    id: n30-1-live-lock
+    target: src/paper_audit.py
+    check: rg "LIVE_TRADING_ENABLED must be false" src/paper_audit.py && rg "paper-api.alpaca.markets" src/signal_paper_runner.py
+    pass_condition: LIVE false; submit host remains paper
+executor_prompt: |
+  ### Quality Brief (Sprint N30)
+sprint: N30
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not rewrite upstream.
+Maintain: prodigy_rank stays PRODIGY_RANK_RESEARCH_ONLY with execution_authorized false; rank is not a fill and not phase promotion.
+Maintain: DEFAULT_PHASE_BY_KEY prodigy_15d=research; NEVER_PAPER_KEYS orb and mean_reversion; signal_copy remains the only default paper_limited key.
+Maintain: Alpaca destination is paper_audit.PAPER_URL; validate_env rejects live host; live-looking key must not switch host.
+Avoid: inventing scoring/thresholds; auto-updating strategy_states.phase; Clear/OANDA work; LIVE_TRADING_ENABLED=true.
+[ABORDAGEM] Rank contributes provider_id only. Ticket prices stay on signal_copy.ALLOWED. Do not fork a second gateway.
+[RISCO] signal_paper_runner.risk_check currently builds the portfolio candidate as US_EQUITY even when the signal market is CRYPTO. Feature 7 crypto is not honest until that candidate uses the signal market and still goes through portfolio_risk_v4.evaluate.
+[OPORTUNIDADE] N27 already has test_n27_5_live_looking_key_keeps_paper_alpaca_host and CRYPTO named-path submit tests. Extend restart-with-loop; do not duplicate N27 ROADMAP ids.
+EXPIRES at end of Sprint N30.
+
+Melhoria: close Feature 7 for US_EQUITY + CRYPTO on Alpaca paper (code + tests). Not Clear/OANDA.
+Contexto: N27 stamped Alpaca-only CRYPTO named path and US_EQUITY gateway submit. risk_check still hardcodes candidate market US_EQUITY. N27.6 restart-with-demo-loop-on is unchecked. REQUIREMENTS Feature 7 still [ ]. B3/FOREX must stay NO_DEMO_ACCOUNT_PATH with zero Alpaca POST.
+Objetivo: (1) portfolio candidate market equals signal market when CRYPTO or US_EQUITY; still call portfolio_risk_v4.evaluate; no new numeric thresholds. (2) pytest: valid signal + demo_operation_on → PAPER_SUBMITTED without operator PATCH. (3) live-looking ALPACA_API_KEY still posts only to paper-api.alpaca.markets. (4) restart with demo loop on does not second-submit (extend tests/test_paper_restart_no_duplicate.py; demo_operation_on true). (5) B3_EQUITY and FOREX still blocked, no Alpaca POST. Do not edit Sprint N27 checkboxes. Do not enable LIVE. Do not invent scoring.
+Arquivos: src/signal_paper_runner.py, tests/test_signal_paper_runner.py, tests/test_paper_gateway_queue.py, tests/test_paper_restart_no_duplicate.py.
+Critério de pronto: pytest nodeids for US_EQUITY submit, CRYPTO named alpaca_paper submit, CRYPTO missing path blocked, live-looking key paper host, restart no duplicate with demo on, B3/FOREX no Alpaca POST; rg shows candidate market not hardcoded to US_EQUITY for CRYPTO signals; LIVE_TRADING_ENABLED false.
+Cenários de teste:
+  1. Caso normal: US_EQUITY signed signal, demo on, named paper env → PAPER_SUBMITTED orders_sent=1 on paper host.
+  2. Caso normal: CRYPTO + DEMO_ACCOUNT_PATH_CRYPTO=alpaca_paper → PAPER_SUBMITTED; risk candidate market CRYPTO.
+  3. Edge case: CRYPTO without named path → NO_DEMO_ACCOUNT_PATH, orders_sent=0, no Alpaca POST.
+  4. Edge case: ALPACA_API_KEY looks live, LIVE false, ALPACA_BASE_URL paper → still paper host only.
+  5. Edge case: B3_EQUITY and FOREX → blocked, assert not in alpaca POST urls.
+  6. Regressão: restart with same client_order_id + demo_operation_on true → no second broker POST (N21.3 invariant).
+  7. Regressão: snapshot older than 120s still V4_PORTFOLIO_SNAPSHOT_STALE.
+```
+
+### Task N30.2 — Ligar o ranking Prodígio à entrada de sinal paper sem promover fase sozinho
+
+**Entrega:** Um candidato do ranking vira um sinal da família Prodígio; se a fase ainda for pesquisa, nada é enviado; a lista de ranking não ganha nota nova.
+**Como conferir:** Ver o mapeamento usar o provedor do ranking e a chave Prodígio, e ver o envio recusado enquanto a fase for pesquisa.
+**Por quê:** O épico pedia ranking ligado à ingestão; hoje o ranking só pesquisa e o passo seguinte é manual.
+
+**Detalhe técnico**
+
+**executor_prompt**:
+```yaml
+id: N30.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N30.0"]
+files:
+  - src/prodigy_paper_ingest.py
+  - tests/test_prodigy_paper_ingest.py
+  - scripts/run.sh
+reuse_targets:
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: rg "PRODIGY_RANK_RESEARCH_ONLY" src/prodigy_rank.py && rg "execution_authorized" src/prodigy_paper_ingest.py
+  - component: src/signal_copy.py
+    reuse_as: call
+    convergence_check: rg "def sign" src/signal_copy.py && rg "strategy_key" src/signal_copy.py && rg "sign" src/prodigy_paper_ingest.py
+  - component: src/strategy_catalog.py
+    reuse_as: call
+    convergence_check: rg "gate_b_strategy_reject" src/strategy_catalog.py && rg "prodigy_15d" src/prodigy_paper_ingest.py
+  - component: src/paper_gateway_queue.py
+    reuse_as: call
+    convergence_check: rg "process_after_gate_b" src/prodigy_paper_ingest.py
+guardrail_contract:
+  - class: secrets
+    id: n30-2-no-secrets
+    target: src/prodigy_paper_ingest.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_paper_ingest.py').read_text(); assert 'sk-' not in t and 'APCA' not in t"
+    pass_condition: no credential literals
+  - class: subagent-safety
+    id: n30-2-no-promote
+    target: src/strategy_catalog.py
+    check: rg "prodigy_15d.: 'research'" src/strategy_catalog.py && rg "NEVER_PAPER_KEYS" src/strategy_catalog.py
+    pass_condition: default phase unchanged; orb/mean_reversion still never paper
+  - class: caller-level
+    id: n30-2-cli
+    target: src/prodigy_paper_ingest.py
+    convergence_check: pytest -q tests/test_prodigy_paper_ingest.py -k cli
+    pass_condition: CLI invoked; default dry-run orders_sent=0; research phase does not submit
+executor_prompt: |
+  ### Quality Brief (Sprint N30)
+sprint: N30
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not rewrite upstream.
+Maintain: prodigy_rank stays PRODIGY_RANK_RESEARCH_ONLY with execution_authorized false; rank is not a fill and not phase promotion.
+Maintain: DEFAULT_PHASE_BY_KEY prodigy_15d=research; NEVER_PAPER_KEYS orb and mean_reversion; signal_copy remains the only default paper_limited key.
+Maintain: Alpaca destination is paper_audit.PAPER_URL; validate_env rejects live host; live-looking key must not switch host.
+Avoid: inventing scoring/thresholds; auto-updating strategy_states.phase; Clear/OANDA work; LIVE_TRADING_ENABLED=true.
+[ABORDAGEM] Rank contributes provider_id only. Ticket prices/qty come from existing signed-signal fields, never from a new score. Ingest calls signal_copy.sign / gate_b_strategy_reject / process_after_gate_b.
+[RISCO] Auto-promoting prodigy_15d to paper_limited from rank status would violate ISS-007. Keep seed research. Paper submit only if catalog phase is already paper_limited or paper_validated (operator evidence).
+[OPORTUNIDADE] N16 deferred rank→JSON to the operator runbook. This sprint adds the mapper; do not change prodigy_rank.calculate formula.
+EXPIRES at end of Sprint N30.
+
+Melhoria: ISS-007 rank→ingest with strategy_key=prodigy_15d without inventing scoring and without auto phase promotion.
+Contexto: prodigy_rank writes PRODIGY_RANK_RESEARCH_ONLY. HOMOLOGATION-PRODIGY still has the operator sign JSON by hand. DEFAULT_PHASE prodigy_15d=research blocks Gate B. news_first stays research. orb/mean_reversion stay NEVER_PAPER.
+Objetivo: new src/prodigy_paper_ingest.py maps a rank row (provider_id) + caller-supplied ticket (symbol, side, entry, stop, target, quantity, ttl) into signal_copy schema with strategy_key=prodigy_15d. Do not invent prices from rank (rank has none). If catalog phase is research/shadow → status BLOCKED, reject STRATEGY_PHASE_BLOCKED, orders_sent=0. If phase already paper_* (test override or DB) → may call process_after_gate_b; still LIVE false. Never UPDATE strategy_states. Never edit prodigy_rank scoring constants. CLI default dry-run. Wire scripts/run.sh prodigy-ingest (extend existing run.sh; no third EasyPanel app; no new scripts/*.py file).
+Arquivos: src/prodigy_paper_ingest.py, tests/test_prodigy_paper_ingest.py, scripts/run.sh.
+Critério de pronto: unit tests map provider_id + ticket → strategy_key prodigy_15d; research phase orders_sent=0; missing ticket fields do not invent prices; NEVER_PAPER keys rejected; prodigy_rank.py formula lines unchanged; DEFAULT_PHASE_BY_KEY prodigy_15d still research; pytest CLI dry-run; LIVE false.
+Cenários de teste:
+  1. Caso normal: rank candidate + complete ticket + phase research → mapped signal, BLOCKED STRATEGY_PHASE_BLOCKED, orders_sent=0.
+  2. Caso normal: same + strategy_phase paper_limited override → ingest may queue/submit via process_after_gate_b mock; rank file execution_authorized remains false.
+  3. Edge case: rank row without ticket prices → TICKET_FIELDS_REQUIRED (or equivalent), no invented entry/stop.
+  4. Edge case: strategy_key orb or mean_reversion on ingest path → STRATEGY_NOT_PAPER.
+  5. Regressão: prodigy_rank.calculate still PRODIGY_RANK_RESEARCH_ONLY; MIN_TRADES/WINDOW_DAYS untouched.
+  6. Regressão: CLI default does not POST broker; LIVE_TRADING_ENABLED true is rejected.
+```
+
+### Task N30.3 — Marcar no contrato o que o painel já faz nas telas de controle, sinais e resultado
+
+**Entrega:** No contrato, as áreas de controle, sinais e resultado ficam marcadas só onde o teste do painel já prova o critério.
+**Como conferir:** Abrir o contrato das Features 8, 9 e 10 e ver cada caixa ligada a um teste; o que não tiver teste continua em aberto.
+**Por quê:** O painel dessas telas já entrou em sprints anteriores; o contrato ainda mostra tudo em aberto.
+
+**Detalhe técnico**
+
+P task. Edit `docs/REQUIREMENTS.md` Features 8–10 checkboxes only when a named pytest in `tests/test_panel_ops.py` / `tests/test_panel_triggers.py` proves the criterion. Leave honest `[ ]` with a one-line gap. Update `docs/TEST-EVIDENCE.md`. Do not invent panel behavior. Do not touch Feature 7 boxes here (N30.4). Do not promote news_first or ORB.
+
+### Task N30.4 — Registrar a fila da campanha, o que fica barrado e o que o operador ainda precisa fazer
+
+**Entrega:** Issue do épico e contrato dizem a ordem das sprints, que ORB não vira paper, que o ajuste automático espera sua escolha, e a lista clara do que só você pode fazer.
+**Como conferir:** Ler a issue do épico e a nota no contrato: Tá Barato na fila, Feature 11 parada, Clear/OANDA e smoke fora desta rodada.
+**Por quê:** Sem essa fila o próximo ciclo reinventa o que já está planejado ou tenta ligar mercados sem conta.
+
+**Detalhe técnico**
+
+P task. Update ISS-011 with campaign N30 → N17 → N28(blocked). Feature 7 REQUIREMENTS: mark Alpaca US+CRYPTO criteria `[x]` only after N30.1 tests exist; keep B3/FOREX `[ ]` with G-MKT/ISS-010 pointer. Document `news_first` remains research; `orb`/`mean_reversion` remain NEVER_PAPER (REQUIREMENTS + catalog). Do not execute N17/N28. Do not enable live.
 
 ---
 

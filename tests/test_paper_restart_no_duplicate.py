@@ -110,6 +110,100 @@ class PaperRestartNoDuplicateTest(unittest.TestCase):
                 count = cur.fetchone()[0]
         self.assertEqual(count, 1)
 
+    def test_n30_demo_operation_on_restart_no_second_broker_post(self):
+        """N30.1 scenario 6: demo loop on — resumed intent must not re-POST to broker."""
+        import ledger_store as store
+        from gate_a_signal import idempotency_key, record_signal_event
+
+        signal = {
+            'provider': 'tradingview',
+            'signal_id': 'N30_RESTART_DEMO_ON',
+            'symbol': 'AAPL',
+            'side': 'buy',
+            'asset_class': 'us_equity',
+            'market': 'US_EQUITY',
+            'entry': '100',
+            'stop': '99',
+            'target': '102',
+            'quantity': 1,
+            'strategy_key': 'signal_copy',
+        }
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        env = {
+            'LIVE_TRADING_ENABLED': 'false',
+            'PAPER_SIGNAL_AUTO_ENABLED': 'true',
+            'PAPER_EXECUTION_ENABLED': 'true',
+            'PAPER_SIGNAL_ACCOUNT_ACK': 'I_AUTHORIZE_ALPACA_PAPER_ONLY',
+        }
+        queued = pgq.queue_intent(signal, decision)
+        broker_id = 'alpaca-broker-n30-restart'
+        client_order_id = queued['client_order_id']
+
+        with store.connect() as conn:
+            record_signal_event(
+                conn,
+                payload=signal,
+                http_status=202,
+                body={'status': 'QUEUED', 'orders_sent': 0},
+            )
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE control_flags SET demo_operation_on = TRUE '
+                    'WHERE id = (SELECT id FROM control_flags WHERE deleted_at IS NULL '
+                    'ORDER BY created_at DESC LIMIT 1)'
+                )
+            conn.commit()
+        pgq.persist_intent(signal, decision, queued)
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE paper_orders SET broker_order_id = %s, status = %s '
+                    'WHERE client_order_id = %s',
+                    (broker_id, 'submitted', client_order_id),
+                )
+            conn.commit()
+
+        broker_calls = []
+        track_calls = []
+
+        def fake_broker_run(sig, e, ledger=None, **kwargs):
+            broker_calls.append(sig['signal_id'])
+            return {
+                'status': 'PAPER_SUBMITTED',
+                'orders_sent': 1,
+                'client_order_id': client_order_id,
+                'broker_id': broker_id,
+            }
+
+        def fake_track(order, e, **kwargs):
+            track_calls.append(order['client_order_id'])
+            return {
+                'status': 'TRACKED_FILLED',
+                'terminal': True,
+                'treated_as_fill': False,
+                'orders_sent': 0,
+            }
+
+        with patch.object(pgq, 'paper_run', side_effect=fake_broker_run) as broker:
+            out = pgq.process_after_gate_b(signal, decision, env, track_fn=fake_track)
+        broker.assert_not_called()
+        self.assertEqual(out['mode'], 'RESUMED_AFTER_RESTART')
+        self.assertEqual(out['orders_sent'], 0)
+        self.assertEqual(broker_calls, [])
+        self.assertEqual(track_calls, [client_order_id])
+
+        with store.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT COUNT(*) FROM paper_orders po '
+                    'JOIN risk_decisions rd ON rd.id = po.risk_decision_id '
+                    'JOIN signal_events se ON se.id = rd.signal_event_id '
+                    'WHERE se.idempotency_key = %s',
+                    (idempotency_key('tradingview', 'N30_RESTART_DEMO_ON'),),
+                )
+                count = cur.fetchone()[0]
+        self.assertEqual(count, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

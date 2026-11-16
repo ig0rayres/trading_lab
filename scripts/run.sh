@@ -131,6 +131,10 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/prodigy_rank.py "$@"
    ;;
+ prodigy-ingest)
+   shift
+   exec python3 /app/src/prodigy_paper_ingest.py "$@"
+   ;;
  continuous-review)
    shift
    exec python3 /app/src/strategy_data_adapter.py "$@"

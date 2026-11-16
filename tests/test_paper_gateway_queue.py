@@ -310,6 +310,48 @@ class N27AlpacaOnlyGateBWiringTest(unittest.TestCase):
         self.assertNotIn('https://api.alpaca.markets', out.get('_alpaca_posts', []))
 
 
+class N30Feature7AlpacaPaperLoopTest(unittest.TestCase):
+    """N30.1 Feature 7: gateway auto path keeps honest CRYPTO portfolio risk market."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.env = _auto_env_with_snapshot(self.tmp.name)
+        self.ledger = str(Path(self.tmp.name) / 'signal-orders.jsonl')
+
+    @patch('risk_control_flags.demo_send_allowed', return_value=(True, None))
+    @patch('signal_paper_runner.validate', return_value=[])
+    def test_n30_gateway_crypto_risk_candidate_market_is_crypto(self, _mock_validate, _mock_demo):
+        import signal_paper_runner as spr
+
+        self.env['DEMO_ACCOUNT_PATH_CRYPTO'] = G_MKT_ADAPTER_PATH_ALPACA_PAPER
+        signal = _gated_signal('N30_GW_CRYPTO_RISK')
+        signal['market'] = 'CRYPTO'
+        signal['symbol'] = 'BTCUSD'
+        decision = {'decision': 'paper_allowed', 'risk_amount_cents': 500}
+        seen = {}
+
+        def capture_eval(candidate, snapshot):
+            seen['market'] = candidate.get('market')
+            return {'allowed': True, 'reasons': []}
+
+        def broker_stub(sig, env, ledger=None, **kwargs):
+            return _mocked_paper_run(sig, env, ledger)
+
+        with patch.object(spr, 'evaluate_portfolio_risk', side_effect=capture_eval):
+            out = pgq.process_after_gate_b(
+                signal,
+                decision,
+                self.env,
+                ledger=self.ledger,
+                broker_run=broker_stub,
+            )
+        self.assertEqual(seen.get('market'), 'CRYPTO')
+        self.assertEqual(out['status'], 'PAPER_SUBMITTED')
+        self.assertEqual(out.get('orders_sent'), 1)
+        self.assertEqual(out.get('_alpaca_posts', []), [ALPACA_PAPER_HOST])
+
+
 class N27AlpacaOnlyPaperRunnerMarketTest(unittest.TestCase):
     """N27.2a: signal_paper_runner honors demo path before Alpaca POST."""
 

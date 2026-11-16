@@ -14,6 +14,7 @@
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
+| ISS-011 | aberto | N30 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -249,5 +250,57 @@
 **Critério de fechamento:** Clear Smart Trader **simulado** (B3) e OANDA fxTrade **Practice** (forex) expõem posição, ordem aberta e fill ao laço; cripto reusa Alpaca paper; mercado sem credencial no env fica visível e barrado com motivo; `LIVE_TRADING_ENABLED=false`; account ids e chaves só no EasyPanel (nunca Git).
 
 **Fontes:** operador `/analista planejar` + `/pmo plan` 2026-11-13; `docs/REQUIREMENTS.md` v0.4 § Feature 7 G-MKT e § Integrações; ADR-010; ISS-009; N27.2.
+
+---
+
+## ISS-011 — Entregar Features 7–11 do contrato (exceto Clear/OANDA)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | enhancement / epic |
+| Sprint | N30 → N17 → N28 (campanha) |
+| Status | aberto (N30+N17 PR [#35](https://github.com/ig0rayres/trading_lab/pull/35) CI **green** + mergeable; N17 G-FORM blocked; N28.1 done; N28.2–4 blocked G-AJUSTE) |
+
+**Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); B3/FOREX barrados sem adapter ISS-010; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 e Clear/OANDA permanecem fora.
+
+**Critério de fechamento:** Feature 7 conferível em US/CRYPTO (Alpaca paper) sem ação manual; Prodígio e Tá Barato com caminho paper homologado quando upstream permitir; Features 8–10 critérios fecháveis no painel; Feature 11 (N28) entregue ou blocked com gap documentado; Clear/OANDA **fora** (pendência operador ISS-010/N29.5).
+
+**Campanha (2026-11-16 `/pmo plan`; atualizado N30.4):**
+
+| Ordem | Sprint | Entrega | Estado |
+|-------|--------|---------|--------|
+| 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
+| 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
+| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1 **done**; N28.2–4 **blocked** até G-AJUSTE + fill real |
+| fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
+| fora | N27.4 | Smoke sinal válido → ordem demo | pendência operador |
+
+**Estratégias (N30.4 — sem promoção nesta sprint):**
+
+| `strategy_key` | Fase | Paper |
+|----------------|------|-------|
+| `news_first` | research | Não exigido pelo contrato; manifesto/Gate A apenas (`tests/test_news_first_report_audited`) |
+| `orb` | shadow | **NEVER_PAPER** — `NEVER_PAPER_KEYS` + Gate B (`tests/test_strategy_catalog`, `tests/test_gate_b_risk`) |
+| `mean_reversion` | shadow | **NEVER_PAPER** — idem catálogo |
+| `prodigy_15d` | research (default) | Rank→ingest N30.2; ordem só após promoção explícita do operador |
+
+**Pendências operador (somente humano / EasyPanel):**
+
+1. Credenciais e account ids **Clear (B3)** e **OANDA Practice (FOREX)** — EasyPanel; **ISS-010** / sprint N29.5 (fora de N30).
+2. Smoke **N27.4**: sinal válido → ordem demo na sessão real (não substituído por pytest).
+3. Retrato de risco consolidado **≤120s** antes de submit em produção (`V4_PORTFOLIO_SNAPSHOT_STALE` se velho).
+4. **Rebuild** EasyPanel se a imagem desta frente ainda não estiver no ar.
+5. Definir método **G-AJUSTE** (Feature 11) — sem isso **N28** permanece blocked.
+6. Promover `prodigy_15d` a paper no banco **somente** com evidência; default continua research.
+
+**Pendências operador (push/CI):**
+
+7. **PR #35** (`front/n27-alpaca-loop`, N30+N17): CI **fully green** + mergeable (2026-11-16); merge **somente operador** (repo produto). N28.1 segue nesta frente após green.
+
+**Fora de escopo agora:** N28 até G-AJUSTE; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
+
+**Fontes:** REQUIREMENTS v0.4 Features 7–11; ROADMAP N17/N27/N28/N30; `docs/TEST-EVIDENCE.md` (N30.1/N30.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
+
+**Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief: `docs/.briefs/N30.brief.md`.
 
 ---

@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N33 concluída; campanha ISS-011 restante (ISS-010 + N17.2)",
+  "fase_nome": "N34 planejada; ligar Clear/OANDA no laço paper fail-closed (N27.2)",
   "sprint_pending_merge": null,
-  "sprint_pr": 43,
+  "sprint_pr": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T20:40:00-03:00",
+  "ultimo_update": "2026-11-16T18:07:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "/pmo plan — ISS-010 B3/FOREX (N29) e/ou N17.2 G-FORM quando priorizado",
-    "ISS-011 permanece aberto só B3/FOREX + homologação Tá Barato paper",
-    "LIVE_TRADING_ENABLED=false; não implementar Clear/OANDA sem sprint própria"
+    "Parent Fable / plan-verifier N34 (não auto-PASS); depois Rock EXECUTE nesta frente",
+    "AgentCoder: N34.0 → N34.1 → N34.2 → N34.3; não marcar N29 concluida; N29.5/N29.6 [ ]",
+    "LIVE_TRADING_ENABLED=false; CI/mock only; credenciais Clear/OANDA são do operador"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -114,89 +114,80 @@
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
     "/pmo sprint N18",
-    "/pmo plan N33"
+    "/pmo plan N33",
+    "/pmo plan N34"
   ],
-  "contexto_rapido": "N33 finalize PR #43 fe80f161 main; ROADMAP N33 concluida; N28/N30/N31 carimbadas; ISS-011 aberto ISS-010+N17.2; PR #42/EasyPanel attested (não fill). LIVE false.",
+  "contexto_rapido": "N34 plan_only rewrite; N27.2 wiring Clear/OANDA no laço fail-closed; build_demo_adapter ainda sem caller de produção; N29 planejada; N29.5 operador; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N33.0",
-      "title": "Inventariar a prova já entregue antes de carimbar",
+      "id": "N34.0",
+      "title": "Inventariar o reuso do laço e dos adaptadores",
       "size": "P",
-      "status": "done",
+      "status": "pending",
       "depends_on": [],
       "files": [
-        "docs/.briefs/N33-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N34-GIT-FIRST-REUSE.md"
       ]
     },
     {
-      "id": "N33.1",
-      "title": "Carimbar no plano as três sprints já entregues",
-      "size": "P",
-      "status": "done",
+      "id": "N34.1",
+      "title": "Ligar bolsa brasileira e câmbio no envio paper",
+      "size": "M",
+      "status": "pending",
       "depends_on": [
-        "N33.0"
+        "N34.0"
       ],
       "files": [
-        "docs/ROADMAP.md"
+        "src/signal_paper_runner.py"
       ]
     },
     {
-      "id": "N33.2",
-      "title": "Deixar os chamados e o changelog do contrato honestos",
+      "id": "N34.2",
+      "title": "Provar envio mock e bloqueio sem chave",
       "size": "P",
-      "status": "done",
+      "status": "pending",
       "depends_on": [
-        "N33.1"
+        "N34.1"
+      ],
+      "files": [
+        "tests/test_signal_paper_runner.py"
+      ]
+    },
+    {
+      "id": "N34.3",
+      "title": "Atualizar chamados e o plano com honestidade",
+      "size": "P",
+      "status": "pending",
+      "depends_on": [
+        "N34.2"
       ],
       "files": [
         "docs/ISSUES.md",
-        "docs/REQUIREMENTS.md"
-      ]
-    },
-    {
-      "id": "N33.3",
-      "title": "Registrar no diário e na evidência o pedido 42 no ar",
-      "size": "P",
-      "status": "done",
-      "depends_on": [
-        "N33.1"
-      ],
-      "files": [
+        "docs/ROADMAP.md",
+        "EASYPANEL.md",
         "docs/DIARY.md",
         "docs/TEST-EVIDENCE.md"
-      ]
-    },
-    {
-      "id": "N33.4",
-      "title": "Atualizar a sessão desta sprint após os carimbos",
-      "size": "P",
-      "status": "done",
-      "depends_on": [
-        "N33.2",
-        "N33.3"
-      ],
-      "files": [
-        ".cursorsession"
       ]
     }
   ],
   "checkpoint": {
-    "phase": "validated",
-    "sprint": "N33",
+    "phase": "implementation",
+    "sprint": "N34",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N33.4",
+    "last_completed_task": "N34.3",
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N33",
+      "sprint": "N34",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T20:32:49Z",
+      "recorded_at": "2026-11-16T21:27:36Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N33 docs closeout; no src; ROADMAP stamps verified",
-      "full_suite_ran": false,
+      "notes": "N34 wiring: 33 unittest OK; mock Clear/OANDA; zero Alpaca POST for B3/FOREX",
+      "full_suite_ran": true,
+      "first_pass": true,
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -206,7 +197,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_signal_paper_runner.py -k n32 -q --tb=no",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_signal_copy tests.test_demo_broker_adapters -q",
           "exit_code": 0
         }
       ],
@@ -216,17 +207,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "d25741379c6cd39ffb6c41a4630695b5fa4bce8d",
-      "stamped_at": "2026-11-16T20:36:05Z",
+      "last_validated_sha": "bbe97b82c648fe29b109fea5e28e566f589efe40",
+      "stamped_at": "2026-11-16T22:36:47Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "91e2a9fedf03cc33a660505777830fbdca659a97",
+      "content_hash": "4786357720bd43baea302e59ec150ba3d61b44088ba97ff22ca7963c8381c75a",
+      "patch_id": "ddec4f73acafc82ef4415be17aaae3da022b57b0",
       "patch_id_version": 2
     },
-    "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N33",
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N34",
     "validation_gate_ref": ".beesy/sprints/N33.json"
   },
   "artefatos_gerados": [
@@ -315,8 +306,8 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N33",
-  "sprint_atual": null,
-  "sprint_nome": "Closeout docs ISS-011 Alpaca",
+  "sprint_atual": "N34",
+  "sprint_nome": "Ligar B3 e forex no laço paper sem chave real",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -425,6 +416,42 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N33; checkpoint.phase=planning; preserve autopilot",
         "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T18:15:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio / docs; skip Passo2; skip ISSUES preview (ISS-010 exists); sprint_id=N34; zero M tasks; /pmo pla treated as plan",
+        "rationale": "Parent classified N / docs honesty; max existing N is 33; ISS-011 restante=ISS-010+N17.2; autopilot no AskQuestion; conservative"
+      },
+      {
+        "timestamp": "2026-11-16T18:15:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not mark N29 concluida; keep N29.5/N29.6 unchecked; document adapter code N29.1-N29.4 via existing pytest nodeids; no new Clear/OANDA HTTP; no LIVE; no invented scoring",
+        "rationale": "Operator/parent mandate; credentials are operator-owned (N29.5 EasyPanel names only)"
+      },
+      {
+        "timestamp": "2026-11-16T18:15:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N34; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T18:07:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-010 exists); rewrite N34 as N27.2 wiring 1M+3P; review=comprehensive; AgentCoder",
+        "rationale": "Prior N34 FAIL honesty: build_demo_adapter has no production callers; runner always NO_DEMO_ACCOUNT_PATH for B3/FOREX; wiring can proceed fail-closed without live creds"
+      },
+      {
+        "timestamp": "2026-11-16T18:07:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not mark N29 concluida; keep N29.5/N29.6 unchecked; check N27.2 only after N34.2 tests; no live Clear/OANDA HTTP; no LIVE; no invented scoring",
+        "rationale": "Operator/parent rewrite mandate; credentials operator-owned; CI/mock only until N29.5"
+      },
+      {
+        "timestamp": "2026-11-16T18:07:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N34; checkpoint.phase=planning; clear stale sprint_pr 43; preserve autopilot",
+        "rationale": "Rewrite plan-only; EXECUTE waits parent Fable/plan-verifier; PR 43 was N33"
       }
     ]
   },

@@ -250,6 +250,8 @@
 
 **Critério de fechamento:** Clear Smart Trader **simulado** (B3) e OANDA fxTrade **Practice** (forex) expõem posição, ordem aberta e fill ao laço; cripto reusa Alpaca paper; mercado sem credencial no env fica visível e barrado com motivo; `LIVE_TRADING_ENABLED=false`; account ids e chaves só no EasyPanel (nunca Git).
 
+**Estado N34 (2026-11-16):** Adaptadores mock existiam desde PR **#32**; sprint **N34** passou a chamar `build_demo_adapter` em `signal_paper_runner.run()` fail-closed (pin B3→`clear_smart_trader_simulated`, FOREX→`oanda_fxtrade_practice`; zero POST Alpaca). `submit_order` nos adaptadores é **symbol/side/qty only** (sem bracket stop/target no envio demo). Pytest mock **não** fecha esta issue — homologação ao vivo permanece **N29.5** (operador).
+
 **Fontes:** operador `/analista planejar` + `/pmo plan` 2026-11-13; `docs/REQUIREMENTS.md` v0.4 § Feature 7 G-MKT e § Integrações; ADR-010; ISS-009; N27.2.
 
 ---
@@ -260,7 +262,7 @@
 |-------|--------|
 | Categoria | enhancement / epic |
 | Sprint | N33 closeout Alpaca; restante **ISS-010** / **N17.2** |
-| Status | aberto — trilha Alpaca Features 7–11 entregue (N30/N31/N28/N32); PR **#42** merged `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); EasyPanel imagem **#42 no ar** (atestado operador 2026-11-16, **não é fill**). **Restante:** Feature 7 B3/FOREX ordem demo (**ISS-010** / N29.5); homologação shadow→paper Tá Barato (**N17.2** / G-FORM) |
+| Status | aberto — trilha Alpaca Features 7–11 entregue (N30/N31/N28/N32); PR **#42** merged `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); EasyPanel imagem **#42 no ar** (atestado operador 2026-11-16, **não é fill**). **N34:** laço paper B3/FOREX ligado fail-closed no código (mock CI). **Restante:** homologação ao vivo Clear/OANDA (**ISS-010** / **N29.5**); homologação shadow→paper Tá Barato (**N17.2** / G-FORM) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); **âncoras no laço paper** (N32.1–N32.3) via `control_flags`; B3/FOREX barrados sem adapter **ISS-010**; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 código N28/N31 nesta frente; Clear/OANDA permanecem fora.
 

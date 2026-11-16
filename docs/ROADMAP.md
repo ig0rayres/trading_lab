@@ -58,6 +58,7 @@
 | N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | concluida | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
 | N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
 | N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | concluida | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
+| N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -102,6 +103,7 @@
 | N31 | senior+qa | Melhoria contínua diária + TimesFM research-only |
 | N32 | senior+qa | Âncoras do painel no envio paper |
 | N33 | skip | Closeout docs ISS-011 (Alpaca); sem `src/` |
+| N34 | comprehensive | Ligar adaptadores demo no laço paper (N27.2); AgentCoder |
 
 ---
 
@@ -969,6 +971,7 @@ Onda 6  N31                melhoria contínua diária (fills+não-fills) + Times
 Onda 6b N28                ajuste supervisionado (método N31; execução N28.2–4)           0–1
 Onda 6c N32                Feature 7: envio paper lê âncoras do painel (lacuna 10k USD)   ISS-011
 Onda 6d N33                closeout docs: Status N28/N30/N31 + ISS-011 restante honesto  ISS-011
+Onda 6e N34                N27.2: ligar Clear/OANDA no laço paper fail-closed            ISS-010
 ```
 
 Caminho crítico Must-have: **0 → 1 → 2 → 3 → 4**. Envio autônomo permanece desligado até a Onda 4.
@@ -1144,7 +1147,7 @@ Delivered in PR #27 with N24/N25. Maintain: `performance_from_snapshots` counts 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
 | [x] | M | N27.1 Forex no universo e no avaliador de carteira, barrado sem conta | `/dev` | — |
-| [ ] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT, N29 |
+| [x] | M | N27.2 Adaptador da conta demo nomeada pelo operador (B3 e forex nunca pela Alpaca) | `/dev` | G-MKT, N29 |
 | [x] | P | N27.3 Teste: mercado sem conta continua visível e barrado com motivo | `/qa testes` | N27.1, N19.4 |
 | [ ] | P | N27.4 Operador: sinal válido vira ordem demo sem ação manual | operador | N27.2, N23.1, N24.2 |
 | [ ] | P | N27.5 Teste: chave live no ambiente não muda o destino paper | `/qa testes` | N27.2 |
@@ -1155,6 +1158,7 @@ Delivered in PR #27 with N24/N25. Maintain: `performance_from_snapshots` counts 
 ## Sprint N29 — Adapters demo G-MKT (Clear + OANDA + Alpaca)
 > Categoria: N  
 > Status: planejada  
+> Nota N34 (2026-11-16): Sprint **N34** ligou `signal_paper_runner.run()` aos adaptadores Clear/OANDA fail-closed (mock no CI). Homologação ao vivo e credenciais no EasyPanel permanecem **N29.5**; esta sprint **não** conclui N29.  
 > Gerado via: `/pmo plan` 2026-11-13 · fonte ISS-010 · REQUIREMENTS v0.4  
 > titulo_humano: Ligar B3 e forex nas contas demo que você escolheu  
 > Gate: Clear simulado e OANDA Practice devolvem posição/ordem/fill; cripto = Alpaca paper; mercado sem credencial barrado com motivo; B3/FOREX nunca Alpaca; LIVE false; ids só no env  
@@ -2031,6 +2035,175 @@ TEST-EVIDENCE one-liner (operator-attested chat 2026-11-16): PR **#42** is on `m
 **Detalhe técnico**
 
 P task. `.cursorsession`: after EXECUTE stamps, set `plan_only=false` only when parent `/pmo sprint` starts work; at PLAN time fields are already `sprint_atual=N33`, `plan_only=true`, `checkpoint.phase=planning`. Preserve `autopilot`. Update `contexto_rapido` / `proximos_passos` after stamps. Do not enable live. Do not commit from the subagent.
+
+---
+
+## Sprint N34 — Ligar bolsa brasileira e câmbio no laço paper, sem chave real
+> Categoria: N  
+> Status: concluida  
+> Gerado via: `/pmo plan` 2026-11-16 · rewrite honestidade · fonte ISS-010 / N27.2 · N29.1–N29.4 `[x]` mas `build_demo_adapter` sem caller de produção · N17 tabela **não** reescrita  
+> titulo_humano: Ligar B3 e forex no laço paper sem chave real  
+> resumo_humano: O envio paper passa a usar a conta demo da bolsa brasileira e a de câmbio quando o caminho e as chaves estão no ambiente. Sem chave, barra com motivo. Esses mercados nunca vão para a corretora americana. Homologação ao vivo continua sua.  
+> Gate: runner chama o adaptador demo com path+creds; sem credencial → motivo e zero envio; pytest mock prova zero POST Alpaca; N27.2 `[x]` só com nodeid; N29 permanece planejada; LIVE false  
+> review: comprehensive  
+> Brief: `docs/.briefs/N34.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N29.1–N29.4 adapters no disco · Release: campanha ISS-010 / N27.2 wiring  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+O envio paper passa a usar a conta demo da bolsa brasileira e a de câmbio quando o caminho e as chaves estão no ambiente; se faltar, barra com motivo e nunca manda esses mercados para a corretora americana.
+
+### O que muda para você
+
+- Com caminho e chaves no ambiente, o teste do laço fala com a corretora demo certa (HTTP falso no CI)
+- Sem chave, o mercado continua visível e barrado com motivo
+- Bolsa brasileira e câmbio nunca vão para a corretora americana
+- Preencher o painel sozinho, antes deste wiring, não colocava ordem nesses mercados
+- Homologação ao vivo e a fórmula Tá Barato continuam fora; dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Inventário honesto do que já existe e do que o laço ainda ignora | Abrir o inventário e ver adaptadores, envio paper e portão citados, com a lacuna do laço explícita |
+| 2 | Laço paper nas contas demo da bolsa brasileira e do câmbio, barrado sem chave | Pedir o teste: com chave mock a ordem demo sai na corretora certa; sem chave barra; nada na corretora americana |
+| 3 | Chamados e plano honestos | Abrir a lista de problemas e a sprint das corretoras: laço ligado no código, homologação ao vivo ainda sua, sprint das corretoras não concluída |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N34.0 Inventariar o reuso do laço e dos adaptadores | `/git` | — |
+| [x] | M | N34.1 Ligar bolsa brasileira e câmbio no envio paper | `/dev` + AgentCoder | N34.0 |
+| [x] | P | N34.2 Provar envio mock e bloqueio sem chave | `/qa testes` | N34.1 |
+| [x] | P | N34.3 Atualizar chamados e o plano com honestidade | docs | N34.2 |
+
+### Quality Brief (Sprint N34)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper/demo hosts only; no live broker path.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX never POST `paper-api.alpaca.markets`; missing path/creds → `NO_DEMO_ACCOUNT_PATH`.
+Maintain: CRYPTO / US_EQUITY Alpaca paper happy path.
+Maintain: N29 Status **planejada**; N29.5 e N29.6 permanecem `[ ]`.
+Avoid: reimplementing adapter HTTP; real Clear/OANDA in CI; stamping N29 `concluida`; closing ISS-010/ISS-011; writing secret values.
+
+### Fora de escopo
+
+- Homologação ao vivo / credenciais reais
+- Inventar scoring (N17.2)
+- Concluir N29 ou checar N29.5 / N29.6
+- Mudar o caminho feliz Alpaca CRYPTO/US, exceto para não quebrá-lo
+- HTTP Clear/OANDA real no CI
+- `LIVE_TRADING_ENABLED=true`
+- Segredos no Git
+
+### Task N34.0 — Inventariar o reuso do laço e dos adaptadores
+
+**Entrega:** Inventário curto dizendo que os adaptadores e o portão já existem, e que o envio paper ainda barra bolsa brasileira e câmbio mesmo com chave no ambiente.
+**Como conferir:** O inventário cita adaptadores, envio paper e portão, marca o checkout do vendor como vazio nesta frente, e deixa homologação ao vivo de fora.
+**Por quê:** O plano anterior tratou código de adaptador como laço pronto; sem essa lista o EXECUTE reimplementa HTTP ou inventa atestado.
+
+**Detalhe técnico**
+
+P task (docs). Confirm `docs/.briefs/N34-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md`; local `vendor/day-trader-skill` is empty/absent on this worktree — keep fail-closed. GitHub main not re-checked. Do not bump. Do not invent live homolog.
+
+Must cite: `src/demo_broker_adapters.py` (`build_demo_adapter`, `credentials_block_for_adapter`); `src/signal_paper_runner.py` (`_market_blocks_alpaca_paper` always-block); `src/demo_account_gate.py` (`demo_market_block_reason`, `named_demo_account_configured`). Record: `build_demo_adapter` production callers = none (tests only). PR **#32** `88aae40` / feat `27c1dd9` = adapters in mock, not N27.2.
+
+### Task N34.1 — Ligar bolsa brasileira e câmbio no envio paper
+
+**Entrega:** O envio paper usa a conta demo da bolsa brasileira e a de câmbio quando o caminho e as chaves existem; se faltar, barra com motivo e não fala com a corretora americana.
+**Como conferir:** Com chave mock a ordem demo segue a corretora certa; sem chave o motivo aparece e nada é enviado; o caminho americano de cripto continua igual; dinheiro real permanece desligado.
+**Por quê:** Hoje o envio paper recusa bolsa brasileira e câmbio sempre, mesmo com o caminho e as chaves no ambiente — os adaptadores existem só nos testes.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/signal_paper_runner.py`
+
+**executor_prompt**:
+
+```yaml
+id: N34.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N34.0"]
+files:
+  - src/signal_paper_runner.py
+reuse_targets:
+  - component: src/demo_broker_adapters.py
+    reuse_as: call
+    convergence_check: rg "build_demo_adapter" src/signal_paper_runner.py && rg "credentials_block_for_adapter" src/signal_paper_runner.py
+  - component: src/demo_account_gate.py
+    reuse_as: call
+    convergence_check: rg "demo_market_block_reason" src/signal_paper_runner.py
+  - component: src/original.py
+    reuse_as: call
+    convergence_check: rg "load_original" src/original.py
+guardrail_contract:
+  - class: secrets
+    id: n34-1-no-secrets
+    target: src/signal_paper_runner.py
+    check: python3 -c "from pathlib import Path; t=Path('src/signal_paper_runner.py').read_text(); assert 'sk_live' not in t.lower(); assert 'practice-token-value' not in t; assert 'test-clear-secret' not in t"
+    pass_condition: no broker secret values hardcoded in runner
+  - class: subagent-safety
+    id: n34-1-live-false-no-alpaca-b3-forex
+    target: src/signal_paper_runner.py
+    check: rg "build_demo_adapter" src/signal_paper_runner.py && rg "demo_market_block_reason" src/signal_paper_runner.py && rg "LIVE_TRADING_ENABLED" src/demo_broker_adapters.py
+    pass_condition: runner calls existing adapters; live stays false in adapters; B3/FOREX not Alpaca POST
+```
+
+### Quality Brief (Sprint N34)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper/demo hosts only; no live broker path.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX never POST paper-api.alpaca.markets; missing path/creds → NO_DEMO_ACCOUNT_PATH.
+Maintain: CRYPTO / US_EQUITY Alpaca paper happy path unchanged except not to break it.
+Avoid: copying _http_json into the runner; real Clear/OANDA HTTP; N29 concluida; invented Tá Barato thresholds.
+
+Melhoria: wire N27.2 — signal_paper_runner.run dispatches B3_EQUITY to Clear simulated and FOREX to OANDA Practice fail-closed.
+Contexto: `_market_blocks_alpaca_paper` always returns NO_DEMO_ACCOUNT_PATH for B3/FOREX. `build_demo_adapter` has no production callers. `demo_account_gate` + `paper_gateway_queue` already use `demo_market_block_reason`; the runner ignores that for B3/FOREX and then Alpaca GET/POST.
+Objetivo: (1) For B3_EQUITY/FOREX call `demo_market_block_reason` instead of hard-block. (2) If blocked → NO_DEMO_ACCOUNT_PATH, orders_sent=0, never Alpaca. (3) **Market→adapter pin (fail-closed):** B3_EQUITY may only use `clear_smart_trader_simulated`; FOREX may only use `oanda_fxtrade_practice`. Any other `DEMO_ACCOUNT_PATH_*` value (including `alpaca_paper` or cross-path) → NO_DEMO_ACCOUNT_PATH, orders_sent=0, zero Alpaca POST. After pin+creds: `adapter_path_for_market` + `credentials_block_for_adapter` + `build_demo_adapter` (pass opener for tests); call only methods the adapter already exposes (`submit_order`; Clear also has list_positions / list_open_orders / get_order_status / get_fill_for_order). Do not call `submit()` Alpaca or `broker_get` Alpaca for those markets. (4) **Risk anchors for B3/FOREX:** keep `fetch_control_flags` TRADE_RISK_LIMIT / CAPITAL_LIMIT / max_open_positions and DAILY_RISK_NOT_CONFIRMED when those checks do not require Alpaca account shape; skip Alpaca USD/PDT/V4 `alpaca_positions_count` GETs. OANDA Practice adapter today has no list_positions / list_open_orders — for FOREX use submit-only + fail-closed on position-dependent checks (do not invent position APIs). (5) **Order shape:** adapter `submit_order` is symbol/side/qty only (no stop/target bracket). Document in ISS-010 note (N34.3); do not invent bracket fields. (6) Keep PAPER_SIGNAL_AUTO_ENABLED + PAPER_EXECUTION_ENABLED; apply `I_AUTHORIZE_ALPACA_PAPER_ONLY` only to Alpaca markets (decision: B3/FOREX are not Alpaca POST — no new ACK string). (7) LIVE false; adapters already raise if live. (8) Do not edit N17/N29 task tables except N34.3 later. (9) Do not reimplement HTTP.
+Arquivos: src/signal_paper_runner.py.
+Critério de pronto: rg shows build_demo_adapter and demo_market_block_reason in signal_paper_runner.py; B3/FOREX auto path does not call PAPER_URL POST; wrong path pin blocks; CRYPTO/US still can.
+Cenários de teste (implement in N34.2):
+1. B3 without path/creds → NO_DEMO_ACCOUNT_PATH, orders_sent=0, zero Alpaca POST (keep existing n32 tests).
+2. B3 with DEMO_ACCOUNT_PATH_B3_EQUITY=clear_smart_trader_simulated + CLEAR_* and urlopen mock → adapter submit (Clear URL), not paper-api.alpaca.markets; position/open-order/fill-status as adapter returns.
+3. FOREX without creds → block; with path=oanda_fxtrade_practice + OANDA_PRACTICE_* mock → practice host only, never Alpaca, never api-fxtrade live; no invented list_positions.
+4. Missing one CLEAR_* or empty OANDA token → NO_DEMO_ACCOUNT_PATH.
+5. Regressão: qty=1 AAPL / CRYPTO named path still Alpaca PAPER_SUBMITTED.
+6. LIVE_TRADING_ENABLED not false → no live HTTP (adapter RuntimeError / block).
+7. Pin abuse: DEMO_ACCOUNT_PATH_B3_EQUITY=alpaca_paper or FOREX path=clear_smart_trader_simulated (cross) → NO_DEMO_ACCOUNT_PATH, orders_sent=0, zero Alpaca POST.
+
+### Task N34.2 — Provar envio mock e bloqueio sem chave
+
+**Entrega:** Testes mostram envio demo com HTTP falso quando o caminho e as chaves existem, bloqueio com motivo quando faltam, e zero envio à corretora americana para bolsa brasileira e câmbio.
+**Como conferir:** Pedir essa bateria e ver falha se o laço ainda recusar com chave mock, se postar na corretora americana, ou se o CI chamar a Clear/OANDA de verdade.
+**Por quê:** Sem prova no caminho paper, N27.2 continuaria só no papel.
+
+**Detalhe técnico**
+
+P task. Prefer `tests/test_signal_paper_runner.py` (1 file; extend `tests/test_paper_gateway_queue.py` only if runner tests cannot see the queue auto path). Patch `urlopen` / adapter opener — never real Clear/OANDA. Keep `test_n32_b3_equity_auto_blocked_no_alpaca_post` / forex equivalent for the no-cred case. Add nodeids for mock submit + zero Alpaca POST with creds present. Do not weaken N30/N32 US/CRYPTO tests. LIVE false in env. No secret values — use the same fixture names as `tests/test_demo_broker_adapters.py` (`_clear_env_with_path`, `_oanda_env_with_path`).
+
+### Task N34.3 — Atualizar chamados e o plano com honestidade
+
+**Entrega:** Os chamados dizem que o laço está ligado no código e que a homologação ao vivo ainda é sua; a tarefa do laço no plano fecha só com prova de teste; a sprint das corretoras continua planejada.
+**Como conferir:** Abrir a lista de problemas e o plano: laço marcado só com teste; credenciar ainda aberto; fórmula Tá Barato ainda esperando você; dinheiro real desligado.
+**Por quê:** O texto atual ou some o wiring ou trata mock como homologação.
+
+**Detalhe técnico**
+
+P task. EXECUTE (not PLAN time):
+
+ISS-010 — keep **aberto**. Honest note: adapters existed in mock (PR **#32**); N34 wires them into `run()` fail-closed; live homolog still N29.5. Do not close.
+
+ISS-011 — keep **aberto**. Remaining: ISS-010 live homolog (N29.5) + N17.2 G-FORM. Do not claim Clear/OANDA live. Do not invent Tá Barato thresholds.
+
+ROADMAP: check N27.2 `[x]` **only after** N34.2 nodeids exist. Short note under `## Sprint N29` that N34 wired the loop fail-closed; do **not** change N29 Status from `planejada`; do **not** check N29.5 or N29.6. Do not rewrite N29.1–N29.4 history.
+
+REQUIREMENTS Feature 7 B3/FOREX order-demo boxes stay `[ ]` until N29.5 (pytest mock ≠ homolog). Keep the “sem conta → barrado” box `[x]`.
+
+Optional: `EASYPANEL.md` names-only checklist (`CLEAR_SIM_BASE_URL`, `CLEAR_SIM_API_KEY`, `CLEAR_SIM_API_SECRET`, `OANDA_PRACTICE_API_TOKEN`, `OANDA_PRACTICE_ACCOUNT_ID`, `DEMO_ACCOUNT_PATH_B3_EQUITY`, `DEMO_ACCOUNT_PATH_FOREX`) + one line: filling env enables the path **only after this wiring**. Optional empty names in `.env.example` (F-004). Never values.
+
+DIARY + TEST-EVIDENCE: nodeids of mock submit / no-Alpaca-POST; credentials operator-owned; until N29.5 CI/mock only; EasyPanel-alone did not place B3/FOREX orders before this wiring. LIVE false.
 
 ---
 

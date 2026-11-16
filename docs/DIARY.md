@@ -4,11 +4,24 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 14–40 |
+| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; pin path; mock CI | 14–28 |
+| N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 29–55 |
 | N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 38–63 |
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N34 — Ligar B3/FOREX no laço paper (N27.2)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** `signal_paper_runner.run()` despacha B3→Clear simulado e FOREX→OANDA Practice quando path pinado + credenciais; caso contrário `NO_DEMO_ACCOUNT_PATH`; zero POST Alpaca para esses mercados; ACK Alpaca só para US/CRYPTO. Testes mock em `tests/test_signal_paper_runner.py` (`test_n34_*`).
+
+**Honestidade:** ISS-010 permanece **aberto** (homologação ao vivo N29.5); N29 Status **planejada**; adapter submit qty-only sem bracket; preencher EasyPanel sozinho não homologa conta real.
+
+**Decisões:** `LIVE_TRADING_ENABLED=false`; vendor pin inalterado; sem HTTP Clear/OANDA real no CI.
 
 ---
 

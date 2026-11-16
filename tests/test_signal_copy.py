@@ -33,3 +33,14 @@ class SignalCopyTests(unittest.TestCase):
         self.s['strategy_key']='signal_copy'
         self.s['provider_signature']=sign(self.s,self.secret)
         self.assertEqual(self.check()['status'],'SIGNAL_ACCEPTED_RISK_PREVIEW')
+    def test_b3_ticket_uses_brl_ceiling(self):
+        self.s.update(market='B3_EQUITY', asset_class='b3_equity', symbol='ITUB4',
+                      entry='2000', stop='1990', target='2020')
+        self.s['provider_signature']=sign(self.s,self.secret)
+        self.assertEqual(self.check()['status'],'SIGNAL_ACCEPTED_RISK_PREVIEW')
+        self.assertEqual(self.check()['orders_sent'],0)
+    def test_forex_instrument_accepted(self):
+        self.s.update(market='FOREX', asset_class='forex', symbol='EUR_USD',
+                      entry='1.10', stop='1.09', target='1.12')
+        self.s['provider_signature']=sign(self.s,self.secret)
+        self.assertEqual(self.check()['status'],'SIGNAL_ACCEPTED_RISK_PREVIEW')

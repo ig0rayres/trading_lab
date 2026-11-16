@@ -194,13 +194,13 @@
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N31",
+      "sprint": "N28",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T16:47:25Z",
+      "recorded_at": "2026-11-16T17:17:19Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N31 G-AJUSTE+TimesFM research-only; 9 focused tests",
+      "notes": "N28.2-4 supervised adjustment; 13 focused tests",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -210,7 +210,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_timesfm_context.py tests/test_n31_g_ajuste_guardrails.py tests/test_evolution_engine.py -q --tb=no'",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_n28_supervised_adjustment.py tests/test_n28_suggestion_labels.py tests/test_n31_g_ajuste_guardrails.py tests/test_evolution_engine.py -q --tb=no'",
           "exit_code": 0
         }
       ],
@@ -220,17 +220,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "84791eb3739b186c10c47d725f28fb25db5ce139",
-      "stamped_at": "2026-11-16T16:47:40Z",
+      "last_validated_sha": "71caca112ab81b3c6ec37c294949636d0a51a236",
+      "stamped_at": "2026-11-16T17:17:20Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "6e56eb14b938c255abd4391daa9e9a4e92e0b03ce6d4bc8803d8ebde2053244c",
-      "patch_id": "3f5eeaaf1c2c9d19be4d0ebbb96d5f357789e52d",
+      "content_hash": "5abbc13ef06f85ebe3bd201155c842df2cb560a92829b82a99bb756fa34fdf70",
+      "patch_id": "c32ed08ca802db26c14d72294b83680d13dc7cf8",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N31"
+    "sprint_delivery_sprint": "N28"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

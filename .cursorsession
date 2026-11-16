@@ -184,25 +184,18 @@
         }
       ],
       "dirty_production_paths": [
-        "scripts/run.sh",
-        "src/signal_paper_runner.py",
-        "tests/test_paper_gateway_queue.py",
-        "tests/test_paper_restart_no_duplicate.py",
-        "tests/test_signal_paper_runner.py",
         ".beesy/",
         ".cursorsession.bak",
-        ".cursorsession.lock",
-        "src/prodigy_paper_ingest.py",
-        "tests/test_prodigy_paper_ingest.py"
+        ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "25f5c5b46bd8abe760eb9234127e12acb15a507a",
-      "stamped_at": "2026-11-16T09:22:11Z",
+      "last_validated_sha": "322318b4c99f0938fe58667ff1afe6af0a5d9886",
+      "stamped_at": "2026-11-16T09:22:48Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "ae36b1d7a998b2ba4c1105dd8dffe053a4172c6f",
+      "content_hash": "52ad90df4287e955a42fc414ef332b6383818bcb6c66a23b6b4247615bb480bb",
+      "patch_id": "0093cefd581a8b762c21107f30a8631c39c59375",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",

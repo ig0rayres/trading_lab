@@ -126,7 +126,33 @@
     "validation_gate_ref": ".beesy/sprints/N34.json",
     "sprint_delivery": "finalized",
     "sprint_delivery_sprint": "N34",
-    "last_validated_sha": "7627b45"
+    "last_validated_sha": "7627b45",
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_signal_paper_runner tests.test_demo_broker_adapters -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".beesy/",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "8e32abb9b18db4eb642b75ace72f8b1be1ec8eed",
+      "stamped_at": "2026-11-16T22:49:13Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "f33c7456e4217e3df10abc93d73e6f6e399958c3",
+      "patch_id_version": 2
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

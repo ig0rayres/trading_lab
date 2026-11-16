@@ -252,6 +252,8 @@
 
 **Estado N34 (2026-11-16):** Adaptadores mock existiam desde PR **#32**; sprint **N34** passou a chamar `build_demo_adapter` em `signal_paper_runner.run()` fail-closed (pin B3→`clear_smart_trader_simulated`, FOREX→`oanda_fxtrade_practice`; zero POST Alpaca). Merge produção PR **#45** `3aefd447` / main `7627b45`. `submit_order` nos adaptadores é **symbol/side/qty only** (sem bracket stop/target no envio demo). Pytest mock **não** fecha esta issue — homologação ao vivo permanece **N29.5** (operador).
 
+**Estado N35 (2026-11-16):** Sprint **N35** adiciona `env_presence_report` (nomes `present`/`absent` sem valores) + roteiro em `docs/HOMOLOGATION.md` § G-MKT. **Não** fecha ISS-010; live homolog / «creds ok» permanece **N29.5**. EasyPanel **#46 no ar** ≠ creds preenchidas ≠ fill.
+
 **Fontes:** operador `/analista planejar` + `/pmo plan` 2026-11-13; `docs/REQUIREMENTS.md` v0.4 § Feature 7 G-MKT e § Integrações; ADR-010; ISS-009; N27.2.
 
 ---

@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from demo_account_gate import (  # noqa: E402
     NO_DEMO_ACCOUNT_PATH,
     demo_market_block_reason,
+    env_presence_report,
     named_demo_account_configured,
 )
 from demo_broker_adapters import (  # noqa: E402
@@ -264,6 +265,80 @@ class DemoAccountPathWiringTests(unittest.TestCase):
             self.assertTrue(urls)
             for url in urls:
                 self.assertNotIn('paper-api.alpaca.markets', url)
+
+
+class EnvPresenceReportTests(unittest.TestCase):
+    """N35 — per-key presence smoke without exposing secret values or HTTP."""
+
+    _SECRET_MARKERS = ('test-clear-secret', 'practice-token-value')
+
+    def test_n35_empty_env_all_keys_absent_markets_blocked_live_false(self):
+        with patch.dict(os.environ, {'LIVE_TRADING_ENABLED': 'false'}, clear=True):
+            report = env_presence_report()
+        for name in (
+            'CLEAR_SIM_BASE_URL',
+            'CLEAR_SIM_API_KEY',
+            'CLEAR_SIM_API_SECRET',
+            'OANDA_PRACTICE_API_TOKEN',
+            'OANDA_PRACTICE_ACCOUNT_ID',
+            'DEMO_ACCOUNT_PATH_B3_EQUITY',
+            'DEMO_ACCOUNT_PATH_FOREX',
+        ):
+            self.assertEqual(report['keys'][name], 'absent')
+        self.assertEqual(report['markets']['B3_EQUITY'], NO_DEMO_ACCOUNT_PATH)
+        self.assertEqual(report['markets']['FOREX'], NO_DEMO_ACCOUNT_PATH)
+        self.assertTrue(report['live_trading_enabled_false'])
+
+    def test_n35_full_mock_creds_keys_present_markets_ready(self):
+        env = {**_clear_env_with_path(), **_oanda_env_with_path()}
+        with patch.dict(os.environ, env, clear=True):
+            report = env_presence_report()
+        for name in report['keys']:
+            self.assertEqual(report['keys'][name], 'present', name)
+        self.assertEqual(report['markets']['B3_EQUITY'], 'READY')
+        self.assertEqual(report['markets']['FOREX'], 'READY')
+        self.assertTrue(report['live_trading_enabled_false'])
+
+    def test_n35_missing_one_clear_key_that_name_absent_b3_blocked(self):
+        env = _clear_env_with_path()
+        del env['CLEAR_SIM_API_SECRET']
+        with patch.dict(os.environ, env, clear=True):
+            report = env_presence_report()
+        self.assertEqual(report['keys']['CLEAR_SIM_API_SECRET'], 'absent')
+        self.assertEqual(report['keys']['CLEAR_SIM_API_KEY'], 'present')
+        self.assertEqual(report['markets']['B3_EQUITY'], NO_DEMO_ACCOUNT_PATH)
+
+    def test_n35_report_repr_and_json_contain_no_fixture_secrets(self):
+        env = {**_clear_env_with_path(), **_oanda_env_with_path()}
+        with patch.dict(os.environ, env, clear=True):
+            report = env_presence_report()
+        blob = repr(report) + json.dumps(report)
+        for marker in self._SECRET_MARKERS:
+            self.assertNotIn(marker, blob)
+
+    def test_n35_urlopen_raise_report_still_returns_no_http(self):
+        def boom(*_args, **_kwargs):
+            raise RuntimeError('urlopen must not be called')
+
+        with patch.dict(os.environ, {}, clear=True):
+            with patch('demo_broker_adapters.urlopen', side_effect=boom):
+                report = env_presence_report()
+        self.assertIn('keys', report)
+        self.assertIn('markets', report)
+
+    def test_n35_live_trading_true_live_trading_enabled_false_is_false(self):
+        env = {
+            **_clear_env_with_path(),
+            **_oanda_env_with_path(),
+            'LIVE_TRADING_ENABLED': 'true',
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with patch('demo_broker_adapters.urlopen', side_effect=RuntimeError('no http')):
+                report = env_presence_report()
+        self.assertFalse(report['live_trading_enabled_false'])
+        blob = repr(report) + json.dumps(report)
+        for marker in self._SECRET_MARKERS:
+            self.assertNotIn(marker, blob)
 
 
 class _JsonResponse:

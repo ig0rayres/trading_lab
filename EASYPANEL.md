@@ -62,3 +62,5 @@ After sprint **N34**, filling these enables B3/FOREX on the paper signal loop (f
 | `OANDA_PRACTICE_ACCOUNT_ID` | OANDA Practice account id |
 
 Never commit secret values. `LIVE_TRADING_ENABLED=false`.
+
+Homologation runbook (paste keys, presence report, demo order evidence without secrets): [`docs/HOMOLOGATION.md` § G-MKT Clear simulated + OANDA Practice](docs/HOMOLOGATION.md#g-mkt-clear-simulated--oanda-practice-homolog-n35).

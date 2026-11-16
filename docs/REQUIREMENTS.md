@@ -216,8 +216,8 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - [ ] Sinal válido vira ordem na conta demo **B3** (Clear simulada) — **G-MKT § abaixo; adapter ISS-010 / N29.5** (ADR-010: sem POST Alpaca).
 - [ ] Sinal válido vira ordem na conta demo **FOREX** (OANDA Practice) — **G-MKT / ISS-010 / N29.5** (ADR-010: sem POST Alpaca).
 - [x] Mercado sem conta demo nomeada fica barrado com `NO_DEMO_ACCOUNT_PATH` e **zero** POST Alpaca (`test_n30_crypto_without_named_path_blocked_no_post`; `test_n27_gateway_b3_equity_blocked_no_alpaca_post`; `test_n27_forex_runner_never_posts_alpaca_paper_host`).
-- [ ] Nenhuma ordem sai com qualquer âncora estourada. *Parcial N30.1: snapshot de risco >120s bloqueia submit (`test_n30_stale_v4_portfolio_snapshot_still_blocked`); tetos dia/semana não assertados nesta sprint.*
-- [ ] Perda do dia ou da semana no teto para a operação até o próximo período e registra o motivo.
+- [ ] Nenhuma ordem sai com qualquer âncora estourada. *Parcial: snapshot stale (`test_n30_stale_v4_portfolio_snapshot_still_blocked`); tetos dia/semana no Gate B (`tests/test_ledger_loss_anchor.py` `test_loss_ceiling_reject_*`, `test_gate_b_blocks_when_daily_loss_at_ceiling`).*
+- [x] Perda do dia ou da semana no teto para a operação até o próximo período e registra o motivo (`tests/test_ledger_loss_anchor.py` `test_loss_ceiling_reject_daily_at_tight_default`, `test_loss_ceiling_reject_weekly_at_tight_default`, `test_gate_b_blocks_when_daily_loss_at_ceiling`; `tests/test_portfolio_risk_v4.py` `DAILY_LOSS_HALT`/`WEEKLY_LOSS_HALT`; rejeição persistida via `paper_gateway_queue.persist_risk_decision` no caminho `tv-worker`).
 - [x] Host de destino é sempre o paper; existir uma chave live no ambiente não muda isso (`tests/test_paper_gateway_queue.py` `test_n27_5_live_looking_key_keeps_paper_alpaca_host`; hosts em `test_n30_us_equity_demo_on_paper_submitted`).
 - [x] Reinício do serviço retoma a operação sem duplicar ordem com laço demo ligado (`tests/test_paper_restart_no_duplicate.py` `test_n30_demo_operation_on_restart_no_second_broker_post`).
 

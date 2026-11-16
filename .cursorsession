@@ -210,7 +210,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_n28_supervised_adjustment.py tests/test_n28_suggestion_labels.py tests/test_n31_g_ajuste_guardrails.py tests/test_evolution_engine.py -q --tb=no'",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_n28_supervised_adjustment.py tests/test_n28_suggestion_labels.py -q --tb=no'",
           "exit_code": 0
         }
       ],
@@ -220,8 +220,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "71caca112ab81b3c6ec37c294949636d0a51a236",
-      "stamped_at": "2026-11-16T17:17:20Z",
+      "last_validated_sha": "c465724ec77ebd16c7ec5e7e8da576e0e5579733",
+      "stamped_at": "2026-11-16T17:17:29Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

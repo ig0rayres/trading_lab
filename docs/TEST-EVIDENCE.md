@@ -378,3 +378,23 @@ Operador: **PR #35 merged**; smoke **MSFT** `PAPER_SUBMITTED` ok; **N27.4** fech
 | `docs/REQUIREMENTS.md` Feature 7 + G-MKT | `[x]` só US/CRYPTO; B3/FOREX `[ ]` + **ISS-010** |
 | `docs/REQUIREMENTS.md` Feature 1 + 4 | `news_first` research; NEVER_PAPER explícito |
 | `docs/ROADMAP.md` Sprint N30 | Status **em closeout** (não `concluída` até verifier) |
+
+## Sprint N34 — Clear/OANDA no laço paper (N27.2)
+
+> `LIVE_TRADING_ENABLED=false` · HTTP mock apenas · credenciais operador (N29.5) · **não é fill**
+
+| Cenário | Nodeid |
+|---------|--------|
+| B3 sem cred → bloqueio | `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_b3_equity_auto_blocked_no_alpaca_post` |
+| FOREX sem cred → bloqueio | `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_forex_auto_blocked_no_alpaca_post` |
+| B3 Clear mock submit | `tests.test_signal_paper_runner.PaperRunnerTests.test_n34_b3_clear_mock_submit_no_alpaca_post` |
+| FOREX OANDA mock submit | `tests.test_signal_paper_runner.PaperRunnerTests.test_n34_forex_oanda_mock_submit_no_alpaca_post` |
+| CLEAR_* faltando | `tests.test_signal_paper_runner.PaperRunnerTests.test_n34_b3_missing_clear_secret_blocks` |
+| OANDA token vazio | `tests.test_signal_paper_runner.PaperRunnerTests.test_n34_forex_empty_oanda_token_blocks` |
+| Pin abuse B3/FOREX path | `tests.test_signal_paper_runner.PaperRunnerTests.test_n34_pin_b3_alpaca_paper_path_blocked`; `test_n34_pin_forex_clear_path_cross_blocked` |
+| LIVE true | `tests.test_signal_paper_runner.PaperRunnerTests.test_n34_live_trading_enabled_blocks_demo_submit` |
+| Regressão AAPL Alpaca | `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_tight_defaults_qty1_aapl_paper_submitted` |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_signal_paper_runner -q
+```

@@ -16,22 +16,45 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from demo_account_gate import NO_DEMO_ACCOUNT_PATH, demo_market_block_reason
+from demo_broker_adapters import (
+    G_MKT_ADAPTER_PATH_CLEAR_SIMULATED,
+    G_MKT_ADAPTER_PATH_OANDA_PRACTICE,
+    adapter_path_for_market,
+    build_demo_adapter,
+)
 from paper_audit import PAPER_URL, get_json, validate_env, amount
 from risk_control_flags import brl_from_cents, fetch_control_flags
 from signal_copy import validate, canonical_payload
 from portfolio_risk_v4 import evaluate as evaluate_portfolio_risk
 
 DEFAULT_LEDGER = '/app/reports/paper/signal-orders.jsonl'
-ALPACA_PAPER_BLOCKED_MARKETS = frozenset({'B3_EQUITY', 'FOREX'})
+DEMO_ADAPTER_MARKETS = frozenset({'B3_EQUITY', 'FOREX'})
+_PINNED_DEMO_PATH_BY_MARKET = {
+    'B3_EQUITY': G_MKT_ADAPTER_PATH_CLEAR_SIMULATED,
+    'FOREX': G_MKT_ADAPTER_PATH_OANDA_PRACTICE,
+}
+
+
+def _demo_path_pin_ok(market: str, env: dict) -> bool:
+    expected = _PINNED_DEMO_PATH_BY_MARKET.get(market)
+    if not expected:
+        return False
+    return adapter_path_for_market(market, env) == expected
 
 
 def _market_blocks_alpaca_paper(signal: dict, env: dict) -> str | None:
-    market = signal.get('market')
-    if market in ALPACA_PAPER_BLOCKED_MARKETS:
-        return NO_DEMO_ACCOUNT_PATH
+    market = signal.get('market', 'US_EQUITY')
+    if market in DEMO_ADAPTER_MARKETS:
+        if not _demo_path_pin_ok(market, env):
+            return NO_DEMO_ACCOUNT_PATH
+        return demo_market_block_reason(market, env)
     if market == 'CRYPTO':
         return demo_market_block_reason('CRYPTO', env)
     return None
+
+
+def _uses_alpaca_paper_submit(signal: dict) -> bool:
+    return signal.get('market', 'US_EQUITY') not in DEMO_ADAPTER_MARKETS
 
 
 def token(signal):
@@ -107,6 +130,46 @@ def risk_check(signal, account, positions, open_orders, fx, env):
     return reasons
 
 
+def demo_market_risk_check(signal, env, fx, adapter, market: str) -> list[str]:
+    """Risk anchors for B3/FOREX demo adapters — no Alpaca account GET."""
+    reasons: list[str] = []
+    flags = fetch_control_flags()
+    cap, per_trade, max_positions = _parallel_usd_limits(flags, signal, env, fx)
+    try:
+        entry, stop, target = (amount(signal[k]) for k in ('entry', 'stop', 'target'))
+        qty = signal['quantity']
+        if type(qty) != int or qty < 1 or entry <= stop or stop <= 0 or target <= entry:
+            reasons.append('INVALID_TICKET')
+        else:
+            if qty * (entry - stop) > per_trade:
+                reasons.append('TRADE_RISK_LIMIT')
+            if qty * entry > cap:
+                reasons.append('CAPITAL_LIMIT')
+        if env.get('PAPER_DAILY_RISK_CONFIRMED', 'false').lower() != 'true':
+            reasons.append('DAILY_RISK_NOT_CONFIRMED')
+        if market == 'B3_EQUITY' and 'INVALID_TICKET' not in reasons:
+            try:
+                positions = adapter.list_positions()
+                open_orders = adapter.list_open_orders()
+            except Exception:
+                return ['INVALID_BROKER_RESPONSE']
+            if not isinstance(positions, list) or not isinstance(open_orders, list):
+                return ['INVALID_BROKER_RESPONSE']
+            if len(positions) >= max_positions:
+                reasons.append('MAX_POSITIONS')
+            if open_orders:
+                reasons.append('OPEN_ORDERS_REQUIRE_REVIEW')
+            if any(x.get('symbol') == signal['symbol'] for x in positions):
+                reasons.append('DUPLICATE_SYMBOL')
+        elif market == 'FOREX':
+            # OANDA practice adapter has no list_positions — fail-closed on position state.
+            if max_positions < 1:
+                reasons.append('MAX_POSITIONS')
+    except (ValueError, TypeError, KeyError):
+        reasons.append('INVALID_ACCOUNT_OR_SIGNAL')
+    return reasons
+
+
 def make_order(signal, fp):
     return {'symbol':signal['symbol'],'qty':str(signal['quantity']),
             'side':'buy','type':'limit','limit_price':str(signal['entry']),
@@ -124,7 +187,15 @@ def submit(body,env,opener=urlopen):
     with opener(req, timeout=15) as r: return json.load(r)
 
 
-def run(signal,env,ledger=DEFAULT_LEDGER,broker_get=get_json,broker_post=submit,now=None):
+def run(
+    signal,
+    env,
+    ledger=DEFAULT_LEDGER,
+    broker_get=get_json,
+    broker_post=submit,
+    now=None,
+    demo_opener=urlopen,
+):
     now=now or datetime.now(timezone.utc)
     try:
         fx=validate_env(env)
@@ -133,15 +204,17 @@ def run(signal,env,ledger=DEFAULT_LEDGER,broker_get=get_json,broker_post=submit,
         # signal_copy has old 5k/50 risk: do not loosen its acceptance silently.
         fp=token(signal)
         body=make_order(signal,fp)
+        market = signal.get('market', 'US_EQUITY')
         if env.get('PAPER_SIGNAL_AUTO_ENABLED','false').lower()!='true':
             return {'status':'PREVIEW_ONLY','client_order_id':'nf-'+fp,'order_preview':body,'orders_sent':0}
         if env.get('PAPER_EXECUTION_ENABLED','false').lower()!='true':
             return {'status':'BLOCKED','reasons':['PAPER_EXECUTION_NOT_ENABLED'],'orders_sent':0}
-        if env.get('PAPER_SIGNAL_ACCOUNT_ACK','')!='I_AUTHORIZE_ALPACA_PAPER_ONLY':
-            return {'status':'BLOCKED','reasons':['EXPLICIT_PAPER_ACK_REQUIRED'],'orders_sent':0}
         blocked = _market_blocks_alpaca_paper(signal, env)
         if blocked:
             return {'status': 'BLOCKED', 'reasons': [blocked], 'orders_sent': 0}
+        if _uses_alpaca_paper_submit(signal):
+            if env.get('PAPER_SIGNAL_ACCOUNT_ACK','')!='I_AUTHORIZE_ALPACA_PAPER_ONLY':
+                return {'status':'BLOCKED','reasons':['EXPLICIT_PAPER_ACK_REQUIRED'],'orders_sent':0}
         path=Path(ledger);path.parent.mkdir(parents=True,exist_ok=True)
         with (path.parent/'signal-orders.lock').open('a+') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
@@ -151,14 +224,42 @@ def run(signal,env,ledger=DEFAULT_LEDGER,broker_get=get_json,broker_post=submit,
                     if line.strip(): past.append(json.loads(line))
             if any(x.get('client_order_id')=='nf-'+fp for x in past):
                 return {'status':'BLOCKED','reasons':['ALREADY_ATTEMPTED_RECONCILE_FIRST'],'orders_sent':0}
+            record={'at':now.isoformat(),'client_order_id':'nf-'+fp,'provider':signal['provider'],
+                    'signal_id':signal['signal_id'],'state':'ATTEMPTED_UNKNOWN'}
+            if market in DEMO_ADAPTER_MARKETS:
+                adapter_path = adapter_path_for_market(market, env)
+                adapter = build_demo_adapter(adapter_path, env, opener=demo_opener)
+                reasons = demo_market_risk_check(signal, env, fx, adapter, market)
+                if reasons:
+                    return {'status':'BLOCKED','reasons':reasons,'orders_sent':0}
+                with path.open('a') as f:
+                    f.write(json.dumps({**record,'market':market,'adapter_path':adapter_path})+'\n')
+                    f.flush();os.fsync(f.fileno())
+                try:
+                    response = adapter.submit_order(
+                        symbol=signal['symbol'],
+                        side=signal.get('side', 'buy'),
+                        quantity=signal['quantity'],
+                    )
+                    broker_id = response.get('broker_order_id', '')
+                    broker_status = response.get('status', 'accepted')
+                    with path.open('a') as f:
+                        f.write(json.dumps({**record,'state':'SUBMITTED','broker_id':broker_id,
+                                            'broker_status':broker_status,'market':market,
+                                            'adapter_path':adapter_path})+'\n')
+                        f.flush();os.fsync(f.fileno())
+                    return {'status':'PAPER_SUBMITTED','client_order_id':'nf-'+fp,
+                            'broker_id':broker_id,'broker_status':broker_status,'orders_sent':1,
+                            'adapter_path':adapter_path}
+                except Exception as exc:
+                    return {'status':'UNKNOWN_DO_NOT_RETRY','client_order_id':'nf-'+fp,
+                            'error_type':type(exc).__name__,'orders_sent':'UNKNOWN'}
             a=broker_get('/v2/account',env)
             pos=broker_get('/v2/positions',env)
             orders=broker_get('/v2/orders?status=open&limit=500',env)
             reasons=risk_check(signal,a,pos,orders,fx,env)
             if reasons: return {'status':'BLOCKED','reasons':reasons,'orders_sent':0}
             # Commit intent BEFORE POST; ambiguous network failures must not double-submit.
-            record={'at':now.isoformat(),'client_order_id':'nf-'+fp,'provider':signal['provider'],
-                    'signal_id':signal['signal_id'],'state':'ATTEMPTED_UNKNOWN'}
             with path.open('a') as f:
                 f.write(json.dumps(record)+'\n');f.flush();os.fsync(f.fileno())
             try:

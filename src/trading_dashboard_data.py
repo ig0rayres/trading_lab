@@ -188,6 +188,36 @@ def _load_prodigy_opportunities(root):
         'research_tip',
     )
 
+def _latest_evolution_daily_tips(root: Path, limit: int = 8) -> list[dict]:
+    daily_dir = root / 'evolution' / 'daily'
+    if not daily_dir.is_dir():
+        return []
+    daily_files = sorted(daily_dir.glob('*.json'), reverse=True)
+    if not daily_files:
+        return []
+    try:
+        payload = json.loads(daily_files[0].read_text(encoding='utf-8'))
+    except (json.JSONDecodeError, OSError):
+        return []
+    tips = payload.get('tips') or []
+    out = []
+    for tip in tips[-limit:]:
+        if not isinstance(tip, dict):
+            continue
+        label = tip.get('label') or 'continuous_improvement'
+        if label not in SUGGESTION_ITEM_LABELS:
+            label = 'suggestion'
+        out.append(
+            {
+                'at': payload.get('date_utc'),
+                'kind': tip.get('kind') or 'daily_tip',
+                'summary': tip.get('summary') or tip.get('note'),
+                'label': label,
+            }
+        )
+    return out
+
+
 def _load_evolution_recent(root, limit=8):
     rows = read_jsonl(Path(root) / 'evolution' / 'decisions.jsonl')
     recent = []
@@ -202,8 +232,10 @@ def _load_evolution_recent(root, limit=8):
                 'label': 'continuous_improvement',
             }
         )
+    daily_tips = _latest_evolution_daily_tips(Path(root), limit=limit)
+    merged = (daily_tips + recent)[:limit]
     return _apply_suggestion_surface(
-        {'count': len(rows), 'recent': recent, 'items': []},
+        {'count': len(rows) + len(daily_tips), 'recent': merged, 'items': daily_tips},
         'continuous_improvement',
     )
 

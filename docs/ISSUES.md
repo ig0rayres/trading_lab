@@ -15,6 +15,7 @@
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
 | ISS-011 | aberto | N30 | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
+| ISS-012 | aberto (implementado N31 — aguarda PR/CI) | N31 | G-AJUSTE: melhoria contínua diária (fills + não-fills) + TimesFM research-only → Feature 11 |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -270,8 +271,9 @@
 | Ordem | Sprint | Entrega | Estado |
 |-------|--------|---------|--------|
 | 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
+| 1b | **N31** | G-AJUSTE método: ciclo diário fills+não-fills + TimesFM research-only (ISS-012) | **planejada** (não reescreve N28) |
 | 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
-| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1 **done**; N28.2–4 **blocked** até G-AJUSTE + fill real |
+| 3 | **N28** | Feature 11 ajuste supervisionado | N28.1 **done**; N28.2–4 após gate **N31** (método definido; bloco N28 não reescrito) |
 | fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
 | fora | N27.4 | Smoke sinal válido → ordem demo | **done** (smoke MSFT paper 2026-11-16; não substituído por pytest) |
 
@@ -290,17 +292,41 @@
 2. ~~Smoke **N27.4**~~ — **concluído** (MSFT `PAPER_SUBMITTED` na sessão real, 2026-11-16 pós-merge #35).
 3. Retrato de risco consolidado **≤120s** antes de submit em produção (`V4_PORTFOLIO_SNAPSHOT_STALE` se velho).
 4. **Rebuild** EasyPanel se a imagem desta frente ainda não estiver no ar.
-5. Definir método **G-AJUSTE** (Feature 11) — sem isso **N28** permanece blocked.
+5. ~~Definir método **G-AJUSTE** (Feature 11)~~ — **respondido** ISS-012 / N31 (ciclo diário fills+não-fills; TimesFM research-only). N28.2–4 executam o ajuste depois do gate N31; bloco N28 não é reescrito.
 6. Promover `prodigy_15d` a paper no banco **somente** com evidência; default continua research.
 
 **Pendências operador (push/CI):**
 
 7. ~~**PR #35**~~ — **merged** (2026-11-16). Closeout Features 8–9: `tests/test_panel_ops.py` + `tests/test_panel_triggers.py` (N30.3b).
 
-**Fora de escopo agora:** N28 até G-AJUSTE; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
+**Fora de escopo agora:** N28.2–4 até gate N31; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
 
 **Fontes:** REQUIREMENTS v0.4 Features 7–11; ROADMAP N17/N27/N28/N30; `docs/TEST-EVIDENCE.md` (N30.1/N30.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
 
 **Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief: `docs/.briefs/N30.brief.md`.
+
+---
+
+## ISS-012 — G-AJUSTE: melhoria contínua diária (Feature 11)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-sem-dominio / enhancement |
+| Sprint | N31 (campanha Feature 11 / N28) |
+| Status | aberto (planejada; brief `docs/.briefs/N31.brief.md`) |
+
+**Decisão operador (2026-11-16):** serviço de melhoria contínua que analisa com frequência ordens **executadas e não executadas**; a plataforma se **auto-analisa diariamente** para aprimorar as melhores estratégias (aprendizado a partir do rastro real). Fecha dúvida REQUIREMENTS §9 item **#8** (método do ajuste).
+
+**Adendo operador (2026-11-16):** incluir **TimesFM** (Google — foundation model de séries temporais) no planejamento do ciclo de melhoria contínua, como apoio de previsão/contexto — **não** como autorização de ordem nem limiar inventado de Tá Barato/momentum.
+
+**Guardrails (já no contrato):** sugestão ≠ ordem; não inventar parâmetro/limiar; não afrouxar âncora de risco; antes/depois/motivo + desfazer (ou só sugerir até o operador aplicar); saída TimesFM rotulada research/suggestion.
+
+**Reuse:** `src/evolution_engine.py`, `evolution/decisions.jsonl`, painel `continuous_improvement` (N28.1 labels); TimesFM via pacote/API oficial Google (Git First no plano) — sem reimplementar o modelo.
+
+**Aceite:** job/ciclo diário produz relatório + sugestões rotuladas a partir de fills e não-fills (+ forecast TimesFM quando disponível); nenhum caminho aplica ordem paper só por tip/forecast; N28.2–4 avançam sem inventar scoring; LIVE false; fail-closed se TimesFM indisponível.
+
+**Fontes:** operador `/pmo plan` 2026-11-16 (+ TimesFM); REQUIREMENTS Feature 11 + dúvida #8 (Respondida); ROADMAP N31 (bloco N28 intocado); ISS-011.
+
+**Nota headless:** TimesFM entra na task dedicada **N31.2** (adapter opcional, fail-closed, rótulo `research_tip`). N31.1 = job diário fills+não-fills. N31.3 = desbloqueia caminho N28.2–4 suggestion-first, sem inventar scoring. Brief: `docs/.briefs/N31.brief.md`.
 
 ---

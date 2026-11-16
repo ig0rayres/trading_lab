@@ -159,13 +159,14 @@
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N28",
+      "sprint": "N32",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-16T17:17:19Z",
+      "recorded_at": "2026-11-16T19:25:33Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N28.2-4 supervised adjustment; 13 focused tests",
+      "notes": "N32 control_flags parity; 25 passed test_signal_paper_runner+feature7_anchor_ceilings; parent pytest evidence",
+      "full_suite_ran": false,
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -175,7 +176,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_risk_snapshot_refresh.py -q --tb=no'",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_signal_paper_runner.py tests/test_feature7_anchor_ceilings.py -q --tb=no",
           "exit_code": 0
         }
       ],
@@ -185,17 +186,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "7904de5dba933751a45080d2b900d00ffe63f4d7",
-      "stamped_at": "2026-11-16T17:41:12Z",
+      "last_validated_sha": "41b04e7df11ce9511181b0913b6a9474a31763dd",
+      "stamped_at": "2026-11-16T19:26:00Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "46990e1ed063f933edcadc1e08c363ac191a5dd39c0c4b548c79c3d20e05368a",
-      "patch_id": "cf70aa42ae2db8fd57fdf843c50d460baa72f8d5",
+      "content_hash": "98228f885af30bece4c4136f458881f606abd1146dbcbb0cf9b71e3e011fa4f4",
+      "patch_id": "d2aee5fda6bf7e8fdadece6e70e80c26f1a6a88c",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N28"
+    "sprint_delivery_sprint": "N32"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

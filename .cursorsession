@@ -16,11 +16,11 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N30 em closeout — campanha ISS-011 (Alpaca-only)",
+  "fase_nome": "N17 código done (G-FORM blocked) — campanha ISS-011",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T15:30:00Z",
+  "ultimo_update": "2026-11-16T18:30:00Z",
   "modulos": [
     {
       "nome": "market-data",
@@ -114,52 +114,54 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "N30 closeout docs N30.4: Feature 7 US/CRYPTO [x] em contrato; campanha N30→N17→N28 blocked; ISS-010 Clear/OANDA operador; verifier stamp pendente.",
+  "contexto_rapido": "N17 G-FORM blocked; painel ta_barato_shadow; N30 push bloqueado GFX.2b; próximo N28 blocked G-AJUSTE; ISS-010 fora.",
   "sprint_tasks": [
     {
-      "id": "N30.0",
-      "title": "Git First reuse inventory for Prodigy ingest and Alpaca Feature 7",
+      "id": "N17.0",
+      "title": "Git First upstream paths ta_barato/momentum (G-FORM)",
       "status": "done",
+      "file": "docs/.briefs/N17-GIT-FIRST-REUSE.md",
       "depends_on": []
     },
     {
-      "id": "N30.1",
-      "title": "Complete autonomous Alpaca paper send for US_EQUITY and CRYPTO",
+      "id": "N17.1",
+      "title": "Gate B / research reuse; UPSTREAM_FORMULA_BLOCKED_KEYS",
       "status": "done",
-      "depends_on": [
-        "N30.0"
-      ]
+      "file": "src/strategy_catalog.py",
+      "depends_on": ["N17.0"]
     },
     {
-      "id": "N30.2",
-      "title": "Map Prodigy rank to paper ingest without auto phase promotion",
-      "status": "done",
-      "depends_on": [
-        "N30.0"
-      ]
+      "id": "N17.2",
+      "title": "Homolog operador shadow to paper limitado",
+      "status": "pending",
+      "depends_on": ["N17.1"]
     },
     {
-      "id": "N30.3",
-      "title": "Close Features 8-10 REQUIREMENTS only with existing panel tests",
+      "id": "N17.3",
+      "title": "TEST-EVIDENCE and RELEASE MVP-OP-1.1 matrix",
       "status": "done",
-      "depends_on": []
+      "file": "docs/TEST-EVIDENCE.md",
+      "depends_on": ["N17.1"]
     },
     {
-      "id": "N30.4",
-      "title": "Record campaign queue, NEVER_PAPER, operator pendencies",
+      "id": "N17.4",
+      "title": "F-003 orb-parity reprioritize (optional)",
+      "status": "skipped",
+      "depends_on": ["N17.1"]
+    },
+    {
+      "id": "N17.5",
+      "title": "Painel read-only Tá Barato shadow homolog",
       "status": "done",
-      "depends_on": [
-        "N30.1",
-        "N30.2",
-        "N30.3"
-      ]
+      "file": "src/trading_dashboard_data.py",
+      "depends_on": ["N17.1"]
     }
   ],
   "checkpoint": {
-    "phase": "implementation",
-    "sprint": "N30",
+    "phase": "testing",
+    "sprint": "N17",
     "branch": "front/n27-alpaca-loop",
-    "current_task": "N30.4",
+    "current_task": "N17.5",
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
@@ -189,8 +191,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "322318b4c99f0938fe58667ff1afe6af0a5d9886",
-      "stamped_at": "2026-11-16T09:22:48Z",
+      "last_validated_sha": "836300953834e7d771dcc1ada4e8879d7c7cdcdf",
+      "stamped_at": "2026-11-16T09:23:10Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
@@ -198,8 +200,8 @@
       "patch_id": "0093cefd581a8b762c21107f30a8631c39c59375",
       "patch_id_version": 2
     },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N30"
+    "sprint_delivery": "pending",
+    "sprint_delivery_sprint": "N17"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -234,7 +236,6 @@
     "messages_lost": 423
   },
   "compact_count": 11,
-  "previous_sprint": "N27",
   "front": {
     "slug": "n27-alpaca-loop",
     "kind": "agent",
@@ -244,7 +245,7 @@
     "sprint_branch": "front/n27-alpaca-loop"
   },
   "sprint_branch": "front/n27-alpaca-loop",
-  "sprint_nome": "Sprint N30 — laço Alpaca US+cripto e caminho Prodígio (ISS-011)",
+  "sprint_nome": "Sprint N17 — MVP-OP-1.1 Tá Barato (G-FORM blocked; shadow homolog)",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -288,7 +289,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "sprint_atual": "N30",
+  "previous_sprint": "N30",
+  "sprint_atual": "N17",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",

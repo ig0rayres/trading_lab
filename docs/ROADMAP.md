@@ -880,18 +880,18 @@ MVP-OP-0.9 (N15) ──► MVP-OP-1.0 (N16) ──► MVP-OP-1.1 (N17)
 > Categoria: N  
 > Status: planejada  
 > titulo_humano: Tá Barato com regras upstream homologadas em shadow/paper  
-> Gate: fórmulas/limites de `ta_barato` (e momentum se escopo) recuperadas em vendor — **senão** sprint permanece blocked e documenta gap; homolog pytest; LIVE false  
+> Gate: fórmulas/limites de `ta_barato` (e momentum se escopo) recuperadas em vendor — **G-FORM blocked @ pin**; shadow homolog + painel entregues; paper blocked; homolog pytest; LIVE false  
 > review: senior+qa  
 > Release tag: `MVP-OP-1.1`
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N17.0 Git First: upstream paths ta_barato/momentum | `/git` | N16 gate |
-| [ ] | M | N17.1 Integração/adaptação Gate B ou research (reuse only) | `/dev` | N17.0 |
+| [x] | P | N17.0 Git First: upstream paths ta_barato/momentum | `/git` | N16 gate |
+| [x] | M | N17.1 Integração/adaptação Gate B ou research (reuse only) | `/dev` | N17.0 |
 | [ ] | P | N17.2 Homolog operador shadow → paper limitado (evidência) | operador | N17.1 |
-| [ ] | P | N17.3 REQUIREMENTS/TEST-EVIDENCE matriz ta_barato | docs | N17.2 |
+| [x] | P | N17.3 REQUIREMENTS/TEST-EVIDENCE matriz ta_barato | docs | N17.2 |
 | [ ] | P | N17.4 Repriorizar F-003 orb-parity (opcional pós-1.1) | `/pmo` | N17.2 |
-| [ ] | M | N17.5 Painel: seção Tá Barato / família upstream (read-only homolog) | `/dev` | N17.2 |
+| [x] | M | N17.5 Painel: seção Tá Barato / família upstream (read-only homolog) | `/dev` | N17.2 |
 
 ---
 

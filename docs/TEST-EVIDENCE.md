@@ -309,6 +309,30 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest -q \
   tests/test_signal_paper_runner.py tests/test_paper_gateway_queue.py tests/test_paper_restart_no_duplicate.py -k 'n30 or n27_5 or n27_gateway_b3 or n27_forex_runner'
 ```
 
+## Sprint N17 — MVP-OP-1.1 Tá Barato (G-FORM blocked; shadow homolog)
+
+> Sprint N17 · `LIVE_TRADING_ENABLED=false` · vendor pin `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd`  
+> **G-FORM:** no `ta_barato` / `momentum` module in `day-trader-skill` at pin — paper integration **blocked**; local `market_opportunities.py` is shadow-only, not upstream formula.
+
+| Task | Entrega | Status |
+|------|---------|--------|
+| N17.0 Git First | `docs/.briefs/N17-GIT-FIRST-REUSE.md` | ok |
+| N17.1 Gate B / research | `UPSTREAM_FORMULA_BLOCKED_KEYS`; reuse `gate_b_strategy_reject` | ok (blocked upstream) |
+| N17.2 Operador shadow→paper | — | operador pendente |
+| N17.3 Docs matriz | Esta seção + REQUIREMENTS sem limiar novo | ok |
+| N17.4 F-003 orb-parity | — | skip |
+| N17.5 Painel read-only | `command_panel.ta_barato_shadow` + HTML Command Panel v1 | ok |
+
+| `strategy_key` | G-FORM | Fase | Homolog pytest | Paper |
+|----------------|--------|------|----------------|-------|
+| `ta_barato` | **BLOCKED** (0 vendor paths) | research | `tests.test_n17_ta_barato` + `tests.test_v4_capabilities` shadow | **não** |
+| `momentum` | **BLOCKED** (0 vendor paths) | research | `tests.test_gate_b_risk` phase block | **não** |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
+  tests.test_n17_ta_barato tests.test_strategy_homolog_traceability tests.test_v4_capabilities -q
+```
+
 ## Sprint N30.4 — Campanha ISS-011 e pendências operador
 
 > Docs-only · campanha **N30 → N17 → N28 (blocked)** · `news_first` research · `orb`/`mean_reversion` NEVER_PAPER · sem live

@@ -259,7 +259,7 @@
 |-------|--------|
 | Categoria | enhancement / epic |
 | Sprint | N30 → N17 → N28 (campanha) |
-| Status | aberto (N30 em closeout de docs; ISS-011 aberto até N17/N28) |
+| Status | aberto (N30 código done; push PR bloqueado GFX.2b; N17 código done G-FORM blocked; N28 pendente) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); B3/FOREX barrados sem adapter ISS-010; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 e Clear/OANDA permanecem fora.
 
@@ -270,7 +270,7 @@
 | Ordem | Sprint | Entrega | Estado |
 |-------|--------|---------|--------|
 | 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
-| 2 | **N17** | Tá Barato + momentum — já no ROADMAP; Git First N17.0; não reinventar | planejada (fila; **não executar** nesta frente) |
+| 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
 | 3 | **N28** | Feature 11 ajuste supervisionado | **blocked** até G-AJUSTE + fill real (**não executar**) |
 | fora | N29.5 / **ISS-010** | Clear B3 + OANDA Practice | pendência operador |
 | fora | N27.4 | Smoke sinal válido → ordem demo | pendência operador |
@@ -293,7 +293,11 @@
 5. Definir método **G-AJUSTE** (Feature 11) — sem isso **N28** permanece blocked.
 6. Promover `prodigy_15d` a paper no banco **somente** com evidência; default continua research.
 
-**Fora de escopo agora:** Executar N17/N28; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
+**Pendências operador (push/CI):**
+
+7. **N30 push/PR** bloqueado pelo hook `validation-gate` GFX.2b (`patch_id`/refspec) — commits locais `322318b`, `8363009` na frente; operador reconcilia stamp/refspec antes do push (sem bypass).
+
+**Fora de escopo agora:** N28 até G-AJUSTE; adapters Clear B3 e OANDA Practice; `LIVE_TRADING_ENABLED=true`; promover `orb` / `mean_reversion` a paper; inventar scoring.
 
 **Fontes:** REQUIREMENTS v0.4 Features 7–11; ROADMAP N17/N27/N28/N30; `docs/TEST-EVIDENCE.md` (N30.1/N30.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
 

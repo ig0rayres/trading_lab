@@ -23,6 +23,8 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(cp['schema_version'], 'command-panel-v1')
             self.assertIn('strategy_catalog', cp)
             self.assertIn('opportunities', cp)
+            self.assertIn('ta_barato_shadow', cp)
+            self.assertEqual(cp['ta_barato_shadow']['upstream_formula'], 'BLOCKED')
 
     def test_html_escapes_data(self):
         with tempfile.TemporaryDirectory() as d:

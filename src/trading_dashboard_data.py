@@ -16,6 +16,64 @@ def read_jsonl(path):
         except (ValueError,TypeError):pass
     return rows
 
+def _load_ta_barato_shadow(root):
+    """Read-only homolog slice for strategy_key ta_barato (N17). Not an upstream formula."""
+    pin = '3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd'
+    base = {
+        'strategy_key': 'ta_barato',
+        'upstream_formula': 'BLOCKED',
+        'upstream_vendor_sha': pin,
+        'upstream_paths_searched': [
+            'trader-entry/',
+            'trader-exit/',
+            'trader-risk/',
+            'trader-budget/',
+            'trader-scanner/',
+            'trader-news/',
+            'trader-analyst/',
+            '(full tree)',
+        ],
+        'local_shadow_module': 'src/market_opportunities.py',
+        'local_shadow_note': (
+            'Lab drawdown radar for homolog only; does not satisfy G-FORM or authorize paper.'
+        ),
+        'paper_authorized': False,
+        'execution_authorized': False,
+        'orders_sent': 0,
+    }
+    path = Path(root) / 'research' / 'opportunities-latest.json'
+    if not path.is_file():
+        return {**base, 'status': 'NOT_RUN', 'items': [], 'mode': 'SHADOW_ONLY'}
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError, TypeError):
+        return {**base, 'status': 'UNREADABLE', 'items': [], 'mode': 'SHADOW_ONLY'}
+    if not isinstance(payload, dict) or payload.get('mode') != 'SHADOW_ONLY':
+        return {**base, 'status': 'UNTRUSTED', 'items': [], 'mode': 'SHADOW_ONLY'}
+    opps = payload.get('opportunities') or []
+    items = []
+    for row in opps[:12]:
+        if not isinstance(row, dict):
+            continue
+        items.append(
+            {
+                'market': row.get('market'),
+                'symbol': row.get('symbol'),
+                'drop_pct': row.get('drop_pct_from_previous_5_bar_peak'),
+                'radar_candidate': row.get('radar_candidate'),
+                'mode': row.get('mode', 'SHADOW_ONLY'),
+                'paper_approved': False,
+            }
+        )
+    return {
+        **base,
+        'status': 'OK',
+        'as_of': payload.get('schema_version'),
+        'items': items,
+        'mode': 'SHADOW_ONLY',
+    }
+
+
 def _load_prodigy_opportunities(root):
     path = Path(root) / 'intelligence' / 'prodigy-top10-latest.json'
     if not path.is_file():
@@ -98,6 +156,7 @@ def command_panel(root):
         },
         'strategy_catalog': _load_strategy_catalog(),
         'opportunities': _load_prodigy_opportunities(root),
+        'ta_barato_shadow': _load_ta_barato_shadow(root),
         'continuous_improvement': _load_evolution_recent(root),
         'history': {'postgres_ledger_counts': ledger},
     }

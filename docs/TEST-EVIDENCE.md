@@ -258,3 +258,64 @@ Comando Gate B / catálogo (regressão):
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest \
   tests.test_strategy_catalog tests.test_gate_b_risk -v
 ```
+
+## Sprint N30.3 — Features 8–10 (painel; pytest `test_panel_*` only)
+
+> Sprint N30 · `docs/REQUIREMENTS.md` Features 8–10 · `LIVE_TRADING_ENABLED=false`  
+> Gate N30.3: marcar `[x]` no REQUIREMENTS **somente** com nodeid em `tests/test_panel_ops.py` ou `tests/test_panel_triggers.py`. Feature 7 inalterada nesta task.
+
+| Feature | Critério REQUIREMENTS | Evidência pytest (nodeid) | REQUIREMENTS |
+|---------|------------------------|---------------------------|--------------|
+| 8 | Parada geral impede ordem nova | `tests.test_panel_ops.PanelKillSwitchCycleTests.test_kill_switch_from_panel_blocks_next_eval` | `[x]` |
+| 8 | Dia a dia sem Exec | `tests.test_panel_ops.PanelOpsRunbookTest.test_daily_runbook_points_to_panel_not_exec` | `[x]` |
+| 8 | Acesso exige autenticação | `tests.test_panel_ops.PanelOpsHttpTests.test_root_redirects_to_login_without_cookie`, `test_login_sets_cookie_and_opens_central`, `test_api_signals_requires_session`, `test_bearer_alone_still_401_on_patch`; `tests.test_panel_triggers.PanelTriggerHttpTests.test_patch_triggers_bearer_only_is_401` | `[x]` |
+| 8 | Alteração registrada com valor anterior + data | *(audit parcial em `test_patch_triggers_with_cookie_updates_audit`)* | `[ ]` |
+| 8 | Plataforma nunca afrouxa âncora sozinha | *(sem teste nomeado)* | `[ ]` |
+| 9 | Lista sinais origem/destino/motivo | *(só `test_signal_destination_blocked_vs_queue` no helper)* | `[ ]` |
+| 9 | Ranking Prodígio + copiados | *(sem assert de ranking/copiados)* | `[ ]` |
+| 9 | Barrado com gate e âncora | `tests.test_panel_ops.PanelOpsDataTests.test_blocked_context_exposes_gate_and_anchor` | `[x]` |
+| 10 | Resultado por estratégia + total (fill confirmado) | *(total sim; `strategies[]` não assertado)* | `[ ]` |
+| 10 | Ordem sem fill fora do resultado | `tests.test_panel_ops.PanelOpsDataTests.test_performance_excludes_unfilled_orders` | `[x]` |
+| 10 | Valores brutos rotulados | idem — `pnl_label` gross | `[x]` |
+
+Comando local (escopo N30.3):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_panel_ops tests.test_panel_triggers -q
+```
+
+Git First (N30.0): `docs/.briefs/N30-GIT-FIRST-REUSE.md` · vendor pin/local SHA `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd`.
+
+## Sprint N30.1 — Feature 7 Alpaca US_EQUITY + CRYPTO (pytest only)
+
+> Sprint N30 · `docs/REQUIREMENTS.md` Feature 7 · `LIVE_TRADING_ENABLED=false`  
+> Gate N30.4: marcar `[x]` no REQUIREMENTS **somente** com nodeid abaixo ou equivalente N27 no mesmo gate. B3/FOREX permanecem `[ ]` (**ISS-010**).
+
+| Critério / mercado | Evidência pytest (nodeid) | REQUIREMENTS |
+|--------------------|---------------------------|--------------|
+| US_EQUITY → ordem Alpaca paper | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_us_equity_demo_on_paper_submitted` | `[x]` |
+| CRYPTO candidato de risco honesto + submit | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_crypto_risk_candidate_uses_signal_market` | `[x]` |
+| CRYPTO gateway auto submit | `tests.test_paper_gateway_queue.N30Feature7AlpacaPaperLoopTest.test_n30_gateway_crypto_risk_candidate_market_is_crypto` | `[x]` |
+| CRYPTO sem path nomeado barrado | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_crypto_without_named_path_blocked_no_post` | `[x]` barrado |
+| Snapshot risco >120s | `tests.test_signal_paper_runner.PaperRunnerTests.test_n30_stale_v4_portfolio_snapshot_still_blocked` | lacuna âncoras |
+| Chave live-looking → host paper | `tests.test_paper_gateway_queue.N27AlpacaOnlyGateBWiringTest.test_n27_5_live_looking_key_keeps_paper_alpaca_host` | `[x]` |
+| Reinício laço demo sem 2º POST | `tests.test_paper_restart_no_duplicate.PaperRestartNoDuplicateTest.test_n30_demo_operation_on_restart_no_second_broker_post` | `[x]` |
+| B3/FOREX zero POST Alpaca | `tests.test_paper_gateway_queue.N27AlpacaOnlyGateBWiringTest.test_n27_gateway_b3_equity_blocked_no_alpaca_post`; `tests.test_paper_gateway_queue.N27AlpacaOnlyPaperRunnerMarketTest.test_n27_forex_runner_never_posts_alpaca_paper_host` | B3/FOREX `[ ]` ISS-010 |
+
+Comando local (escopo N30.1):
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest -q \
+  tests/test_signal_paper_runner.py tests/test_paper_gateway_queue.py tests/test_paper_restart_no_duplicate.py -k 'n30 or n27_5 or n27_gateway_b3 or n27_forex_runner'
+```
+
+## Sprint N30.4 — Campanha ISS-011 e pendências operador
+
+> Docs-only · campanha **N30 → N17 → N28 (blocked)** · `news_first` research · `orb`/`mean_reversion` NEVER_PAPER · sem live
+
+| Artefato | Entrega |
+|----------|---------|
+| `docs/ISSUES.md` `## ISS-011` | Fila de campanha, tabela de estratégias, lista numerada de pendências operador |
+| `docs/REQUIREMENTS.md` Feature 7 + G-MKT | `[x]` só US/CRYPTO; B3/FOREX `[ ]` + **ISS-010** |
+| `docs/REQUIREMENTS.md` Feature 1 + 4 | `news_first` research; NEVER_PAPER explícito |
+| `docs/ROADMAP.md` Sprint N30 | Status **em closeout** (não `concluída` até verifier) |

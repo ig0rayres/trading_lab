@@ -82,7 +82,7 @@ def risk_check(signal, account, positions, open_orders, fx, env):
                 # A snapshot must be anchored to the currently observed US broker state.
                 if snapshot.get('alpaca_positions_count') != len(positions) or snapshot.get('alpaca_open_orders_count') != len(open_orders):
                     reasons.append('V4_BROKER_SNAPSHOT_MISMATCH')
-                candidate = {'market':'US_EQUITY', 'symbol':signal['symbol'], 'side':'buy',
+                candidate = {'market':signal.get('market', 'US_EQUITY'), 'symbol':signal['symbol'], 'side':'buy',
                              'verified':True, 'trading_mode':'PAPER', 'quantity':qty,
                              'entry_brl':str(entry*fx), 'stop_brl':str(stop*fx),
                              'prodigy':signal.get('provider') in set(filter(None,env.get('PRODIGY_PROVIDERS','').split(',')))}

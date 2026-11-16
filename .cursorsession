@@ -12,15 +12,15 @@
       "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
     }
   ],
-  "fase_atual": "9",
-  "beesy_version": "4.104.20",
+  "fase_atual": "10",
+  "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "fase_nome": "N30 em closeout — campanha ISS-011 (Alpaca-only)",
   "sprint_pending_merge": null,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T14:51:42-03:00",
+  "ultimo_update": "2026-11-16T15:30:00Z",
   "modulos": [
     {
       "nome": "market-data",
@@ -77,9 +77,9 @@
     }
   ],
   "proximos_passos": [
-    "Executar N10.1–N10.4 na frente n10-closeout",
-    "/qa validar N10",
-    "PR merge + /git front finish"
+    "Parent Fable / plan-verifier em docs/.briefs/N30.brief.md",
+    "Rock EXECUTE N30 nesta frente (onda 0: N30.0+N30.3; onda 1: N30.1+N30.2; onda 2: N30.4)",
+    "Não executar N17/N28/N29.5 nesta rodada"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -114,110 +114,99 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "Sprint N18: v4-ops autostart dashboard 8765; branch front/n16-8-panel; N18.3 operador rebuild; ISS-008.",
-  "sprint_atual": "N18",
+  "contexto_rapido": "N30 closeout docs N30.4: Feature 7 US/CRYPTO [x] em contrato; campanha N30→N17→N28 blocked; ISS-010 Clear/OANDA operador; verifier stamp pendente.",
   "sprint_tasks": [
     {
-      "id": "N18.1",
-      "title": "Layout v4-ops (run.sh, v4_ops_main.sh, Dockerfile, tests)",
-      "size": "M",
+      "id": "N30.0",
+      "title": "Git First reuse inventory for Prodigy ingest and Alpaca Feature 7",
       "status": "done",
-      "depends_on": [],
-      "files": [
-        "scripts/v4_ops_main.sh",
-        "scripts/run.sh",
-        "Dockerfile",
-        "Dockerfile.demo",
-        "tests/test_v4_ops_layout.py"
+      "depends_on": []
+    },
+    {
+      "id": "N30.1",
+      "title": "Complete autonomous Alpaca paper send for US_EQUITY and CRYPTO",
+      "status": "done",
+      "depends_on": [
+        "N30.0"
       ]
     },
     {
-      "id": "N18.2",
-      "title": "Runbook DASHBOARD-OPERATIONS + EASYPANEL/COMMAND-PANEL/MVP-DEMO",
-      "size": "P",
+      "id": "N30.2",
+      "title": "Map Prodigy rank to paper ingest without auto phase promotion",
       "status": "done",
       "depends_on": [
-        "N18.1"
-      ],
-      "files": [
-        "docs/DASHBOARD-OPERATIONS.md",
-        "EASYPANEL.md",
-        "docs/COMMAND-PANEL.md",
-        "docs/HOMOLOGATION-N16.8-PANEL.md",
-        "docs/MVP-DEMO-RUNBOOK.md"
+        "N30.0"
       ]
     },
     {
-      "id": "N18.3",
-      "title": "Operador: rebuild trading-lab + TEST-EVIDENCE N18",
-      "size": "P",
-      "status": "todo",
-      "depends_on": [
-        "N18.2"
-      ],
-      "files": [],
-      "owner": "operador"
+      "id": "N30.3",
+      "title": "Close Features 8-10 REQUIREMENTS only with existing panel tests",
+      "status": "done",
+      "depends_on": []
     },
     {
-      "id": "N18.4",
-      "title": "Closeout ROADMAP N16 concluida",
-      "size": "P",
-      "status": "todo",
+      "id": "N30.4",
+      "title": "Record campaign queue, NEVER_PAPER, operator pendencies",
+      "status": "done",
       "depends_on": [
-        "N18.3"
-      ],
-      "files": [
-        "docs/ROADMAP.md"
+        "N30.1",
+        "N30.2",
+        "N30.3"
       ]
     }
   ],
   "checkpoint": {
-    "sprint": "N18",
     "phase": "implementation",
-    "branch": "front/n16-8-panel",
-    "last_completed_task": "N18.2",
-    "current_task": "N18.3",
-    "timestamp": "2026-11-03T19:52:00-03:00",
-    "relevant_paths": [
-      "scripts/v4_ops_main.sh",
-      "scripts/run.sh",
-      "Dockerfile",
-      "src/v4_web_dashboard.py",
-      "docs/DASHBOARD-OPERATIONS.md",
-      "EASYPANEL.md"
-    ],
+    "sprint": "N30",
+    "branch": "front/n27-alpaca-loop",
+    "current_task": "N30.4",
+    "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N18",
+      "sprint": "N30",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
-      "senior_status": "PASS",
       "findings_registered": [],
-      "findings_found": 0,
-      "findings_disposition": [],
-      "recorded_at": "2026-11-03T19:59:00Z",
-      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
-      "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
-      "round": 1,
-      "full_suite_ran": false
+      "recorded_at": "2026-11-16T09:21:34Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "532 pytest N30 Alpaca US/CRYPTO + prodigy ingest; Clear/OANDA out",
+      "senior_status": "PASS"
     },
     "validation_gate": {
       "produced_by": "validation-stamp.py",
-      "result": "BLOQUEADA_ARVORE_SUJA",
-      "validation_mode": "blocked",
-      "gates": [],
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "bash -lc 'cd /home/igor/cursor/trading-lab.fronts/n27-alpaca-loop && LIVE_TRADING_ENABLED=false UPSTREAM_DIR=/home/igor/cursor/trading-lab/vendor/day-trader-skill PYTHONPATH=src /usr/bin/python3 -m pytest -q --tb=no'",
+          "exit_code": 0
+        }
+      ],
       "dirty_production_paths": [
-        ".cursor/router-state.json",
-        ".cursor/session-state-cache.json",
+        "scripts/run.sh",
+        "src/signal_paper_runner.py",
+        "tests/test_paper_gateway_queue.py",
+        "tests/test_paper_restart_no_duplicate.py",
+        "tests/test_signal_paper_runner.py",
+        ".beesy/",
         ".cursorsession.bak",
-        ".cursorsession.lock"
+        ".cursorsession.lock",
+        "src/prodigy_paper_ingest.py",
+        "tests/test_prodigy_paper_ingest.py"
       ],
       "missing_backends": [],
-      "last_validated_sha": "012649666d0c9b318dd84f9c690fe9b34d29bf94",
-      "stamped_at": "2026-11-03T20:01:22Z",
-      "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
+      "last_validated_sha": "25f5c5b46bd8abe760eb9234127e12acb15a507a",
+      "stamped_at": "2026-11-16T09:22:11Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "ae36b1d7a998b2ba4c1105dd8dffe053a4172c6f",
       "patch_id_version": 2
-    }
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N30"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -232,33 +221,37 @@
     "docs/VENDOR-PIN.md",
     ".github/workflows/ci.yml",
     "requirements-dev.txt",
-    ".dockerignore"
+    ".dockerignore",
+    ".cursor/rules/30-triggers.mdc",
+    ".cursor/rules/40-markets.mdc",
+    ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-tarefas",
-    "phase": "Sprint N9 implementation",
-    "intent": "Homologação D5 itens 3–7: runbook + evidência; operador EasyPanel.",
-    "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
-    "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
-    "next_steps": "N9.1 expand Gate A runbook in HOMOLOGATION.md",
-    "updated_at": "2026-10-30T14:51:42-03:00"
+    "persona": "tech-lead",
+    "phase": "Rules de gatilho e mercado; sprint N18 segue registrada",
+    "intent": "Travar no agente o contrato de gatilho no painel e os mercados B3, cripto e forex.",
+    "changes_made": ".cursor/rules/30-triggers.mdc, .cursor/rules/40-markets.mdc, .cursor/skills/panel-triggers/SKILL.md.",
+    "decisions": "Rules antigas não foram reescritas. PATCH não cria ordem. Simulador local não é fill. Alpaca não recebe B3 nem forex.",
+    "next_steps": "Sprint do laço via /pmo plan. Migration 002 só nessa sprint. /devops planejar se for mexer em CI ou no processo.",
+    "updated_at": "2026-11-03T22:54:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-11-03T19:30:21Z",
-    "usage_percent": 90.752,
-    "messages_lost": 337
+    "compacted_at": "2026-11-04T02:00:04Z",
+    "usage_percent": 95.121875,
+    "messages_lost": 423
   },
-  "compact_count": 9,
-  "previous_sprint": "N16",
+  "compact_count": 11,
+  "previous_sprint": "N27",
   "front": {
-    "slug": "n16-8-panel",
+    "slug": "n27-alpaca-loop",
     "kind": "agent",
-    "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab",
-    "branch": "front/n16-8-panel"
+    "parent_root": "/home/igor/cursor/trading-lab",
+    "worktree": "/home/igor/cursor/trading-lab.fronts/n27-alpaca-loop",
+    "branch": "front/n27-alpaca-loop",
+    "sprint_branch": "front/n27-alpaca-loop"
   },
-  "sprint_branch": "front/n16-8-panel",
-  "sprint_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "sprint_branch": "front/n27-alpaca-loop",
+  "sprint_nome": "Sprint N30 — laço Alpaca US+cripto e caminho Prodígio (ISS-011)",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -301,5 +294,47 @@
     ],
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
-  }
+  },
+  "sprint_atual": "N30",
+  "autopilot": {
+    "active": true,
+    "started_at": "2026-11-16T08:59:06.336014+00:00",
+    "mandate": "full",
+    "operator_absent": true,
+    "note": "Deliver contracted Features 7-11 minus Clear/OANDA; no pause; pendencias for operator-only",
+    "auto_decisions": [
+      {
+        "timestamp": "2026-11-16T08:59:06.336014+00:00",
+        "file": "pmo-plan",
+        "decision": "category=N feature-sem-dominio; skip Passo2 (REQUIREMENTS v0.4 already defines Features 7-11); exclude Clear/OANDA",
+        "rationale": "Operator: Nao pare; entregar contrato exceto plataformas 3os nao homologadas"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "docs/ROADMAP.md",
+        "decision": "sprint_id=N30 (max existing N29); do not rewrite N17/N28/N29",
+        "rationale": "next available N >29; N17 and N28 already planned — campaign queue only"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "pmo-plan",
+        "decision": "feature-sem-dominio; skip Passo2 phase review; skip ISSUES preview (ISS-011 exists)",
+        "rationale": "autopilot conservative; REQUIREMENTS v0.4 already specifies Features 7-11; no new table/screen"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "docs/ROADMAP.md",
+        "decision": "review=senior+qa; N28 remains blocked on G-AJUSTE; news_first stays research; orb/mean_reversion NEVER_PAPER",
+        "rationale": "G-AJUSTE unanswered; contract does not require news_first paper; REQUIREMENTS forbids ORB paper"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N30; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Rock PLAN writes plan then parent EXECUTE; operator absent so no AskQuestion"
+      }
+    ]
+  },
+  "rock_auto": true,
+  "rock_mandate": "full"
 }

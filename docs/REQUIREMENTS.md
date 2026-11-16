@@ -63,7 +63,8 @@ O MVP de produto, para este documento, é o laboratório até paper reconciliado
 
 **Regras de negócio:**
 - `OK_RESEARCH_ONLY` prova execução do radar naquela amostra, não prova paper.
-- ORB e mean reversion permanecem em Research/Shadow. ORB não vira estratégia principal de paper.
+- `news_first` permanece em **research** (N30.4): notícia é hipótese; ciclo e auditoria Gate A apenas — o contrato **não** exige ordem paper para esta família.
+- `orb` e `mean_reversion` permanecem **NEVER_PAPER** (`NEVER_PAPER_KEYS` em `src/strategy_catalog.py`; fase seed shadow). Gate B rejeita mesmo se a linha no banco for `paper_*` (`STRATEGY_NOT_PAPER` / `STRATEGY_ORB_NOT_SELECTABLE`). ORB não vira estratégia principal de paper.
 
 **Critérios de aceite:**
 - [x] `pytest` com evidência em CI (GitHub Actions run [41041762290](https://github.com/ig0rayres/trading_lab/actions/runs/41041762290), commit `f597f8b`, job **test** verde). Contagens 224–395 de ZIPs não substituem isso.
@@ -129,12 +130,12 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - **Evidência**: Decidido o contrato. Fórmulas numéricas de momentum, “Tá Barato Demais” e Prodigy não foram recuperadas. Não inventar limiar.
 
 **Famílias:**
-- News First: notícia é hipótese, com timestamp, veículo, tickers, categoria, frescor e confiança. Não é compra ou venda pelo tom do texto. Rejeitar notícia velha, ticker indefinido, rumor sem fonte, movimento já no preço, divergência com o preço e liquidez ruim.
+- News First: notícia é hipótese, com timestamp, veículo, tickers, categoria, frescor e confiança. Não é compra ou venda pelo tom do texto. Permanece **research** (N30.4); sem ordem paper automática — ciclo/Gate A apenas.
 - Momentum: força, rompimento e continuidade com barra fechada. Limiares numéricos finais não estão decididos até saírem do código.
 - Tá Barato Demais: nome interno de desconto/distorção, por mercado (EUA, B3, cripto), com parâmetros próprios. Não é “caiu, compra”. Fórmula, percentis e gatilhos não foram recuperados.
 - Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. Collective2 observado: 10 candidatos, nenhum com histórico de seis meses verificado, nenhum aprovado para paper-copy, zero ordens.
-- Prodigy 15 dias: candidatos fortes e recentes, janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, retorno líquido positivo, drawdown e consistência. Fórmula de pontuação ainda pendente. Risco paper inicial R$ 20.
-- ORB e mean reversion: shadow/research. ORB 1R e 2R reportados com média R e profit factor negativos. Sem edge intraday validado.
+- Prodigy 15 dias: candidatos fortes e recentes, janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, retorno líquido positivo, drawdown e consistência. Fórmula de pontuação ainda pendente. Risco paper inicial R$ 20. Fase default **research**; rank→ingest (N30) não promove fase sozinho.
+- ORB e mean reversion: shadow/research; **NEVER_PAPER** no catálogo (N30.4). ORB 1R e 2R reportados com média R e profit factor negativos. Sem edge intraday validado.
 
 **Estados persistentes:** RESEARCH, SHADOW, PAPER_LIMITED, PAPER_VALIDATED. LIVE desabilitado. Um estado não sobe por lucratividade aparente nem por HTTP 200.
 
@@ -211,19 +212,23 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 | Perda máxima na semana | R$ 500 |
 
 **Critérios de aceite:**
-- [ ] Sinal válido vira ordem na conta demo sem ação manual do operador.
-- [ ] Nenhuma ordem sai com qualquer âncora estourada.
+- [x] Sinal válido vira ordem na conta demo sem ação manual — **US_EQUITY e CRYPTO (Alpaca paper)** (`tests/test_signal_paper_runner.py` `test_n30_us_equity_demo_on_paper_submitted`, `test_n30_crypto_risk_candidate_uses_signal_market`; `tests/test_paper_gateway_queue.py` `N30Feature7AlpacaPaperLoopTest.test_n30_gateway_crypto_risk_candidate_market_is_crypto`).
+- [ ] Sinal válido vira ordem na conta demo **B3** (Clear simulada) — **G-MKT § abaixo; adapter ISS-010 / N29.5** (ADR-010: sem POST Alpaca).
+- [ ] Sinal válido vira ordem na conta demo **FOREX** (OANDA Practice) — **G-MKT / ISS-010 / N29.5** (ADR-010: sem POST Alpaca).
+- [x] Mercado sem conta demo nomeada fica barrado com `NO_DEMO_ACCOUNT_PATH` e **zero** POST Alpaca (`test_n30_crypto_without_named_path_blocked_no_post`; `test_n27_gateway_b3_equity_blocked_no_alpaca_post`; `test_n27_forex_runner_never_posts_alpaca_paper_host`).
+- [ ] Nenhuma ordem sai com qualquer âncora estourada. *Parcial N30.1: snapshot de risco >120s bloqueia submit (`test_n30_stale_v4_portfolio_snapshot_still_blocked`); tetos dia/semana não assertados nesta sprint.*
 - [ ] Perda do dia ou da semana no teto para a operação até o próximo período e registra o motivo.
-- [ ] Host de destino é sempre o paper; existir uma chave live no ambiente não muda isso.
-- [ ] Reinício do serviço retoma a operação sem duplicar ordem.
+- [x] Host de destino é sempre o paper; existir uma chave live no ambiente não muda isso (`tests/test_paper_gateway_queue.py` `test_n27_5_live_looking_key_keeps_paper_alpaca_host`; hosts em `test_n30_us_equity_demo_on_paper_submitted`).
+- [x] Reinício do serviço retoma a operação sem duplicar ordem com laço demo ligado (`tests/test_paper_restart_no_duplicate.py` `test_n30_demo_operation_on_restart_no_second_broker_post`).
 
 **G-MKT — corretoras demo nomeadas (2026-11-13, operador):**
 
-| Mercado | Conta demo escolhida | Observação |
-|---------|----------------------|------------|
-| B3 | Clear — Smart Trader API (ambiente **simulado**) | REST/WS; posição, ordem e status. Day trade Clear. **Não** Alpaca. |
-| Cripto | Alpaca Paper (já ligada) | Mantém o caminho paper existente. |
-| Forex | OANDA fxTrade **Practice** (API v20) | REST practice; ordem + fill. **Não** Alpaca. |
+| Mercado | Conta demo escolhida | Observação | Feature 7 (N30.4) |
+|---------|----------------------|------------|-------------------|
+| B3 | Clear — Smart Trader API (ambiente **simulado**) | REST/WS; posição, ordem e status. Day trade Clear. **Não** Alpaca. | `[ ]` — **ISS-010**; barrado até adapter homologado |
+| Cripto | Alpaca Paper (já ligada) | Mantém o caminho paper existente. | `[x]` — pytest N30.1 (env `DEMO_ACCOUNT_PATH_CRYPTO`) |
+| Forex | OANDA fxTrade **Practice** (API v20) | REST practice; ordem + fill. **Não** Alpaca. | `[ ]` — **ISS-010**; barrado até adapter homologado |
+| US ação | Alpaca Paper | Caminho existente N27/N30. | `[x]` — pytest N30.1 |
 
 O identificador concreto da conta (login/account id) e as chaves ficam só no ambiente EasyPanel — nunca no Git. Enquanto a conta de um mercado não estiver criada/credenciada, esse mercado permanece visível e **barrado** com motivo (`NO_DEMO_ACCOUNT_PATH` ou equivalente). Conta real continua sem botão.
 
@@ -238,11 +243,11 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 3. Liga ou desliga cada estratégia existente e aciona a parada geral.
 
 **Critérios de aceite:**
-- [ ] Toda alteração vale a partir da próxima ordem e fica registrada com data e valor anterior.
-- [ ] A plataforma nunca afrouxa uma âncora sozinha; só o operador altera.
-- [ ] Parada geral pelo painel impede ordem nova em até um ciclo.
-- [ ] Nenhuma operação do dia a dia exige Exec no EasyPanel.
-- [ ] Acesso exige autenticação; o painel não abre sem login.
+- [ ] Toda alteração vale a partir da próxima ordem e fica registrada com data e valor anterior. *Lacuna (N30.3): `trigger_changes` é gravado em `test_patch_triggers_with_cookie_updates_audit` / `test_apply_trigger_patch_appends_audit`, mas nenhum pytest asserta `old_value` nem timestamp.*
+- [ ] A plataforma nunca afrouxa uma âncora sozinha; só o operador altera. *Lacuna (N30.3): sem caso nomeado em `test_panel_ops.py` / `test_panel_triggers.py`.*
+- [x] Parada geral pelo painel impede ordem nova em até um ciclo (`tests/test_panel_ops.py` `PanelKillSwitchCycleTests.test_kill_switch_from_panel_blocks_next_eval`).
+- [x] Nenhuma operação do dia a dia exige Exec no EasyPanel (`tests/test_panel_ops.py` `PanelOpsRunbookTest.test_daily_runbook_points_to_panel_not_exec`).
+- [x] Acesso exige autenticação; o painel não abre sem login (`tests/test_panel_ops.py` `PanelOpsHttpTests.test_root_redirects_to_login_without_cookie`, `test_login_sets_cookie_and_opens_central`, `test_api_signals_requires_session`, `test_bearer_alone_still_401_on_patch`; `tests/test_panel_triggers.py` `PanelTriggerHttpTests.test_patch_triggers_bearer_only_is_401`).
 
 ### Feature 9: Sinais e Prodígio
 
@@ -250,9 +255,9 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - **Prioridade**: Must-have
 
 **Critérios de aceite:**
-- [ ] Lista de sinais recebidos com origem, destino (ordem, barrado, fila) e motivo da rejeição.
-- [ ] Ranking Prodígio dos provedores e quais sinais ele copiou.
-- [ ] Sinal barrado mostra qual gate e qual âncora barrou.
+- [ ] Lista de sinais recebidos com origem, destino (ordem, barrado, fila) e motivo da rejeição. *Lacuna (N30.3): só `test_signal_destination_blocked_vs_queue` cobre o helper; não há pytest da lista `/api/signals` com origem/destino/motivo.*
+- [ ] Ranking Prodígio dos provedores e quais sinais ele copiou. *Lacuna (N30.3): `test_snapshot_includes_panel_ops` não asserta ranking nem `copied_signals`.*
+- [x] Sinal barrado mostra qual gate e qual âncora barrou (`tests/test_panel_ops.py` `PanelOpsDataTests.test_blocked_context_exposes_gate_and_anchor`).
 
 ### Feature 10: Performance
 
@@ -260,9 +265,9 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - **Prioridade**: Must-have
 
 **Critérios de aceite:**
-- [ ] Resultado por estratégia e total, calculado só a partir de fill confirmado na corretora.
-- [ ] Ordem sem fill não entra no resultado.
-- [ ] Indicação de quais valores ainda são brutos (sem custo completo).
+- [ ] Resultado por estratégia e total, calculado só a partir de fill confirmado na corretora. *Lacuna (N30.3): `test_performance_excludes_unfilled_orders` valida total com fill confirmado, mas não asserta o array `strategies[]`.*
+- [x] Ordem sem fill não entra no resultado (`tests/test_panel_ops.py` `PanelOpsDataTests.test_performance_excludes_unfilled_orders`).
+- [x] Indicação de quais valores ainda são brutos (sem custo completo) (`tests/test_panel_ops.py` `PanelOpsDataTests.test_performance_excludes_unfilled_orders` — `pnl_label` = `PERFORMANCE_LABEL_GROSS`).
 
 ### Feature 11: Sugestões e ajuste supervisionado
 

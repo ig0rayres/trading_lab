@@ -4,12 +4,27 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 14–35 |
+| N35 | demo_account_gate, docs | env_presence_report + homolog roteiro; N29.5 ainda `[ ]` | 14–28 |
+| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 30–51 |
 | N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 29–55 |
 | N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 38–63 |
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N35 — Presença das chaves demo (sem valores)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** `env_presence_report()` em `src/demo_account_gate.py` (nomes `present`/`absent`, mercados `READY`/`NO_DEMO_ACCOUNT_PATH`, sem valores/HTTP); roteiro `docs/HOMOLOGATION.md` § G-MKT; ponte `EASYPANEL.md`; nomes vazios em `.env.example`.
+
+**Honestidade:** N29 Status **planejada**; N29.5 **não** marcada; ISS-010 **aberto**; EasyPanel **#46 no ar** ≠ creds ok ≠ fill; `LIVE_TRADING_ENABLED=false`.
+
+**Prova:** nodeids `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_*` (ver `docs/TEST-EVIDENCE.md`).
+
+**Próximo:** operador cola chaves no painel → presença `READY` → homolog ordem demo (roteiro N35) → chat «creds ok» para N29.5.
 
 ---
 

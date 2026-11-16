@@ -406,3 +406,22 @@ Operador: **PR #35 merged**; smoke **MSFT** `PAPER_SUBMITTED` ok; **N27.4** fech
 ```bash
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_signal_paper_runner -q
 ```
+
+## Sprint N35 — Presença das chaves demo (sem valores)
+
+> `LIVE_TRADING_ENABLED=false` · **não** imprime valores · **não** HTTP · **não** fecha N29.5 · EasyPanel **#46 no ar** ≠ creds ok ≠ fill
+
+| Cenário | Nodeid |
+|---------|--------|
+| Env vazio → chaves ausentes, mercados barrados | `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_empty_env_all_keys_absent_markets_blocked_live_false` |
+| Mock completo → present + READY | `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_full_mock_creds_keys_present_markets_ready` |
+| Um CLEAR_* faltando | `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_missing_one_clear_key_that_name_absent_b3_blocked` |
+| repr/json sem segredos de fixture | `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_report_repr_and_json_contain_no_fixture_secrets` |
+| urlopen não chamado | `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_urlopen_raise_report_still_returns_no_http` |
+| LIVE=true → flag live_trading_enabled_false | `tests.test_demo_broker_adapters.EnvPresenceReportTests.test_n35_live_trading_true_live_trading_enabled_false_is_false` |
+
+Roteiro operador: `docs/HOMOLOGATION.md` § **G-MKT Clear simulated + OANDA Practice homolog (N35)**.
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_demo_broker_adapters.EnvPresenceReportTests -q
+```

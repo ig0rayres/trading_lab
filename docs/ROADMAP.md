@@ -59,6 +59,7 @@
 | N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
 | N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | concluida | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
+| N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | planejada | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -104,6 +105,7 @@
 | N32 | senior+qa | Âncoras do painel no envio paper |
 | N33 | skip | Closeout docs ISS-011 (Alpaca); sem `src/` |
 | N34 | comprehensive | Ligar adaptadores demo no laço paper (N27.2); AgentCoder |
+| N35 | senior+qa | Presença de nomes + roteiro homologação demo; zero M |
 
 ---
 
@@ -1159,6 +1161,7 @@ Delivered in PR #27 with N24/N25. Maintain: `performance_from_snapshots` counts 
 > Categoria: N  
 > Status: planejada  
 > Nota N34 (2026-11-16): Sprint **N34** ligou `signal_paper_runner.run()` aos adaptadores Clear/OANDA fail-closed (mock no CI). Homologação ao vivo e credenciais no EasyPanel permanecem **N29.5**; esta sprint **não** conclui N29.  
+> Nota N35 (2026-11-16): **N27.2** já `[x]` no código (N34/PR **#45**). **N29.6** (“desbloquear N27.2”) satisfeito no repo — **não** marcar N29.6 nem N29.5. Status **planejada** até operador fechar N29.5. N35 entrega presença por nome + roteiro homolog — **não** substitui atestado ao vivo.  
 > Gerado via: `/pmo plan` 2026-11-13 · fonte ISS-010 · REQUIREMENTS v0.4  
 > titulo_humano: Ligar B3 e forex nas contas demo que você escolheu  
 > Gate: Clear simulado e OANDA Practice devolvem posição/ordem/fill; cripto = Alpaca paper; mercado sem credencial barrado com motivo; B3/FOREX nunca Alpaca; LIVE false; ids só no env  
@@ -2207,6 +2210,123 @@ REQUIREMENTS Feature 7 B3/FOREX order-demo boxes stay `[ ]` until N29.5 (pytest 
 Optional: `EASYPANEL.md` names-only checklist (`CLEAR_SIM_BASE_URL`, `CLEAR_SIM_API_KEY`, `CLEAR_SIM_API_SECRET`, `OANDA_PRACTICE_API_TOKEN`, `OANDA_PRACTICE_ACCOUNT_ID`, `DEMO_ACCOUNT_PATH_B3_EQUITY`, `DEMO_ACCOUNT_PATH_FOREX`) + one line: filling env enables the path **only after this wiring**. Optional empty names in `.env.example` (F-004). Never values.
 
 DIARY + TEST-EVIDENCE: nodeids of mock submit / no-Alpaca-POST; credentials operator-owned; until N29.5 CI/mock only; EasyPanel-alone did not place B3/FOREX orders before this wiring. LIVE false.
+
+---
+
+## Sprint N35 — Conferir chaves demo sem ver valores, sem fechar homologação
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-16 · pós-N34 · #46 no ar · operador «Vamos em frente» · **não** «creds ok» · fonte ISS-010 / N29.5  
+> Nota: tasks `[x]` no working tree; Status vira `concluida` no closeout pós-PR.  
+> titulo_humano: Conferir chaves demo sem ver valores, sem fechar homologação  
+> resumo_humano: Depois que você cola as chaves demo no painel, um relatório diz só se os nomes estão preenchidos e se o mercado está pronto ou barrado. Um roteiro ensina a atestar ordem demo sem colar segredo. A homologação ao vivo continua sua.  
+> Gate: relatório de presença cobre nomes + mercados sem valores e sem HTTP; roteiro operador existe; N29.5/N29.6 `[ ]`; N29 permanece planejada; ISS-010 aberto; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N35.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N34 concluída (N27.2 no laço) · Release: campanha ISS-010 / pré-homolog N29.5  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Depois que você colar as chaves demo no painel, dá para conferir se os nomes estão preenchidos — sem ver os valores — e seguir um roteiro para atestar uma ordem demo, sem tratar isso como homologação concluída.
+
+### O que muda para você
+
+- Um relatório diz só se cada nome de chave está presente ou ausente, e se cada mercado demo está pronto ou barrado
+- O roteiro ensina a confirmar uma ordem demo sem colar segredo no chat
+- A homologação ao vivo continua sua: o plano das corretoras não fecha até você atestar
+- Painel no ar não é preenchimento de chave nem ordem executada; dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Relatório de presença das chaves, sem valores | Pedir o teste: sem chave o mercado aparece barrado; com chave de teste aparece pronto; o relatório não contém o valor da chave |
+| 2 | Roteiro para atestar ordem demo sem colar segredo | Abrir o guia de homologação e o painel de deploy: passos de colar no painel, conferir presença e anotar evidência sem valor |
+| 3 | Plano das corretoras ainda aberto até você atestar | Abrir o plano: credenciar continua em aberto; o laço já ligado no código não conta como homologação ao vivo |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N35.0 Inventariar o reuso do portão e das chaves | `/git` | — |
+| [x] | P | N35.1 Expor o relatório de presença sem valores | `/dev` | N35.0 |
+| [x] | P | N35.2 Documentar o roteiro de homologação demo | docs | N35.0 |
+| [x] | P | N35.3 Manter o plano das corretoras honesto | docs | N35.1, N35.2 |
+
+### Task N35.0 — Inventariar o reuso do portão e das chaves
+
+**Entrega:** Inventário curto dizendo o que já barra o mercado sem chave, o que o painel já mostra, e que ainda falta um relatório por nome de chave mais o roteiro de atestado.
+**Como conferir:** O inventário cita o portão, o bloco de credencial e o laço já ligado; marca o checkout do vendor como vazio nesta frente; deixa homologação ao vivo de fora.
+**Por quê:** Sem essa lista o EXECUTE reimplementa o adaptador ou trata painel no ar como chave colada.
+
+**Detalhe técnico**
+
+P task (docs). Confirm `docs/.briefs/N35-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md`; local `vendor/day-trader-skill` is empty/absent — keep fail-closed. GitHub main not re-checked. Do not bump. Do not invent live homolog. Do not claim «creds ok».
+
+Must cite: `src/demo_account_gate.py` (`named_demo_account_configured`, `demo_market_block_reason`); `src/demo_broker_adapters.py` (`credentials_block_for_adapter`); `src/v4_web_dashboard.py` (`load_trigger_snapshot` `block_reason`); N34 `test_n34_*` already wired the loop. Gap = per-key present/absent + homolog HOW-TO, not a second HTTP client.
+
+### Task N35.1 — Expor o relatório de presença sem valores
+
+**Entrega:** Um relatório diz, para cada nome de chave conhecido, se está presente ou ausente, e se bolsa brasileira e câmbio estão prontos ou barrados — sem mostrar o valor e sem falar com a corretora.
+**Como conferir:** Pedir o teste: ambiente vazio → barrado e ausente; chave de teste completa → pronto e presente; uma chave faltando → aquele nome ausente e o mercado barrado; o texto do relatório não contém o valor da chave de teste.
+**Por quê:** Hoje só existe o bloqueio por mercado; você não vê qual nome falta sem abrir o valor no painel.
+
+**Detalhe técnico**
+
+P task. Files: `src/demo_account_gate.py`, `tests/test_demo_broker_adapters.py` (2 files). Add `env_presence_report(env=None) -> dict` (name may match this). Reuse `named_demo_account_configured` / `demo_market_block_reason` / key names already checked by `credentials_block_for_adapter`. Do **not** edit `signal_paper_runner.py` or adapter HTTP. Do **not** add a CLI (`scripts/*`) — operator `python3 -c` belongs in N35.2 docs.
+
+**executor_prompt**:
+```
+estado_atual: named_demo_account_configured + credentials_block_for_adapter return a market-level block; dashboard shows block_reason; no per-key present/absent map; N34 tests already cover mock submit.
+desejado: env_presence_report returns only: keys {CLEAR_SIM_BASE_URL, CLEAR_SIM_API_KEY, CLEAR_SIM_API_SECRET, OANDA_PRACTICE_API_TOKEN, OANDA_PRACTICE_ACCOUNT_ID, DEMO_ACCOUNT_PATH_B3_EQUITY, DEMO_ACCOUNT_PATH_FOREX} -> present|absent; markets B3_EQUITY/FOREX -> READY|NO_DEMO_ACCOUNT_PATH via existing gate; live_trading_enabled_false bool derived (true when LIVE is false/0/no/empty). Never include values. Never HTTP.
+guardrail: LIVE false; no urlopen; no secret strings in report/repr/json; no real Clear/OANDA; do not check N29.5.
+testes (extend tests/test_demo_broker_adapters.py; reuse _clear_env_with_path / _oanda_env_with_path fixtures):
+  1. Empty env → all listed keys absent; B3/FOREX NO_DEMO_ACCOUNT_PATH; live_trading_enabled_false true if LIVE unset/false.
+  2. Full mock creds + pinned paths → those keys present; B3 and FOREX READY.
+  3. Missing one CLEAR_* → that key absent, others present; B3 NO_DEMO; FOREX follows its own keys.
+  4. repr(report) and json.dumps(report) must not contain fixture secrets (test-clear-secret, practice-token-value).
+  5. Patch urlopen to raise; report must still return (no HTTP).
+  6. LIVE_TRADING_ENABLED=true → live_trading_enabled_false is false; still no HTTP; still no values.
+reuse_targets:
+  - component: src/demo_account_gate.py
+    reuse_as: extend
+    convergence_check: rg "def env_presence_report" src/demo_account_gate.py && rg "named_demo_account_configured" src/demo_account_gate.py
+  - component: src/demo_broker_adapters.py
+    reuse_as: call
+    convergence_check: rg "CLEAR_SIM_BASE_URL" src/demo_account_gate.py && rg "OANDA_PRACTICE_API_TOKEN" src/demo_account_gate.py
+```
+
+### Task N35.2 — Documentar o roteiro de homologação demo
+
+**Entrega:** Guia dizendo como colar as chaves só no painel de deploy, conferir a presença sem ver valores, e atestar uma ordem demo sem colar segredo no chat.
+**Como conferir:** Abrir o guia de homologação e a folha do painel de deploy: a tabela de nomes continua sem valores; os passos deixam claro o que não conta como ordem executada.
+**Por quê:** O guia de homologação hoje fala da corretora americana; bolsa brasileira e câmbio não têm passo de atestado seguro.
+
+**Detalhe técnico**
+
+P task. Files: `docs/HOMOLOGATION.md`, `EASYPANEL.md`. New HOMOLOGATION section (Clear simulated + OANDA Practice): (1) paste names in EasyPanel only — table already in EASYPANEL G-MKT; (2) run presence report (`PYTHONPATH` + `env_presence_report`) — interpret READY vs NO_DEMO_ACCOUNT_PATH; never print env values; (3) optional: panel `block_reason` already on market rows; (4) how to confirm a demo order without pasting secrets (ledger/panel counts, order id redacted, host practice/simulated — not Alpaca for B3/FOREX); (5) what does **not** count: HTTP 200, queue, #46 on air, pytest mock, presence READY alone; (6) close N29.5 only after chat «creds ok» + that evidence. Keep `LIVE_TRADING_ENABLED=false`. Pointer from EASYPANEL G-MKT section to the new HOMOLOGATION heading. Do not add secret values. Do not claim creds are filled.
+
+### Task N35.3 — Manter o plano das corretoras honesto
+
+**Entrega:** O plano diz que o laço já está ligado no código, que credenciar continua aberto, e que a sprint das corretoras só fecha depois do atestado ao vivo.
+**Como conferir:** Abrir a lista de problemas e o plano: credenciar em aberto; laço já marcado no código; fórmula Tá Barato ainda esperando você; exemplo de ambiente com nomes vazios, sem valores.
+**Por quê:** Sem essa nota, alguém carimba a sprint das corretoras porque o laço e o painel no ar já existiam.
+
+**Detalhe técnico**
+
+P task. EXECUTE (not PLAN time):
+
+ISS-010 — keep **aberto**. Note: N35 adds presence report + homolog HOW-TO; live homolog still N29.5; #46 ≠ creds ok ≠ fill.
+
+ISS-011 — keep **aberto**. Remaining: ISS-010 live homolog (N29.5) + N17.2 G-FORM.
+
+ROADMAP `## Sprint N29`: short note that N27.2 is already `[x]` from N34; N29.6 original “unblock N27.2” is satisfied in code; **do not** check N29.6; **do not** change N29 Status from `planejada`; **do not** check N29.5; unlock N29 `concluida` **only after** N29.5. Do not rewrite N29.1–N29.4 history.
+
+REQUIREMENTS Feature 7 B3/FOREX order-demo boxes stay `[ ]`.
+
+`.env.example`: append empty names only (`DEMO_ACCOUNT_PATH_B3_EQUITY=`, `DEMO_ACCOUNT_PATH_FOREX=`, `CLEAR_SIM_BASE_URL=`, `CLEAR_SIM_API_KEY=`, `CLEAR_SIM_API_SECRET=`, `OANDA_PRACTICE_API_TOKEN=`, `OANDA_PRACTICE_ACCOUNT_ID=`) plus one comment: values in EasyPanel, never Git. Do not add Alpaca secret values. Keep `LIVE_TRADING_ENABLED=false` at top.
+
+DIARY + TEST-EVIDENCE: N35 nodeids of presence tests; checklist heading; N29.5 still operator; #46 on air still not fill. LIVE false.
 
 ---
 

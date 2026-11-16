@@ -147,3 +147,51 @@ Evidência redigida: coluna **Status homolog** em `docs/TEST-EVIDENCE.md` § Spr
 Fill real na corretora com P&L verificado continua **passo operador** com chaves paper reais.
 
 **Feature 7 — âncoras no envio paper (N32.3, pytest only):** `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_tight_defaults_qty1_aapl_paper_submitted`, `test_n32_lowered_capital_cents_blocks_capital_limit`, `test_n32_lowered_max_risk_per_trade_blocks_trade_risk_limit`, `test_n32_risk_check_tight_cap_not_parallel_10k_usd`, `test_n32_b3_equity_auto_blocked_no_alpaca_post`, `test_n32_forex_auto_blocked_no_alpaca_post` — não substitui homolog B3/FOREX (**ISS-010**).
+
+---
+
+## G-MKT Clear simulated + OANDA Practice homolog (N35)
+
+> **`LIVE_TRADING_ENABLED=false` obrigatório.** Valores **somente** no EasyPanel — nunca no Git nem no chat. EasyPanel **#46 no ar** ≠ chaves coladas ≠ fill. Pytest mock / `READY` no relatório de presença **não** fecha N29.5.
+
+### 1 — Colar nomes no EasyPanel
+
+Use a tabela **G-MKT demo paths** em [`EASYPANEL.md`](../EASYPANEL.md) (nomes apenas). Preencha `DEMO_ACCOUNT_PATH_B3_EQUITY=clear_smart_trader_simulated` e `DEMO_ACCOUNT_PATH_FOREX=oanda_fxtrade_practice` mais os seis nomes `CLEAR_SIM_*` / `OANDA_PRACTICE_*`. Não commitar valores.
+
+### 2 — Conferir presença (sem imprimir valores)
+
+No container ou shell com `PYTHONPATH=src` e **o mesmo env** do serviço (variáveis já injetadas pelo painel — **não** colar segredos na linha de comando):
+
+```bash
+python3 -c "from demo_account_gate import env_presence_report; print(env_presence_report())"
+```
+
+Interpretação:
+
+| Campo | Significado |
+|-------|-------------|
+| `keys.<NAME>` | `present` / `absent` — **não** mostra o valor |
+| `markets.B3_EQUITY` / `FOREX` | `READY` ou `NO_DEMO_ACCOUNT_PATH` (mesmo gate do laço paper N34) |
+| `live_trading_enabled_false` | deve ser `true` (live desligado) |
+
+Opcional: no dashboard, linhas de mercado já expõem `block_reason` por mercado (nível agregado).
+
+### 3 — Atestar ordem demo sem colar segredo no chat
+
+| Mercado | Onde confirmar | Evidência aceitável (redigida) |
+|---------|----------------|--------------------------------|
+| B3 (Clear simulado) | UI/API **simulada** Clear (`CLEAR_SIM_BASE_URL` — host practice/simulated, **não** Alpaca) | Contagem de ordem aberta/fill, `order_id` parcialmente redigido, host confirmado |
+| FOREX (OANDA Practice) | UI OANDA **Practice** (`api-fxpractice.oanda.com`, **não** fxtrade live) | Idem — sem token no chat |
+
+Anotar em `docs/TEST-EVIDENCE.md` (contagens, ids redigidos). Não colar `CLEAR_SIM_API_*`, `OANDA_PRACTICE_*` nem corpo de resposta com segredo.
+
+### 4 — O que **não** conta como homologação N29.5
+
+- HTTP 200, fila `QUEUED`, `PAPER_GATEWAY_QUEUE_ONLY`, journal `orders_sent=0`
+- Deploy EasyPanel **#46** / imagem nova sem ordem demo observada na corretora certa
+- Pytest com HTTP mock (`tests/test_demo_broker_adapters.py`, `test_n34_*`)
+- Relatório de presença com todos os nomes `present` e mercados `READY` **sem** ordem demo na Clear/OANDA
+
+### 5 — Fechar N29.5 (operador)
+
+Somente após chat **«creds ok»** **e** evidência redigida de ordem demo (passo 3). Então marcar task N29.5 no ROADMAP — **não** antecipar nesta sprint N35.

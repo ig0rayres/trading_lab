@@ -111,6 +111,14 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/tradingview_worker.py "$@"
    ;;
+ risk-snapshot-refresh)
+   shift
+   exec python3 /app/src/risk_snapshot_refresh.py "$@"
+   ;;
+ paper-track-open)
+   shift
+   exec python3 /app/src/paper_fill_cycle.py "$@"
+   ;;
  c2-signal-feed)
    shift
    exec python3 /app/src/c2_signal_feed.py "$@"

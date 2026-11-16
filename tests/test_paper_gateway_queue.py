@@ -123,7 +123,6 @@ def _auto_env_with_snapshot(tmp_dir: str) -> dict[str, str]:
         'PAPER_SIGNAL_AUTO_ENABLED': 'true',
         'PAPER_EXECUTION_ENABLED': 'true',
         'PAPER_SIGNAL_ACCOUNT_ACK': 'I_AUTHORIZE_ALPACA_PAPER_ONLY',
-        'PAPER_DAILY_RISK_CONFIRMED': 'true',
         'ALPACA_PAPER_TRADE': 'true',
         'ALPACA_BASE_URL': ALPACA_PAPER_HOST,
         'ALPACA_API_KEY': 'test',
@@ -299,6 +298,13 @@ class N27AlpacaOnlyGateBWiringTest(unittest.TestCase):
     def test_n27_gateway_b3_equity_blocked_no_alpaca_post(self):
         out = self._gateway_auto(market='B3_EQUITY', signal_id='N27_B3_GW', symbol='ITUB4')
         _assert_n19_4_no_demo_block(self, out)
+
+    def test_n30_5_live_base_url_blocks_before_broker_post(self):
+        self.env['ALPACA_BASE_URL'] = 'https://api.alpaca.markets'
+        out = self._gateway_auto(market='US_EQUITY', signal_id='N30_5_LIVE_URL')
+        self.assertEqual(out['status'], 'BLOCKED')
+        self.assertEqual(out.get('orders_sent'), 0)
+        self.assertEqual(out.get('_alpaca_posts', []), [])
 
     def test_n27_5_live_looking_key_keeps_paper_alpaca_host(self):
         self.env['ALPACA_API_KEY'] = 'PK_LIVE_STYLE_DO_NOT_SWITCH_HOST'

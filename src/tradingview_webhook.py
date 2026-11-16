@@ -11,6 +11,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from gate_b_session import market_from_signal, within_signal_session
+
 QUEUE=Path(os.environ.get('TV_QUEUE_DIR','/app/reports/webhooks/pending'))
 FIELDS={'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry','stop','target','quantity','ttl_seconds'}
 
@@ -31,9 +33,10 @@ def ingest(payload,secret,queue=QUEUE,now=None):
         return _respond(payload,422,{'status':'REJECTED','reason':'INVALID_PROVIDER'})
     if not re.fullmatch(r'[A-Za-z0-9_.:-]{6,100}',str(payload['signal_id'])):
         return _respond(payload,422,{'status':'REJECTED','reason':'INVALID_SIGNAL_ID'})
-    if payload.get('side')!='buy' or payload.get('asset_class')!='us_equity':
+    asset = str(payload.get('asset_class', '')).lower()
+    if payload.get('side') != 'buy' or asset not in ('us_equity', 'crypto'):
         return _respond(payload,422,{'status':'REJECTED','reason':'UNSUPPORTED_ASSET_OR_SIDE'})
-    if not _within_regular_session(now):
+    if not within_signal_session(payload, now):
         return _respond(payload,422,{'status':'REJECTED','reason':'OUTSIDE_SESSION'})
     try:
         ts=datetime.fromisoformat(payload['sent_at_utc'].replace('Z','+00:00'))

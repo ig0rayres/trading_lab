@@ -23,6 +23,9 @@ class V4OpsLayoutTests(unittest.TestCase):
         self.assertIn('tv-worker', body)
         self.assertIn('TV_WORKER_AUTOSTART', body)
         self.assertIn('TV_WORKER_INTERVAL_SEC', body)
+        self.assertIn('risk-snapshot-refresh', body)
+        self.assertIn('RISK_SNAPSHOT_INTERVAL_SEC', body)
+        self.assertIn('paper-track-open', body)
 
     def test_worker_supervisor_does_not_replace_scheduler_exec(self):
         ops = _REPO / 'scripts' / 'v4_ops_main.sh'

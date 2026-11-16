@@ -1,10 +1,14 @@
 """Track a submitted paper order to terminal state (ADR-007). Never authorizes live orders."""
 from __future__ import annotations
 
+import argparse
+import json
+import os
 from datetime import datetime, timezone
 from typing import Any, Callable
+from urllib.request import Request, urlopen
 
-from paper_audit import validate_env
+from paper_audit import PAPER_URL, validate_env
 from paper_reconcile import reconcile as default_reconcile
 
 _TERMINAL = frozenset({'filled', 'canceled', 'expired', 'rejected', 'done_for_day'})
@@ -89,6 +93,125 @@ def _treated_as_fill(report: dict[str, Any], order: dict[str, Any]) -> bool:
     return _broker_status(report) == 'filled'
 
 
+def _default_order_timeout(env: dict[str, Any]) -> int:
+    raw = env.get('PAPER_ORDER_TIMEOUT_SEC', env.get('PAPER_ORDER_TTL_SEC', '300'))
+    try:
+        ttl = int(raw)
+    except (TypeError, ValueError):
+        ttl = 300
+    return max(1, ttl)
+
+
+def cancel_alpaca_order(broker_order_id: str, env: dict[str, Any], opener=urlopen) -> dict[str, Any]:
+    _live_forbidden(env)
+    validate_env(env)
+    path = '/v2/orders/' + broker_order_id
+    req = Request(
+        PAPER_URL + path,
+        method='DELETE',
+        headers={
+            'APCA-API-KEY-ID': env['ALPACA_API_KEY'],
+            'APCA-API-SECRET-KEY': env['ALPACA_SECRET_KEY'],
+        },
+    )
+    with opener(req, timeout=15) as response:
+        raw = response.read().decode()
+        body = json.loads(raw) if raw.strip() else {}
+    return {'status': 'CANCEL_ACCEPTED', 'broker_status': body.get('status'), 'orders_sent': 0}
+
+
+def _record_cancelled(client_order_id: str, *, conn_factory=None) -> None:
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE paper_orders SET status = %s, updated_at = now() '
+                    'WHERE client_order_id = %s AND deleted_at IS NULL',
+                    ('cancelled_ttl', client_order_id),
+                )
+            conn.commit()
+    except Exception:
+        return
+
+
+def track_once_with_cancel(
+    order: dict[str, Any],
+    env: dict[str, Any],
+    **kwargs,
+) -> dict[str, Any]:
+    cancel = kwargs.pop('cancel_fn', None) or (
+        lambda bid, e: cancel_alpaca_order(bid, e)
+    )
+
+    def _cancel_and_record(broker_id: str, e: dict[str, Any]) -> dict[str, Any]:
+        out = cancel(broker_id, e)
+        _record_cancelled(str(order.get('client_order_id', '')))
+        return out
+
+    out = track_once(order, env, cancel_fn=_cancel_and_record, **kwargs)
+    return out
+
+
+def list_open_paper_orders(conn_factory=None) -> list[dict[str, Any]]:
+    if not os.environ.get('LEDGER_DATABASE_URL', '').strip():
+        return []
+    if conn_factory is None:
+        from ledger_store import connect
+
+        conn_factory = connect
+    rows: list[dict[str, Any]] = []
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT client_order_id, broker_order_id, symbol, side, status, qty, '
+                    'created_at, updated_at, market '
+                    'FROM paper_orders '
+                    'WHERE deleted_at IS NULL AND broker_order_id IS NOT NULL '
+                    "AND status IN ('submitted', 'accepted', 'new', 'queued_intent')",
+                )
+                for row in cur.fetchall():
+                    rows.append({
+                        'client_order_id': row[0],
+                        'broker_order_id': row[1],
+                        'symbol': row[2],
+                        'side': row[3],
+                        'status': row[4],
+                        'qty': row[5],
+                        'created_at': row[6],
+                        'updated_at': row[7],
+                        'market': row[8] or 'us_equity',
+                    })
+    except Exception:
+        return []
+    return rows
+
+
+def _enrich_order(order: dict[str, Any], env: dict[str, Any]) -> dict[str, Any]:
+    out = dict(order)
+    submitted = order.get('updated_at') or order.get('created_at')
+    if submitted is not None and hasattr(submitted, 'isoformat'):
+        submitted = submitted.astimezone(timezone.utc).isoformat()
+    out['submitted_at_utc'] = str(submitted or '')
+    out['ttl_seconds'] = int(order.get('ttl_seconds') or _default_order_timeout(env))
+    return out
+
+
+def track_open_once(env: dict[str, Any], *, conn_factory=None) -> dict[str, Any]:
+    orders = list_open_paper_orders(conn_factory=conn_factory)
+    outcomes = []
+    for raw in orders:
+        enriched = _enrich_order(raw, env)
+        outcomes.append(track_once_with_cancel(enriched, env))
+    return {'status': 'TRACKED_BATCH', 'count': len(outcomes), 'outcomes': outcomes, 'orders_sent': 0}
+
+
 def may_auto_resubmit(order: dict[str, Any], env: dict[str, Any]) -> bool:
     _live_forbidden(env)
     if order.get('idempotency_key'):
@@ -142,3 +265,17 @@ def track_once(
     if treated and ledger_apply_fn is not None:
         ledger_apply_fn(_ledger_report(report, order))
     return out
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Track open paper orders; cancel on TTL expiry')
+    parser.add_argument('--once', action='store_true')
+    args = parser.parse_args()
+    if not args.once:
+        parser.error('--once required')
+    result = track_open_once(os.environ)
+    print(json.dumps(result, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    main()

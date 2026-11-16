@@ -35,7 +35,7 @@ class PaperRunnerTests(unittest.TestCase):
         self.assertEqual(x.run(self.signal,self.env,self.ledger)['status'],'BLOCKED')
     def test_unknown_broker_state_blocks_retry(self):
         self.env.update(PAPER_SIGNAL_AUTO_ENABLED='true',PAPER_EXECUTION_ENABLED='true',
-                        PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY',PAPER_DAILY_RISK_CONFIRMED='true')
+                        PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY')
         def getter(endpoint, env):
             if endpoint.endswith('account'):
                 return {'status':'ACTIVE','currency':'USD','trading_blocked':False,'cash':'2000','equity':'2000'}
@@ -55,8 +55,7 @@ class PaperRunnerTests(unittest.TestCase):
         self.assertEqual(second['reasons'],['ALREADY_ATTEMPTED_RECONCILE_FIRST'])
     def test_auto_mode_blocks_without_consolidated_risk_snapshot(self):
         self.env.update(PAPER_SIGNAL_AUTO_ENABLED='true', PAPER_EXECUTION_ENABLED='true',
-                        PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY',
-                        PAPER_DAILY_RISK_CONFIRMED='true')
+                        PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY')
         def getter(endpoint, env):
             if endpoint.endswith('account'):
                 return {'status':'ACTIVE','currency':'USD','trading_blocked':False,
@@ -78,7 +77,6 @@ class PaperRunnerTests(unittest.TestCase):
             PAPER_SIGNAL_AUTO_ENABLED='true',
             PAPER_EXECUTION_ENABLED='true',
             PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY',
-            PAPER_DAILY_RISK_CONFIRMED='true',
             V4_RISK_SNAPSHOT_FILE=str(snapshot),
         )
         return snapshot
@@ -98,6 +96,39 @@ class PaperRunnerTests(unittest.TestCase):
         self.assertEqual(result['broker_id'],'mock-order-id')
         lines=[json.loads(ln) for ln in Path(self.ledger).read_text().splitlines() if ln.strip()]
         self.assertTrue(any(row.get('state')=='SUBMITTED' for row in lines))
+    def test_unverified_snapshot_blocks_with_loss_data_not_verified(self):
+        self.env.update(
+            PAPER_SIGNAL_AUTO_ENABLED='true',
+            PAPER_EXECUTION_ENABLED='true',
+            PAPER_SIGNAL_ACCOUNT_ACK='I_AUTHORIZE_ALPACA_PAPER_ONLY',
+        )
+        snapshot = Path(self.tmp.name) / 'risk-unverified.json'
+        snapshot.write_text(json.dumps({
+            'at_utc': datetime.now(timezone.utc).isoformat(),
+            'alpaca_positions_count': 0,
+            'alpaca_open_orders_count': 0,
+            'complete': False,
+            'daily_pnl_verified': False,
+            'weekly_pnl_verified': False,
+            'broker_reconciled': False,
+            'positions': [],
+            'daily_pnl_brl': '0',
+            'weekly_pnl_brl': '0',
+            'available_cash_brl': '10000',
+            'has_pending_orders': False,
+        }))
+        self.env['V4_RISK_SNAPSHOT_FILE'] = str(snapshot)
+
+        def getter(endpoint, env):
+            if endpoint.endswith('account'):
+                return {'status': 'ACTIVE', 'currency': 'USD', 'trading_blocked': False,
+                        'cash': '5000', 'equity': '5000'}
+            return []
+
+        result = x.run(self.signal, self.env, self.ledger, broker_get=getter, broker_post=lambda *a, **k: None)
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertIn('LOSS_DATA_NOT_VERIFIED', result['reasons'])
+
     def test_short_blocked(self):
         self.signal['side']='sell'
         self.signal['provider_signature']=sign(self.signal,self.env['SIGNAL_COPY_SECRET'])

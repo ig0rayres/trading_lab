@@ -10,13 +10,15 @@ import json
 import os
 import re
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from paper_audit import amount
 
 ALLOWED = {'provider','signal_id','symbol','side','asset_class','sent_at_utc','entry',
            'stop','target','quantity','ttl_seconds','provider_signature','strategy_key'}
 DEFAULT_MAX_AGE=30
+_CRYPTO_SYMBOL = re.compile(r'^[A-Z0-9]{3,12}$|^[A-Z0-9]{2,10}/[A-Z0-9]{2,10}$')
+_US_SYMBOL = re.compile(r'^[A-Z]{1,5}$')
 
 def canonical_payload(signal):
     return json.dumps({k:v for k,v in signal.items() if k!='provider_signature'},sort_keys=True,separators=(',',':')).encode()
@@ -35,9 +37,17 @@ def validate(signal,secret,fx,now=None):
         errors.append('INVALID_PROVIDER')
     if not re.fullmatch(r'[a-zA-Z0-9_-]{6,100}',str(signal.get('signal_id',''))):
         errors.append('INVALID_SIGNAL_ID')
-    if not re.fullmatch(r'[A-Z]{1,5}',str(signal.get('symbol',''))):
-        errors.append('INVALID_SYMBOL')
-    if signal.get('side')!='buy' or signal.get('asset_class')!='us_equity':
+    asset = str(signal.get('asset_class', '')).lower()
+    symbol = str(signal.get('symbol', ''))
+    if asset == 'us_equity':
+        if not _US_SYMBOL.fullmatch(symbol):
+            errors.append('INVALID_SYMBOL')
+    elif asset == 'crypto':
+        if not _CRYPTO_SYMBOL.fullmatch(symbol):
+            errors.append('INVALID_SYMBOL')
+    else:
+        errors.append('LONG_US_EQUITY_ONLY')
+    if signal.get('side') != 'buy' or asset not in ('us_equity', 'crypto'):
         errors.append('LONG_US_EQUITY_ONLY')
     try:
         ts=datetime.fromisoformat(str(signal['sent_at_utc']).replace('Z','+00:00'))
@@ -49,7 +59,15 @@ def validate(signal,secret,fx,now=None):
     try:
         entry,stop,target=(amount(signal[x]) for x in ('entry','stop','target'))
         qty=signal['quantity']
-        if type(qty)!=int or qty<1: errors.append('INVALID_QUANTITY')
+        if asset == 'crypto':
+            try:
+                q = Decimal(str(qty))
+                if q <= 0 or not q.is_finite():
+                    errors.append('INVALID_QUANTITY')
+            except (TypeError, ValueError, InvalidOperation):
+                errors.append('INVALID_QUANTITY')
+        elif type(qty) != int or qty < 1:
+            errors.append('INVALID_QUANTITY')
         elif not (entry>stop>0 and target>entry): errors.append('INVALID_PRICES')
         elif qty*(entry-stop)>Decimal('50')/fx or qty*entry>Decimal('5000')/fx:
             errors.append('RISK_OR_NOTIONAL_LIMIT')

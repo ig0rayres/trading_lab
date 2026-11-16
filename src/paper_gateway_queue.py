@@ -7,9 +7,18 @@ from typing import Any
 
 from gate_a_signal import idempotency_key
 from ledger_store import insert_row
-from paper_fill_cycle import track_once as default_track_once
+from paper_fill_cycle import track_once_with_cancel as default_track_once
 from demo_account_gate import DEMO_PANEL_MARKETS, demo_market_block_reason
 from signal_paper_runner import make_order, run as paper_run, token
+
+
+def _paper_order_market(signal: dict[str, Any]) -> str | None:
+    market = str(signal.get('market', '')).upper().strip()
+    if market in ('B3_EQUITY', 'CRYPTO', 'FOREX'):
+        return market
+    if str(signal.get('asset_class', '')).lower() == 'crypto':
+        return 'CRYPTO'
+    return None
 
 
 def broker_auto_allowed(env: dict[str, str]) -> bool:
@@ -122,6 +131,7 @@ def persist_risk_decision(
                         'side': 'long',
                         'status': 'queued_intent',
                         'qty': signal.get('quantity', 0),
+                        'market': _paper_order_market(signal),
                     },
                 )
             conn.commit()
@@ -184,22 +194,28 @@ def _load_paper_order(client_order_id: str, conn_factory=None) -> dict[str, Any]
         with conn_factory() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    'SELECT client_order_id, broker_order_id, symbol, side, status, qty '
+                    'SELECT client_order_id, broker_order_id, symbol, side, status, qty, '
+                    'created_at, updated_at, market '
                     'FROM paper_orders WHERE client_order_id = %s AND deleted_at IS NULL',
                     (client_order_id,),
                 )
                 row = cur.fetchone()
         if not row:
             return None
-        return {
+        from paper_fill_cycle import _default_order_timeout, _enrich_order
+
+        base = {
             'client_order_id': row[0],
             'broker_order_id': row[1],
             'symbol': row[2],
             'side': row[3],
             'status': row[4],
             'qty': row[5],
-            'market': 'us_equity',
+            'created_at': row[6],
+            'updated_at': row[7],
+            'market': row[8] or 'us_equity',
         }
+        return _enrich_order(base, os.environ)
     except Exception:
         return None
 

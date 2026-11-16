@@ -31,12 +31,38 @@ _tv_worker_supervisor() {
   done
 }
 
+_risk_snapshot_supervisor() {
+  interval="${RISK_SNAPSHOT_INTERVAL_SEC:-60}"
+  while true; do
+    echo "v4-ops: risk-snapshot-refresh --once (interval ${interval}s)" >&2
+    /app/scripts/run.sh risk-snapshot-refresh --once || true
+    sleep "${interval}"
+  done
+}
+
+_paper_track_supervisor() {
+  interval="${PAPER_TRACK_INTERVAL_SEC:-30}"
+  while true; do
+    echo "v4-ops: paper-track-open --once (interval ${interval}s)" >&2
+    /app/scripts/run.sh paper-track-open --once || true
+    sleep "${interval}"
+  done
+}
+
 if [ "$(printf '%s' "${DASHBOARD_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _dashboard_supervisor &
 fi
 
 if [ "$(printf '%s' "${TV_WORKER_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _tv_worker_supervisor &
+fi
+
+if [ "$(printf '%s' "${RISK_SNAPSHOT_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
+  _risk_snapshot_supervisor &
+fi
+
+if [ "$(printf '%s' "${PAPER_TRACK_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
+  _paper_track_supervisor &
 fi
 
 exec /app/scripts/run.sh v4-scheduler "$@"

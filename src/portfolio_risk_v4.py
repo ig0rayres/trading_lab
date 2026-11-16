@@ -80,6 +80,10 @@ def evaluate(
             reasons.append('LOSS_DATA_NOT_VERIFIED')
         if snapshot.get('broker_reconciled') is not True:
             reasons.append('BROKER_NOT_RECONCILED')
+        if snapshot.get('daily_loss_halt_active') is True:
+            reasons.append('DAILY_LOSS_HALT')
+        if snapshot.get('weekly_loss_halt_active') is True:
+            reasons.append('WEEKLY_LOSS_HALT')
         qty = number(candidate['quantity'])
         entry, stop = number(candidate['entry_brl']), number(candidate['stop_brl'])
         if qty <= 0 or (candidate['market'] != 'CRYPTO' and qty != qty.to_integral_value()) or stop <= 0 or entry <= stop:

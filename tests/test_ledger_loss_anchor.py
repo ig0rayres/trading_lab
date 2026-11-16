@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
@@ -33,6 +34,50 @@ class LossAnchorPureTest(unittest.TestCase):
         self.assertEqual(state['weekly_pnl_brl'], '-50')
         self.assertTrue(state['daily_pnl_verified'])
         self.assertFalse(state['blocks_new_order'])
+
+    def test_period_daily_halt_latches_until_next_utc_day(self):
+        import tempfile
+        from unittest.mock import patch
+        from risk_control_flags import TIGHT_DEFAULTS, brl_from_cents
+
+        with tempfile.TemporaryDirectory() as td:
+            halt_path = Path(td) / 'halts.json'
+            now = datetime(2026, 11, 11, 15, 0, tzinfo=timezone.utc)
+            max_daily = brl_from_cents(int(TIGHT_DEFAULTS['max_daily_loss_cents']))
+            anchor = {
+                'daily_pnl_brl': str(-max_daily - Decimal('1')),
+                'weekly_pnl_brl': '0',
+                'daily_pnl_verified': True,
+                'weekly_pnl_verified': True,
+                'blocks_new_order': False,
+            }
+            with patch.dict(os.environ, {'LOSS_PERIOD_HALT_FILE': str(halt_path)}):
+                first = la._sync_period_halts(anchor, now_utc=now)
+                self.assertTrue(first['daily_loss_halt_active'])
+                improved = dict(anchor, daily_pnl_brl='0')
+                second = la._sync_period_halts(improved, now_utc=now)
+                self.assertTrue(second['daily_loss_halt_active'])
+                next_day = datetime(2026, 11, 12, 0, 0, tzinfo=timezone.utc)
+                third = la._sync_period_halts(improved, now_utc=next_day)
+                self.assertFalse(third['daily_loss_halt_active'])
+
+    def test_unverified_pnl_does_not_trigger_halt(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            halt_path = Path(td) / 'halts.json'
+            now = datetime(2026, 11, 11, 15, 0, tzinfo=timezone.utc)
+            anchor = {
+                'daily_pnl_brl': '-999999',
+                'weekly_pnl_brl': '-999999',
+                'daily_pnl_verified': False,
+                'weekly_pnl_verified': False,
+                'blocks_new_order': True,
+                'reject_code': 'LOSS_DATA_NOT_VERIFIED',
+            }
+            with patch.dict(os.environ, {'LOSS_PERIOD_HALT_FILE': str(halt_path)}):
+                out = la._sync_period_halts(anchor, now_utc=now)
+            self.assertFalse(out['daily_loss_halt_active'])
+            self.assertFalse(halt_path.exists())
 
     def test_unconverted_fill_blocks_gate(self):
         now = datetime(2026, 11, 11, 15, 0, tzinfo=timezone.utc)

@@ -317,6 +317,8 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m pytest -q \
 
 **Sprint N33 (docs closeout):** PR **#42** na linha principal — merge `d30689bfeb4b009b6297d4bdea8fead233486474` (`2026-11-16T19:49:34Z`); EasyPanel imagem do pedido **#42 no ar** (atestado operador chat 2026-11-16). **Não é fill** — painel no ar ≠ ordem executada na corretora.
 
+**EasyPanel #46 no ar (2026-11-16, atestado operador):** tip `main` `d99b332` (closeout N34 / PR **#46** merge `e83994b3cbd57f211e455e13b614802a0b3a9d93`); inclui wiring N34 (PR **#45**). **Não é fill** e **não** fecha N29.5 — falta credenciar Clear/OANDA no painel.
+
 ## Sprint N17 — MVP-OP-1.1 Tá Barato (G-FORM blocked; shadow homolog)
 
 > Sprint N17 · `LIVE_TRADING_ENABLED=false` · vendor pin `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd`  

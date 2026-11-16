@@ -31,6 +31,8 @@
 
 **Próximo:** `/pmo plan` — lacuna honesta **ISS-011**: homolog Clear/OANDA (**N29.5** / credenciais EasyPanel) *vs* shadow→paper Tá Barato (**N17.2** / G-FORM); `LIVE_TRADING_ENABLED=false`.
 
+**EasyPanel (2026-11-16):** operador atestou **#46 no ar** (tip `d99b332`, inclui N34/#45). **Não é fill**; N29.5 (creds Clear/OANDA) continua pendente.
+
 ---
 
 ## Sprint N33 — Closeout docs ISS-011 (laço americano no papel)

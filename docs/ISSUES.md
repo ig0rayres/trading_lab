@@ -260,7 +260,7 @@
 |-------|--------|
 | Categoria | enhancement / epic |
 | Sprint | N30 → N32 (lacuna Feature 7) → N17 → N28 (campanha) |
-| Status | aberto (PR **#35 merged+deployed** 2026-11-16; N28/N31 código entregue nesta frente; **N32** paridade `control_flags` no `signal_paper_runner` entregue — critério âncora Feature 7 `[x]` com pytest N32.2; Clear/OANDA ainda fora) |
+| Status | aberto (PR **#35 merged+deployed** 2026-11-16; **N32 concluída** — lacuna `control_flags` no `signal_paper_runner` fechada, critério âncora Feature 7 `[x]`; merge operador **PR #42** pendente; N17/B3/FOREX/Clear/OANDA ainda fora) |
 
 **Impacto:** Feature 7 **US_EQUITY + CRYPTO** conferível em repo (N30.1); **âncoras no laço paper** (N32.1–N32.3) via `control_flags`; B3/FOREX barrados sem adapter **ISS-010**; Prodígio rank→ingest (N30.2) sem promoção automática de fase; Features 8–10 parcialmente `[x]` no contrato (N30.3); Feature 11 código N28/N31 nesta frente; Clear/OANDA permanecem fora.
 
@@ -271,7 +271,7 @@
 | Ordem | Sprint | Entrega | Estado |
 |-------|--------|---------|--------|
 | 1 | **N30** | Feature 7 Alpaca US+CRYPTO; Prodígio rank→ingestão sem promover fase; Features 8–10 só com evidência de teste | **em closeout** (código N30.1–N30.3 feito; contrato N30.4; stamp verifier pendente) |
-| 1c | **N32** | Feature 7: `signal_paper_runner.risk_check` lê `control_flags` (fecha lacuna 10k/50 USD) | **código entregue** (N32.1–N32.3; contrato N32.3; blocos N17/N28/N29/N30/N31 intocados) |
+| 1c | **N32** | Feature 7: `signal_paper_runner.risk_check` lê `control_flags` (fecha lacuna 10k/50 USD) | **concluída** (VERIFY green; ROADMAP N32 `concluida`; PR **#42** MERGEABLE — operador mergeia) |
 | 1b | **N31** | G-AJUSTE método: ciclo diário fills+não-fills + TimesFM research-only (ISS-012) | **código entregue** nesta frente (bloco N28 não reescrito) |
 | 2 | **N17** | Tá Barato shadow homolog + G-FORM blocked; painel `ta_barato_shadow` | **código done** (paper blocked upstream; N17.2 operador pendente) |
 | 3 | **N28** | Feature 11 ajuste supervisionado | N28.1–4 **código entregue** nesta frente; bloco N28 não reescrito |
@@ -304,7 +304,7 @@
 
 **Fontes:** REQUIREMENTS v0.4 Features 7–11 (critério âncora `[x]` N32.3); ROADMAP N22/N30/N32; `docs/TEST-EVIDENCE.md` (N30.1/N30.3, N32.3); pedido operador 2026-11-16 `/pmo plan` + `/rock` sem pausa.
 
-**Nota N32 (2026-11-16):** N32 código entregue — paridade Feature 7 `control_flags` em `signal_paper_runner.risk_check`; REQUIREMENTS âncora `[x]` com nodeids `test_n32_*` em `tests/test_signal_paper_runner.py`. B3/FOREX ordem demo continuam **ISS-010** (`[ ]` no contrato). N28/N31 código entregue nesta frente; Clear/OANDA ainda fora. Brief: `docs/.briefs/N32.brief.md`.
+**Nota N32 (2026-11-16, closeout):** Sprint **N32 concluída** no ROADMAP — lacuna paralela 10k/50 USD no `risk_check` fechada; paridade `control_flags` + REQUIREMENTS âncora `[x]` (`test_n32_*`). Issue **permanece aberta**: B3/FOREX ordem demo (**ISS-010**), campanha **N17** / **N28**, adapters Clear/OANDA. CI PR **#42** verde; merge e rebuild EasyPanel = operador. Brief: `docs/.briefs/N32.brief.md`.
 
 **Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief N30: `docs/.briefs/N30.brief.md`.
 

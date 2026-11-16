@@ -4,9 +4,37 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 13–42 |
+| N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 13–38 |
+| N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N32 — Âncoras do painel no laço paper (Feature 7)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Gate:** validação local **APROVADA** (`validation_gate` + `qa_gate`); pytest `test_n32_*` e âncoras portfolio (25 testes na evidência do stamp); `LIVE_TRADING_ENABLED=false`. CI PR [#42](https://github.com/ig0rayres/trading_lab/pull/42): test, docker-smoke, docker-build **SUCCESS**; MERGEABLE (merge reservado ao operador).
+
+**Entregue (código + docs):**
+
+- `signal_paper_runner.risk_check` lê `fetch_control_flags` + `brl_from_cents` (fim do teto paralelo `Decimal('10000')` / 50 USD).
+- Testes `tests/test_signal_paper_runner.py` (`test_n32_*`) + reforço âncoras em `test_feature7_anchor_ceilings.py`.
+- Contrato: REQUIREMENTS Feature 7 âncora `[x]`; B3/FOREX permanecem `[ ]` (**ISS-010**).
+- ROADMAP N32 e campanha **ISS-011** atualizados; blocos N17/N28/N29/N30/N31 não reescritos.
+
+**Decisões:**
+
+- Reuso N22 (`gate_b_risk`, `portfolio_risk_v4`) — sem segundo motor de risco.
+- Épico **ISS-011** segue **aberto** (N17, Feature 11/N28, adapters Clear/OANDA).
+
+**Aprendizados:**
+
+- A lacuna de âncora só fechava no caminho paper; Gate B/carteira já liam `control_flags` desde N22.
+- Verify green com stamp focal em `n32` evita regressão no ticket qty=1 AAPL conhecido.
+
+**Próximo (operador):** merge PR #42; rebuild EasyPanel; campanha ISS-011 (N30 closeout, N17, adapters ISS-010).
 
 ---
 

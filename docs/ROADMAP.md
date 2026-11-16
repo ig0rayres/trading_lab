@@ -56,7 +56,7 @@
 | N28 | N | Ajuste supervisionado reversível, sem tocar âncora (G-AJUSTE) | planejada | 4 | strategy-catalog | Onda 6 — Feature 11 | *(abaixo)* |
 | N30 | N | Feature 7 Alpaca US+cripto + Prodígio rank→sinal; Features 8–10 com evidência | em closeout (stamp verifier pendente) | 5 | paper-gateway, prodigy | Campanha ISS-011 onda 1 | *(abaixo)* |
 | N31 | N | Melhoria contínua diária (fills + não-fills) + TimesFM research-only (G-AJUSTE) | em execução | 5 | evolution, research | Campanha ISS-012 · desbloqueia caminho N28.2–4 | *(abaixo)* |
-| N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | planejada | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
+| N32 | N | Âncoras do painel no laço paper (Feature 7, sem teto paralelo) | concluida | 4 | paper-gateway, risk-gate-b | Campanha ISS-011 lacuna âncora | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -1723,7 +1723,7 @@ P task. Add `tests/test_n31_g_ajuste_guardrails.py` (or extend existing if overl
 
 ## Sprint N32 — Âncoras do painel no laço paper
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-16 · fonte ISS-011 lacuna Feature 7 · N17/N28/N29/N30/N31 **não** reescritos  
 > titulo_humano: Ordem paper obedece ao teto do painel, não a um limite paralelo  
 > resumo_humano: O envio paper deixa de usar um teto paralelo de dez mil dólares e passa a respeitar capital e risco por operação gravados no painel. Ticket de teste conhecido continua passando com os tetos de partida. Bolsa brasileira e câmbio seguem fora.  
@@ -1756,10 +1756,10 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N32.0 Confirmar o reuso dos tetos já lidos na recusa de risco antes de escrever código | `/git` | — |
-| [ ] | M | N32.1 Ligar os tetos de capital e risco do painel no envio paper | `/dev` + `paper-order-gate` | N32.0 |
-| [ ] | P | N32.2 Provar que teto apertado recusa e teto de partida ainda permite | `/qa testes` | N32.1 |
-| [ ] | P | N32.3 Marcar no contrato a âncora só com prova de teste | docs | N32.2 |
+| [x] | P | N32.0 Confirmar o reuso dos tetos já lidos na recusa de risco antes de escrever código | `/git` | — |
+| [x] | M | N32.1 Ligar os tetos de capital e risco do painel no envio paper | `/dev` + `paper-order-gate` | N32.0 |
+| [x] | P | N32.2 Provar que teto apertado recusa e teto de partida ainda permite | `/qa testes` | N32.1 |
+| [x] | P | N32.3 Marcar no contrato a âncora só com prova de teste | docs | N32.2 |
 
 ### Campanha ISS-011 (não executar N17/N28/N29/N30/N31 nesta sprint)
 
@@ -1774,9 +1774,10 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 ### Pendências operador
 
+- **Merge PR [#42](https://github.com/ig0rayres/trading_lab/pull/42)** (CI verde; produto: operador mergeia — não push em `main` da frente)
+- Rebuild EasyPanel após merge
 - Credenciais Clear / OANDA — ISS-010
 - Fórmula Tá Barato / momentum — N17 / G-FORM
-- Rebuild EasyPanel
 - Closeout N28/N30/N31 — sprint-finalizer / VERIFY (não marcar concluída aqui)
 
 ### Task N32.0 — Confirmar o reuso dos tetos já lidos na recusa de risco antes de escrever código
@@ -1844,7 +1845,7 @@ Avoid: second risk engine; FX conversion CLI; Clear/OANDA adapters; rewriting N1
 [ABORDAGEM] Call fetch_control_flags + brl_from_cents, then divide by existing fx (same as gate_b_risk.config_for_fx). Replace Decimal('10000') / Decimal('50'|'20') and hardcoded >=3 positions. Keep evaluate_portfolio_risk as the cross-market snapshot path — do not duplicate it.
 [RISCO] Existing PAPER_SUBMITTED tests use qty=1 AAPL @100 with fx=5 (R$ 500 notional, R$ 5 risk). TIGHT_DEFAULTS still allow that ticket. A leftover 10k USD cap would still allow tickets the panel would reject.
 [OPORTUNIDADE] portfolio_risk_v4.evaluate already reads control_flags (N22). N32 only closes the parallel hardcaps in risk_check before that call.
-EXPIRES at end of Sprint N32.
+**Closeout (2026-11-16):** validation_gate e qa_gate **APROVADA**; pytest `test_n32_*` + âncoras portfolio; PR **#42** MERGEABLE (test, docker-smoke, docker-build SUCCESS). Lacuna `Decimal('10000')` fechada; LIVE false; B3/FOREX `[ ]` (**ISS-010**). Épico **ISS-011** permanece aberto (N17, N28 campanha, adapters).
 
 Melhoria: wire signal_paper_runner.risk_check capital/per-trade/max positions to control_flags (ISS-011 Feature 7 remaining gap).
 Contexto: N22 made gate_b_risk and portfolio_risk_v4 read control_flags. risk_check still uses cap=Decimal('10000')/fx and per_trade Decimal('50'|'20')/fx plus len(positions)>=3. REQUIREMENTS Feature 7 criterion "Nenhuma ordem sai com qualquer âncora estourada" is still [ ]. B3/FOREX stay out (ISS-010).

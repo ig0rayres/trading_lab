@@ -16,11 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N32 Feature 7 âncoras no laço paper",
+  "fase_nome": "N32 validada",
   "sprint_pending_merge": null,
+  "sprint_pr": 42,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-16T19:25:00-03:00",
+  "ultimo_update": "2026-11-16T16:35:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -114,48 +115,14 @@
   "comandos_recentes": [
     "/pmo sprint N18"
   ],
-  "contexto_rapido": "N32 done: control_flags no risk_check; pytest n32_* green; contrato Feature 7 âncora [x]; B3/FOREX ISS-010. LIVE false.",
-  "sprint_tasks": [
-    {
-      "id": "N32.0",
-      "title": "Confirm reuse of panel anchors already read by Gate B",
-      "status": "done",
-      "file": "docs/.briefs/N32-GIT-FIRST-REUSE.md",
-      "depends_on": []
-    },
-    {
-      "id": "N32.1",
-      "title": "Wire paper runner capital/per-trade caps to control_flags",
-      "status": "done",
-      "file": "src/signal_paper_runner.py",
-      "depends_on": [
-        "N32.0"
-      ]
-    },
-    {
-      "id": "N32.2",
-      "title": "Prove lowered flags block paper; TIGHT_DEFAULTS still allow",
-      "status": "done",
-      "file": "tests/test_signal_paper_runner.py",
-      "depends_on": [
-        "N32.1"
-      ]
-    },
-    {
-      "id": "N32.3",
-      "title": "Mark Feature 7 anchor checkbox only after pytest proof",
-      "status": "done",
-      "file": "docs/REQUIREMENTS.md",
-      "depends_on": [
-        "N32.2"
-      ]
-    }
-  ],
+  "contexto_rapido": "N32 concluída no ROADMAP; PR #42 MERGEABLE CI green; ISS-011 aberto (B3/FOREX/N17). LIVE false.",
+  "sprint_tasks": [],
   "checkpoint": {
-    "phase": "implementation",
+    "phase": "validated",
     "sprint": "N32",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
+    "last_completed_task": "N32.3",
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
@@ -195,7 +162,7 @@
       "patch_id": "d2aee5fda6bf7e8fdadece6e70e80c26f1a6a88c",
       "patch_id_version": 2
     },
-    "sprint_delivery": "stamped",
+    "sprint_delivery": "finalized",
     "sprint_delivery_sprint": "N32"
   },
   "artefatos_gerados": [
@@ -283,9 +250,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N28",
-  "sprint_atual": "N32",
-  "sprint_nome": "Sprint N32 — Âncoras do painel no laço paper (Feature 7)",
+  "previous_sprint": "N32",
+  "sprint_atual": null,
+  "sprint_nome": null,
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",

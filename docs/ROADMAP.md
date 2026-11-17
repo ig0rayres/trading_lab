@@ -64,7 +64,14 @@
 | N37 | N | Saúde automática + Central semáforo + defaults ON | concluida | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
 | N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | concluida | 3 | observability | UX estado visual do freio | *(abaixo)* |
 | N39 | N | Closeout docs: carimbar N37 saúde automática e fechar ISS-014 | concluida | 5 | docs | Campanha ISS-014 closeout papel | *(abaixo)* |
-| N40 | N | Mapa honesto: onde está cada coisa no painel (docs-only) | planejada | 5 | docs, observability | Orientação operador ISS-016 | *(abaixo)* |
+| N40 | N | Mapa honesto: onde está cada coisa no painel (docs-only) | concluida | 5 | docs, observability | Orientação operador ISS-016 | *(abaixo)* |
+| N41 | N | Menu Ordens + Histórico (listas); painel sem envio; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 1 | *(abaixo)* |
+| N42 | N | Estratégias e fases no menu do dia a dia | planejada | stub | observability | Campanha ISS-017 onda 2 | *(abaixo)* |
+| N43 | N | TimesFM / dicas visíveis e rotuladas (não autorizam ordem) | planejada | stub | research | Campanha ISS-017 onda 3 | *(abaixo)* |
+| N44 | N | Homologar operar US+cripto pelo painel | planejada | stub | docs, operador | Campanha ISS-017 onda 4 | *(abaixo)* |
+| N45 | N | Tá Barato no menu — bloqueado em N17.2 | planejada | stub | strategy-catalog | Campanha ISS-017 onda 5 | *(abaixo)* |
+| N46 | N | B3 Clear no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 6 | *(abaixo)* |
+| N47 | N | OANDA Practice no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 7 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -116,6 +123,13 @@
 | N38 | skip | Faixa do freio na Central; um CTA por estado; zero M |
 | N39 | skip | Closeout docs N37 / ISS-014; sem `src/` |
 | N40 | skip | Mapa operador das duas superfícies; zero M; sem `src/` |
+| N41 | senior+qa | Ordens e histórico no menu do dia a dia; AgentCoder |
+| N42 | senior+qa | stub campanha — catálogo de fases no menu |
+| N43 | senior+qa | stub campanha — TimesFM rotulado |
+| N44 | skip | stub campanha — homologação operador US+cripto |
+| N45 | senior+qa | stub campanha — Tá Barato; não arranca sem N17.2 |
+| N46 | comprehensive | stub campanha — Clear; não arranca sem N29.5 |
+| N47 | comprehensive | stub campanha — OANDA; não arranca sem N29.5 |
 
 ---
 
@@ -2922,6 +2936,296 @@ DIARY: short `## Sprint N40` row — docs-only map; two UIs; orders screen OUT; 
 **Detalhe técnico**
 
 P task. Files: `.cursorsession`, `docs/ROADMAP.md` (tick N40.0–N40.4 only; do not rewrite other sprints). After map: `sprint_atual=N40` until parent closeout; `plan_only` false only at EXECUTE start. Preserve `autopilot`, `rock_auto`, N39 `validation_gate` history. Do not enable LIVE. Do not start orders UI / N17 / N29.
+
+---
+
+## Campanha entrega plataforma (pós-N40)
+
+> Gerado via: `/pmo plan` 2026-11-17 · operador: plano-mestre por contrato, não infra · fonte **ISS-017**  
+> Folha humana: `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`  
+> «Pronto» da campanha: operar pelo menu (estratégias, sinais, ordens abertas, histórico, performance, Prodígio) nos mercados que o contrato já permite (Alpaca paper US+cripto).  
+> TimesFM = pesquisa, nunca autorização de ordem. Clear/OANDA = fail-closed até N29.5. `LIVE_TRADING_ENABLED=false`.
+
+| Onda | Sprint | Uma linha | Estado |
+|------|--------|-----------|--------|
+| 0 | esta folha | Matriz honesta; fila; ISS-017 | plan_only |
+| 1 | **N41** | Ordens abertas + histórico no menu (listas) | concluida (decomposta abaixo) |
+| 2 | N42 | Estratégias e fases no menu do dia a dia | stub |
+| 3 | N43 | TimesFM / dicas visíveis e rotuladas | stub |
+| 4 | N44 | Homologar operar US+cripto pelo painel | stub; rebuild seu |
+| 5 | N45 | Tá Barato no menu | stub; bloqueado em N17.2 |
+| 6 | N46 | B3 via Clear simulada | stub; bloqueado em N29.5 |
+| 7 | N47 | Forex via OANDA Practice | stub; bloqueado em N29.5 |
+
+Não reescreve N17 / N28 / N29. Não fecha ISS-010 / ISS-011 / ISS-007 na onda 1.
+
+---
+
+## Sprint N41 — Ver ordens abertas e histórico no menu do dia a dia
+> Categoria: N  
+> Status: concluida  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-017 onda 1 · ISS-007 áreas Histórico / Ordens abertas · mapa N40 marcou NÃO-EXISTE-AINDA  
+> titulo_humano: Ver no menu as ordens paper abertas e o histórico de fills  
+> resumo_humano: Depois do login você clica em Ordens e Histórico e vê linhas — ou o vazio honesto. Fila não conta como fill. O painel não envia ordem. Bolsa brasileira e câmbio não entram nesta rodada.  
+> Gate: menu com Ordens e Histórico; listas a partir de snapshots/ledger; sessão obrigatória; queued_intent fora do histórico; zero envio pelo painel; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N41.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N40 concluida · Release: campanha ISS-017 onda 1  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Você passa a ver, no mesmo menu do dia a dia, as ordens paper ainda abertas e o histórico de fills — lista de linhas, não um contador escondido na página antiga.
+
+### O que muda para você
+
+- Depois do login aparecem os itens **Ordens** e **Histórico**
+- Fila não entra no histórico como se fosse fill
+- Bolsa brasileira e câmbio não ganham fill inventado; o caminho de demonstração continua ação americana e cripto na Alpaca paper
+- O painel continua só leitura: nenhum botão envia ordem
+- Dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Inventário do que já conta ordem sem listar | Abrir o inventário e ver snapshots, ledger e menu citados, com a lacuna da lista explícita |
+| 2 | Lista de ordens abertas no menu | Entrar no painel, abrir Ordens, ver linhas ou o vazio combinado — sem enviar ordem |
+| 3 | Histórico só de fill confirmado | Abrir Histórico; ordem só na fila não aparece como resultado |
+| 4 | Mapa e chamado atualizados | O mapa deixa de dizer que a tela não existe; o épico da campanha aponta esta sprint |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N41.0 Inventariar o reuso das contagens de ordem antes de desenhar a lista | `/git` | — |
+| [x] | M | N41.1 Montar as linhas de ordens abertas e de histórico no pacote do painel | `/dev` | N41.0 |
+| [x] | M | N41.2 Colocar Ordens e Histórico no menu do dia a dia | `/dev` | N41.1 |
+| [x] | P | N41.3 Provar listas, vazio, sessão e que fila não é fill | `/qa testes` | N41.2 |
+| [x] | P | N41.4 Atualizar o mapa e os chamados depois das telas existirem | docs | N41.3 |
+
+### Quality Brief (Sprint N41)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds (ISS-010); zero Alpaca POST from this sprint.
+Maintain: history counts confirmed fills only; `queued_intent` is not a fill; gross label when costs incomplete.
+Avoid: forking a second jsonl parser; Alpaca HTTP from the panel; TimesFM as order auth; rewriting Command Panel v1 instead of the login menu; closing ISS-007/010/011.
+
+### Fora de escopo
+
+- Clear / OANDA / N29.5
+- POST ou cancelamento de ordem pelo painel
+- Poll HTTP Alpaca a partir do dashboard
+- TimesFM HTML (N43)
+- Catálogo de fases no menu (N42)
+- Inventar limiar / promover Prodígio / ORB paper
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-013
+
+### Task N41.0 — Inventariar o reuso das contagens de ordem antes de desenhar a lista
+
+**Entrega:** Inventário curto dizendo o que já conta ordem no snapshot e no ledger, e que o menu ainda não lista linhas.
+**Como conferir:** O inventário cita snapshots, contagens do ledger, o menu atual e deixa Clear, câmbio e envio pelo painel de fora.
+**Por quê:** Sem essa lista o EXECUTE reimplementa o parser ou trata contador como tela.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N41-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor SHA may differ from the pin — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `summary()` / `read_jsonl` on `paper/order-snapshots.jsonl`; `ledger_snapshot()` counts only; `_nav` without Ordens; `command_panel.history` is counts. Do not plan Alpaca HTTP from the panel.
+
+### Task N41.1 — Montar as linhas de ordens abertas e de histórico no pacote do painel
+
+**Entrega:** O pacote do painel passa a carregar listas de ordens ainda abertas e de fills confirmados, com a mesma regra do resultado: fila não entra como fill.
+**Como conferir:** Pedir o teste de dados em que um snapshot aberto aparece na lista de abertas, um fill confirmado aparece no histórico, e uma intenção só na fila não aparece como resultado.
+**Por quê:** Hoje só existem contadores; sem linhas a tela nova nasceria vazia por desenho.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/panel_ops_data.py`
+
+**executor_prompt**:
+
+```yaml
+id: N41.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N41.0"]
+files:
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/trading_dashboard_data.py
+    reuse_as: copy_pattern
+    convergence_check: rg "order-snapshots.jsonl" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "open_orders" src/panel_ops_data.py && rg "order_history" src/panel_ops_data.py && rg "build_panel_bundle" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: copy_pattern
+    convergence_check: rg "load_panel_signals" src/panel_ops_data.py && rg "performance_from_ledger" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n41-1-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'AKIA' not in t"
+    pass_condition: no broker secret values hardcoded
+  - class: subagent-safety
+    id: n41-1-no-broker-post
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'paper-api.alpaca.markets' not in t; assert 'process_after_gate_b' not in t"
+    pass_condition: panel data loader does not call Alpaca or the paper gateway submit path
+```
+
+### Quality Brief (Sprint N41)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds; zero Alpaca POST from this sprint.
+Maintain: history counts confirmed fills only; queued_intent is not a fill.
+Avoid: forking a second unrelated jsonl format; Alpaca HTTP from the panel; TimesFM as order auth.
+
+Melhoria: expose row lists `open_orders` and `order_history` on `build_panel_bundle`.
+Contexto: `trading_dashboard_data.summary()` already walks `paper/order-snapshots.jsonl` (latest MONITORED per client_order_id) but only returns counts. `ledger_snapshot()` returns table counts, not rows. `command_panel.history` is `{postgres_ledger_counts: ledger}`. Login menu has no lists.
+Objetivo: (1) Reuse the snapshot walk (do not invent a second jsonl schema). Open = remaining qty > 0 or equivalent monitored open; history = confirmed fills / closed monitored with realized gross — same fill rule as `performance_from_ledger` / `performance_from_snapshots`. (2) If ledger DSN present, SELECT rows from `paper_orders` / `paper_fills` like `load_panel_signals` (deleted_at IS NULL); prefer ledger rows when available, else snapshots. (3) `queued_intent` / unfilled must not appear in `order_history` as fills; they may appear on open/queue with a destination label that is not fill. (4) Row fields: symbol, side, qty, status, client_order_id, broker_order_id if present, market, strategy_key, timestamp; fills: qty, price, gross label. (5) Do not call Alpaca HTTP. Do not import `process_after_gate_b`. Do not touch Clear/OANDA adapters. (6) Empty list is valid. LIVE false.
+Arquivos: src/panel_ops_data.py.
+Critério de pronto: `build_panel_bundle` includes `open_orders` and `order_history` lists; rg shows order-snapshots.jsonl reuse; no alpaca host string in this file.
+Cenários de teste (implement in N41.3):
+1. Snapshot open remaining_qty > 0 → appears in open_orders.
+2. Confirmed fill / closed monitored → appears in order_history.
+3. queued_intent only → not in order_history as fill.
+4. No files / no ledger → empty lists, no exception.
+5. Regressão: signals and performance keys still present on the bundle.
+
+### Task N41.2 — Colocar Ordens e Histórico no menu do dia a dia
+
+**Entrega:** Depois do login, o menu ganha Ordens e Histórico, com tabela de linhas ou a frase de vazio, no mesmo visual das outras páginas.
+**Como conferir:** Abrir o painel logado, clicar nos dois itens, ver a lista ou o vazio combinado, e confirmar que não há botão de enviar ordem.
+**Por quê:** Os dados sozinhos não aparecem no clique do dia a dia; o mapa marcou essas áreas como ainda inexistentes.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N41.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N41.1"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: rg "/ordens" src/panel_ops_html.py && rg "/historico" src/panel_ops_html.py && rg "def _nav" src/panel_ops_html.py
+  - component: src/panel_ops_html.py
+    reuse_as: copy_pattern
+    convergence_check: rg "def render_orders_page" src/panel_ops_html.py && rg "def render_history_page" src/panel_ops_html.py && rg "def render_signals_page" src/panel_ops_html.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/ordens" src/v4_web_dashboard.py && rg "/historico" src/v4_web_dashboard.py && rg "serve_operator_panel" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n41-2-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower()"
+    pass_condition: no live keys in HTML or dashboard routes
+  - class: subagent-safety
+    id: n41-2-read-only-routes
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still does not call the paper submit path
+```
+
+### Quality Brief (Sprint N41)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of the new pages; same shell as Sinais.
+Maintain: do not rewrite render_page as the daily UI; login menu is panel_ops_html.
+Maintain: empty copy is explicit Portuguese; queued is not fill.
+Avoid: Live button; order submit/cancel controls; inventing a public hostname; TimesFM block on these pages.
+
+Melhoria: add authenticated GET /ordens and GET /historico to the daily menu; optional GET /api/orders and GET /api/history mirroring /api/signals.
+Contexto: OPERATOR_PANEL_PATHS is only /, /central, /sinais, /prodigy, /performance, /login. _nav has four items. serve_operator_panel 404s anything else. Command Panel v1 count cards stay as they are.
+Objetivo: (1) Extend OPERATOR_PANEL_PATHS and _nav with Ordens (/ordens) and Histórico (/historico). (2) render_orders_page / render_history_page copy render_signals_page layout (side nav, table, muted disclaimer). Empty copy: open = `Nenhuma ordem aberta no paper.`; history = `Nenhum fill confirmado no histórico.` Disclaimer: fila e HTTP 200 não são fill; valores brutos se o rótulo de performance já disser isso. (3) serve_operator_panel branches; session required like /sinais. (4) serve_panel_json for /api/orders and /api/history. (5) No POST handlers for placing/cancelling orders. Do not add Live button. Do not call Alpaca. Do not edit TimesFM. Do not replace render_page.
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /ordens and /historico return HTML with nav labels; unauthenticated still blocked; rg shows both paths in _nav and serve_operator_panel.
+Cenários de teste (implement in N41.3):
+1. Sem cookie → redirect/401 like /sinais.
+2. Com cookie, listas vazias → frases combinadas.
+3. Com fixture rows → symbol/status visíveis.
+4. Nav contém Ordens e Histórico.
+5. Regressão: /sinais /performance / central still render.
+6. Nenhum POST de ordem nessas rotas.
+
+### Task N41.3 — Provar listas, vazio, sessão e que fila não é fill
+
+**Entrega:** Testes mostram as telas com e sem dado, recusa sem login, e que intenção só na fila não vira linha de fill.
+**Como conferir:** Pedir essa bateria e ver falha se o menu não tiver os itens, se a fila entrar no histórico, ou se a página abrir sem sessão.
+**Por quê:** Sem prova, o mapa poderia marcar VISÍVEL com a tela ainda mentindo.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file unless HTTP helpers force a tiny extra). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated /ordens and /historico; empty copy strings; fixture open row; fixture fill row; queued_intent absent from history fills; nav labels. Do not call real Alpaca. LIVE false in env. No secret values.
+
+### Task N41.4 — Atualizar o mapa e os chamados depois das telas existirem
+
+**Entrega:** O mapa deixa de dizer que ordens e histórico não existem no menu; os chamados apontam a campanha e não fecham corretoras terceiras.
+**Como conferir:** Abrir o mapa: Ordens e Histórico com selo visível ou vazio comum; ISS-017 aberto; ISS-010 e o épico antigo do painel único continuam.
+**Por quê:** Sem esse recorte, a próxima rodada acha que a tela ainda foi adiada.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-017 keep **aberto**; ISS-007 keep open; ISS-016 stays orientation). Flip areas 5–6 from NÃO-EXISTE-AINDA to VISÍVEL / VAZIO-COMUM using the real empty strings. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009. Do not claim EasyPanel rebuild. LIVE false.
+
+---
+
+## Sprint N42 — Mostrar estratégias e fases no menu do dia a dia
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ver no menu quais estratégias estão em pesquisa, sombra ou paper  
+> Campanha ISS-017 onda 2 (stub). O catálogo hoje só aparece na página única antiga; o menu do dia a dia não lista fases. Sem promoção automática. Sem limiar inventado. LIVE false.
+
+---
+
+## Sprint N43 — Mostrar a análise Google só como pesquisa
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ver a previsão do modelo como dica, nunca como ordem  
+> Campanha ISS-017 onda 3 (stub). TimesFM fail-closed se indisponível; rótulo de pesquisa; **não** autoriza ordem nem inventa limiar. LIVE false.
+
+---
+
+## Sprint N44 — Homologar operar ação americana e cripto pelo painel
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Percorrer sinal, ordem aberta, fill e resultado sem o Exec  
+> Campanha ISS-017 onda 4 (stub). Depende de N41 no ar + rebuild EasyPanel (você). Não é fill inventado. Clear/OANDA fora. LIVE false.
+
+---
+
+## Sprint N45 — Trazer Tá Barato para o menu, só com fórmula recuperada
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ver Tá Barato no menu quando a fórmula original existir  
+> Campanha ISS-017 onda 5 (stub). **Não arranca** sem N17.2 / G-FORM. Não inventar percentil. LIVE false.
+
+---
+
+## Sprint N46 — Mostrar a bolsa brasileira no painel depois da conta Clear
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ver B3 no painel só com a conta simulada credenciada  
+> Campanha ISS-017 onda 6 (stub). **Não arranca** sem N29.5. Sem credencial continua barrado com motivo. Zero POST Alpaca. LIVE false.
+
+---
+
+## Sprint N47 — Mostrar o câmbio no painel depois da conta OANDA Practice
+> Categoria: N  
+> Status: planejada  
+> titulo_humano: Ver forex no painel só com a conta Practice credenciada  
+> Campanha ISS-017 onda 7 (stub). **Não arranca** sem N29.5. Host practice, nunca live. LIVE false.
 
 ---
 

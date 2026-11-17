@@ -11,7 +11,7 @@ except ImportError:
     from panel_ops_data import PERFORMANCE_LABEL_GROSS
 
 OPERATOR_PANEL_PATHS = frozenset({
-    '/', '/central', '/sinais', '/prodigy', '/performance', '/login',
+    '/', '/central', '/sinais', '/prodigy', '/performance', '/ordens', '/historico', '/login',
 })
 
 _PANEL_CSS = '''
@@ -57,6 +57,8 @@ def _nav(active: str) -> str:
     links = (
         ('central', '/', 'Central'),
         ('sinais', '/sinais', 'Sinais'),
+        ('ordens', '/ordens', 'Ordens'),
+        ('historico', '/historico', 'Histórico'),
         ('prodigy', '/prodigy', 'Prodígio'),
         ('performance', '/performance', 'Performance'),
     )
@@ -151,6 +153,38 @@ def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -
 <h2>Sinais recentes</h2><table><tbody>{sig_rows}</tbody></table>
 <p><a href="/sinais">Ver todos os sinais</a></p></main></div>
 <script>{_KILL_PATCH_SCRIPT}</script></body></html>'''
+
+
+def render_orders_page(bundle: dict[str, Any]) -> str:
+    rows = ''.join(
+        f'<tr><td class="mono">{esc(o.get("client_order_id") or "—")}</td>'
+        f'<td>{esc(o.get("symbol"))}</td><td>{esc(o.get("side"))}</td>'
+        f'<td>{esc(o.get("status"))}</td><td>{esc(o.get("broker_status") or o.get("paper_status") or "—")}</td>'
+        f'<td class="mono">{esc(o.get("remaining_qty") or o.get("entry_qty") or "—")}</td>'
+        f'<td>{esc(o.get("strategy_key") or "—")}</td></tr>'
+        for o in bundle.get('open_orders') or []
+    ) or '<tr><td colspan="7">Nenhuma ordem aberta no paper.</td></tr>'
+    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ordens</title>
+<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("ordens")}<main class="main">
+<h1>Ordens abertas</h1><p class="muted">Somente leitura — paper demo. Live desligado.</p>
+<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Status</th><th>Corretora</th><th>Qtd rest.</th><th>Estratégia</th></tr></thead>
+<tbody>{rows}</tbody></table></main></div></body></html>'''
+
+
+def render_history_page(bundle: dict[str, Any]) -> str:
+    label = esc(PERFORMANCE_LABEL_GROSS)
+    rows = ''.join(
+        f'<tr><td class="mono">{esc(h.get("client_order_id") or "—")}</td>'
+        f'<td>{esc(h.get("symbol"))}</td><td>{esc(h.get("side"))}</td>'
+        f'<td class="mono">{esc(h.get("realized_gross_pnl_usd") or "—")}</td>'
+        f'<td>{label}</td><td>{esc(h.get("strategy_key") or "—")}</td></tr>'
+        for h in bundle.get('order_history') or []
+    ) or '<tr><td colspan="6">Nenhum fill confirmado no histórico.</td></tr>'
+    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Histórico</title>
+<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("historico")}<main class="main">
+<h1>Histórico de fills</h1><p class="muted">Apenas fills confirmados — fila e HTTP 200 não entram.</p>
+<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Resultado</th><th>Rótulo</th><th>Estratégia</th></tr></thead>
+<tbody>{rows}</tbody></table></main></div></body></html>'''
 
 
 def render_signals_page(bundle: dict[str, Any]) -> str:

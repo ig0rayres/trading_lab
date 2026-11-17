@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N40 | docs | Mapa OPERATOR-PANEL-MAP; duas superfícies 8765; ordens UI OUT; ISS-016 mapa existe | 22–32 |
+| N41 | panel_ops, docs | Ordens + Histórico no menu; ISS-017 onda 1; campanha CAMPAIGN-PLATFORM-DELIVERY | 22–32 |
+| N40 | docs | Mapa OPERATOR-PANEL-MAP; duas superfícies 8765; ordens UI OUT; ISS-016 mapa existe | 34–44 |
 | N39 | docs | Closeout papel N37/ISS-014; prova PR #52; rebuild/N29.5/N17.2 operador | 34–45 |
 | N38 | panel_ops_html, platform_health | Faixa do freio (um CTA por estado) + bloco saúde na Central; kill_switch_on inalterado | 32–45 |
 | N37 | platform_health, operational_defaults, observability | Saúde automática: probes, semáforo Central, defaults ON; PR #52 | 47–62 |
@@ -17,6 +18,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N41 — Ordens e Histórico no menu (ISS-017 onda 1)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** listas `open_orders` e `order_history` em `build_panel_bundle`; menu com **Ordens** (`GET /ordens`) e **Histórico** (`GET /historico`); APIs `GET /api/orders` e `GET /api/history`; testes `tests/test_panel_ops.py`; mapa (`docs/OPERATOR-PANEL-MAP.md` áreas 5–6), `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-017 anotado; **permanece aberto**). Folha da campanha: `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
+
+**Honestidade:** painel só leitura — **sem** POST de ordem; fila / HTTP 200 ≠ fill; histórico = fills confirmados; B3/Clear/OANDA fora; rebuild EasyPanel operador; **ISS-007** / **ISS-010** / **ISS-011** / **ISS-016** não fechados; `LIVE_TRADING_ENABLED=false`.
 
 ---
 

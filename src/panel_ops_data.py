@@ -22,6 +22,9 @@ ANCHOR_FIELD_BY_REJECT = {
 EXCLUDED_PNL_ORDER_STATUSES = frozenset({
     'new', 'accepted', 'queued_intent', 'pending_new', 'pending_replace',
 })
+OPEN_ORDER_BROKER_STATUSES = frozenset({
+    'new', 'accepted', 'pending_new', 'pending_replace', 'partially_filled',
+})
 PERFORMANCE_LABEL_GROSS = 'gross_unverified_costs'
 
 
@@ -150,6 +153,196 @@ def _decimal_sum(values: list[Decimal]) -> str | None:
     if not values:
         return None
     return str(sum(values, Decimal(0)))
+
+
+def latest_monitored_snapshots(root: Path) -> dict[str, dict[str, Any]]:
+    latest: dict[str, dict[str, Any]] = {}
+    for snap in read_jsonl(Path(root) / 'paper' / 'order-snapshots.jsonl'):
+        key = snap.get('client_order_id')
+        if key and snap.get('status') == 'MONITORED':
+            latest[key] = snap
+    return latest
+
+
+def _snap_qtys(snap: dict[str, Any]) -> tuple[Decimal, Decimal] | None:
+    try:
+        entry = Decimal(str(snap.get('entry_qty') or 0))
+        raw_remaining = snap.get('remaining_qty')
+        remaining = Decimal(str(entry if raw_remaining is None else raw_remaining))
+        return entry, remaining
+    except (InvalidOperation, TypeError):
+        return None
+
+
+def snapshot_is_confirmed_fill(snap: dict[str, Any]) -> bool:
+    if str(snap.get('paper_status') or '') == 'queued_intent':
+        return False
+    broker_status = str(snap.get('broker_status') or snap.get('alpaca_status') or '').lower()
+    if broker_status in EXCLUDED_PNL_ORDER_STATUSES:
+        return False
+    qtys = _snap_qtys(snap)
+    if qtys is None:
+        return False
+    entry, remaining = qtys
+    if entry <= 0 or remaining != 0:
+        return False
+    return bool(snap.get('broker_fill_confirmed') or snap.get('fill_qty'))
+
+
+def snapshot_is_open_order(snap: dict[str, Any]) -> bool:
+    if snapshot_is_confirmed_fill(snap):
+        return False
+    if str(snap.get('paper_status') or '') == 'queued_intent':
+        return True
+    qtys = _snap_qtys(snap)
+    if qtys is None:
+        return False
+    entry, remaining = qtys
+    if entry > 0 and remaining > 0:
+        return True
+    broker_status = str(snap.get('broker_status') or snap.get('alpaca_status') or '').lower()
+    return broker_status in OPEN_ORDER_BROKER_STATUSES
+
+
+def order_row_from_snapshot(snap: dict[str, Any], *, history: bool = False) -> dict[str, Any]:
+    row: dict[str, Any] = {
+        'client_order_id': snap.get('client_order_id'),
+        'symbol': snap.get('symbol'),
+        'side': snap.get('side'),
+        'status': snap.get('status'),
+        'broker_status': snap.get('broker_status') or snap.get('alpaca_status'),
+        'paper_status': snap.get('paper_status'),
+        'entry_qty': snap.get('entry_qty'),
+        'remaining_qty': snap.get('remaining_qty'),
+        'strategy_key': snap.get('strategy_key'),
+        'broker_order_id': snap.get('broker_order_id'),
+        'market': snap.get('market') or 'US_EQUITY',
+    }
+    if history:
+        row['realized_gross_pnl_usd'] = snap.get('realized_gross_pnl_usd')
+        row['pnl_label'] = PERFORMANCE_LABEL_GROSS
+        row['broker_fill_confirmed'] = snap.get('broker_fill_confirmed')
+    return row
+
+
+def open_orders_from_snapshots(root: Path) -> list[dict[str, Any]]:
+    rows = [
+        order_row_from_snapshot(snap)
+        for snap in latest_monitored_snapshots(root).values()
+        if snapshot_is_open_order(snap)
+    ]
+    return sorted(rows, key=lambda item: str(item.get('symbol') or ''))
+
+
+def order_history_from_snapshots(root: Path) -> list[dict[str, Any]]:
+    rows = [
+        order_row_from_snapshot(snap, history=True)
+        for snap in latest_monitored_snapshots(root).values()
+        if snapshot_is_confirmed_fill(snap)
+    ]
+    return sorted(rows, key=lambda item: str(item.get('symbol') or ''))
+
+
+def open_orders_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str, Any]] | None:
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT po.client_order_id, po.symbol, po.side, po.status, po.qty, '
+                    'po.broker_order_id, rd.strategy_key '
+                    'FROM paper_orders po '
+                    'JOIN risk_decisions rd ON rd.id = po.risk_decision_id AND rd.deleted_at IS NULL '
+                    'WHERE po.deleted_at IS NULL AND po.status != %s '
+                    'ORDER BY po.created_at DESC LIMIT 100',
+                    ('filled',),
+                )
+                fetched = cur.fetchall()
+    except Exception:
+        return None
+    if not fetched:
+        return None
+    return [
+        {
+            'client_order_id': cid,
+            'symbol': symbol,
+            'side': side,
+            'status': status,
+            'entry_qty': qty,
+            'remaining_qty': qty,
+            'broker_order_id': broker_id,
+            'strategy_key': strategy_key,
+            'market': 'US_EQUITY',
+        }
+        for cid, symbol, side, status, qty, broker_id, strategy_key in fetched
+        if str(status) != 'filled'
+    ]
+
+
+def order_history_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str, Any]] | None:
+    try:
+        with conn_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT po.client_order_id, po.symbol, po.side, po.status, po.broker_order_id, '
+                    'rd.strategy_key, pf.qty, le.amount_cents, pf.filled_at '
+                    'FROM paper_fills pf '
+                    'JOIN paper_orders po ON po.id = pf.paper_order_id AND po.deleted_at IS NULL '
+                    'JOIN risk_decisions rd ON rd.id = po.risk_decision_id AND rd.deleted_at IS NULL '
+                    'JOIN ledger_entries le ON le.paper_fill_id = pf.id AND le.deleted_at IS NULL '
+                    "WHERE pf.deleted_at IS NULL AND le.kind = %s AND po.status NOT IN %s "
+                    'ORDER BY pf.filled_at DESC NULLS LAST LIMIT 100',
+                    ('fill', tuple(EXCLUDED_PNL_ORDER_STATUSES)),
+                )
+                fetched = cur.fetchall()
+    except Exception:
+        return None
+    if not fetched:
+        return None
+    rows: list[dict[str, Any]] = []
+    for cid, symbol, side, status, broker_id, strategy_key, qty, cents, filled_at in fetched:
+        if str(status) in EXCLUDED_PNL_ORDER_STATUSES:
+            continue
+        gross = None
+        if cents is not None:
+            gross = str(Decimal(cents) / Decimal(100))
+        rows.append({
+            'client_order_id': cid,
+            'symbol': symbol,
+            'side': side,
+            'status': status,
+            'broker_order_id': broker_id,
+            'strategy_key': strategy_key,
+            'entry_qty': qty,
+            'remaining_qty': 0,
+            'realized_gross_pnl_usd': gross,
+            'pnl_label': PERFORMANCE_LABEL_GROSS,
+            'broker_fill_confirmed': True,
+            'filled_at': filled_at.isoformat() if isinstance(filled_at, datetime) else filled_at,
+            'market': 'US_EQUITY',
+        })
+    return rows or None
+
+
+def load_panel_open_orders(root: Path, conn_factory: Callable[..., Any] | None) -> list[dict[str, Any]]:
+    if conn_factory is not None:
+        from_db = open_orders_from_ledger(conn_factory)
+        if from_db:
+            return from_db
+    try:
+        return open_orders_from_snapshots(root)
+    except Exception:
+        return []
+
+
+def load_panel_order_history(root: Path, conn_factory: Callable[..., Any] | None) -> list[dict[str, Any]]:
+    if conn_factory is not None:
+        from_db = order_history_from_ledger(conn_factory)
+        if from_db:
+            return from_db
+    try:
+        return order_history_from_snapshots(root)
+    except Exception:
+        return []
 
 
 def performance_from_snapshots(root: Path) -> dict[str, Any]:
@@ -293,6 +486,8 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
     return {
         'generated_at': datetime.now(timezone.utc).isoformat(),
         'signals': load_panel_signals(root, conn_factory, flags),
+        'open_orders': load_panel_open_orders(root, conn_factory),
+        'order_history': load_panel_order_history(root, conn_factory),
         'prodigy': {
             'ranking': None,
             'copied_signals': prodigy_copied_signals(root),

@@ -538,4 +538,6 @@
 
 **Nota N49 PLAN (2026-11-17):** sprint **N49** planejada (`docs/.briefs/N49.brief.md`). Critérios **reusados** de REQUIREMENTS Feature 4, 9 e 10 — não inventados. **Não** fecha ISS-007 / ISS-017 / ISS-010 / ISS-011. Não arranca N45–N47. `LIVE_TRADING_ENABLED=false`.
 
+**Nota N49 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — JOIN ledger `signal_events` + overlay `paper/signal-orders.jsonl`; `/sinais` com colunas Origem/Sinal, inventário fill-only, bloco critérios Feature 4/9/10, pool `_load_prodigy_opportunities` (`research_tip`); `tests/test_panel_ops.py` 55 passed. **Chamado permanece aberto** até rebuild EasyPanel + confirmação visual do operador (mesma política de ISS-018).
+
 ---

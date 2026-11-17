@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N49 planejada (plan_only)",
+  "fase_nome": "N49 EXECUTE ISS-019",
   "sprint_pending_merge": null,
   "sprint_pr": 65,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T15:25:00-03:00",
+  "ultimo_update": "2026-11-17T15:17:19-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -134,7 +134,7 @@
       "id": "N49.0",
       "title": "Inventariar o reuso da proveniência, do inventário e do pool",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "files": [
         "docs/.briefs/N49-GIT-FIRST-REUSE.md",
         "docs/.briefs/N49.brief.md"
@@ -146,7 +146,7 @@
       "id": "N49.1",
       "title": "Ligar cada ordem paper ao sinal que a abriu",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "files": [
         "src/panel_ops_data.py"
       ],
@@ -159,7 +159,7 @@
       "id": "N49.2",
       "title": "Montar o inventário de sinais e o pool de candidatos",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "files": [
         "src/panel_ops_data.py"
       ],
@@ -172,7 +172,7 @@
       "id": "N49.3",
       "title": "Mostrar proveniência, inventário e critérios na tela Sinais",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "files": [
         "src/panel_ops_html.py",
         "src/v4_web_dashboard.py"
@@ -186,7 +186,7 @@
       "id": "N49.4",
       "title": "Provar proveniência, vazio honesto e critérios visíveis",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "files": [
         "tests/test_panel_ops.py"
       ],
@@ -199,7 +199,7 @@
       "id": "N49.5",
       "title": "Atualizar o mapa e o chamado depois da tela completa",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
         "docs/DASHBOARD-OPERATIONS.md",
@@ -213,15 +213,15 @@
     }
   ],
   "checkpoint": {
-    "phase": "planning",
+    "phase": "implementation",
     "sprint": "N49",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N48.4",
+    "last_completed_task": "N49.5",
     "validation_gate_ref": ".beesy/sprints/N48.json",
     "sprint_delivery": "verify_green",
     "sprint_delivery_sprint": "N48",
-    "plan_only": true,
+    "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
       "sprint": "N48",
@@ -301,7 +301,7 @@
   },
   "sprint_branch": null,
   "sprint_categoria": "N",
-  "plan_only": true,
+  "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",

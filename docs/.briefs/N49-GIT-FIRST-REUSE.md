@@ -80,3 +80,10 @@ If GitHub is unreachable at EXECUTE, stop claiming current `main`. Re-run `git l
 | Local vendor git | submodule not initialized; directory empty — **≠ claim of reviewed local HEAD** |
 | `src/` in this plan-time inventory | **zero** product edits |
 | Criteria source | `docs/REQUIREMENTS.md` `### Feature 4: Catálogo de estratégias e promoção de estado`; `### Feature 9: Sinais e Prodígio`; `### Feature 10: Performance` — **reused, not invented** |
+
+## EXECUTE confirmation (N49.0 re-check, 2026-11-17)
+
+| Check | Result |
+|-------|--------|
+| Pin vs remote (EXECUTE) | `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd` — **no bump** |
+| Product edits | `src/panel_ops_data.py`, `src/panel_ops_html.py`, tests + docs per sprint N49 |

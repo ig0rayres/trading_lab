@@ -60,6 +60,10 @@ def _write_order_snapshots(root: Path, rows: list[dict]) -> None:
     )
 
 
+def _clear_order_snapshots(root: Path) -> None:
+    _write_order_snapshots(root, [])
+
+
 def _unauthenticated_panel_status(base: str, path: str) -> int:
     opener = build_opener(_NoRedirect)
     try:
@@ -470,6 +474,13 @@ class PanelOpsHttpTests(unittest.TestCase):
 
 
 class PanelOrdersHistoryHttpTests(unittest.TestCase):
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
     def _server(self, tmp, session='panel-secret', token=None):
         handler = make_handler(Path(tmp), token=token, operator_session=session)
         server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
@@ -498,6 +509,7 @@ class PanelOrdersHistoryHttpTests(unittest.TestCase):
 
     def test_ordens_empty_shows_paper_copy(self):
         with tempfile.TemporaryDirectory() as d:
+            _clear_order_snapshots(Path(d))
             server, thread, base = self._server(d)
             try:
                 req = _get(base + '/ordens', session='panel-secret')
@@ -509,6 +521,7 @@ class PanelOrdersHistoryHttpTests(unittest.TestCase):
 
     def test_historico_empty_shows_confirmed_fill_copy(self):
         with tempfile.TemporaryDirectory() as d:
+            _clear_order_snapshots(Path(d))
             server, thread, base = self._server(d)
             try:
                 req = _get(base + '/historico', session='panel-secret')
@@ -628,6 +641,7 @@ class PanelOrdersHistoryHttpTests(unittest.TestCase):
 
     def test_api_orders_and_history_empty_json_lists(self):
         with tempfile.TemporaryDirectory() as d:
+            _clear_order_snapshots(Path(d))
             server, thread, base = self._server(d)
             try:
                 req = _get(base + '/api/orders', session='panel-secret')

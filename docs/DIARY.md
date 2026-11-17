@@ -30,6 +30,8 @@
 
 **Honestidade:** painel só leitura — **sem** POST de ordem; **sem** promoção de fase na tela nova; vazio `Catálogo indisponível (ledger)` quando o ledger falta; melhoria contínua continua só no Command Panel v1; B3/Clear/OANDA fora; rebuild EasyPanel operador; **ISS-007** / **ISS-010** / **ISS-011** / **ISS-016** não fechados; `LIVE_TRADING_ENABLED=false`.
 
+**Closeout:** feat em main via PR **#61** (`70cf0f2`); sessão `verify_green` → `finalized`; rebuild EasyPanel ainda na mão do operador.
+
 ---
 
 ## Sprint N41 — Ordens e Histórico no menu (ISS-017 onda 1)

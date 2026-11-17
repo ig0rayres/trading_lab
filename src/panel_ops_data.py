@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import math
+import os
+import re
 from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -907,6 +909,183 @@ def _build_copy_inventory(
     }
 
 
+_C2_ALLOWLIST_FILENAME = 'c2_paper_copy_allowlist.json'
+_C2_NAMED_ID_RE = re.compile(r'^\d+$')
+_C2_SNAPSHOT_NOT_TICKET_PT = (
+    'Instantâneo de ordens ativas — não é ticket nem autoriza execução.'
+)
+
+
+def _repo_config_root() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
+def _load_c2_allowlist_config_paths(root: Path) -> list[Path]:
+    paths: list[Path] = []
+    for candidate in (
+        Path(root) / 'config' / _C2_ALLOWLIST_FILENAME,
+        _repo_config_root() / 'config' / _C2_ALLOWLIST_FILENAME,
+    ):
+        if candidate.is_file() and candidate not in paths:
+            paths.append(candidate)
+    return paths
+
+
+def _parse_numeric_ids(values: Any) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    if not isinstance(values, list):
+        return out
+    for raw in values:
+        text = str(raw).strip()
+        if not _C2_NAMED_ID_RE.match(text) or text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
+    return sorted(out, key=int)
+
+
+def _c2_approved_ids_from_env() -> list[str]:
+    raw = os.environ.get('C2_PAPER_COPY_APPROVED_IDS', '').strip()
+    if not raw:
+        return []
+    parts = [p.strip() for p in raw.replace(';', ',').split(',')]
+    return _parse_numeric_ids(parts)
+
+
+def load_c2_paper_copy_approved_ids(root: Path) -> list[str]:
+    """Named Collective2 strategy IDs approved for paper-copy (default empty)."""
+    merged: list[str] = []
+    seen: set[str] = set()
+    for path in _load_c2_allowlist_config_paths(root):
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        for item in _parse_numeric_ids(payload.get('approved_ids')):
+            if item not in seen:
+                seen.add(item)
+                merged.append(item)
+    for item in _c2_approved_ids_from_env():
+        if item not in seen:
+            seen.add(item)
+            merged.append(item)
+    return sorted(merged, key=int)
+
+
+def _load_c2_research_candidates(root: Path) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for rel in (
+        'intelligence/provider-research-top10-latest.json',
+        'reports/intelligence/provider-research-top10-latest.json',
+    ):
+        path = Path(root) / rel
+        if not path.is_file():
+            path = _repo_config_root() / rel
+        if not path.is_file():
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        top = payload.get('top_10_research') or []
+        for row in top:
+            if not isinstance(row, dict):
+                continue
+            pid = row.get('provider_id') or row.get('provider')
+            if pid is None:
+                continue
+            pid_text = str(pid).strip()
+            if not pid_text:
+                continue
+            candidates.append(
+                {
+                    'provider_id': pid_text,
+                    'name': row.get('name') or pid_text,
+                    'label': 'research_only',
+                    'eligible_for_copy': False,
+                }
+            )
+        if candidates:
+            break
+    return candidates
+
+
+def _load_c2_active_orders_snapshot(root: Path) -> dict[str, Any] | None:
+    for rel in (
+        'reports/providers/signals/active-orders-latest.json',
+        'providers/signals/active-orders-latest.json',
+    ):
+        path = Path(root) / rel
+        if not path.is_file():
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        return {
+            'mode': payload.get('mode') or 'C2_ACTIVE_ORDERS_READ_ONLY',
+            'as_of': payload.get('as_of'),
+            'strategy_ids': payload.get('strategy_ids') or [],
+            'active_orders_count': len(payload.get('records') or []),
+            'execution_authorized': False,
+            'not_a_ticket_label_pt': _C2_SNAPSHOT_NOT_TICKET_PT,
+            'orders_sent': 0,
+        }
+    return None
+
+
+def _is_collective2_order_row(row: dict[str, Any]) -> bool:
+    origin = str(row.get('origin') or row.get('provider') or '').lower()
+    if 'collective2' in origin or origin == 'c2':
+        return True
+    sk = str(row.get('strategy_key') or '').lower()
+    return 'collective2' in sk or sk == 'c2'
+
+
+def _collective2_operating_rows(
+    open_orders: list[dict[str, Any]],
+    order_history: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for source in (open_orders, order_history):
+        for row in source:
+            if not isinstance(row, dict) or not _is_collective2_order_row(row):
+                continue
+            key = str(row.get('client_order_id') or row.get('symbol') or '')
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(dict(row))
+    return rows
+
+
+def _build_collective2_block(root: Path, approved_ids: list[str]) -> dict[str, Any]:
+    subscribed = [
+        {
+            'provider_id': pid,
+            'status': 'subscribed_named',
+            'label': 'named_allowlist',
+        }
+        for pid in approved_ids
+    ]
+    return {
+        'approved_ids': list(approved_ids),
+        'approved_for_paper_copy': bool(approved_ids),
+        'status': 'allowlist' if approved_ids else 'closed',
+        'subscribed': subscribed,
+        'candidates': _load_c2_research_candidates(root),
+        'active_orders_snapshot': _load_c2_active_orders_snapshot(root),
+    }
+
+
 def _build_copy_adoption(strategy_catalog: dict[str, Any] | None) -> dict[str, Any]:
     catalog = strategy_catalog if isinstance(strategy_catalog, dict) else {}
     phases: list[dict[str, Any]] = []
@@ -923,13 +1102,14 @@ def _build_copy_adoption(strategy_catalog: dict[str, Any] | None) -> dict[str, A
         'Risco paper inicial sugerido: R$ 20; fase padrão pesquisa; ranking não promove sozinho.',
         'Fases: pesquisa, sombra, paper limitado, paper validado — promoção somente operador.',
         'Live desligado; fase não sobe por lucratividade aparente nem HTTP 200.',
-        'Collective2: cópia fechada — nenhum provedor aprovado.',
+        'Collective2: cópia paper só para identificadores na lista nomeada (padrão vazia = fechada).',
         'Performance e inventário: somente fill confirmado (valores brutos se o custo faltar).',
     ]
     return {
         'criteria_pt': criteria_pt,
         'catalog_phases': phases,
         'collective2_closed': True,
+        'collective2_named_allowlist': True,
         'auto_promote': False,
         'live_trading_enabled': False,
         'source': 'REQUIREMENTS Feature 4, 9 and 10',
@@ -964,15 +1144,21 @@ def build_panel_copy(
 ) -> dict[str, Any]:
     operating = _signal_copy_rows(open_orders)
     history = _signal_copy_rows(order_history)
+    approved_ids = load_c2_paper_copy_approved_ids(root)
+    collective2 = _build_collective2_block(root, approved_ids)
+    c2_operating = _collective2_operating_rows(open_orders, order_history)
+    adoption = _build_copy_adoption(strategy_catalog)
+    adoption['collective2_closed'] = not bool(approved_ids)
     return {
         'operating': operating,
         'history': history,
         'performance': _copy_performance_slice(perf),
-        'collective2': {'approved_for_paper_copy': False, 'status': 'closed'},
+        'collective2': collective2,
+        'collective2_operating': c2_operating,
         'research_copies': list(research_copies),
         'providers': _copy_providers(research_copies),
         'inventory': _build_copy_inventory(operating, history),
-        'adoption': _build_copy_adoption(strategy_catalog),
+        'adoption': adoption,
         'prodigy_pool': _build_prodigy_pool(root),
     }
 

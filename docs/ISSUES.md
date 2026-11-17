@@ -571,4 +571,6 @@
 
 **Nota PLAN N50 (2026-11-17):** sprint **N50** planejada (`docs/.briefs/N50.brief.md`). Política = lista nomeada (padrão vazia). Tela `/sinais` reorganizada em operação vs auditoria vs candidatos. Bug Provedor `None` = `provider_id`. **Não** fecha ISS-007 / ISS-017 / ISS-010 / ISS-011 / ISS-019. N45–N47 intactos. `LIVE_TRADING_ENABLED=false`.
 
+**Nota N50 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — allowlist `config/c2_paper_copy_allowlist.json`; `REQUIREMENTS` v0.5; `/sinais` reordenado (operação → inventário → Collective2 → Prodígio → critérios → auditoria); `provider_id` no pool; `tests/test_panel_ops.py` **60 passed**. **Chamado permanece aberto** até operador preencher lista (se desejar C2), rebuild EasyPanel e confirmação visual.
+
 ---

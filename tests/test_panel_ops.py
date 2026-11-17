@@ -17,6 +17,7 @@ from panel_ops_data import (
     PERFORMANCE_LABEL_GROSS,
     blocked_context,
     build_panel_bundle,
+    load_c2_paper_copy_approved_ids,
     load_panel_signals,
     performance_from_snapshots,
     signal_destination,
@@ -98,22 +99,47 @@ def _write_signal_orders_journal(
     )
 
 
-def _write_prodigy_pool_fixture(root: Path) -> None:
+def _write_prodigy_pool_fixture(root: Path, *, use_provider_id: bool = False) -> None:
     intel = root / 'intelligence'
     intel.mkdir(parents=True, exist_ok=True)
+    row = {
+        'status': 'candidate',
+        'prodigy_score': '0.42',
+    }
+    if use_provider_id:
+        row['provider_id'] = 'provider-77'
+    else:
+        row['provider'] = 'prov-a'
     payload = {
         'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
         'as_of': '2026-11-17',
-        'top_10_research': [
-            {
-                'provider': 'prov-a',
-                'status': 'candidate',
-                'prodigy_score': '0.42',
-            },
-        ],
+        'top_10_research': [row],
         'score_warning': 'Research rank only; does not authorize orders.',
     }
     (intel / 'prodigy-top10-latest.json').write_text(json.dumps(payload), encoding='utf-8')
+
+
+def _write_c2_allowlist_fixture(root: Path, approved_ids: list[str]) -> None:
+    cfg = root / 'config'
+    cfg.mkdir(parents=True, exist_ok=True)
+    (cfg / 'c2_paper_copy_allowlist.json').write_text(
+        json.dumps({'approved_ids': approved_ids}, indent=2),
+        encoding='utf-8',
+    )
+
+
+def _write_c2_active_orders_snapshot(root: Path) -> None:
+    out = root / 'reports' / 'providers' / 'signals'
+    out.mkdir(parents=True, exist_ok=True)
+    payload = {
+        'mode': 'C2_ACTIVE_ORDERS_READ_ONLY',
+        'as_of': '2026-11-17T12:00:00+00:00',
+        'strategy_ids': ['999001'],
+        'records': [{'StrategyId': '999001', 'Symbol': 'SPY'}],
+        'execution_authorized': False,
+        'orders_sent': 0,
+    }
+    (out / 'active-orders-latest.json').write_text(json.dumps(payload), encoding='utf-8')
 
 
 def _write_signal_copy_panel_fixture(root: Path) -> None:
@@ -1208,11 +1234,14 @@ class PanelAnaliseGoogleHttpTests(unittest.TestCase):
                 self._shutdown(server, thread)
 
 
-N48_SECTION_COPY = 'Cópia de terceiros'
 N48_SECTION_AUDIT = 'Auditoria de ingresso'
 N48_COPY_EMPTY = 'Nenhuma cópia de terceiro em operação.'
 N48_COPY_PERF_EMPTY = 'Sem fills confirmados nesta cópia.'
-N48_COLLECTIVE2 = 'Collective2: cópia fechada — nenhum provedor aprovado.'
+N50_OPERATING_SECTION = 'Em operação / assinados'
+N50_C2_SECTION = 'Collective2'
+N50_C2_EMPTY = 'Collective2: cópia paper fechada — nenhum provedor na lista nomeada.'
+N50_C2_ALLOWLIST = 'Collective2: cópia paper só para os provedores nomeados.'
+N50_POOL_SECTION = 'Candidatos Prodígio (pesquisa)'
 N48_AUDIT_EMPTY = 'Nenhum sinal neste destino.'
 N48_AUDIT_SUBTITLE = 'Auditoria de ingresso — origem, destino e motivo. Não é fill.'
 N48_COPY_SUBTITLE = 'Cópia de terceiros (TradingView / provedores). Não é fill.'
@@ -1254,7 +1283,9 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
             self.assertIn(key, copy)
         collective2 = copy['collective2']
         self.assertIsInstance(collective2, dict)
-        self.assertFalse(collective2.get('approved_for_paper_copy'))
+        self.assertIn('approved_ids', collective2)
+        if not collective2.get('approved_ids'):
+            self.assertFalse(collective2.get('approved_for_paper_copy'))
         lowered = json.dumps(copy).lower()
         self.assertNotIn('per_signal', lowered)
         self.assertNotIn('provider_pnl', lowered)
@@ -1278,12 +1309,14 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
                 req = _get(base + '/sinais', session='panel-secret')
                 with urlopen(req, timeout=3) as resp:
                     body = resp.read().decode('utf-8')
-                self.assertIn(N48_SECTION_COPY, body)
+                self.assertIn(N50_OPERATING_SECTION, body)
                 self.assertIn(N48_SECTION_AUDIT, body)
-                self.assertLess(body.index(N48_SECTION_COPY), body.index(N48_SECTION_AUDIT))
+                self.assertIn(N50_C2_SECTION, body)
+                self.assertLess(body.index(N50_OPERATING_SECTION), body.index(N48_SECTION_AUDIT))
+                self.assertLess(body.index(N50_C2_SECTION), body.index(N48_SECTION_AUDIT))
                 self.assertIn(N48_COPY_EMPTY, body)
                 self.assertIn(N48_COPY_PERF_EMPTY, body)
-                self.assertIn(N48_COLLECTIVE2, body)
+                self.assertIn(N50_C2_EMPTY, body)
                 self.assertIn(N48_AUDIT_EMPTY, body)
                 self.assertIn(N48_AUDIT_SUBTITLE, body)
                 self.assertIn(N48_COPY_SUBTITLE, body)
@@ -1300,7 +1333,7 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
                 req = _get(base + '/sinais', session='panel-secret')
                 with urlopen(req, timeout=3) as resp:
                     body = resp.read().decode('utf-8')
-                self.assertIn(N48_COLLECTIVE2, body)
+                self.assertIn(N50_C2_EMPTY, body)
                 self.assertIn(PERFORMANCE_LABEL_GROSS, body)
                 self.assertIn('AAPL', body)
                 self.assertIn('MSFT', body)
@@ -1463,8 +1496,8 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
                     body = resp.read().decode('utf-8')
                 self.assertIn('Critérios de adoção', body)
                 self.assertIn('Inventário de sinais', body)
-                self.assertIn('Candidatos ao pool (Prodígio)', body)
-                self.assertIn(N48_SECTION_COPY, body)
+                self.assertIn(N50_POOL_SECTION, body)
+                self.assertIn(N50_OPERATING_SECTION, body)
                 self.assertIn(N48_SECTION_AUDIT, body)
             finally:
                 self._shutdown(server, thread)
@@ -1474,7 +1507,7 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
             server, thread, base = self._server(d)
             try:
                 cases = (
-                    ('/sinais', N48_SECTION_COPY),
+                    ('/sinais', N50_OPERATING_SECTION),
                     ('/ordens', 'Ordens'),
                     ('/historico', 'Histórico'),
                     ('/estrategias', 'Estratégias'),
@@ -1490,6 +1523,96 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
                         self.assertIn(needle, body)
             finally:
                 self._shutdown(server, thread)
+
+
+class PanelSinaisN50HttpTests(unittest.TestCase):
+    """N50 — named C2 allowlist, section order, prodigy provider_id."""
+
+    def setUp(self):
+        self._panel_tests = PanelSinaisCopyAuditHttpTests()
+        self._panel_tests.setUp()
+
+    def tearDown(self):
+        self._panel_tests.tearDown()
+
+    def _server(self, root=None):
+        return self._panel_tests._server(root)
+
+    def _shutdown(self, server, thread):
+        self._panel_tests._shutdown(server, thread)
+
+    def test_n50_empty_allowlist_collective2_closed_api(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                c2 = payload['copy']['collective2']
+                self.assertEqual(c2.get('approved_ids'), [])
+                self.assertFalse(c2.get('approved_for_paper_copy'))
+                self.assertEqual(c2.get('status'), 'closed')
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n50_one_named_id_allowlist_only_that_id(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, ['12345', '67890'])
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                c2 = payload['copy']['collective2']
+                self.assertEqual(c2.get('approved_ids'), ['12345', '67890'])
+                self.assertTrue(c2.get('approved_for_paper_copy'))
+                self.assertEqual({s['provider_id'] for s in c2.get('subscribed') or []}, {'12345', '67890'})
+                req_html = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req_html, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N50_C2_ALLOWLIST, body)
+                self.assertIn('12345', body)
+                self.assertNotIn('30415311', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n50_prodigy_pool_provider_id_not_none(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_prodigy_pool_fixture(root, use_provider_id=True)
+            bundle = build_panel_bundle(root, conn_factory=None)
+            item = bundle['copy']['prodigy_pool']['items'][0]
+            self.assertEqual(item.get('provider'), 'provider-77')
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/prodigy', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('provider-77', body)
+                self.assertNotIn('>None<', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n50_c2_snapshot_not_ticket(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_active_orders_snapshot(root)
+            bundle = build_panel_bundle(root, conn_factory=None)
+            snap = bundle['copy']['collective2'].get('active_orders_snapshot')
+            self.assertIsInstance(snap, dict)
+            self.assertFalse(snap.get('execution_authorized'))
+            self.assertEqual(snap.get('active_orders_count'), 1)
+
+    def test_n50_load_c2_ids_env_overlay(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, ['100'])
+            with patch.dict(os.environ, {'C2_PAPER_COPY_APPROVED_IDS': '200,abc,300'}):
+                ids = load_c2_paper_copy_approved_ids(root)
+            self.assertEqual(ids, ['100', '200', '300'])
 
 
 class PanelKillSwitchCycleTests(unittest.TestCase):

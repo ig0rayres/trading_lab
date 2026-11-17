@@ -175,9 +175,10 @@ def _load_prodigy_opportunities(root):
     for row in top[:10]:
         if not isinstance(row, dict):
             continue
+        provider = row.get('provider') or row.get('provider_id')
         items.append(
             {
-                'provider': row.get('provider'),
+                'provider': provider,
                 'status': row.get('status'),
                 'prodigy_score': row.get('prodigy_score'),
                 'label': 'research_tip',

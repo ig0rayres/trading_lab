@@ -61,6 +61,7 @@
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
 | N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
 | N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | concluida | 3 | observability | Copy UX kill switch | *(abaixo)* |
+| N37 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | planejada | 3 | observability | UX estado visual do freio | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -108,6 +109,7 @@
 | N34 | comprehensive | Ligar adaptadores demo no laço paper (N27.2); AgentCoder |
 | N35 | senior+qa | Presença de nomes + roteiro homologação demo; zero M |
 | N36 | skip | Copy do freio na Central; testes de string; zero M |
+| N37 | skip | Faixa do freio na Central; um CTA por estado; zero M |
 
 ---
 
@@ -2422,6 +2424,101 @@ Do not edit `gate_b_risk.py`, `signal_paper_runner.py`, `panel_ops_data.py`, `ri
 P task. Files: `docs/DASHBOARD-OPERATIONS.md`, `docs/DIARY.md` (2 files). In the operator day-to-day table, replace the action label `Ligar parada geral` with `Ativar freio` (same PATCH `/api/triggers`, cookie still required). Optional one-line note that Liberar freio is the other button. Do not write that releasing the brake permits demo operation. Do not rewrite auth, Live, or fill policy.
 
 DIARY: short `## Sprint N36` + index row. Record: copy-only; `kill_switch_on=true` still blocks new demo orders; `kill_switch_on=false` only clears the kill gate (does not turn on `demo_operation_on`); no Live button; N29.5 still operator. LIVE false.
+
+Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion wording.
+
+---
+
+## Sprint N37 — Freio da Central com faixa que muda de cor e um só botão
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-17 · pós-N36 · demanda operador (estado visual do freio) · fonte ISS-014  
+> titulo_humano: Freio da Central com faixa que muda de cor e um só botão  
+> resumo_humano: Na Central, o operador vê em menos de um segundo se o freio está ativo. Faixa vermelha com Liberar, ou faixa calma com Ativar — nunca dois botões iguais. Dinheiro real permanece desligado.  
+> Gate: faixa com classe de estado + um único botão principal por estado; testes afirmam classe, copy e ausência dos dois botões iguais; PATCH kill_switch_on inalterado; sem botão Live; LIVE false  
+> review: skip  
+> Brief: `docs/.briefs/N37.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N36 concluída · Release: ISS-014 UX estado visual  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Na Central, o operador vê em menos de um segundo se o freio está ativo: faixa vermelha com Liberar, ou faixa calma com Ativar — nunca dois botões iguais.
+
+### O que muda para você
+
+- Com o freio ativo, a faixa fica vermelha e só aparece Liberar freio
+- Com o freio liberado, a faixa fica calma e só aparece Ativar freio
+- O aviso amarelo permanente some
+- Clicar Liberar com o freio já solto deixa de parecer um clique sem efeito, porque esse botão não aparece
+- O bloqueio em si não muda; dinheiro real continua desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Faixa do freio com dois estados | Abrir a Central: freio ativo = faixa vermelha e só Liberar freio; freio liberado = faixa calma e só Ativar freio |
+| 2 | Teste que trava o estado visual | Pedir o teste da Central: cada estado tem a classe certa, o texto certo e um único botão principal; os dois botões iguais não voltam |
+| 3 | Folha do dia a dia alinhada | Abrir a folha operacional: ela descreve um botão por estado, não dois botões lado a lado |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N37.0 Inventariar o reuso do painel e da faixa do freio | `/git` | — |
+| [x] | P | N37.1 Distinguir a faixa do freio na Central | `/dev` | N37.0 |
+| [x] | P | N37.2 Alinhar a folha do dia a dia e o diário | docs | N37.0 |
+
+### Task N37.0 — Inventariar o reuso do painel e da faixa do freio
+
+**Entrega:** Lista curta dizendo onde a faixa amarela e os dois botões iguais moram, o que já bloqueia ordem demo nova, e que o vendor não tem essa tela.
+**Como conferir:** O inventário cita a Central, o PATCH do freio e o bloqueio no risco; marca o checkout do vendor como vazio nesta frente; deixa botão Live de fora; deixa claro que liberar o freio não liga a operação demo.
+**Por quê:** Sem essa lista o EXECUTE reimplementa o bloqueio ou inventa um segundo painel.
+
+**Detalhe técnico**
+
+P task (docs). Confirm `docs/.briefs/N37-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md`; local `vendor/day-trader-skill` is empty/absent — keep fail-closed. GitHub main not re-checked. Do not bump. Do not change kill-switch semantics. Record: `kill_switch_on=false` only clears the kill gate; it does not turn on `demo_operation_on`. Click Liberar when already released is a no-op by design; N37 hides that button.
+
+Must cite: `src/panel_ops_html.py` `render_central_page`; `src/v4_web_dashboard.py` `serve_operator_panel`; `src/gate_b_risk.py` `kill_switch_active`; `src/signal_paper_runner.py` `_demo_panel_block`. Gap = visual state of the existing strip. `demo_operation_on` is OUT.
+
+### Task N37.1 — Distinguir a faixa do freio na Central
+
+**Entrega:** Na Central, uma faixa-luz mostra se o freio está ativo ou liberado, com um único botão para a transição que faz sentido.
+**Como conferir:** Pedir o teste da Central: freio ativo mostra a faixa ativa, Freio de emergência ativo e só Liberar freio; freio liberado mostra a faixa calma, Freio liberado e só Ativar freio; os dois botões iguais não aparecem; Live desligado continua; não há botão Live.
+**Por quê:** Hoje os dois botões parecem iguais, o aviso fica amarelo nos dois estados, e o status some na linha fraca — o operador não vê o freio em um segundo.
+
+**Detalhe técnico**
+
+P task. Files: `src/panel_ops_html.py`, `tests/test_panel_ops.py` (2 files). CSS-only in existing `_PANEL_CSS` + conditional markup in `render_central_page`. No new SPA. Keep `patchKill(true|false)`, JSON `{kill_switch_on:on}`, and `Live desligado (sem botão)`. Bind onclick only on the button that exists.
+
+Locked visual (see `docs/.briefs/N37.brief.md`):
+- Tokens: halt-red `#7A1218`, halt-paper `#FFF7F5`, calm-slate `#1C4A52`, calm-mist `#E6F4F4`, focus-gold `#F0C14B`.
+- Active: `div.brake-strip.brake-strip--active` `role="status"`; label `Freio de emergência ativo`; help `Ordens demo novas bloqueadas.`; only `id="kill-off"` with `class="brake-strip__cta"` text `Liberar freio` (filled halt-paper on halt-red).
+- Released / missing flag: `div.brake-strip.brake-strip--released`; label `Freio liberado`; help `Outros limites ainda valem.`; only `id="kill-on"` with `class="brake-strip__cta"` text `Ativar freio` (danger outline).
+- Exactly one `brake-strip__cta` per HTML. Do not wrap the strip in `.warn`.
+- Muted line: `Conta demo · Live desligado (sem botão)` — do not repeat brake status there.
+- Focus-visible outline `#F0C14B`. `prefers-reduced-motion: reduce { transition: none }`.
+- Do not emit both buttons. Hide the no-op action (Liberar when released; Ativar when active).
+
+Must not remain in this HTML: `Ligar parada`, `Desligar parada`, `Parada geral ligada`, status `Operando`, `Liberar operação demo`, `operação demo permitida`, dual equal-weight kill buttons.
+
+Tests (rewrite `RenderCentralPageFreioCopyTests` in `tests/test_panel_ops.py`; keep HTTP login assertion):
+1. `kill_switch_on=True` → `brake-strip--active`; `Freio de emergência ativo`; `>Liberar freio<`; `id="kill-off"`; `html.count('brake-strip__cta') == 1`; not `>Ativar freio<`; not `id="kill-on"`; not class `warn` on the strip; not old copy.
+2. `kill_switch_on=False` / missing flag → `brake-strip--released`; `Freio liberado`; `Outros limites ainda valem.`; `>Ativar freio<`; `id="kill-on"`; one `brake-strip__cta`; not `>Liberar freio<`; not `id="kill-off"`; `Live desligado`; no Live button (`>Live<` or `id="live"` absent).
+3. Existing `test_login_sets_cookie_and_opens_central` still finds `Central`, `Live desligado`, and `Ativar freio` (default flag is released).
+4. `test_kill_switch_from_panel_blocks_next_eval` unchanged (logic).
+Do not edit `gate_b_risk.py`, `signal_paper_runner.py`, `panel_ops_data.py`, `risk_control_flags.py`, or trigger PATCH handlers. Do not rename or toggle `demo_operation_on`.
+
+### Task N37.2 — Alinhar a folha do dia a dia e o diário
+
+**Entrega:** A folha do dia a dia descreve um botão por estado do freio, e o diário anota que só a apresentação mudou.
+**Como conferir:** Abrir a folha operacional e o diário: a linha não diz mais que Liberar usa o outro botão ao lado; o diário diz que o bloqueio ficou igual.
+**Por quê:** Se a folha continuar falando em dois botões, o operador volta a procurar o par que não existe mais.
+
+**Detalhe técnico**
+
+P task. Files: `docs/DASHBOARD-OPERATIONS.md`, `docs/DIARY.md` (2 files). Replace the day-to-day row that says Liberar uses the other button with: Ativar freio is the only button when released (`kill_switch_on: true`); Liberar freio is the only button when active (`kill_switch_on: false`). Do not write that releasing the brake permits demo operation. Do not rewrite auth, Live, or fill policy.
+
+DIARY: short `## Sprint N37` + index row. Record: presentation-only halt-light strip; `kill_switch_on=true` still blocks new demo orders; `kill_switch_on=false` only clears the kill gate (does not turn on `demo_operation_on`); Liberar hidden when already released (no-op by design); no Live button; N29.5 still operator. LIVE false.
 
 Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion wording.
 

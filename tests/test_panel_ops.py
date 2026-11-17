@@ -75,31 +75,64 @@ class RenderCentralPageFreioCopyTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertNotIn(fragment, html)
 
+    def _assert_single_brake_cta(self, html: str) -> None:
+        self.assertEqual(html.count('class="brake-strip__cta"'), 1)
+
+    def _assert_brake_strip_not_warn(self, html: str) -> None:
+        start = html.find('class="brake-strip')
+        self.assertGreater(start, -1)
+        chunk = html[start : start + 400]
+        self.assertNotIn('class="warn"', chunk)
+        self.assertNotIn('brake-strip warn', chunk)
+
     def test_kill_on_shows_emergency_brake_copy(self):
         html = self._render(True)
+        self.assertIn('brake-strip--active', html)
         self.assertIn('Freio de emergência ativo', html)
-        self.assertIn('<b>Freio de emergência</b>', html)
-        self.assertIn('id="kill-on"', html)
-        self.assertIn('>Ativar freio<', html)
+        self.assertIn('Ordens demo novas bloqueadas.', html)
         self.assertIn('id="kill-off"', html)
         self.assertIn('>Liberar freio<', html)
+        self.assertNotIn('id="kill-on"', html)
+        self.assertNotIn('>Ativar freio<', html)
         self.assertIn('kill_switch_on', html)
+        self._assert_single_brake_cta(html)
+        self._assert_brake_strip_not_warn(html)
         self._assert_no_old_copy(html)
 
     def test_kill_off_shows_released_brake_copy(self):
         html = self._render(False)
-        self.assertIn('Freio liberado (outros limites ainda valem)', html)
+        self.assertIn('brake-strip--released', html)
+        self.assertIn('Freio liberado', html)
+        self.assertIn('Outros limites ainda valem.', html)
         self.assertIn('>Ativar freio<', html)
-        self.assertIn('>Liberar freio<', html)
+        self.assertIn('id="kill-on"', html)
+        self.assertNotIn('>Liberar freio<', html)
+        self.assertNotIn('id="kill-off"', html)
+        self.assertIn('Conta demo · Live desligado (sem botão)', html)
         self.assertIn('Live desligado', html)
         self.assertNotIn('>Live<', html)
         self.assertNotIn('id="live"', html)
+        self._assert_single_brake_cta(html)
+        self._assert_brake_strip_not_warn(html)
         self._assert_no_old_copy(html)
 
     def test_kill_missing_flag_defaults_to_released_status(self):
         html = self._render(None)
-        self.assertIn('Freio liberado (outros limites ainda valem)', html)
+        self.assertIn('brake-strip--released', html)
+        self.assertIn('Freio liberado', html)
+        self.assertIn('Outros limites ainda valem.', html)
+        self.assertIn('id="kill-on"', html)
+        self.assertNotIn('id="kill-off"', html)
+        self._assert_single_brake_cta(html)
         self._assert_no_old_copy(html)
+
+    def test_kill_script_binds_conditionally(self):
+        html = self._render(False)
+        self.assertIn("const killOn=document.getElementById('kill-on');", html)
+        self.assertIn('if(killOn)killOn.onclick', html)
+        self.assertIn("const killOff=document.getElementById('kill-off');", html)
+        self.assertIn('if(killOff)killOff.onclick', html)
+        self.assertNotIn("getElementById('kill-on').onclick", html)
 
 
 class PanelOpsDataTests(unittest.TestCase):

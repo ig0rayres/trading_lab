@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N36 concluida; restante homolog demo + Tá Barato G-FORM",
+  "fase_nome": "N37 implementation — brake strip UX",
   "sprint_pending_merge": null,
   "sprint_pr": 51,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T05:58:00-03:00",
+  "ultimo_update": "2026-11-17T09:58:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,8 +78,8 @@
     }
   ],
   "proximos_passos": [
-    "Parent Fable / plan-verifier N36 (não auto-PASS); EXECUTE só depois",
-    "Rock EXECUTE N36: N36.0 → N36.1 ∥ N36.2; zero M; copy only; sem botão Live",
+    "Parent Fable / plan-verifier N37 (não auto-PASS); EXECUTE só depois",
+    "Rock EXECUTE N37: N37.0 → N37.1 ∥ N37.2; zero M; faixa + um CTA; sem botão Live",
     "LIVE_TRADING_ENABLED=false; sem HTTP real Clear/OANDA; não marcar N29.5"
   ],
   "features_concluidas": [
@@ -117,17 +117,52 @@
     "/pmo plan N33",
     "/pmo plan N34",
     "/pmo plan N35",
-    "/pmo plan N36"
+    "/pmo plan N36",
+    "/pmo plan N37"
   ],
-  "contexto_rapido": "N36 plan_only copy freio Central; N35 concluída PR #48; N29.5 operador; LIVE false.",
-  "sprint_tasks": [],
+  "contexto_rapido": "N37 plan_only faixa freio Central; N36 concluída PR #51; N29.5 operador; LIVE false.",
+  "sprint_tasks": [
+    {
+      "id": "N37.0",
+      "file": "docs/.briefs/N37-GIT-FIRST-REUSE.md",
+      "files": [
+        "docs/.briefs/N37-GIT-FIRST-REUSE.md"
+      ],
+      "depends_on": [],
+      "status": "pending"
+    },
+    {
+      "id": "N37.1",
+      "file": "src/panel_ops_html.py, tests/test_panel_ops.py",
+      "files": [
+        "src/panel_ops_html.py",
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N37.0"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "N37.2",
+      "file": "docs/DASHBOARD-OPERATIONS.md, docs/DIARY.md",
+      "files": [
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/DIARY.md"
+      ],
+      "depends_on": [
+        "N37.0"
+      ],
+      "status": "pending"
+    }
+  ],
   "checkpoint": {
-    "phase": "validated",
+    "phase": "implementation",
+    "sprint": "N37",
     "current_task": null,
     "last_completed_task": "N36.2",
     "validation_gate_ref": ".beesy/sprints/N36.json",
-    "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N36",
+    "sprint_delivery_sprint": "N37",
     "last_validated_sha": "2157b53",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
@@ -136,25 +171,43 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops.RenderCentralPageFreioCopyTests -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [
+        "src/panel_ops_html.py",
+        "tests/test_panel_ops.py",
         ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "c6bbd715574ce2f0452f63a415e9359a674179e3",
-      "stamped_at": "2026-11-17T09:20:54Z",
+      "last_validated_sha": "fe13153801d4dded053a98b08445a8e8104f55b5",
+      "stamped_at": "2026-11-17T13:11:01Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
       "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "c6c17c0a74f1e639fc4ca03ec2e155142905034d",
+      "patch_id": "8b0323e2031dae7f995c9c1ac1cce98084da920e",
       "patch_id_version": 2
-    }
+    },
+    "branch": "front/n27-alpaca-loop",
+    "plan_only": false,
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N37",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T13:10:58Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N37 brake strip; 18 panel_ops OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    },
+    "sprint_delivery": "stamped"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -197,7 +250,7 @@
     "branch": "front/n27-alpaca-loop",
     "sprint_branch": "front/n27-alpaca-loop"
   },
-  "sprint_branch": null,
+  "sprint_branch": "front/n27-alpaca-loop",
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -242,8 +295,8 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N36",
-  "sprint_atual": null,
-  "sprint_nome": "Freio de emergência na Central",
+  "sprint_atual": "N37",
+  "sprint_nome": "Freio faixa-luz Central",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -424,6 +477,24 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N36; checkpoint.phase=planning; preserve N35 stamp and autopilot",
         "rationale": "Deliverable list asked sprint_atual=N36; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-17T09:58:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; autopilot ISS-014; sprint_id=N37; zero M; review=skip",
+        "rationale": "Operator classified N / feature-sem-dominio / N37; kill logic works and N36 copy is correct — presentation only. Heuristic also matched UI; operator prevails. Autopilot no AskQuestion."
+      },
+      {
+        "timestamp": "2026-11-17T09:58:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "halt-light strip + single CTA; hide no-op button; do not change kill_switch logic; no Live button; demo_operation_on OUT",
+        "rationale": "Operator frontend-design lock; Liberar when already released is no-op by design; LIVE stays false"
+      },
+      {
+        "timestamp": "2026-11-17T09:58:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N37; checkpoint.phase=planning; preserve N36 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N37; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -431,5 +502,5 @@
   "rock_mandate": "full",
   "active_automation": null,
   "journal": [],
-  "sprint_tasks_sha256": "157dde553e7774dc64a997202eae39072f5160fc41beb4f2e788a807c9bd2ccd"
+  "sprint_tasks_sha256": "bca971a0b85248b4248fb0f17dfdc6540d0394377f7f604cc3f97aef08360c6f"
 }

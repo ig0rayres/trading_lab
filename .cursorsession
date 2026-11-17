@@ -141,6 +141,7 @@
         }
       ],
       "dirty_production_paths": [
+        ".beesy/sprints/N38.json",
         ".beesy/activate_n32_session.py",
         ".beesy/archive/",
         ".beesy/stamp-gate-logs/",
@@ -148,8 +149,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "b66872a269d2dc822c8850cf6253b20e35971e07",
-      "stamped_at": "2026-11-17T13:25:12Z",
+      "last_validated_sha": "3fc401bd4079c83fceb397c9378e39804338c3d2",
+      "stamped_at": "2026-11-17T13:25:14Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

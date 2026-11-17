@@ -60,7 +60,7 @@
 | N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | concluida | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
 | N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
-| N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | planejada | 3 | observability | Copy UX kill switch | *(abaixo)* |
+| N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | concluida | 3 | observability | Copy UX kill switch | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -2334,7 +2334,8 @@ DIARY + TEST-EVIDENCE: N35 nodeids of presence tests; checklist heading; N29.5 s
 
 ## Sprint N36 — Freio de emergência na Central, sem parecer ligar o sistema
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
+> Closeout: PR **#51** merged (`2157b53` tip era).  
 > Gerado via: `/pmo plan` 2026-11-17 · pós-N35 · demanda operador (copy do kill switch) · fonte ISS-013  
 > titulo_humano: Freio de emergência na Central, sem parecer ligar o sistema  
 > resumo_humano: Na Central, o botão deixa de parecer ligar ou desligar o laboratório. Ativar freio bloqueia ordem demo nova; Liberar freio só tira o freio — os outros limites ainda valem. Dinheiro real permanece desligado.  

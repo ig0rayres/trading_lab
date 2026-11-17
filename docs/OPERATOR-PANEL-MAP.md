@@ -166,8 +166,8 @@ No deploy típico com **sessão de operador** configurada (dia a dia EasyPanel),
 
 ## Fora deste mapa (decisão de sprint)
 
-- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; **Análise Google** (`/analise-google`) — entregue em **N43** / **ISS-017** onda 3 (só pesquisa); campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
-- Rebuild da imagem EasyPanel, credenciais demo (**ISS-010** / N29.5), homologação Tá Barato — **operador**.
+- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; **Análise Google** (`/analise-google`) — entregue em **N43** / **ISS-017** onda 3 (só pesquisa); **N44** — roteiro de homologação US+cripto pelo menu (`docs/HOMOLOGATION.md` § Sprint N44, áreas **5–7** + Sinais + Performance); folha `docs/TEST-EVIDENCE.md` § Sprint N44; campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
+- Rebuild da imagem EasyPanel, **passeio N44** na corretora paper, credenciais demo (**ISS-010** / N29.5), homologação Tá Barato — **operador**.
 - Dinheiro real: permanece **desligado**.
 
 ## Referências honestas

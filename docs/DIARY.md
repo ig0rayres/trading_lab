@@ -4,6 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
+| N44 | docs | Roteiro homologação US+cripto pelo menu; ISS-017 onda 4; evidência pendente operador | 5–13 |
 | N43 | panel_ops, docs | Análise Google no menu; TimesFM research-only; ISS-017 onda 3; fail-closed | 26–34 |
 | N42 | panel_ops, docs | Estratégias no menu; catálogo fases; ISS-017 onda 2; sem promoção na UI | 36–46 |
 | N41 | panel_ops, docs | Ordens + Histórico no menu; ISS-017 onda 1; campanha CAMPAIGN-PLATFORM-DELIVERY | 48–58 |
@@ -20,6 +21,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N44 — Roteiro homologação US + cripto pelo painel (ISS-017 onda 4)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue (docs):** roteiro em `docs/HOMOLOGATION.md` § Sprint N44; folha com linhas **pendentes** em `docs/TEST-EVIDENCE.md` § Sprint N44; `docs/.briefs/N44-GIT-FIRST-REUSE.md` (pin re-chequeado, sem bump); ponteiros em `docs/DASHBOARD-OPERATIONS.md` e `docs/OPERATOR-PANEL-MAP.md`; `docs/ISSUES.md` (ISS-017 anotado; **permanece aberto**).
+
+**Honestidade:** sprint **somente documentação** — **zero** `src/`; **passeio operador não feito** pelo agente; rebuild EasyPanel e observação na corretora paper continuam **operador**; pytest / HTTP 200 / fila / fill AAPL 2026-10-29 **não** fecham onda 4 nem campanha; **ISS-007** / **ISS-010** / **ISS-011** não fechados; `LIVE_TRADING_ENABLED=false`. PR **#64** foi closeout **N43**, não evidência de passeio N44.
 
 ---
 

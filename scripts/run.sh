@@ -27,6 +27,10 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/v4_web_dashboard.py "$@"
    ;;
+ platform-health)
+   shift
+   exec python3 /app/src/platform_health.py "$@"
+   ;;
  v4-alpaca-activities)
    shift
    exec python3 /app/src/v4_alpaca_activities.py "$@"

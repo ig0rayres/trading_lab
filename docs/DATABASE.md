@@ -186,7 +186,7 @@ Ação americana que já existe no código não ganha linha nova de mercado nest
 
 | Coluna | Partida | Significado |
 |--------|---------|-------------|
-| `demo_operation_on` | false | Operação demo ligada no painel |
+| `demo_operation_on` | true após migrate N20 (se operador não tiver gravado OFF) | Operação demo ligada no painel |
 | `capital_cents` | 500000 | R$ 5.000 |
 | `max_risk_per_trade_cents` | 5000 | R$ 50. A coluna já existe |
 | `max_open_positions` | 3 | Posições simultâneas |

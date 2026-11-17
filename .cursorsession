@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N41 validada",
+  "fase_nome": "N42 entregue",
   "sprint_pending_merge": null,
   "sprint_pr": 59,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T11:45:00-03:00",
+  "ultimo_update": "2026-11-17T15:30:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,10 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Campanha ISS-017: folha docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md — onda 1 N41 entregue; próxima N42",
-    "Closeout N41: stamp/PR pelo finalizer se verify_green",
+    "Campanha ISS-017: N42 onda 2 entregue; N43 PLAN TimesFM visível; rebuild EasyPanel operador",
     "Operador-gated: N29.5 Clear/OANDA; N17.2 G-FORM; rebuild EasyPanel após merge",
-    "LIVE_TRADING_ENABLED=false; TimesFM research-only"
+    "LIVE_TRADING_ENABLED=false; TimesFM research-only (N43)"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -122,14 +121,88 @@
     "/pmo plan N37",
     "/pmo plan N39",
     "/pmo plan N40",
-    "/pmo plan N41"
+    "/pmo plan N41",
+    "/pmo plan N42"
   ],
-  "contexto_rapido": "N41 EXECUTE: Ordens/Histórico no menu; mapa+ISS N41.4; ISS-017 aberto; CAMPAIGN-PLATFORM-DELIVERY; Clear/OANDA/N17.2 operador; LIVE false.",
-  "sprint_tasks": [],
+  "contexto_rapido": "N42 entregue: Estratégias no menu; sem promoção na UI; LIVE false; ISS-017 aberto; N42.4 docs.",
+  "sprint_tasks": [
+    {
+      "id": "N42.0",
+      "title": "Inventariar o reuso do catálogo de fases antes de desenhar o menu",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/.briefs/N42-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N42.brief.md"
+      ],
+      "depends_on": [],
+      "file": "docs/.briefs/N42-GIT-FIRST-REUSE.md, docs/.briefs/N42.brief.md"
+    },
+    {
+      "id": "N42.1",
+      "title": "Carregar as linhas de estratégia e fase no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "depends_on": [
+        "N42.0"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N42.2",
+      "title": "Colocar Estratégias no menu do dia a dia",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "depends_on": [
+        "N42.1"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N42.3",
+      "title": "Provar tabela, vazio, sessão e que a tela não promove fase",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N42.2"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N42.4",
+      "title": "Atualizar o mapa e os chamados depois da tela existir",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/ISSUES.md",
+        "docs/DIARY.md",
+        "docs/ROADMAP.md",
+        ".cursorsession"
+      ],
+      "depends_on": [
+        "N42.3"
+      ],
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md, docs/ROADMAP.md, .cursorsession"
+    }
+  ],
   "checkpoint": {
-    "phase": "validated",
+    "phase": "implementation",
+    "sprint": "N42",
+    "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N41.4",
+    "last_completed_task": "N42.4",
     "validation_gate_ref": ".beesy/sprints/N41.json",
     "sprint_delivery": "finalized",
     "sprint_delivery_sprint": "N41",
@@ -156,7 +229,22 @@
       "content_hash": "c5a781f0761b47805ccff9c23788463c0c644b7a7a754b3e773dfdaf6420c57c",
       "patch_id": "786aa86d48ab1a8b4ea0365f3558a127be5ea0b4",
       "patch_id_version": 2
-    }
+    },
+    "plan_only": false,
+    "relevant_paths": [
+      ".cursorsession",
+      "docs/.briefs/N42-GIT-FIRST-REUSE.md",
+      "docs/.briefs/N42.brief.md",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "docs/DIARY.md",
+      "docs/ISSUES.md",
+      "docs/OPERATOR-PANEL-MAP.md",
+      "docs/ROADMAP.md",
+      "src/panel_ops_data.py",
+      "src/panel_ops_html.py",
+      "src/v4_web_dashboard.py",
+      "tests/test_panel_ops.py"
+    ]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -177,13 +265,13 @@
     ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "executor-docs",
-    "phase": "N41 N41.4 docs closeout",
-    "intent": "Campanha ISS-017 onda 1 entregue; mapa e chamados pós-telas Ordens/Histórico.",
-    "changes_made": "OPERATOR-PANEL-MAP 5-6; DASHBOARD-OPERATIONS; ISSUES ISS-017/016; DIARY N41; ROADMAP ticks; cursorsession N41.4 done.",
-    "decisions": "ISS-017 stays open; ISS-007/010/011 not closed; CAMPAIGN-PLATFORM-DELIVERY tracked; no commit N41.4.",
-    "next_steps": "Finalizer stamp/PR if verify_green; campaign wave N42.",
-    "updated_at": "2026-11-17T11:45:00-03:00"
+    "persona": "planejador-tarefas",
+    "phase": "N42 entregue",
+    "intent": "Campanha ISS-017 onda 2: estratégias e fases no menu do dia a dia.",
+    "changes_made": "N42.4 docs — mapa área 3 VISÍVEL; DASHBOARD-OPERATIONS; ISS-017 onda 2; ROADMAP/DIARY; briefs plan_only false.",
+    "decisions": "no phase promotion from new page; ISS-017 epic open; ISS-007/010/011 open; LIVE false; no commit this turn.",
+    "next_steps": "rock-finalize / PR; rebuild EasyPanel operador; N43 PLAN.",
+    "updated_at": "2026-11-17T15:30:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -244,8 +332,8 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N41",
-  "sprint_atual": null,
-  "sprint_nome": "Ver ordens abertas e historico no menu do dia a dia",
+  "sprint_atual": "N42",
+  "sprint_nome": "Mostrar estrategias e fases no menu do dia a dia",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -504,6 +592,30 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N41; checkpoint.phase=planning; preserve N40 stamp and autopilot",
         "rationale": "Deliverable list asked fully plan N41 AND campaign brief; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-17T12:48:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-com-dominio; skip Passo2 (Feature 4 + OPERATOR-PANEL-MAP §9 + ISS-007 already specify catalog); skip ISSUES preview (ISS-017 exists); sprint_id=N42; review=senior+qa",
+        "rationale": "Operator «Vamos avançar» after N41; campaign onda 2. Autopilot no AskQuestion. Heuristic matched ui/tela; REQUIREMENTS Feature 4 already closed Design/Requisitos."
+      },
+      {
+        "timestamp": "2026-11-17T12:48:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "expand stub N42 (do not allocate N48); 2M+3P DAG; HTML /estrategias + GET /api/estrategias; do not wire PATCH /api/strategies from new page; no Clear/OANDA; LIVE false; TimesFM out",
+        "rationale": "Reuse list_strategy_states + N25/N41 panel_ops shell; catalog already on Command Panel v1"
+      },
+      {
+        "timestamp": "2026-11-17T12:48:00-03:00",
+        "file": "docs/ISSUES.md",
+        "decision": "note under ISS-017; keep ISS-007/010/011/016/017 open",
+        "rationale": "Epic stays open until campaign close; N42 is wave 2 only"
+      },
+      {
+        "timestamp": "2026-11-17T12:48:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N42; checkpoint.phase=planning; preserve N41 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N42; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -517,6 +629,8 @@
     "2026-11-17: N39 docs closeout for N37/ISS-014; EasyPanel rebuild, N29.5, N17.2 remain operator-gated",
     "2026-11-17: N40 PLAN map-only (ISS-016); option 2; not orders UI; two HTML surfaces; LIVE false",
     "2026-11-17: campaign ISS-017 + N41 PLAN orders/history UI; Clear/OANDA/N17.2 operator-gated; TimesFM research-only; LIVE false",
-    "2026-11-17: N41.4 docs — mapa Ordens/Histórico VISÍVEL; ISS-017 onda 1 anotada; campanha CAMPAIGN-PLATFORM-DELIVERY; no commit"
+    "2026-11-17: N41.4 docs — mapa Ordens/Histórico VISÍVEL; ISS-017 onda 1 anotada; campanha CAMPAIGN-PLATFORM-DELIVERY; no commit",
+    "2026-11-17: N42 PLAN — estratégias/fases no menu; sem promoção; LIVE false; ISS-017 aberto; plan_only",
+    "2026-11-17: N42.4 docs — mapa Estratégias VISÍVEL; ISS-017 onda 2 anotada; ROADMAP concluida; no commit"
   ]
 }

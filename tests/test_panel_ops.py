@@ -738,6 +738,158 @@ class PanelOrdersHistoryHttpTests(unittest.TestCase):
                 self._shutdown(server, thread)
 
 
+N42_EMPTY_CATALOG_COPY = 'Catálogo indisponível (ledger)'
+
+_N42_CATALOG_FIXTURE = [
+    {
+        'strategy_key': 'momentum',
+        'phase': 'research',
+        'paper_allowed': False,
+        'promotion': 'operator_only',
+    },
+    {
+        'strategy_key': 'orb',
+        'phase': 'shadow',
+        'paper_allowed': False,
+        'promotion': 'operator_only',
+    },
+    {
+        'strategy_key': 'signal_copy',
+        'phase': 'paper_limited',
+        'paper_allowed': True,
+        'promotion': 'operator_only',
+    },
+]
+
+
+class PanelStrategiesHttpTests(unittest.TestCase):
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
+    def _server(self, tmp, session='panel-secret', token=None):
+        handler = make_handler(Path(tmp), token=token, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        return server, thread, 'http://127.0.0.1:' + str(server.server_port)
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_unauthenticated_estrategias_and_api_match_sinais_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                reference = _unauthenticated_panel_status(base, '/sinais')
+                self.assertEqual(_unauthenticated_panel_status(base, '/estrategias'), reference)
+                signals_code = None
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(base + '/api/estrategias', timeout=3)
+                with self.assertRaises(HTTPError) as sig_err:
+                    urlopen(base + '/api/signals', timeout=3)
+                signals_code = sig_err.exception.code
+                self.assertEqual(err.exception.code, signals_code)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_estrategias_auth_empty_shows_catalog_unavailable_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/estrategias', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N42_EMPTY_CATALOG_COPY, body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_estrategias_fixture_rows_show_strategy_key_and_phase(self):
+        catalog_patch = patch(
+            'strategy_catalog.list_strategy_states',
+            return_value=_N42_CATALOG_FIXTURE,
+        )
+        with catalog_patch:
+            with tempfile.TemporaryDirectory() as d:
+                server, thread, base = self._server(d)
+                try:
+                    req = _get(base + '/estrategias', session='panel-secret')
+                    with urlopen(req, timeout=3) as resp:
+                        body = resp.read().decode('utf-8')
+                    self.assertIn('momentum', body)
+                    self.assertTrue('research' in body or 'pesquisa' in body)
+                    self.assertIn('orb', body)
+                    self.assertTrue('shadow' in body or 'sombra' in body)
+                    self.assertIn('signal_copy', body)
+                    self.assertTrue(
+                        'paper_limited' in body or 'paper limitado' in body.lower()
+                    )
+                finally:
+                    self._shutdown(server, thread)
+
+    def test_nav_includes_estrategias_menu_link(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/central', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('href="/estrategias"', body)
+                self.assertIn('Estratégias', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_estrategias_page_has_no_phase_promotion_controls(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/estrategias', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                lowered = body.lower()
+                self.assertNotIn('/api/strategies', body)
+                self.assertNotIn('method="patch"', lowered)
+                self.assertNotIn("method='patch'", lowered)
+                self.assertNotIn('promover', lowered)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_api_estrategias_returns_strategies_list_with_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/api/estrategias', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                self.assertIn('strategies', payload)
+                self.assertIsInstance(payload['strategies'], list)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_regression_ordens_historico_sinais_still_render(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                cases = (
+                    ('/ordens', 'Ordens'),
+                    ('/historico', 'Histórico'),
+                    ('/sinais', 'Sinais'),
+                )
+                for path, needle in cases:
+                    with self.subTest(path=path):
+                        req = _get(base + path, session='panel-secret')
+                        with urlopen(req, timeout=3) as resp:
+                            body = resp.read().decode('utf-8')
+                        self.assertIn(needle, body)
+            finally:
+                self._shutdown(server, thread)
+
+
 class PanelKillSwitchCycleTests(unittest.TestCase):
     def test_kill_switch_from_panel_blocks_next_eval(self):
         import sys

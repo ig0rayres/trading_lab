@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N41 | panel_ops, docs | Ordens + Histórico no menu; ISS-017 onda 1; campanha CAMPAIGN-PLATFORM-DELIVERY | 22–32 |
+| N42 | panel_ops, docs | Estratégias no menu; catálogo fases; ISS-017 onda 2; sem promoção na UI | 24–34 |
+| N41 | panel_ops, docs | Ordens + Histórico no menu; ISS-017 onda 1; campanha CAMPAIGN-PLATFORM-DELIVERY | 36–46 |
 | N40 | docs | Mapa OPERATOR-PANEL-MAP; duas superfícies 8765; ordens UI OUT; ISS-016 mapa existe | 34–44 |
 | N39 | docs | Closeout papel N37/ISS-014; prova PR #52; rebuild/N29.5/N17.2 operador | 34–45 |
 | N38 | panel_ops_html, platform_health | Faixa do freio (um CTA por estado) + bloco saúde na Central; kill_switch_on inalterado | 32–45 |
@@ -18,6 +19,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N42 — Estratégias e fases no menu (ISS-017 onda 2)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** `strategy_catalog` em `build_panel_bundle`; menu com **Estratégias** (`GET /estrategias`); API `GET /api/estrategias`; testes `tests/test_panel_ops.py`; mapa (`docs/OPERATOR-PANEL-MAP.md` área 3), `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-017 anotado; **permanece aberto**).
+
+**Honestidade:** painel só leitura — **sem** POST de ordem; **sem** promoção de fase na tela nova; vazio `Catálogo indisponível (ledger)` quando o ledger falta; melhoria contínua continua só no Command Panel v1; B3/Clear/OANDA fora; rebuild EasyPanel operador; **ISS-007** / **ISS-010** / **ISS-011** / **ISS-016** não fechados; `LIVE_TRADING_ENABLED=false`.
 
 ---
 

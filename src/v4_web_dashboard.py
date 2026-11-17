@@ -771,6 +771,8 @@ def serve_operator_panel(handler, root: Path, path: str, connect_factory):
         page = _panel_html.render_central_page(bundle, triggers)
     elif path == '/sinais':
         page = _panel_html.render_signals_page(bundle)
+    elif path == '/estrategias':
+        page = _panel_html.render_strategies_page(bundle)
     elif path == '/prodigy':
         cp = data.get('command_panel') or {}
         page = _panel_html.render_prodigy_page(bundle, cp.get('opportunities') or {})
@@ -805,6 +807,9 @@ def serve_panel_json(handler, root: Path, path: str):
         payload = {'orders': bundle.get('open_orders') or []}
     elif path == '/api/history':
         payload = {'history': bundle.get('order_history') or []}
+    elif path == '/api/estrategias':
+        catalog = bundle.get('strategy_catalog') or {}
+        payload = {'strategies': catalog.get('strategies') or []}
     elif path == '/api/performance':
         payload = data.get('performance_panel') if isinstance(data, dict) else {}
         payload = payload or {}
@@ -855,7 +860,13 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             if path == '/login':
                 serve_login_page(self)
                 return
-            if path in ('/api/signals', '/api/performance', '/api/orders', '/api/history'):
+            if path in (
+                '/api/signals',
+                '/api/performance',
+                '/api/orders',
+                '/api/history',
+                '/api/estrategias',
+            ):
                 if operator_session and not operator_session_authorized(self.headers, operator_session):
                     send_empty_response(self, 401)
                     return

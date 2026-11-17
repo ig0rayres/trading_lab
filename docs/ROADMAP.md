@@ -66,7 +66,7 @@
 | N39 | N | Closeout docs: carimbar N37 saúde automática e fechar ISS-014 | concluida | 5 | docs | Campanha ISS-014 closeout papel | *(abaixo)* |
 | N40 | N | Mapa honesto: onde está cada coisa no painel (docs-only) | concluida | 5 | docs, observability | Orientação operador ISS-016 | *(abaixo)* |
 | N41 | N | Menu Ordens + Histórico (listas); painel sem envio; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 1 | *(abaixo)* |
-| N42 | N | Estratégias e fases no menu do dia a dia | planejada | stub | observability | Campanha ISS-017 onda 2 | *(abaixo)* |
+| N42 | N | Menu Estratégias com fases; sem promoção; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 2 | *(abaixo)* |
 | N43 | N | TimesFM / dicas visíveis e rotuladas (não autorizam ordem) | planejada | stub | research | Campanha ISS-017 onda 3 | *(abaixo)* |
 | N44 | N | Homologar operar US+cripto pelo painel | planejada | stub | docs, operador | Campanha ISS-017 onda 4 | *(abaixo)* |
 | N45 | N | Tá Barato no menu — bloqueado em N17.2 | planejada | stub | strategy-catalog | Campanha ISS-017 onda 5 | *(abaixo)* |
@@ -2950,7 +2950,7 @@ P task. Files: `.cursorsession`, `docs/ROADMAP.md` (tick N40.0–N40.4 only; do 
 |------|--------|-----------|--------|
 | 0 | esta folha | Matriz honesta; fila; ISS-017 | plan_only |
 | 1 | **N41** | Ordens abertas + histórico no menu (listas) | concluida (decomposta abaixo) |
-| 2 | N42 | Estratégias e fases no menu do dia a dia | stub |
+| 2 | N42 | Estratégias e fases no menu do dia a dia | concluida |
 | 3 | N43 | TimesFM / dicas visíveis e rotuladas | stub |
 | 4 | N44 | Homologar operar US+cripto pelo painel | stub; rebuild seu |
 | 5 | N45 | Tá Barato no menu | stub; bloqueado em N17.2 |
@@ -3183,9 +3183,224 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `do
 
 ## Sprint N42 — Mostrar estratégias e fases no menu do dia a dia
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-017 onda 2 · ISS-007 área Estratégias adotadas / fase · mapa N40 §9 NÃO-EXISTE-AINDA no menu  
 > titulo_humano: Ver no menu quais estratégias estão em pesquisa, sombra ou paper  
-> Campanha ISS-017 onda 2 (stub). O catálogo hoje só aparece na página única antiga; o menu do dia a dia não lista fases. Sem promoção automática. Sem limiar inventado. LIVE false.
+> resumo_humano: Depois do login você clica em Estratégias e vê pesquisa, sombra ou paper — ou o vazio honesto. O painel não promove fase e não envia ordem. Bolsa brasileira e câmbio não entram nesta rodada.  
+> Gate: menu com Estratégias; linhas a partir do catálogo persistido; sessão obrigatória; tela nova sem promoção de fase; zero envio pelo painel; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N42.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N41 concluida · Release: campanha ISS-017 onda 2  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Você passa a ver, no mesmo menu do dia a dia, quais estratégias existem e se estão em pesquisa, sombra ou paper — sem o painel promover fase sozinho.
+
+### O que muda para você
+
+- Depois do login aparece o item **Estratégias** ao lado de Sinais e Ordens
+- Pesquisa, sombra e paper aparecem como fase; paper permitido continua sim/não
+- A tela nova não sobe fase e não envia ordem
+- Bolsa brasileira e câmbio não entram; a análise Google continua fora desta onda
+- Dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Inventário do catálogo que já existe na página antiga | Abrir o inventário e ver que as fases já estão no catálogo, mas o menu do dia a dia ainda não as lista |
+| 2 | Lista de estratégias e fases no menu | Entrar no painel, abrir Estratégias, ver pesquisa / sombra / paper ou o vazio combinado — sem promover fase |
+| 3 | Tela só leitura | Confirmar que a página nova não tem botão para subir fase nem enviar ordem |
+| 4 | Mapa e chamado atualizados | O mapa deixa de dizer que o catálogo não existe no menu; a campanha aponta esta onda |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N42.0 Inventariar o reuso do catálogo de fases antes de desenhar o menu | `/git` | — |
+| [x] | M | N42.1 Carregar as linhas de estratégia e fase no pacote do painel | `/dev` | N42.0 |
+| [x] | M | N42.2 Colocar Estratégias no menu do dia a dia | `/dev` | N42.1 |
+| [x] | P | N42.3 Provar tabela, vazio, sessão e que a tela não promove fase | `/qa testes` | N42.2 |
+| [x] | P | N42.4 Atualizar o mapa e os chamados depois da tela existir | docs | N42.3 |
+
+### Quality Brief (Sprint N42)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds (ISS-010); zero Alpaca POST from this sprint.
+Maintain: strategy phase does not rise from PnL, HTTP 200, or queued intent.
+Avoid: second catalog SQL; calling `apply_strategy_patch` from the new page; TimesFM as order auth; rewriting Command Panel v1 instead of the login menu; closing ISS-007/010/011/017.
+
+### Fora de escopo
+
+- Promover fase a partir da tela nova
+- POST ou cancelamento de ordem pelo painel
+- TimesFM HTML (N43)
+- Tela própria de Tá Barato (N45)
+- Eventos de melhoria contínua nessa página
+- Clear / OANDA / N29.5 / adapters B3
+- Inventar limiar / promover Prodígio / ORB paper
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-013 / ISS-016 / ISS-017
+
+### Task N42.0 — Inventariar o reuso do catálogo de fases antes de desenhar o menu
+
+**Entrega:** Inventário curto dizendo que as fases já existem no catálogo e na página antiga, e que o menu do dia a dia ainda não as lista.
+**Como conferir:** O inventário cita o catálogo persistido, a tabela da página antiga, o menu atual e deixa promoção, câmbio e envio pelo painel de fora.
+**Por quê:** Sem essa lista o EXECUTE reimplementa a leitura ou coloca um botão de subir fase.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N42-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `list_strategy_states`; `_load_strategy_catalog`; `render_page` catalog table; `_nav` without Estratégias; existing `PATCH /api/strategies/{key}` is OUT of the new page. Do not plan Alpaca HTTP from the panel.
+
+### Task N42.1 — Carregar as linhas de estratégia e fase no pacote do painel
+
+**Entrega:** O pacote do painel passa a carregar a lista de estratégias com a fase gravada e se paper é permitido, sem inventar linha quando o ledger falta.
+**Como conferir:** Pedir o teste de dados em que o catálogo traz as famílias conhecidas com a fase gravada, e o ledger ausente mostra lista vazia com o estado combinado.
+**Por quê:** Hoje só a página antiga lê o catálogo; sem linhas no pacote a tela nova nasceria vazia por desenho.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/panel_ops_data.py`
+
+**executor_prompt**:
+
+```yaml
+id: N42.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N42.0"]
+files:
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/strategy_catalog.py
+    reuse_as: call
+    convergence_check: rg "list_strategy_states" src/panel_ops_data.py
+  - component: src/trading_dashboard_data.py
+    reuse_as: copy_pattern
+    convergence_check: rg "strategy_catalog" src/panel_ops_data.py && rg "LEDGER_UNAVAILABLE" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "build_panel_bundle" src/panel_ops_data.py && rg "strategy_catalog" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n42-1-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'AKIA' not in t"
+    pass_condition: no broker secret values hardcoded
+  - class: subagent-safety
+    id: n42-1-no-phase-write
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'UPDATE strategy_states' not in t; assert 'apply_strategy_patch' not in t; assert 'process_after_gate_b' not in t; assert 'paper-api.alpaca.markets' not in t"
+    pass_condition: panel data loader does not write phases, patch strategies, or call Alpaca/paper submit
+```
+
+### Quality Brief (Sprint N42)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds; zero Alpaca POST from this sprint.
+Maintain: do not UPDATE strategy_states; do not invent DEFAULT_PHASE_BY_KEY rows when list_strategy_states returns None.
+Avoid: forking a second catalog SELECT; TimesFM as order auth.
+
+Melhoria: expose `strategy_catalog` on `build_panel_bundle`.
+Contexto: `trading_dashboard_data._load_strategy_catalog()` already calls `list_strategy_states()` for Command Panel v1 / `/api/status`. Login menu bundle has signals, orders, history, prodigy, performance — no catalog. Feature 4 forbids invented thresholds and auto-promotion.
+Objetivo: (1) Call `list_strategy_states` (do not copy the SQL). Shape like `_load_strategy_catalog`: `{status: OK|LEDGER_UNAVAILABLE, strategies: [...], note}` with fields `strategy_key`, `phase`, `paper_allowed`, `promotion: operator_only`. (2) None from list → LEDGER_UNAVAILABLE and empty list — never hardcode seven fake rows. (3) Do not UPDATE phase. Do not import `apply_strategy_patch` or `process_after_gate_b`. Do not touch Clear/OANDA. (4) Keep existing bundle keys. LIVE false.
+Arquivos: src/panel_ops_data.py.
+Critério de pronto: `build_panel_bundle` includes `strategy_catalog`; rg shows `list_strategy_states`; no UPDATE strategy_states in this file.
+Cenários de teste (implement in N42.3):
+1. Fake/list rows with orb=shadow, signal_copy=paper_limited, prodigy_15d=research → same keys/phases in the bundle; orb paper_allowed false.
+2. list_strategy_states None / no DSN → status LEDGER_UNAVAILABLE, strategies [].
+3. NEVER_PAPER key never paper_allowed true.
+4. Regressão: signals, open_orders, order_history, performance still present on the bundle.
+
+### Task N42.2 — Colocar Estratégias no menu do dia a dia
+
+**Entrega:** Depois do login, o menu ganha Estratégias, com tabela de chave / fase / paper permitido ou a frase de vazio, no mesmo visual das outras páginas.
+**Como conferir:** Abrir o painel logado, clicar em Estratégias, ver a lista ou o vazio combinado, e confirmar que não há botão de promover fase nem de enviar ordem.
+**Por quê:** Os dados sozinhos não aparecem no clique do dia a dia; o mapa marcou o catálogo como ainda inexistente nesse menu.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N42.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N42.1"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: rg "/estrategias" src/panel_ops_html.py && rg "def _nav" src/panel_ops_html.py
+  - component: src/panel_ops_html.py
+    reuse_as: copy_pattern
+    convergence_check: rg "def render_strategies_page" src/panel_ops_html.py && rg "def render_signals_page" src/panel_ops_html.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: copy_pattern
+    convergence_check: rg "Estratégias (catálogo)" src/v4_web_dashboard.py && rg "Catálogo indisponível (ledger)" src/panel_ops_html.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/estrategias" src/v4_web_dashboard.py && rg "/api/estrategias" src/v4_web_dashboard.py && rg "serve_operator_panel" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n42-2-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower()"
+    pass_condition: no live keys in HTML or dashboard routes
+  - class: subagent-safety
+    id: n42-2-read-only-page
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); dash=Path('src/v4_web_dashboard.py').read_text(); assert '/api/strategies' not in html; assert 'apply_strategy_patch' not in html; assert 'process_after_gate_b' not in dash; assert 'def apply_strategy_patch' in dash"
+    pass_condition: new page does not PATCH phases; existing apply_strategy_patch remains; dashboard still does not call paper submit
+```
+
+### Quality Brief (Sprint N42)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of the new page; same shell as Sinais/Ordens.
+Maintain: do not rewrite render_page as the daily UI; login menu is panel_ops_html.
+Maintain: empty copy is explicit Portuguese; no promote control on this page.
+Avoid: Live button; order submit/cancel controls; phase form; inventing a public hostname; TimesFM block on this page.
+
+Melhoria: add authenticated GET /estrategias to the daily menu; GET /api/estrategias mirroring /api/signals.
+Contexto: OPERATOR_PANEL_PATHS has /, /central, /sinais, /prodigy, /performance, /ordens, /historico, /login. _nav has six items. serve_operator_panel 404s /estrategias. Command Panel v1 catalog table stays. PATCH /api/strategies/{key} already exists — do not wire it from this HTML. Do not add GET /api/strategies (prefix collision with PATCH).
+Objetivo: (1) Extend OPERATOR_PANEL_PATHS and _nav with Estratégias (/estrategias). (2) render_strategies_page copy render_orders_page / render_signals_page (side nav, table, muted disclaimer). Columns like render_page: Chave, Fase, Paper permitido. Phase labels for the operator: research→pesquisa, shadow→sombra, paper_limited→paper limitado, paper_validated→paper validado; unknown phase shown raw. paper_allowed → sim/não. Empty when LEDGER_UNAVAILABLE or no rows: `Catálogo indisponível (ledger)`. Disclaimer: `Promoção de fase: somente operador (fora deste menu).` (3) serve_operator_panel branch; session required like /sinais. (4) serve_panel_json for GET /api/estrategias (status + strategies). Register the path next to /api/orders. (5) No form/button that PATCHes phase. No POST handlers for placing orders. Do not add Live button. Do not call Alpaca. Do not edit TimesFM. Do not replace render_page. Do not delete apply_strategy_patch.
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /estrategias returns HTML with nav label; unauthenticated still blocked; rg shows /estrategias in _nav and serve_operator_panel; HTML has no /api/strategies.
+Cenários de teste (implement in N42.3):
+1. Sem cookie → redirect/401 like /sinais.
+2. Com cookie, ledger ausente → `Catálogo indisponível (ledger)`.
+3. Com fixture rows no bundle → chave e fase visíveis (pesquisa/sombra/paper).
+4. Nav contém Estratégias.
+5. Página sem controle de promoção (sem /api/strategies no HTML da tela nova).
+6. Regressão: /sinais /ordens /historico /performance /central still render.
+
+### Task N42.3 — Provar tabela, vazio, sessão e que a tela não promove fase
+
+**Entrega:** Testes mostram a tela com e sem dado, recusa sem login, e que a página nova não sobe fase nem envia ordem.
+**Como conferir:** Pedir essa bateria e ver falha se o menu não tiver Estratégias, se a página abrir sem sessão, ou se aparecer controle de promoção.
+**Por quê:** Sem prova, o mapa poderia marcar visível com a tela ainda mentindo.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated /estrategias matches /sinais; empty copy `Catálogo indisponível (ledger)`; fixture catalog rows (orb shadow / signal_copy paper_limited); nav label Estratégias; HTML of /estrategias does not contain `/api/strategies` or a phase form; GET /api/estrategias requires session; regression previous menu routes. Do not call real Alpaca. Do not weaken `tests/test_panel_triggers.py` PATCH /api/strategies tests. LIVE false in env. No secret values.
+
+### Task N42.4 — Atualizar o mapa e os chamados depois da tela existir
+
+**Entrega:** O mapa deixa de dizer que o catálogo de fases não existe no menu; os chamados apontam a campanha e não fecham corretoras terceiras.
+**Como conferir:** Abrir o mapa: Estratégias no menu com selo visível ou vazio comum; ISS-017 aberto; ISS-010 e o épico antigo do painel único continuam.
+**Por quê:** Sem esse recorte, a próxima rodada acha que o catálogo ainda está só na página antiga.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-017 keep **aberto**; ISS-007 keep open; ISS-016 stays orientation). Flip area 9 catalog-on-login-menu from NÃO-EXISTE-AINDA to VISÍVEL / VAZIO-COMUM using the real empty string; melhoria contínua events may remain Command Panel v1 / JSON. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017. Do not claim EasyPanel rebuild. LIVE false.
 
 ---
 

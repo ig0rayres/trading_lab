@@ -534,6 +534,36 @@ def load_panel_signals(root: Path, conn_factory: Callable[..., Any] | None, flag
     return signals_from_reports(root)
 
 
+def load_panel_strategy_catalog(
+    conn_factory: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    try:
+        from strategy_catalog import list_strategy_states
+
+        rows = list_strategy_states(conn_factory=conn_factory)
+    except ImportError:
+        rows = None
+    if rows is None:
+        return {'status': 'LEDGER_UNAVAILABLE', 'strategies': []}
+    strategies: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        strategies.append(
+            {
+                'strategy_key': _panel_json_value(row.get('strategy_key')),
+                'phase': _panel_json_value(row.get('phase')),
+                'paper_allowed': bool(row.get('paper_allowed')),
+                'promotion': _panel_json_value(row.get('promotion')),
+            }
+        )
+    return {
+        'status': 'OK',
+        'strategies': strategies,
+        'note': 'Phase changes are operator-only; dashboard is read-only.',
+    }
+
+
 def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = None) -> dict[str, Any]:
     flags = None
     if conn_factory is not None:
@@ -557,5 +587,6 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
             'disclaimer': 'research_only_not_order_auth',
         },
         'performance': perf,
+        'strategy_catalog': load_panel_strategy_catalog(conn_factory),
         'live_trading_ui': {'enabled': False, 'control_visible': False},
     }

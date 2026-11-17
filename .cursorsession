@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N51 PLAN ISS-021",
+  "fase_nome": "N52 PLAN ISS-022",
   "sprint_pending_merge": null,
   "sprint_pr": 65,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T16:35:00-03:00",
+  "ultimo_update": "2026-11-17T17:05:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Parent: Fable / plan-verifier N51; EXECUTE só depois",
-    "Operador: rebuild EasyPanel + ledger-migrate 003 após merge; aprovar no painel (não env/arquivo)",
-    "ISS-021 aberto; ISS-020 aberto; ISS-019 aberto; ISS-007/017/010/011 abertos; N45–N47 stubs; LIVE_TRADING_ENABLED=false"
+    "Parent: Fable / plan-verifier N52; EXECUTE só depois",
+    "Operador: merge no ramo principal + rebuild EasyPanel; «finalizado» só após merge; LIVE_TRADING_ENABLED=false",
+    "ISS-022 aberto; ISS-021 aberto; ISS-020 aberto; ISS-019 aberto; ISS-007/017/010/011 abertos; N45–N47 stubs"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -128,116 +128,85 @@
     "/pmo plan N48",
     "/pmo plan N49",
     "/pmo plan N50",
-    "/pmo plan N51"
+    "/pmo plan N51",
+    "/pmo plan N52"
   ],
-  "contexto_rapido": "N51 PLAN ISS-021 pré-aprovação no painel + métricas reutilizadas; plan_only; N50 stamped; LIVE false; N45–N47 stubs.",
+  "contexto_rapido": "N52 PLAN ISS-022 cockpit Sinais (métricas completas + hierarquia + tokens); plan_only; N51 stamped; LIVE false; N45–N47 stubs; finalizado só após merge main.",
   "sprint_tasks": [
     {
-      "id": "N51.0",
-      "title": "Inventariar o reuso da fila de pré-aprovação e das métricas já gravadas",
+      "id": "N52.0",
+      "title": "Inventariar o reuso do cockpit e das métricas já na fila",
       "size": "P",
       "status": "pending",
       "files": [
-        "docs/.briefs/N51-GIT-FIRST-REUSE.md",
-        "docs/.briefs/N51.brief.md"
+        "docs/.briefs/N52-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N52.brief.md"
       ],
       "depends_on": [],
-      "file": "docs/.briefs/N51-GIT-FIRST-REUSE.md, docs/.briefs/N51.brief.md"
+      "file": "docs/.briefs/N52-GIT-FIRST-REUSE.md, docs/.briefs/N52.brief.md"
     },
     {
-      "id": "N51.1",
-      "title": "Atualizar a política de aprovação nos requisitos",
-      "size": "P",
-      "status": "pending",
-      "files": [
-        "docs/REQUIREMENTS.md"
-      ],
-      "depends_on": [
-        "N51.0"
-      ],
-      "file": "docs/REQUIREMENTS.md"
-    },
-    {
-      "id": "N51.2",
-      "title": "Persistir as decisões no livro-razão e montar a fila com métricas reutilizadas",
+      "id": "N52.1",
+      "title": "Reestruturar a tela Sinais como cockpit de decisão",
       "size": "M",
       "status": "pending",
       "files": [
-        "src/panel_ops_data.py",
-        "src/ledger_migrate.py",
-        "migrations/003_signal_provider_approvals_up.sql",
-        "migrations/003_signal_provider_approvals_down.sql"
+        "src/panel_ops_html.py"
       ],
       "depends_on": [
-        "N51.1"
+        "N52.0"
       ],
-      "file": "src/panel_ops_data.py, src/ledger_migrate.py, migrations/003_signal_provider_approvals_up.sql, migrations/003_signal_provider_approvals_down.sql"
+      "file": "src/panel_ops_html.py"
     },
     {
-      "id": "N51.3",
-      "title": "Mostrar a fila no painel com aprovar, rejeitar e métricas visíveis",
-      "size": "M",
-      "status": "pending",
-      "files": [
-        "src/panel_ops_html.py",
-        "src/v4_web_dashboard.py"
-      ],
-      "depends_on": [
-        "N51.2"
-      ],
-      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
-    },
-    {
-      "id": "N51.4",
-      "title": "Provar fila, métricas reutilizadas, recusa sem login e ausência de envio",
+      "id": "N52.2",
+      "title": "Provar hierarquia, números completos e ausência de envio",
       "size": "P",
       "status": "pending",
       "files": [
-        "tests/test_panel_ops.py",
-        "tests/test_ledger_migration.py"
+        "tests/test_panel_ops.py"
       ],
       "depends_on": [
-        "N51.3"
+        "N52.1"
       ],
-      "file": "tests/test_panel_ops.py, tests/test_ledger_migration.py"
+      "file": "tests/test_panel_ops.py"
     },
     {
-      "id": "N51.5",
-      "title": "Atualizar o mapa e o chamado depois da fila no painel",
+      "id": "N52.3",
+      "title": "Atualizar o mapa e o chamado depois do cockpit",
       "size": "P",
       "status": "pending",
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
         "docs/DASHBOARD-OPERATIONS.md",
-        "docs/DATABASE.md",
         "docs/ISSUES.md",
         "docs/DIARY.md"
       ],
       "depends_on": [
-        "N51.4"
+        "N52.2"
       ],
-      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/DATABASE.md, docs/ISSUES.md, docs/DIARY.md"
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md"
     }
   ],
   "checkpoint": {
     "phase": "planning",
-    "sprint": "N51",
+    "sprint": "N52",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N49.5",
+    "last_completed_task": "N51.4",
     "validation_gate_ref": ".beesy/sprints/N48.json",
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N51",
+    "sprint_delivery_sprint": "N52",
     "plan_only": true,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N51",
+      "sprint": "N52",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-17T19:48:23Z",
+      "recorded_at": "2026-11-17T20:17:39Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N51; 76 OK",
+      "notes": "N52; 75 OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
@@ -249,19 +218,19 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_ledger_migration.py -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "88ae54dd0664ed5aebd28dd9c11df9921fa89a00",
-      "stamped_at": "2026-11-17T19:49:56Z",
+      "last_validated_sha": "d4b75adde323775f22cf9dd5baa73de565536d81",
+      "stamped_at": "2026-11-17T20:24:57Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "90757e0a4a5094ea837e2f41df33cae8601bc43d2d8608f1f5170ac98b18f324",
-      "patch_id": "e7384f0e0da5e115001b45ba722e96b4ba24c242",
+      "content_hash": "2e50a31bfc2f19724dfd9547763384964d5d5731a16be34b69579b78c7d82378",
+      "patch_id": "637d30437abd7686869d49eeb4e5e8613ad3a9df",
       "patch_id_version": 2
     }
   },
@@ -285,12 +254,12 @@
   ],
   "anchor": {
     "persona": "planejador-melhorias",
-    "phase": "N51 planning",
-    "intent": "Plan N51 ISS-021 panel pre-approval queue + reused research metrics; plan_only until parent Fable.",
-    "changes_made": "N51 PLAN: ROADMAP block + index, N51.brief, N51-GIT-FIRST-REUSE, ISS-021 sprint N51, session plan_only.",
-    "decisions": "Panel approve/reject is operator path; N50 JSON/env seed/fallback; ledger table not control_flags; reuse win_rate_pct etc; no invented assertiveness formula; approval != fill; LIVE false; do not steal N45-N47.",
+    "phase": "N52 planning",
+    "intent": "Plan N52 ISS-022 Sinais decision cockpit + full recovered metrics + visual tokens; plan_only until parent Fable.",
+    "changes_made": "N52 PLAN: ROADMAP block + index, N52.brief, N52-GIT-FIRST-REUSE, ISS-022 sprint N52, session plan_only.",
+    "decisions": "Design already done; HTML-only unless overlay key missing; all recovered metrics; decision-first hierarchy; CSS tokens in _PANEL_CSS; no market order POST; LIVE false; finalizado only after merge to main; do not steal N45-N47.",
     "next_steps": "Parent Fable/plan-verifier then /pmo sprint. Do not start AgentCoder from this plan-only.",
-    "updated_at": "2026-11-17T16:35:00-03:00"
+    "updated_at": "2026-11-17T17:05:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -350,9 +319,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N50",
-  "sprint_atual": "N51",
-  "sprint_nome": "Pré-aprovação no painel com métricas de pesquisa",
+  "previous_sprint": "N51",
+  "sprint_atual": "N52",
+  "sprint_nome": "Cockpit de decisão na tela Sinais com todos os números de pesquisa",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -755,6 +724,24 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N51; previous_sprint=N50; checkpoint.phase=planning; preserve N50 stamp and autopilot",
         "rationale": "Deliverable list asked sprint_atual=N51; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-17T17:05:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-com-dominio; skip Passo2 (docs/design already delivered via /designer); skip ISSUES preview (ISS-022 exists); sprint_id=N52; review=senior+qa; plan_only=true",
+        "rationale": "Parent classified N / feature-com-dominio / N52; ISS-022; design DONE; do not steal N45–N47; autopilot no AskQuestion."
+      },
+      {
+        "timestamp": "2026-11-17T17:05:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "append N52 (do not allocate N45–N47); 1M+3P DAG; HTML /sinais cockpit + DESIGN tokens in _PANEL_CSS; no panel_ops_data change unless overlay key missing; LIVE false; approval != fill",
+        "rationale": "Reuse N51 overlay and approve POST; HTML currently shows two metric columns and operating-first order"
+      },
+      {
+        "timestamp": "2026-11-17T17:05:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N52; previous_sprint=N51; checkpoint.phase=planning; preserve N51 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N52; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -779,6 +766,7 @@
     "2026-11-17: N48.4 docs — mapa §2 cópia+auditoria; ISS-018 EXECUTE nota aberto; ROADMAP concluida* operador; rebuild EasyPanel operador; no commit",
     "2026-11-17: N49 PLAN — proveniência ordem↔sinal, inventário, critérios Feature 4/9/10 visíveis, pool Prodígio pesquisa; ISS-019; ISS-018 fechado; plan_only; N45–N47 stubs; LIVE false",
     "2026-11-17: N50 PLAN — Collective2 lista nomeada (padrão vazia) + reorganizar /sinais + Prodígio provider_id; ISS-020; plan_only; N45–N47 stubs; LIVE false",
-    "2026-11-17: N51 PLAN — pré-aprovação no painel + métricas reutilizadas (ISS-021); JSON/env N50 vira semente; ledger 003; LIVE false; plan_only; N45–N47 stubs"
+    "2026-11-17: N51 PLAN — pré-aprovação no painel + métricas reutilizadas (ISS-021); JSON/env N50 vira semente; ledger 003; LIVE false; plan_only; N45–N47 stubs",
+    "2026-11-17: N52 PLAN — cockpit Sinais ISS-022; métricas completas + hierarquia decisão→operação→auditoria + tokens DESIGN; HTML-only; LIVE false; plan_only; N45–N47 stubs; finalizado só após merge main"
   ]
 }

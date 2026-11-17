@@ -4,6 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
+| N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 18–26 |
 | N51 | panel_ops, ledger_migrate, docs | Pré-aprovação painel; migration 003; métricas pesquisa; ISS-021 aberto | 18–26 |
 | N50 | panel_ops, docs | C2 lista nomeada; Sinais reordenado; provider_id Prodígio; ISS-020 aberto | 18–24 |
 | N49 | panel_ops, docs | Proveniência ordem↔sinal; inventário fill-only; critérios Feature 4/9/10; pool Prodígio pesquisa; ISS-019 aberto | 26–34 |
@@ -25,6 +26,12 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N52 — Cockpit Sinais UX (ISS-022)
+
+**Frente:** `n27-alpaca-loop`. Design em `docs/design/`. HTML: hierarquia decisão → operação → auditoria; bloco de métricas de pesquisa na pré-aprovação; tokens Lab Ops. Pytest `test_panel_ops` 75 OK. «Finalizado» só após merge em `main`.
 
 ---
 

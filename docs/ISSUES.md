@@ -25,6 +25,7 @@
 | ISS-019 | aberto | N49 | Sinais: proveniência ordem↔sinal, inventário/assinaturas, critérios + pool Prodígio |
 | ISS-020 | aberto | N50 | Habilitar Collective2 + reorganizar tela Sinais; Prodígio provider None |
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
+| ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -603,5 +604,36 @@
 **Nota planejamento (2026-11-17):** sprint **N51** planejada (`docs/.briefs/N51.brief.md`). EXECUTE ainda não rodou.
 
 **Nota N51 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — fila `copy.preapproval` em `/sinais` e `GET /api/signals`; `POST /api/signals/providers` autenticado; migration `003_signal_provider_approvals`; métricas reutilizadas do rank; pytest painel verde. **Chamado permanece aberto** até operador aplicar `003` no Postgres da instância, rebuild EasyPanel e confirmar decisões no ar.
+
+**Nota operador (2026-11-17):** N51 no ar mas UX insuficiente — métricas vitais ausentes na listagem; tela confusa. Redesign + planejamento visual → **ISS-022** (`/designer`).
+
+---
+
+## ISS-022 — Redesign UX Sinais + planejamento visual do painel
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / design |
+| Sprint | N52 (não roubar N45–N47) |
+| Status | aberto |
+| Impacto | Painel do dia a dia (esp. `/sinais`) não atende tomada de decisão: salada de seções, feia, pouco intuitiva; pré-aprovação sem colunas vitais (acertos, PF, drawdown, score, status). Operador pede **reformulação visual** da tela Sinais e **planejamento visual de toda a plataforma** (menu operacional). |
+
+**Diretrizes do operador (2026-11-17):**
+1. Mostrar na avaliação do sinal as métricas já recuperáveis (`win_rate_pct`, `shrunk_win_rate_pct`, `profit_factor_reported`, `reported_pnl_sum`, `net_return_pct`, `max_drawdown_pct`, `prodigy_score`/`score`, `status`) — ausente = indisponível; sem fórmula inventada.
+2. Visão clara: o que aprovar, o que opera, o que é só pesquisa/auditoria — hierarquia de decisão, não tabela-salada.
+3. Chamar design/UI: reformular `/sinais` e produzir planejamento visual do painel (Central, Sinais, Ordens, Histórico, Estratégias, Prodígio, Performance, …) alinhado a `docs/OPERATOR-PANEL-MAP.md` + Features 8–10.
+4. LIVE false; aprovação ≠ fill; sem POST de ordem de mercado.
+
+**Fase pré-código:** `/designer planejar` (ou retrofit) → `docs/design/` (DESIGN.md + mockups). Só depois Sprint N de implementação.
+
+**Não fecha:** ISS-007, ISS-016, ISS-017, ISS-019–021. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-17 (screenshots pré-aprovação); ISS-021; OPERATOR-PANEL-MAP; REQUIREMENTS Features 8–10.
+
+**Nota autopilot:** registro ISS-022; Passo 2 design **obrigatório** antes de N de UI.
+
+**Nota planejamento (2026-11-17):** Design DONE (`docs/design/DESIGN.md`, `mockups/sinais.md`, `mockups/panel-overview.md`). Sprint **N52** planejada (`docs/.briefs/N52.brief.md`). EXECUTE ainda não rodou. Entrega «finalizado» só após merge no ramo principal.
+
+**Nota N52 EXECUTE (2026-11-17):** `panel_ops_html` cockpit + métricas completas na pré-aprovação; testes painel 75 OK. **Chamado aberto** até merge `main` + rebuild EasyPanel + confirmação visual. «Finalizado» só pós-merge.
 
 ---

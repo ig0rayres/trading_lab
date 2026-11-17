@@ -19,6 +19,15 @@ The agent working on **trading-lab** (`ig0rayres/trading_lab`) is **authorized a
 
 **Out of scope:** hellopaco / GEARNOC / other repos. This note applies only to trading-lab.
 
+### 2026-11-17 — «Finalizado» só depois do merge em `main`
+
+**Source:** operator correction in chat (N51 / EasyPanel deploy).
+
+- **Never** tell the operator a sprint/feature is **finalizado** / pronto para deploy while the PR is still open on `front/*`.
+- Closeout language («finalizado», «no ar no código», «pode rebuild») requires **`MERGED` into `main`** (`gh pr view` → `state=MERGED`) first.
+- After CI green, **merge immediately** — do not stop at «PR aberto / CI verde» and wait for the operator to ask «sobe pra main».
+- EasyPanel rebuild still operator-only, but the agent must leave `main` ready before saying the delivery is done.
+
 ## 2026-11-17 N38 closeout — pendências operador
 
 - Rebuild EasyPanel serviço `trading-lab` para ver faixa do freio (N38) + semáforo (N37).

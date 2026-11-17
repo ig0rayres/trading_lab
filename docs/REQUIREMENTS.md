@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29 · Revisado em: 2026-11-17 (v0.5, Collective2 lista nomeada + Sinais N50)
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-17 (v0.6, pré-aprovação no painel ISS-021 + Sinais N51)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -133,7 +133,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - News First: notícia é hipótese, com timestamp, veículo, tickers, categoria, frescor e confiança. Não é compra ou venda pelo tom do texto. Permanece **research** (N30.4); sem ordem paper automática — ciclo/Gate A apenas.
 - Momentum: força, rompimento e continuidade com barra fechada. Limiares numéricos finais não estão decididos até saírem do código.
 - Tá Barato Demais: nome interno de desconto/distorção, por mercado (EUA, B3, cripto), com parâmetros próprios. Não é “caiu, compra”. Fórmula, percentis e gatilhos não foram recuperados.
-- Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. Collective2: marketplace visível; cópia paper só para identificadores numéricos na **lista nomeada** (`config/c2_paper_copy_allowlist.json`, padrão vazia) ou overlay de ambiente aprovado pelo operador. Relato H10 permanece histórico (10 candidatos observados naquele corte); elegível no ranking de pesquisa **não** é aprovação de cópia.
+- Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. **Pré-aprovação no painel autenticado** é o caminho do dia a dia para Collective2, Prodígio e TradingView (e fontes futuras no mesmo formato): aprovar/rejeitar persiste no livro-razão (`signal_provider_approvals`); aprovação **não** envia ordem. `config/c2_paper_copy_allowlist.json` e `C2_PAPER_COPY_APPROVED_IDS` são **semente/reserva** quando não houver linha no livro-razão; rejeição no painel vence a semente. Métricas de pesquisa (`win_rate_pct`, `reported_pnl_sum`, etc.) aparecem na fila com rótulo pesquisa; campo ausente = indisponível (sem fórmula nova). Relato H10 permanece histórico; elegível no ranking **não** é aprovação de cópia.
 - Prodigy 15 dias: candidatos fortes e recentes, janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, retorno líquido positivo, drawdown e consistência. Fórmula de pontuação ainda pendente. Risco paper inicial R$ 20. Fase default **research**; rank→ingest (N30) não promove fase sozinho.
 - ORB e mean reversion: shadow/research; **NEVER_PAPER** no catálogo (N30.4). ORB 1R e 2R reportados com média R e profit factor negativos. Sem edge intraday validado.
 
@@ -416,4 +416,5 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
 | 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |
 | 2026-11-16 | 0.4 | Feature 11 critérios 2–4 `[x]` após N28.2–4 (`tests/test_n28_supervised_adjustment.py`); closeout papel N33 — sem bump de versão de contrato | Sprint N33 docs |
+| 2026-11-17 | 0.6 | Feature 4: pré-aprovação no painel + `signal_provider_approvals`; JSON/env C2 = semente; métricas rank reutilizadas; aprovação ≠ fill | Sprint N51 ISS-021 |
 | 2026-11-17 | 0.5 | Feature 4 Collective2: lista nomeada (padrão vazia); §5 painel sem API C2; §7 proíbe copy fora da lista e ticket a partir de snapshot; H10 permanece histórico | Sprint N50 ISS-020 |

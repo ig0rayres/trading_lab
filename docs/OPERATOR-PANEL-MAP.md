@@ -46,8 +46,17 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | Campo | Detalhe |
 |-------|---------|
 | **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. |
-| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48** + **N49** + **N50**); ordem das seções `h2`: **Em operação / assinados** → inventário → **Collective2** (lista nomeada) → **Candidatos Prodígio (pesquisa)** → critérios de adoção → **auditoria de ingresso** por último. **Não** é página separada no Command Panel v1. |
+| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48** + **N49** + **N50** + **N51**); ordem das seções `h2`: **Em operação / assinados** → **Pré-aprovação de provedores** → inventário → **Collective2** → **Candidatos Prodígio (pesquisa)** → critérios de adoção → **auditoria de ingresso** por último. **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
+
+### Pré-aprovação de provedores (**N51** / ISS-021)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Ação** | Logado: botões **Aprovar** / **Rejeitar** por linha. API: `POST /api/signals/providers` corpo `{platform, provider_id, action: approve\|reject}` — **401** sem sessão; **503** sem livro-razão / migration `003`. |
+| **Fila** | `copy.preapproval.queue[]`: Collective2, Prodígio, TradingView (origens únicas da auditoria). Métricas só com campos recuperados do JSON de pesquisa (`win_rate_pct`, `reported_pnl_sum`, …); rótulo `research_only`; ausente = **indisponível** (nunca zero inventado). |
+| **Persistência** | Tabela `signal_provider_approvals` (migration `003`). Rejeição no painel vence `config/c2_paper_copy_allowlist.json` / `C2_PAPER_COPY_APPROVED_IDS`. JSON/env são semente quando não há linha no livro-razão. |
+| **Não faz** | Não envia ordem; não chama Alpaca/C2; Live desligado. |
 
 ### Em operação / assinados (**N50** título; conteúdo N48/N49)
 
@@ -59,7 +68,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | **Vínculo ausente** | `origem desconhecida` e `sem vínculo com sinal` — não inventar P&L por sinal. |
 | **Vazio — operação** | `Nenhuma cópia de terceiro em operação.` |
 | **Vazio — performance nesta cópia** | `Sem fills confirmados nesta cópia.` |
-| **Collective2** | Seção própria: lista nomeada `config/c2_paper_copy_allowlist.json` (padrão vazia) + overlay `C2_PAPER_COPY_APPROVED_IDS`. Vazio: `Collective2: cópia paper fechada — nenhum provedor na lista nomeada.` Com IDs: só esses assinados; candidatos de pesquisa **não** viram aprovação; instantâneo `active-orders-latest.json` **não** é ticket. Painel **não** chama API C2. |
+| **Collective2** | IDs efetivos = decisão `approved` no livro-razão ∪ semente (JSON/env) quando não há linha; rejeição exclui mesmo na semente. Vazio: `Collective2: cópia paper fechada — nenhum provedor na lista nomeada.` Candidatos de pesquisa **não** viram aprovação sozinhos; use a fila de pré-aprovação. Instantâneo **não** é ticket. Painel **não** chama API C2. |
 | **Selo** | **VISÍVEL** · vazio honesto = **VAZIO-COMUM** |
 
 ### Inventário de sinais (**N49**)

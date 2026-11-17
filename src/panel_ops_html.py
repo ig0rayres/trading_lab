@@ -50,6 +50,11 @@ _N50_POOL_SECTION = 'Candidatos Prodígio (pesquisa)'
 _N49_INVENTORY_EMPTY = 'Nenhum sinal neste inventário.'
 _N49_POOL_EMPTY = 'Nenhum candidato de pesquisa no pool.'
 _N49_POOL_SUBTITLE = 'Pesquisa — não autoriza ordem / não promove.'
+_N51_PREAPPROVAL_SECTION = 'Pré-aprovação de provedores'
+_N51_PREAPPROVAL_SUBTITLE = (
+    'Pesquisa — não autoriza ordem. Aprovar não é fill. Métricas rotuladas pesquisa.'
+)
+_N51_PREAPPROVAL_EMPTY = 'Nenhum candidato em pré-aprovação.'
 
 _STRATEGY_PHASE_LABELS = {
     'research': 'pesquisa',
@@ -141,6 +146,21 @@ const killOn=document.getElementById('kill-on');
 if(killOn)killOn.onclick=()=>patchKill(true);
 const killOff=document.getElementById('kill-off');
 if(killOff)killOff.onclick=()=>patchKill(false);
+'''
+
+_PROVIDER_APPROVAL_SCRIPT = '''
+async function setProviderApproval(platform,providerId,action){
+  const res=await fetch('/api/signals/providers',{
+    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({platform,provider_id:providerId,action})});
+  if(res.status===401){location.href='/login';return;}
+  if(!res.ok){alert('Não foi possível registrar a decisão.');return;}
+  location.reload();
+}
+document.querySelectorAll('[data-provider-action]').forEach(btn=>{
+  btn.onclick=()=>setProviderApproval(
+    btn.dataset.platform,btn.dataset.providerId,btn.dataset.providerAction);
+});
 '''
 
 
@@ -541,6 +561,56 @@ def _signals_collective2_section_html(collective2: dict[str, Any]) -> str:
     )
 
 
+def _format_research_metric(metrics: dict[str, Any] | None, key: str) -> str:
+    block = metrics if isinstance(metrics, dict) else {}
+    if key not in block:
+        return 'indisponível'
+    return esc(block[key])
+
+
+def _signals_preapproval_section_html(preapproval: dict[str, Any]) -> str:
+    block = preapproval if isinstance(preapproval, dict) else {}
+    queue = block.get('queue') or []
+    if not queue:
+        body = f'<p class="muted">{esc(_N51_PREAPPROVAL_EMPTY)}</p>'
+    else:
+        rows = []
+        for item in queue:
+            metrics = item.get('metrics') if isinstance(item.get('metrics'), dict) else {}
+            win = _format_research_metric(metrics, 'win_rate_pct')
+            pnl = _format_research_metric(metrics, 'reported_pnl_sum')
+            plat_raw = str(item.get('platform') or '—')
+            pid_raw = str(item.get('provider_id') or '—')
+            plat = esc(plat_raw)
+            pid = esc(pid_raw)
+            plat_attr = html.escape(plat_raw, quote=True)
+            pid_attr = html.escape(pid_raw, quote=True)
+            status = esc(item.get('status') or 'pending')
+            approve = (
+                f'<button type="button" class="btn btn-primary" data-provider-action="approve" '
+                f'data-platform="{plat_attr}" data-provider-id="{pid_attr}">Aprovar</button>'
+            )
+            reject = (
+                f'<button type="button" class="btn btn-danger" data-provider-action="reject" '
+                f'data-platform="{plat_attr}" data-provider-id="{pid_attr}">Rejeitar</button>'
+            )
+            rows.append(
+                f'<tr><td>{plat}</td><td class="mono">{pid}</td><td>{status}</td>'
+                f'<td>{win}</td><td>{pnl}</td><td>{approve} {reject}</td></tr>'
+            )
+        body = (
+            '<table><thead><tr><th>Plataforma</th><th>Identificador</th><th>Status</th>'
+            '<th>Acertos % (pesquisa)</th><th>Resultado reportado (pesquisa)</th><th>Ações</th>'
+            f'</tr></thead><tbody>{"".join(rows)}</tbody></table>'
+        )
+    return (
+        f'<h2>{esc(_N51_PREAPPROVAL_SECTION)}</h2>'
+        f'<p class="muted">{esc(_N51_PREAPPROVAL_SUBTITLE)}</p>'
+        f'{body}'
+        f'<script>{_PROVIDER_APPROVAL_SCRIPT}</script>'
+    )
+
+
 def _signals_audit_section_html(signals: list[dict[str, Any]]) -> str:
     rows = ''.join(
         f'<tr><td class="mono">{esc(s.get("received_at") or "—")}</td>'
@@ -561,6 +631,7 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     copy = bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {}
     signals = bundle.get('signals') or []
     operating_body = _signals_operating_section_html(copy)
+    preapproval_body = _signals_preapproval_section_html(copy.get('preapproval') or {})
     inventory_body = _signals_inventory_html(copy.get('inventory') or {})
     c2_body = _signals_collective2_section_html(copy.get('collective2') or {})
     pool_body = _signals_prodigy_pool_html(copy.get('prodigy_pool') or {})
@@ -571,6 +642,7 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("sinais")}<main class="main">
 <h1>Sinais</h1>
 {operating_body}
+{preapproval_body}
 {inventory_body}
 {c2_body}
 {pool_body}

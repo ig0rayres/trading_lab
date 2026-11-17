@@ -4,6 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
+| N51 | panel_ops, ledger_migrate, docs | Pré-aprovação painel; migration 003; métricas pesquisa; ISS-021 aberto | 18–26 |
 | N50 | panel_ops, docs | C2 lista nomeada; Sinais reordenado; provider_id Prodígio; ISS-020 aberto | 18–24 |
 | N49 | panel_ops, docs | Proveniência ordem↔sinal; inventário fill-only; critérios Feature 4/9/10; pool Prodígio pesquisa; ISS-019 aberto | 26–34 |
 | N48 | panel_ops, docs | Sinais = cópia de terceiros + auditoria; ISS-018; Collective2 fechado; família bruta | 28–36 |
@@ -24,6 +25,14 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N51 — Pré-aprovação no painel (ISS-021)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+Fila autenticada em `/sinais` com métricas de pesquisa reutilizadas; `POST /api/signals/providers`; migration `003` `signal_provider_approvals`; semente N50 só sem linha no livro-razão; rejeição vence semente. ISS-021 aberto até operador aplicar migration e rebuild no ar.
 
 ---
 

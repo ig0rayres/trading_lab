@@ -617,6 +617,33 @@ def strategy_parameters_get_payload():
     }
 
 
+def signals_providers_post(body: dict, connect_factory, root: Path):
+    if not isinstance(body, dict):
+        return 'reject', 'INVALID_BODY', None
+    platform = str(body.get('platform') or '').strip().lower()
+    provider_id = str(body.get('provider_id') or '').strip()
+    action = str(body.get('action') or '').strip().lower()
+    if not platform or not provider_id or action not in ('approve', 'reject'):
+        return 'reject', 'INVALID_BODY', None
+    if connect_factory is None:
+        return 'reject', 'LEDGER_UNAVAILABLE', None
+    try:
+        result = _panel_ops.upsert_signal_provider_approval(
+            connect_factory, platform, provider_id, action
+        )
+    except ValueError:
+        return 'reject', 'INVALID_BODY', None
+    except Exception as exc:
+        err = str(exc).lower()
+        if 'undefinedtable' in err or 'signal_provider_approvals' in err:
+            return 'reject', 'LEDGER_UNAVAILABLE', None
+        if 'not set' in err or 'ledger_database_url' in err:
+            return 'reject', 'LEDGER_UNAVAILABLE', None
+        raise
+    _ = root
+    return 'ok', None, {**result, 'execution_authorized': False, 'orders_sent': 0}
+
+
 def strategy_parameters_post(path: str, body: dict, connect_factory):
     root = Path(os.environ.get('REPORTS_DIR', '/app/reports')) / 'evolution'
     audit_hooks = {
@@ -944,6 +971,24 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                     send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
                     return
                 kind, code, payload = strategy_parameters_post(path, body, db_connect)
+                if kind == 'not_found':
+                    self.send_error(404)
+                    return
+                respond_mutation(self, kind, code, payload)
+                return
+            if path == '/api/signals/providers':
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                try:
+                    body = read_json_body(self)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                    return
+                kind, code, payload = signals_providers_post(body, db_connect, root)
+                if kind == 'reject' and code == 'LEDGER_UNAVAILABLE':
+                    send_json_response(self, 503, {'reject_code': code})
+                    return
                 if kind == 'not_found':
                     self.send_error(404)
                     return

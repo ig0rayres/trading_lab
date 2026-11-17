@@ -602,4 +602,6 @@
 
 **Nota planejamento (2026-11-17):** sprint **N51** planejada (`docs/.briefs/N51.brief.md`). EXECUTE ainda não rodou.
 
+**Nota N51 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — fila `copy.preapproval` em `/sinais` e `GET /api/signals`; `POST /api/signals/providers` autenticado; migration `003_signal_provider_approvals`; métricas reutilizadas do rank; pytest painel verde. **Chamado permanece aberto** até operador aplicar `003` no Postgres da instância, rebuild EasyPanel e confirmar decisões no ar.
+
 ---

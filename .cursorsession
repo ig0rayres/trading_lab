@@ -132,7 +132,45 @@
     "last_completed_task": "N42.4",
     "validation_gate_ref": ".beesy/sprints/N42.json",
     "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N42"
+    "sprint_delivery_sprint": "N42",
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".beesy/sprints/N42.json",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "c8bf1eed56552b90114c3c5539c4a6df4769ba24",
+      "stamped_at": "2026-11-17T16:06:15Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "87d9af0e50f822136d8122a29ea5221ab68ec26941aaf35411d51f98f01dcdac",
+      "patch_id_version": 2
+    },
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N42",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T16:06:03Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N42 closeout restamp; 42 OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

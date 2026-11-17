@@ -23,16 +23,17 @@
         }
       ],
       "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/"
+        ".beesy/sprints/N42.json",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "117be0712a5b8773d0bdbc8df5b872e325ceff36",
-      "stamped_at": "2026-11-17T16:00:16Z",
+      "last_validated_sha": "c8bf1eed56552b90114c3c5539c4a6df4769ba24",
+      "stamped_at": "2026-11-17T16:06:15Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "22f0cf461f3d1f6da019d5b3958031a21ace6642597549fa5147e5ed9527f4d4",
-      "patch_id": "6c91f994d6c53cc10746c2b05423228e8201ab1f",
+      "content_hash": "87d9af0e50f822136d8122a29ea5221ab68ec26941aaf35411d51f98f01dcdac",
       "patch_id_version": 2
     },
     "plan_only": false,

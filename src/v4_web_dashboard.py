@@ -137,6 +137,12 @@ def build_snapshot(root):
     else:
         data['operational_acceptance_reason'] = 'LEDGER_FILLS_AND_CLOSED_SNAPSHOTS_PRESENT'
     data['command_panel'] = panel
+    try:
+        from platform_health import load_health_snapshot
+
+        data['platform_health'] = load_health_snapshot(root)
+    except Exception:
+        data['platform_health'] = None
     # No inference of P&L from research candidates or incomplete brokerage records.
     return data
 
@@ -185,9 +191,25 @@ def render_page(data):
     )
     if health.get('queued_is_not_fill'):
         health_line += ' · <b>queued ≠ fill</b>'
+    ph = data.get('platform_health') or {}
+    overall = ph.get('overall') or 'unknown'
+    comp_rows = ''
+    for comp in ph.get('components') or []:
+        comp_rows += (
+            f'<tr><td>{esc(comp.get("id", ""))}</td>'
+            f'<td>{esc(comp.get("status", ""))}</td>'
+            f'<td>{esc(comp.get("detail", ""))}</td></tr>'
+        )
+    if not comp_rows:
+        comp_rows = '<tr><td colspan="3">Aguardando primeira checagem automática (v4-ops)</td></tr>'
+    platform_block = (
+        f'<h2>Plataforma — semáforo</h2>'
+        f'<p class="muted">Agregado: <strong>{esc(overall)}</strong> · atualizado em {esc(ph.get("generated_at", "—"))}</p>'
+        f'<table><thead><tr><th>Componente</th><th>Status</th><th>Detalhe</th></tr></thead><tbody>{comp_rows}</tbody></table>'
+    )
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Trading Lab — Command Panel</title><style>
     :root{{color-scheme:dark}}body{{font:16px system-ui;background:#0c1322;color:#eef3fa;max-width:1040px;margin:auto;padding:40px 20px}}h1{{font-size:32px}}h2{{margin-top:28px;font-size:20px}}.muted,small{{color:#a6b4c5}}.warning{{background:#30251a;border:1px solid #765124;border-radius:12px;padding:14px;margin:20px 0}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}}article{{background:#182337;border:1px solid #2c3c56;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}}strong{{font-size:24px}}footer{{margin-top:32px;color:#a6b4c5}}a{{color:#9bc5fa}}table{{width:100%;border-collapse:collapse;margin-top:10px}}td,th{{border:1px solid #2c3c56;padding:8px;text-align:left}}th{{color:#a6b4c5;font-weight:600}}
-    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div><p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (research)</h2><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Melhoria contínua</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
+    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div>{platform_block}<p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (research)</h2><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Melhoria contínua</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
 
 
 def default_connect():

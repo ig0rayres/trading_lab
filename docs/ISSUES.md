@@ -13,6 +13,7 @@
 | ISS-007 | aprovado | N15–N17 | Épico único **MVP-OP** (0.9 → 1.0 → 1.1) + **Command Panel v1** (`v4_web_dashboard`) |
 | ISS-008 | fechado | N18 | Command Panel always-on (`v4-ops`) — fim do nohup manual |
 | ISS-009 | aberto | N19 | Laço demo em B3, cripto e forex, com gatilhos no painel |
+| ISS-010 | em execucao | N20 | Saúde automática da plataforma + defaults operacionais ON |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -228,5 +229,21 @@
 **Critério de fechamento:** ordem só na conta demo do mercado, com fill no ledger; mudança de gatilho pelo painel gravada em `trigger_changes`; conta real sem botão; simulador local não conta como fill; `LIVE_TRADING_ENABLED` false.
 
 **Fontes:** operador 2026-11-03; `docs/REQUIREMENTS.md` v0.3; `docs/ARCHITECTURE.md` seção 12 e ADR-010; `docs/DATABASE.md` seção 6; `docs/api-spec.yaml` 0.2.0.
+
+---
+
+## ISS-010 — Saúde automática da plataforma + defaults operacionais ON
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio |
+| Sprint | N20 |
+| Status | aberto |
+
+**Impacto:** Operador depende de checklist manual (EasyPanel, Exec, curl) para saber se painel, worker, webhook e gatilhos estão vivos. A Central mostra “Operando” só pela parada geral, não pela stack. Gatilhos nascem desligados (`demo_operation_on`, mercados), contrariando política “sempre operacional até desligar de propósito”.
+
+**Critério de fechamento:** Central (ou `/api/status`) expõe semáforo único `platform_health` com painel, ledger, worker (último ciclo), webhook e fila; probes rodam no `v4-ops` sem Exec diário; seed/migrate aplica defaults ON (demo, três mercados, kill off) só em linha nova ou coluna vazia — nunca sobrescreve OFF gravado pelo operador; runbook substitui checklist EasyPanel; pytest de probes e defaults; `LIVE_TRADING_ENABLED=false`.
+
+**Fontes:** operador 2026-11-17 `/pmo plan` (Central como pérola, monitoramento automatizado); `docs/REQUIREMENTS.md` Feature 6–8; choque documentado com gate N19 `demo_operation_on false` — resolvido por decisão explícita do operador (todos os mercados ON por default).
 
 ---

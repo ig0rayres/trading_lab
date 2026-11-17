@@ -20,6 +20,9 @@ class V4OpsLayoutTests(unittest.TestCase):
         self.assertIn('v4-dashboard', body)
         self.assertIn('v4-scheduler', body)
         self.assertIn('DASHBOARD_AUTOSTART', body)
+        self.assertIn('PLATFORM_HEALTH_AUTOSTART', body)
+        self.assertIn('TV_WORKER_AUTOSTART', body)
+        self.assertIn('platform_health.py', body)
 
     def test_dockerfile_default_is_v4_ops(self):
         dockerfile = _REPO / 'Dockerfile'

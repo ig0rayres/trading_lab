@@ -22,18 +22,14 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [
-        ".beesy/sprints/N42.json",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
+      "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "c8bf1eed56552b90114c3c5539c4a6df4769ba24",
-      "stamped_at": "2026-11-17T16:06:15Z",
+      "last_validated_sha": "ec784aa5c95e56c7b3c42efdc0e15d41dd46c572",
+      "stamped_at": "2026-11-17T16:06:27Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "87d9af0e50f822136d8122a29ea5221ab68ec26941aaf35411d51f98f01dcdac",
+      "content_hash": "167c08843a17e3020830cfaec77627e8fc72e430ddc5d9c9a0c3ab3bde33915c",
       "patch_id_version": 2
     },
     "plan_only": false,

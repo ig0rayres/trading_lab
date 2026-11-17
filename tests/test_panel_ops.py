@@ -11,6 +11,7 @@ from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from gate_b_risk import evaluate_signed_signal
+from panel_ops_html import render_central_page
 from panel_ops_data import (
     PERFORMANCE_LABEL_GROSS,
     blocked_context,
@@ -48,6 +49,57 @@ def _write_webhook_journal(root: Path, rows: list[dict]) -> None:
         '\n'.join(json.dumps(r) for r in rows),
         encoding='utf-8',
     )
+
+
+_OLD_KILL_COPY = (
+    'Ligar parada',
+    'Desligar parada',
+    'Parada geral ligada',
+    'Parada geral',
+    'Operando',
+    'operação demo permitida',
+    'Liberar operação demo',
+)
+
+
+class RenderCentralPageFreioCopyTests(unittest.TestCase):
+    def _render(self, kill: bool | None) -> str:
+        flags: dict = {}
+        if kill is not None:
+            flags['kill_switch_on'] = kill
+        triggers = {'control_flags': flags, 'market_controls': []}
+        return render_central_page({'signals': []}, triggers)
+
+    def _assert_no_old_copy(self, html: str) -> None:
+        for fragment in _OLD_KILL_COPY:
+            with self.subTest(fragment=fragment):
+                self.assertNotIn(fragment, html)
+
+    def test_kill_on_shows_emergency_brake_copy(self):
+        html = self._render(True)
+        self.assertIn('Freio de emergência ativo', html)
+        self.assertIn('<b>Freio de emergência</b>', html)
+        self.assertIn('id="kill-on"', html)
+        self.assertIn('>Ativar freio<', html)
+        self.assertIn('id="kill-off"', html)
+        self.assertIn('>Liberar freio<', html)
+        self.assertIn('kill_switch_on', html)
+        self._assert_no_old_copy(html)
+
+    def test_kill_off_shows_released_brake_copy(self):
+        html = self._render(False)
+        self.assertIn('Freio liberado (outros limites ainda valem)', html)
+        self.assertIn('>Ativar freio<', html)
+        self.assertIn('>Liberar freio<', html)
+        self.assertIn('Live desligado', html)
+        self.assertNotIn('>Live<', html)
+        self.assertNotIn('id="live"', html)
+        self._assert_no_old_copy(html)
+
+    def test_kill_missing_flag_defaults_to_released_status(self):
+        html = self._render(None)
+        self.assertIn('Freio liberado (outros limites ainda valem)', html)
+        self._assert_no_old_copy(html)
 
 
 class PanelOpsDataTests(unittest.TestCase):
@@ -240,6 +292,7 @@ class PanelOpsHttpTests(unittest.TestCase):
                     body = resp.read().decode('utf-8')
                     self.assertIn('Central', body)
                     self.assertIn('Live desligado', body)
+                    self.assertIn('Ativar freio', body)
             finally:
                 self._shutdown(server, thread)
 

@@ -60,7 +60,11 @@ def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -
     flags = (triggers or {}).get('control_flags') or {}
     markets = (triggers or {}).get('market_controls') or []
     kill = flags.get('kill_switch_on')
-    status = 'Parada geral ligada' if kill else 'Operando'
+    status = (
+        'Freio de emergência ativo'
+        if kill
+        else 'Freio liberado (outros limites ainda valem)'
+    )
     cards = ''.join(
         f'<div class="card"><small class="muted">{esc(label)}</small>'
         f'<div class="mono"><strong>{esc(flags.get(key, "—"))}</strong></div></div>'
@@ -86,9 +90,9 @@ def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Central</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("central")}<main class="main">
 <h1>Central</h1><p class="muted">Conta demo · {esc(status)} · Live desligado (sem botão)</p>
-<div class="warn"><b>Parada geral</b> — alterações gravam histórico append-only.
-<button class="btn btn-danger" id="kill-on">Ligar parada</button>
-<button class="btn" id="kill-off">Desligar parada</button></div>
+<div class="warn"><b>Freio de emergência</b> — quando ativo, bloqueia ordens demo novas. Alterações gravam histórico append-only.
+<button class="btn btn-danger" id="kill-on">Ativar freio</button>
+<button class="btn" id="kill-off">Liberar freio</button></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">{cards}</div>
 <h2>Mercados</h2><table><tbody>{market_rows}</tbody></table>
 <h2>Sinais recentes</h2><table><tbody>{sig_rows}</tbody></table>

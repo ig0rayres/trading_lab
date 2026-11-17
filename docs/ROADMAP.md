@@ -60,6 +60,7 @@
 | N33 | N | Closeout docs: carimbar N28/N30/N31 e deixar o restante Alpaca honesto | concluida | 5 | docs | Campanha ISS-011 closeout papel | *(abaixo)* |
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
 | N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
+| N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | planejada | 3 | observability | Copy UX kill switch | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -106,6 +107,7 @@
 | N33 | skip | Closeout docs ISS-011 (Alpaca); sem `src/` |
 | N34 | comprehensive | Ligar adaptadores demo no laço paper (N27.2); AgentCoder |
 | N35 | senior+qa | Presença de nomes + roteiro homologação demo; zero M |
+| N36 | skip | Copy do freio na Central; testes de string; zero M |
 
 ---
 
@@ -2327,6 +2329,100 @@ REQUIREMENTS Feature 7 B3/FOREX order-demo boxes stay `[ ]`.
 `.env.example`: append empty names only (`DEMO_ACCOUNT_PATH_B3_EQUITY=`, `DEMO_ACCOUNT_PATH_FOREX=`, `CLEAR_SIM_BASE_URL=`, `CLEAR_SIM_API_KEY=`, `CLEAR_SIM_API_SECRET=`, `OANDA_PRACTICE_API_TOKEN=`, `OANDA_PRACTICE_ACCOUNT_ID=`) plus one comment: values in EasyPanel, never Git. Do not add Alpaca secret values. Keep `LIVE_TRADING_ENABLED=false` at top.
 
 DIARY + TEST-EVIDENCE: N35 nodeids of presence tests; checklist heading; N29.5 still operator; #46 on air still not fill. LIVE false.
+
+---
+
+## Sprint N36 — Freio de emergência na Central, sem parecer ligar o sistema
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-17 · pós-N35 · demanda operador (copy do kill switch) · fonte ISS-013  
+> titulo_humano: Freio de emergência na Central, sem parecer ligar o sistema  
+> resumo_humano: Na Central, o botão deixa de parecer ligar ou desligar o laboratório. Ativar freio bloqueia ordem demo nova; Liberar freio só tira o freio — os outros limites ainda valem. Dinheiro real permanece desligado.  
+> Gate: HTML da Central usa as quatro frases travadas; testes afirmam presença das novas e ausência das antigas (incluindo operação demo permitida); PATCH continua kill_switch_on true/false; sem botão Live; LIVE false  
+> review: skip  
+> Brief: `docs/.briefs/N36.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N35 concluída · Release: ISS-013 copy UX  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Na Central, o botão deixa de parecer ligar ou desligar o laboratório: ativa o freio (bloqueia ordem demo nova) ou libera o freio (os outros limites continuam valendo).
+
+### O que muda para você
+
+- Com o freio ativo, o aviso diz que é emergência e que ordem demo nova não sai
+- O botão vermelho passa a ser Ativar freio; o outro, Liberar freio
+- Com o freio liberado, o aviso não diz que a operação demo está permitida
+- Dinheiro real continua desligado; não aparece botão Live
+- O bloqueio em si não muda — só o texto
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Textos do freio na Central | Abrir a Central: com freio ativo lê Freio de emergência ativo; com freio liberado lê Freio liberado (outros limites ainda valem); botões Ativar freio e Liberar freio |
+| 2 | Teste que trava o texto | Pedir o teste da Central: as frases novas aparecem; Ligar parada, Desligar parada e operação demo permitida não aparecem |
+| 3 | Folha do dia a dia alinhada | Abrir a folha operacional: a ação do botão usa Ativar freio, não Ligar parada geral |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N36.0 Inventariar o reuso do painel e do freio | `/git` | — |
+| [x] | P | N36.1 Renomear os textos do freio na Central | `/dev` | N36.0 |
+| [x] | P | N36.2 Alinhar a folha do dia a dia e o diário | docs | N36.0 |
+
+### Task N36.0 — Inventariar o reuso do painel e do freio
+
+**Entrega:** Lista curta dizendo onde o texto confuso mora, o que já bloqueia ordem demo nova, e que o vendor não tem essa tela.
+**Como conferir:** O inventário cita a Central, o PATCH do freio e o bloqueio no risco; marca o checkout do vendor como vazio nesta frente; deixa botão Live de fora; deixa claro que liberar o freio não liga a operação demo.
+**Por quê:** Sem essa lista o EXECUTE reimplementa o bloqueio ou inventa um segundo painel.
+
+**Detalhe técnico**
+
+P task (docs). Confirm `docs/.briefs/N36-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md`; local `vendor/day-trader-skill` is empty/absent — keep fail-closed. GitHub main not re-checked. Do not bump. Do not change kill-switch semantics. Record: `kill_switch_on=false` only clears the kill gate; it does not turn on `demo_operation_on` (default off → `DEMO_OPERATION_OFF`).
+
+Must cite: `src/panel_ops_html.py` `render_central_page`; `src/v4_web_dashboard.py` `serve_operator_panel`; `src/gate_b_risk.py` `kill_switch_active`; `src/signal_paper_runner.py` `_demo_panel_block`. Gap = Portuguese labels only. `demo_operation_on` is OUT.
+
+### Task N36.1 — Renomear os textos do freio na Central
+
+**Entrega:** Na Central, o aviso e os dois botões falam em freio de emergência, não em ligar ou desligar o laboratório.
+**Como conferir:** Pedir o teste da Central: freio ativo mostra Freio de emergência ativo e os botões Ativar freio e Liberar freio; freio liberado mostra Freio liberado (outros limites ainda valem); Ligar parada, Desligar parada e operação demo permitida não aparecem; Live desligado continua; não há botão Live.
+**Por quê:** Hoje Ligar parada parece ligar o sistema, e Parada geral ligada parece que o laboratório está em marcha.
+
+**Detalhe técnico**
+
+P task. Files: `src/panel_ops_html.py`, `tests/test_panel_ops.py` (2 files). Change only visible copy in `render_central_page`. Keep `id="kill-on"` / `id="kill-off"`, `patchKill(true|false)`, JSON `{kill_switch_on:on}`, and `Live desligado (sem botão)`.
+
+Locked strings:
+- status true: `Freio de emergência ativo`
+- status false: `Freio liberado (outros limites ainda valem)`
+- box title: `Freio de emergência`
+- box help: `quando ativo, bloqueia ordens demo novas. Alterações gravam histórico append-only.`
+- kill-on: `Ativar freio`
+- kill-off: `Liberar freio`
+
+Must not remain in this HTML: `Ligar parada`, `Desligar parada`, `Parada geral ligada`, status `Operando`, `Liberar operação demo`, `operação demo permitida`.
+
+Tests (extend `tests/test_panel_ops.py`; prefer unit `render_central_page` plus keep existing HTTP login assertion):
+1. `kill_switch_on=True` → contains the active status, both new buttons, box title; not `Ligar parada` / `Desligar parada` / `Parada geral ligada` / `operação demo permitida`.
+2. `kill_switch_on=False` / missing flag → released status string; still both buttons; still `Live desligado`; no Live button (`>Live<` or `id="live"` absent); no `operação demo permitida`.
+3. Existing `test_login_sets_cookie_and_opens_central` still finds `Central` and `Live desligado`; may assert `Ativar freio`.
+4. `test_kill_switch_from_panel_blocks_next_eval` unchanged (logic).
+Do not edit `gate_b_risk.py`, `signal_paper_runner.py`, `panel_ops_data.py`, `risk_control_flags.py`, or trigger PATCH handlers. Do not rename or toggle `demo_operation_on`.
+
+### Task N36.2 — Alinhar a folha do dia a dia e o diário
+
+**Entrega:** A folha do dia a dia chama a ação de Ativar freio, e o diário anota que só o texto mudou.
+**Como conferir:** Abrir a folha operacional e o diário: a linha do botão não diz mais Ligar parada geral; o diário diz que o bloqueio ficou igual.
+**Por quê:** Se a folha continuar com Ligar parada geral, o operador volta a achar que está ligando o sistema.
+
+**Detalhe técnico**
+
+P task. Files: `docs/DASHBOARD-OPERATIONS.md`, `docs/DIARY.md` (2 files). In the operator day-to-day table, replace the action label `Ligar parada geral` with `Ativar freio` (same PATCH `/api/triggers`, cookie still required). Optional one-line note that Liberar freio is the other button. Do not write that releasing the brake permits demo operation. Do not rewrite auth, Live, or fill policy.
+
+DIARY: short `## Sprint N36` + index row. Record: copy-only; `kill_switch_on=true` still blocks new demo orders; `kill_switch_on=false` only clears the kill gate (does not turn on `demo_operation_on`); no Live button; N29.5 still operator. LIVE false.
+
+Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion wording.
 
 ---
 

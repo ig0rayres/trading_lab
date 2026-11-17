@@ -71,8 +71,8 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 | Ação | Onde |
 |------|------|
 | Entrar | `GET /login` → senha não vazia (protótipo) → cookie `trading_lab_session` (= `DASHBOARD_OPERATOR_SESSION` no env) |
-| Ver âncoras, mercados, parada | `GET /` (Central) após login |
-| Ligar parada geral | Botão na Central → `PATCH /api/triggers` (cookie obrigatório) |
+| Ver âncoras, mercados, freio | `GET /` (Central) após login |
+| Ativar freio | Botão **Ativar freio** na Central → `PATCH /api/triggers` com `kill_switch_on: true` (cookie obrigatório). **Liberar freio** usa o outro botão (`kill_switch_on: false`). |
 | Ver sinais com motivo | `GET /sinais` ou `GET /api/signals` |
 | Ver ranking Prodígio | `GET /prodigy` |
 | Ver performance só de fill | `GET /performance` ou `GET /api/performance` |

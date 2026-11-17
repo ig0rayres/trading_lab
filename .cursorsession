@@ -219,13 +219,11 @@
         }
       ],
       "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
+        ".beesy/stamp-gate-logs/"
       ],
       "missing_backends": [],
-      "last_validated_sha": "446e70b7858095aa5f24c173da6653eaf13484e8",
-      "stamped_at": "2026-11-17T14:55:00Z",
+      "last_validated_sha": "79c0b01b216efbb2bd37b21777ef93c503f90932",
+      "stamped_at": "2026-11-17T14:55:11Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

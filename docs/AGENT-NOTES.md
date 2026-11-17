@@ -18,3 +18,10 @@ The agent working on **trading-lab** (`ig0rayres/trading_lab`) is **authorized a
 **Still operator-only:** EasyPanel rebuild/deploy, pasting secrets, naming demo broker accounts (G-MKT), and paper fill evidence from the broker UI.
 
 **Out of scope:** hellopaco / GEARNOC / other repos. This note applies only to trading-lab.
+
+## 2026-11-17 N38 closeout — pendências operador
+
+- Rebuild EasyPanel serviço `trading-lab` para ver faixa do freio (N38) + semáforo (N37).
+- N29.5: credenciais demo só no EasyPanel (não no agente).
+- N17.2 G-FORM: aguarda formulário/aprovação do operador.
+- Colisão de ID: freio renumerado N37→N38/ISS-015 porque main tomou N37 para platform_health.

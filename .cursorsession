@@ -206,23 +206,25 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops tests.test_platform_health -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [
-        ".beesy/",
+        ".beesy/activate_n32_session.py",
+        ".beesy/archive/",
+        ".beesy/stamp-gate-logs/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "2b845027a573ab80b5dbbfd31eedc6fae9fedd10",
-      "stamped_at": "2026-11-17T13:12:24Z",
+      "last_validated_sha": "f773b9fae342e0557442a9d9b5f2323afcfa356f",
+      "stamped_at": "2026-11-17T13:20:46Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "90e2a80e151c6fab09fa83e564a869ed745d07be5b70d52a49f9544aa1560851",
-      "patch_id": "67a32bac7a7465bbfa09c781cf9b277d73a6344d",
+      "content_hash": "03788748330ecc11d4554677090f05e7b52d6e0cf67b883db2448552fb07f255",
+      "patch_id": "9e11ace2d0725cd0f53c9d4d81993ec8a8495178",
       "patch_id_version": 2
     },
     "branch": "front/n27-alpaca-loop",

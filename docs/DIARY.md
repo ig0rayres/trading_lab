@@ -4,6 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
+| N50 | panel_ops, docs | C2 lista nomeada; Sinais reordenado; provider_id Prodígio; ISS-020 aberto | 18–24 |
 | N49 | panel_ops, docs | Proveniência ordem↔sinal; inventário fill-only; critérios Feature 4/9/10; pool Prodígio pesquisa; ISS-019 aberto | 26–34 |
 | N48 | panel_ops, docs | Sinais = cópia de terceiros + auditoria; ISS-018; Collective2 fechado; família bruta | 28–36 |
 | N44 | docs | Roteiro homologação US+cripto pelo menu; ISS-017 onda 4; evidência pendente operador | 40–46 |
@@ -23,6 +24,18 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N50 — Collective2 lista nomeada + Sinais sem salada (ISS-020)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue (N50.1–N50.4):** `REQUIREMENTS` v0.5; `config/c2_paper_copy_allowlist.json` (vazia); `copy.collective2` com lista nomeada + snapshot não-ticket; `/sinais` reordenado; `provider_id` no pool Prodígio; `tests/test_panel_ops.py` (**60 passed**).
+
+**Entregue (N50.5 docs):** mapa §2, `DASHBOARD-OPERATIONS`, `ISSUES` (ISS-020 **aberto** até lista/rebuild operador), `DIARY`.
+
+**Honestidade:** H10 dez candidatos **não** aprovados em lote; painel sem API/chave C2; LIVE false; ISS-007/017/019 abertos; rebuild EasyPanel operador.
 
 ---
 

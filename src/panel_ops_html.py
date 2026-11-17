@@ -27,6 +27,12 @@ _N43_EMPTY_TIPS = 'Nenhuma dica de pesquisa neste relatório.'
 
 _N48_COPY_SECTION = 'Cópia de terceiros'
 _N48_AUDIT_SECTION = 'Auditoria de ingresso'
+_N50_OPERATING_SECTION = 'Em operação / assinados'
+_N50_C2_SECTION = 'Collective2'
+_N50_C2_EMPTY = 'Collective2: cópia paper fechada — nenhum provedor na lista nomeada.'
+_N50_C2_ALLOWLIST = 'Collective2: cópia paper só para os provedores nomeados.'
+_N50_C2_SUBTITLE = 'Marketplace Collective2 — lista nomeada; elegível no ranking não é aprovação.'
+_N50_C2_SNAPSHOT_LABEL = 'Instantâneo de ordens ativas no disco — não é ticket. execution_authorized: false.'
 _N48_COPY_EMPTY = 'Nenhuma cópia de terceiro em operação.'
 _N48_COPY_PERF_EMPTY = 'Sem fills confirmados nesta cópia.'
 _N48_COLLECTIVE2 = 'Collective2: cópia fechada — nenhum provedor aprovado.'
@@ -40,6 +46,7 @@ _N48_RESEARCH_NOTE = 'Cópias de pesquisa (Prodígio) — não são operação.'
 _N49_INVENTORY_SECTION = 'Inventário de sinais'
 _N49_ADOPTION_SECTION = 'Critérios de adoção'
 _N49_POOL_SECTION = 'Candidatos ao pool (Prodígio)'
+_N50_POOL_SECTION = 'Candidatos Prodígio (pesquisa)'
 _N49_INVENTORY_EMPTY = 'Nenhum sinal neste inventário.'
 _N49_POOL_EMPTY = 'Nenhum candidato de pesquisa no pool.'
 _N49_POOL_SUBTITLE = 'Pesquisa — não autoriza ordem / não promove.'
@@ -406,16 +413,20 @@ def _signals_adoption_html(adoption: dict[str, Any]) -> str:
     )
 
 
+def _provider_cell(it: dict[str, Any]) -> str:
+    return esc(it.get('provider') or it.get('provider_id') or '—')
+
+
 def _signals_prodigy_pool_html(pool: dict[str, Any]) -> str:
     items = pool.get('items') or []
     if not items:
         return (
-            f'<h2>{esc(_N49_POOL_SECTION)}</h2>'
+            f'<h2>{esc(_N50_POOL_SECTION)}</h2>'
             f'<p class="muted">{esc(_N49_POOL_SUBTITLE)}</p>'
             f'<p class="muted">{esc(_N49_POOL_EMPTY)}</p>'
         )
     rows = ''.join(
-        f'<tr><td>{esc(it.get("provider"))}</td>'
+        f'<tr><td>{_provider_cell(it)}</td>'
         f'<td>{esc(it.get("status"))}</td>'
         f'<td class="mono">{esc(it.get("prodigy_score"))}</td>'
         f'<td><code>{esc(it.get("label") or "research_tip")}</code></td></tr>'
@@ -423,7 +434,7 @@ def _signals_prodigy_pool_html(pool: dict[str, Any]) -> str:
     )
     disclaimer = esc(pool.get('disclaimer') or 'Research rank only; does not authorize orders.')
     return (
-        f'<h2>{esc(_N49_POOL_SECTION)}</h2>'
+        f'<h2>{esc(_N50_POOL_SECTION)}</h2>'
         f'<p class="muted">{esc(_N49_POOL_SUBTITLE)}</p>'
         f'<p class="muted">{disclaimer}</p>'
         f'<table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th>'
@@ -431,11 +442,14 @@ def _signals_prodigy_pool_html(pool: dict[str, Any]) -> str:
     )
 
 
-def _signals_copy_section_html(copy: dict[str, Any]) -> str:
+def _signals_operating_section_html(copy: dict[str, Any]) -> str:
     operating = copy.get('operating') or []
     history = copy.get('history') or []
     perf = copy.get('performance') if isinstance(copy.get('performance'), dict) else {}
     research = copy.get('research_copies') or []
+    collective2 = copy.get('collective2') if isinstance(copy.get('collective2'), dict) else {}
+    subscribed = collective2.get('subscribed') or []
+    c2_operating = copy.get('collective2_operating') or []
     label = esc(perf.get('pnl_label') or PERFORMANCE_LABEL_GROSS)
     hist_rows = ''.join(
         f'<tr><td class="mono">{esc(h.get("client_order_id") or "—")}</td>'
@@ -451,15 +465,79 @@ def _signals_copy_section_html(copy: dict[str, Any]) -> str:
             '<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Resultado</th>'
             f'<th>Rótulo</th></tr></thead><tbody>{hist_rows}</tbody></table>'
         )
+    subscribed_block = ''
+    if subscribed:
+        sub_rows = ''.join(
+            f'<tr><td class="mono">{esc(s.get("provider_id"))}</td>'
+            f'<td>{esc(s.get("status"))}</td>'
+            f'<td><code>{esc(s.get("label") or "named_allowlist")}</code></td></tr>'
+            for s in subscribed
+        )
+        subscribed_block = (
+            '<h3>Assinados Collective2 (lista nomeada)</h3>'
+            '<p class="muted">Identificadores nomeados — não é fill nem promove sozinho.</p>'
+            '<table><thead><tr><th>ID provedor</th><th>Status</th><th>Rótulo</th></tr></thead>'
+            f'<tbody>{sub_rows}</tbody></table>'
+        )
+    elif collective2.get('approved_ids'):
+        subscribed_block = (
+            '<h3>Assinados Collective2 (lista nomeada)</h3>'
+            '<p class="muted">Nenhuma ordem paper Collective2 neste recorte; IDs nomeados aguardam operação.</p>'
+        )
+    c2_ops_block = ''
+    if c2_operating:
+        c2_ops_block = (
+            '<h3>Ordens paper Collective2</h3>'
+            f'{_signals_copy_operating_html(c2_operating)}'
+        )
     return (
-        f'<h2>{esc(_N48_COPY_SECTION)}</h2>'
+        f'<h2>{esc(_N50_OPERATING_SECTION)}</h2>'
         f'<p class="muted">{esc(_N48_COPY_SUBTITLE)}</p>'
-        f'<p class="warn">{esc(_N48_COLLECTIVE2)}</p>'
         '<h3>Em operação (paper)</h3>'
         f'{_signals_copy_operating_html(operating)}'
+        f'{c2_ops_block}'
+        f'{subscribed_block}'
         f'{hist_block}'
         f'{_signals_copy_perf_html(perf)}'
         f'{_signals_copy_research_html(research)}'
+    )
+
+
+def _signals_collective2_section_html(collective2: dict[str, Any]) -> str:
+    c2 = collective2 if isinstance(collective2, dict) else {}
+    approved = c2.get('approved_ids') or []
+    banner = _N50_C2_ALLOWLIST if approved else _N50_C2_EMPTY
+    candidates = c2.get('candidates') or []
+    cand_rows = ''.join(
+        f'<tr><td class="mono">{esc(c.get("provider_id"))}</td>'
+        f'<td>{esc(c.get("name"))}</td>'
+        f'<td><code>{esc(c.get("label") or "research_only")}</code></td></tr>'
+        for c in candidates
+    )
+    cand_block = (
+        f'<table><thead><tr><th>ID</th><th>Nome</th><th>Rótulo</th></tr></thead>'
+        f'<tbody>{cand_rows}</tbody></table>'
+        if cand_rows
+        else '<p class="muted">Nenhum candidato de pesquisa gravado no disco.</p>'
+    )
+    snapshot = c2.get('active_orders_snapshot')
+    snap_block = ''
+    if isinstance(snapshot, dict):
+        snap_block = (
+            '<h3>Instantâneo de ordens ativas (somente leitura)</h3>'
+            f'<p class="warn">{esc(_N50_C2_SNAPSHOT_LABEL)}</p>'
+            f'<p class="muted">Registros: {esc(snapshot.get("active_orders_count", 0))}; '
+            f'as_of: {esc(snapshot.get("as_of") or "—")}</p>'
+        )
+    id_list = ', '.join(str(x) for x in approved) if approved else '—'
+    return (
+        f'<h2>{esc(_N50_C2_SECTION)}</h2>'
+        f'<p class="muted">{esc(_N50_C2_SUBTITLE)}</p>'
+        f'<p class="warn">{esc(banner)}</p>'
+        f'<p><strong>Lista nomeada:</strong> <span class="mono">{esc(id_list)}</span></p>'
+        '<h3>Candidatos de pesquisa (não aprovados automaticamente)</h3>'
+        f'{cand_block}'
+        f'{snap_block}'
     )
 
 
@@ -482,19 +560,21 @@ def _signals_audit_section_html(signals: list[dict[str, Any]]) -> str:
 def render_signals_page(bundle: dict[str, Any]) -> str:
     copy = bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {}
     signals = bundle.get('signals') or []
-    copy_body = _signals_copy_section_html(copy)
+    operating_body = _signals_operating_section_html(copy)
     inventory_body = _signals_inventory_html(copy.get('inventory') or {})
-    adoption_body = _signals_adoption_html(copy.get('adoption') or {})
+    c2_body = _signals_collective2_section_html(copy.get('collective2') or {})
     pool_body = _signals_prodigy_pool_html(copy.get('prodigy_pool') or {})
+    adoption_body = _signals_adoption_html(copy.get('adoption') or {})
     audit_body = _signals_audit_section_html(signals)
     footer = f'<p class="muted">{esc(_N48_FOOTER)}</p>'
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Sinais</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("sinais")}<main class="main">
 <h1>Sinais</h1>
-{copy_body}
+{operating_body}
 {inventory_body}
-{adoption_body}
+{c2_body}
 {pool_body}
+{adoption_body}
 {audit_body}
 {footer}</main></div></body></html>'''
 
@@ -503,7 +583,7 @@ def render_prodigy_page(bundle: dict[str, Any], opportunities: dict[str, Any]) -
     items = (opportunities or {}).get('items') or []
     disclaimer = esc((opportunities or {}).get('disclaimer') or 'Sugestão de pesquisa — não autoriza ordem.')
     rank_rows = ''.join(
-        f'<tr><td>{esc(o.get("provider"))}</td><td>{esc(o.get("status"))}</td>'
+        f'<tr><td>{_provider_cell(o)}</td><td>{esc(o.get("status"))}</td>'
         f'<td class="mono">{esc(o.get("prodigy_score"))}</td>'
         f'<td><code>{esc(o.get("label", "research_tip"))}</code></td></tr>'
         for o in items

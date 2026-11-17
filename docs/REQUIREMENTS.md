@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29 · Revisado em: 2026-11-13 (v0.4, G-MKT shortlist de contas demo)
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-17 (v0.5, Collective2 lista nomeada + Sinais N50)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -133,7 +133,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - News First: notícia é hipótese, com timestamp, veículo, tickers, categoria, frescor e confiança. Não é compra ou venda pelo tom do texto. Permanece **research** (N30.4); sem ordem paper automática — ciclo/Gate A apenas.
 - Momentum: força, rompimento e continuidade com barra fechada. Limiares numéricos finais não estão decididos até saírem do código.
 - Tá Barato Demais: nome interno de desconto/distorção, por mercado (EUA, B3, cripto), com parâmetros próprios. Não é “caiu, compra”. Fórmula, percentis e gatilhos não foram recuperados.
-- Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. Collective2 observado: 10 candidatos, nenhum com histórico de seis meses verificado, nenhum aprovado para paper-copy, zero ordens.
+- Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. Collective2: marketplace visível; cópia paper só para identificadores numéricos na **lista nomeada** (`config/c2_paper_copy_allowlist.json`, padrão vazia) ou overlay de ambiente aprovado pelo operador. Relato H10 permanece histórico (10 candidatos observados naquele corte); elegível no ranking de pesquisa **não** é aprovação de cópia.
 - Prodigy 15 dias: candidatos fortes e recentes, janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, retorno líquido positivo, drawdown e consistência. Fórmula de pontuação ainda pendente. Risco paper inicial R$ 20. Fase default **research**; rank→ingest (N30) não promove fase sozinho.
 - ORB e mean reversion: shadow/research; **NEVER_PAPER** no catálogo (N30.4). ORB 1R e 2R reportados com média R e profit factor negativos. Sem edge intraday validado.
 
@@ -141,7 +141,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 
 **Critérios de aceite:**
 - [x] ORB não é selecionável como estratégia principal de paper (Gate B `STRATEGY_NOT_PAPER`; N7).
-- [x] Nenhum provedor Collective2 entra em copy enquanto `approved_for_paper_copy` for falso (inalterado; N7 não toca C2).
+- [x] Nenhum provedor Collective2 entra em paper-copy fora da lista nomeada; com lista vazia `approved_for_paper_copy` permanece falso (N50; painel não chama API Collective2).
 - [x] Estratégia sem fórmula recuperada não ganha limiar inventado neste repositório (N7: fases seed only; sem scoring).
 
 ### Feature 5: Paper ponta a ponta
@@ -296,7 +296,7 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 | Clear Smart Trader (simulado) | API de corretora demo B3 | Bidirecional | API_KEY / SECRET / RSA no portal Clear, fora do repositório | Sem credencial simulada, mercado B3 fica barrado com motivo. Nunca apontar URL real com token simulado. |
 | OANDA fxTrade Practice | API de corretora demo forex | Bidirecional | Personal access token practice, fora do repositório | Sem conta Practice, mercado forex fica barrado com motivo. Nunca usar host fxTrade live. |
 | TradingView | Webhook | Entrada | Segredo do webhook | Pedido sem segredo válido é rejeitado no Gate A. |
-| Collective2 | Pesquisa e possível copy | Entrada | Acesso ainda não verificado | Nenhum provedor aprovado. Copy permanece fechado. |
+| Collective2 | Pesquisa e cópia paper por lista nomeada | Entrada (poller/CLI fora do painel) | Chave fora do repositório; painel **não** lê chave nem chama HTTP | Lista nomeada padrão vazia; operador nomeia IDs para liberar cópia paper. Instantâneo de ordens ativas no disco não é ticket. |
 | News | Feed de notícias | Entrada | Conforme a fonte, sem gravar segredo | Ausência de notícia não autoriza ordem. |
 | day-trader-skill | Biblioteca de reuso | Entrada de código | Não se aplica | Sem o checkout pinado em `vendor/`, não afirmar paridade. Não reescrever entry, exit, budget, risk e scanner. |
 | EasyPanel (`trading-lab` e `trading-lab-webhook`) | Deploy já existente | Operação | Fora deste repo | Não substituir esses dois serviços com este snapshot. App novo, se existir, é separado e sem volume compartilhado. |
@@ -325,7 +325,10 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 
 - Operação com dinheiro real (LIVE).
 - Tratar ORB como edge validado ou como estratégia principal de paper.
-- Assinar ou copiar provedor Collective2. Os dez candidatos observados estão reprovados para paper-copy.
+- Copiar provedor Collective2 cujo ID numérico **não** esteja na lista nomeada aprovada pelo operador.
+- Tratar ranking `eligible`, candidatos de pesquisa ou os dez observados em H10 como aprovados automaticamente para paper-copy.
+- Sintetizar ticket Gate A / envio paper a partir de instantâneo de ordens ativas Collective2.
+- Assinar em lote os dez candidatos históricos de H10 sem nomeação explícita na lista.
 - Inventar percentil, RSI, volume ou score de “Tá Barato Demais”, momentum ou Prodigy que não esteja no código recuperado.
 - Substituir os serviços EasyPanel atuais por este ZIP.
 - Publicar dashboard sem autenticação.
@@ -399,7 +402,7 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | H04–H06 | ORB 1R e 2R com média R e profit factor negativos; replay AMAT desfavorável | Sem edge intraday validado. |
 | H08 | Webhook HTTP 200, `PAPER_GATEWAY_QUEUE_ONLY` | Fila, não ordem. |
 | H09 | Radar `OK_RESEARCH_ONLY`, 12 candidatos, 0 ordens | Pesquisa naquela amostra. |
-| H10 | Collective2, 10 candidatos, 0 elegíveis | Copy fechado. |
+| H10 | Collective2, 10 candidatos, 0 elegíveis | Relato histórico daquele corte; copy fechada até IDs na lista nomeada; elegível no rank ≠ aprovação. |
 | H11–H12 | Reconciliação `nf-`/`demo-` e atividades Alpaca reportadas | P&L com a corretora ainda não fechado. |
 
 ---
@@ -413,3 +416,4 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
 | 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |
 | 2026-11-16 | 0.4 | Feature 11 critérios 2–4 `[x]` após N28.2–4 (`tests/test_n28_supervised_adjustment.py`); closeout papel N33 — sem bump de versão de contrato | Sprint N33 docs |
+| 2026-11-17 | 0.5 | Feature 4 Collective2: lista nomeada (padrão vazia); §5 painel sem API C2; §7 proíbe copy fora da lista e ticket a partir de snapshot; H10 permanece histórico | Sprint N50 ISS-020 |

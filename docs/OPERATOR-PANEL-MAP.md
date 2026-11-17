@@ -46,10 +46,10 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | Campo | Detalhe |
 |-------|---------|
 | **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. |
-| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48** + **N49**); seções `h2` na mesma página (cópia, inventário, critérios, pool Prodígio, auditoria). **Não** é página separada no Command Panel v1. |
+| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48** + **N49** + **N50**); ordem das seções `h2`: **Em operação / assinados** → inventário → **Collective2** (lista nomeada) → **Candidatos Prodígio (pesquisa)** → critérios de adoção → **auditoria de ingresso** por último. **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
 
-### Cópia de terceiros (seção superior)
+### Em operação / assinados (**N50** título; conteúdo N48/N49)
 
 | Campo | Detalhe |
 |-------|---------|
@@ -59,7 +59,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | **Vínculo ausente** | `origem desconhecida` e `sem vínculo com sinal` — não inventar P&L por sinal. |
 | **Vazio — operação** | `Nenhuma cópia de terceiro em operação.` |
 | **Vazio — performance nesta cópia** | `Sem fills confirmados nesta cópia.` |
-| **Collective2** | `Collective2: cópia fechada — nenhum provedor aprovado.` (`approved_for_paper_copy` permanece falso.) |
+| **Collective2** | Seção própria: lista nomeada `config/c2_paper_copy_allowlist.json` (padrão vazia) + overlay `C2_PAPER_COPY_APPROVED_IDS`. Vazio: `Collective2: cópia paper fechada — nenhum provedor na lista nomeada.` Com IDs: só esses assinados; candidatos de pesquisa **não** viram aprovação; instantâneo `active-orders-latest.json` **não** é ticket. Painel **não** chama API C2. |
 | **Selo** | **VISÍVEL** · vazio honesto = **VAZIO-COMUM** |
 
 ### Inventário de sinais (**N49**)
@@ -74,14 +74,22 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 | Campo | Detalhe |
 |-------|---------|
-| **Texto** | Reuso **Feature 4 / 9 / 10** (`copy.adoption.criteria_pt`): cópia de terceiros; Prodígio janela 15 dias, ≥5 operações em ≥3 dias, R$ 20 paper inicial, fases, C2 fechado, sem promoção automática, Live desligado. |
+| **Texto** | Reuso **Feature 4 / 9 / 10** (`copy.adoption.criteria_pt`): cópia de terceiros; Prodígio janela 15 dias, ≥5 operações em ≥3 dias, R$ 20 paper inicial, fases, Collective2 lista nomeada (vazio = fechado), sem promoção automática, Live desligado. |
 | **Fases** | Catálogo `signal_copy` / `prodigy_15d` somente leitura (mesmo bloco que Estratégias). |
 
-### Candidatos ao pool Prodígio (**N49**)
+### Collective2 — marketplace (**N50**)
 
 | Campo | Detalhe |
 |-------|---------|
-| **Fonte** | `copy.prodigy_pool` via `_load_prodigy_opportunities` (`intelligence/prodigy-top10-latest.json`) — **research_tip**; não chama `prodigy_rank.calculate`. |
+| **Objeto API** | `copy.collective2`: `approved_ids`, `approved_for_paper_copy`, `status`, `subscribed`, `candidates` (pesquisa), `active_orders_snapshot` opcional (não-ticket). |
+| **Config** | `config/c2_paper_copy_allowlist.json` commitado; operador pode somar IDs via `C2_PAPER_COPY_APPROVED_IDS`. |
+| **H10** | Dez candidatos históricos **não** entram sozinhos na lista. |
+
+### Candidatos Prodígio (pesquisa) (**N49** + **N50** título)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Fonte** | `copy.prodigy_pool` via `_load_prodigy_opportunities` (`intelligence/prodigy-top10-latest.json`) — **research_tip**; não chama `prodigy_rank.calculate`. Coluna **Provedor** = `provider` ou `provider_id` do JSON gravado. |
 | **Vazio** | `Nenhum candidato de pesquisa no pool.` |
 | **Rótulo** | `Pesquisa — não autoriza ordem / não promove.` |
 

@@ -20,15 +20,18 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [],
+      "dirty_production_paths": [
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
       "missing_backends": [],
-      "last_validated_sha": "ab73fd0040917d1f5e066262464399c0cb909b2c",
-      "stamped_at": "2026-11-17T16:33:10Z",
+      "last_validated_sha": "69dae92c3083025aa58364cca0868baac9566a82",
+      "stamped_at": "2026-11-17T16:36:05Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "68b030da7893c11d744a3208c13b0b47beec82c8df72c74b465a1c1f773e33b2",
-      "patch_id": "f40d361a8ee246e75748800f04fdb5f8d7af9a9a",
+      "content_hash": "eb5e3fee4dd077d66e063dd6f10088c76aec691b4f312b3d252d66e245f9487a",
+      "patch_id": "8389aa992886a3d070bfa7dd9bb0bccd8ac430c6",
       "patch_id_version": 2
     },
     "validation_gate_qa": {

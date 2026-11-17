@@ -11,9 +11,19 @@ except ImportError:
     from panel_ops_data import PERFORMANCE_LABEL_GROSS
 
 OPERATOR_PANEL_PATHS = frozenset({
-    '/', '/central', '/sinais', '/estrategias', '/prodigy', '/performance', '/ordens',
-    '/historico', '/login',
+    '/', '/central', '/sinais', '/estrategias', '/analise-google', '/prodigy', '/performance',
+    '/ordens', '/historico', '/login',
 })
+
+_TIP_LABEL_PT = {
+    'research_tip': 'dica de pesquisa',
+    'suggestion': 'sugestão',
+}
+
+_N43_UNAVAILABLE_MAIN = 'Análise Google indisponível: modelo ou dependência ausente.'
+_N43_SUBTITLE = 'Dica de pesquisa — não autoriza ordem. Live desligado.'
+_N43_FOOTER = 'Esta análise é só pesquisa. Não autoriza ordem.'
+_N43_EMPTY_TIPS = 'Nenhuma dica de pesquisa neste relatório.'
 
 _STRATEGY_PHASE_LABELS = {
     'research': 'pesquisa',
@@ -66,6 +76,7 @@ def _nav(active: str) -> str:
         ('central', '/', 'Central'),
         ('sinais', '/sinais', 'Sinais'),
         ('estrategias', '/estrategias', 'Estratégias'),
+        ('analise_google', '/analise-google', 'Análise Google'),
         ('ordens', '/ordens', 'Ordens'),
         ('historico', '/historico', 'Histórico'),
         ('prodigy', '/prodigy', 'Prodígio'),
@@ -199,6 +210,43 @@ def render_history_page(bundle: dict[str, Any]) -> str:
 def _strategy_phase_label(phase: Any) -> str:
     raw = str(phase or '')
     return _STRATEGY_PHASE_LABELS.get(raw, raw)
+
+
+def _tip_label_pt(label: Any) -> str:
+    raw = str(label or '')
+    return _TIP_LABEL_PT.get(raw, raw)
+
+
+def _analise_google_body(block: dict[str, Any]) -> str:
+    status = str(block.get('timesfm_status') or 'UNAVAILABLE')
+    if status != 'OK':
+        reason = block.get('operator_reason') or 'modelo ou dependência ausente.'
+        return (
+            f'<p class="warn">{esc(_N43_UNAVAILABLE_MAIN)}</p>'
+            f'<p class="muted">Motivo: {esc(reason)}</p>'
+        )
+    tips = block.get('tips') or []
+    if not tips:
+        return f'<p class="muted">{esc(_N43_EMPTY_TIPS)}</p>'
+    rows = ''.join(
+        f'<tr><td>{esc(_tip_label_pt(t.get("label")))}</td>'
+        f'<td>{esc(t.get("summary") or "—")}</td></tr>'
+        for t in tips
+    )
+    return (
+        '<table><thead><tr><th>Rótulo</th><th>Resumo</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table>'
+    )
+
+
+def render_analise_google_page(bundle: dict[str, Any]) -> str:
+    block = bundle.get('timesfm') if isinstance(bundle.get('timesfm'), dict) else {}
+    body = _analise_google_body(block)
+    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Análise Google</title>
+<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("analise_google")}<main class="main">
+<h1>Análise Google</h1><p class="muted">{esc(_N43_SUBTITLE)}</p>
+{body}
+<p class="muted">{esc(_N43_FOOTER)}</p></main></div></body></html>'''
 
 
 def render_strategies_page(bundle: dict[str, Any]) -> str:

@@ -20,7 +20,7 @@
 | ISS-014 | fechado | N37 (closeout papel **N39**) | Saúde automática da plataforma + defaults operacionais ON |
 | ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 | ISS-016 | aberto | N40 | Orientação no painel: mapa «onde está cada coisa» (docs; não é tela de ordens) |
-| ISS-017 | aberto | N41+ / N42 | Épico: entrega do painel operacional completo (campanha pós-N40) |
+| ISS-017 | aberto | N41+ / N42 / N43 | Épico: entrega do painel operacional completo (campanha pós-N40) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -52,6 +52,8 @@
 > **N41 / ISS-017 (2026-11-17):** campanha «operar pelo painel» (`docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`). **N41 entregue:** menu **Ordens** (`/ordens`) e **Histórico** (`/historico`) com listas ou vazio honesto; painel **sem** submit de ordem. **ISS-017 permanece aberto** (campanha). Catálogo de fases, TimesFM visível, Tá Barato, Clear e OANDA ficam nas ondas seguintes — **não** fecha ISS-007 / ISS-010 / ISS-011 nesta onda.
 
 > **N42 / ISS-017 (2026-11-17):** onda 2 **entregue** — menu **Estratégias** (`/estrategias`) só leitura (chave / fase / paper permitido); vazio `Catálogo indisponível (ledger)`; **sem** promoção de fase na tela nova. **ISS-017 permanece aberto** (campanha). TimesFM, Tá Barato, Clear e OANDA ficam nas ondas seguintes — **não** fecha ISS-007 / ISS-010 / ISS-011 nesta onda.
+
+> **N43 / ISS-017 (2026-11-17):** onda 3 **entregue** — menu **Análise Google** (`/analise-google`) só pesquisa; fail-closed `Análise Google indisponível: modelo ou dependência ausente.` quando o modelo falta; **não** autoriza ordem; **sem** POST de ordem. **ISS-017 permanece aberto** (campanha). Tá Barato, Clear e OANDA ficam nas ondas seguintes — **não** fecha ISS-007 / ISS-010 / ISS-011 nesta onda.
 
 > **Sem N18 separado:** dashboard não é épico paralelo; estende `src/v4_web_dashboard.py` + dados existentes (Feature 6), bearer remoto invariável.
 
@@ -441,7 +443,7 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio / epic |
-| Sprint | N41+ (onda 1 **N41** concluída; onda 2 **N42** concluída; N43–N47 planejadas) |
+| Sprint | N41+ (onda 1 **N41** concluída; onda 2 **N42** concluída; onda 3 **N43** concluída; N44–N47 stubs) |
 | Status | aberto |
 
 **Impacto:** Depois de muitas sprints o contrato Features 1–11 está quase todo `[x]` em teste, e o operador ainda não opera pelo menu do dia a dia. Faltam listas de ordens abertas e histórico; estratégias/fases e TimesFM não estão nesse menu; B3 e forex esperam credencial. Sem um épico de campanha, cada rodada vira cosmética (mapa, copy, closeout) e a plataforma não fecha.
@@ -469,5 +471,7 @@
 **Nota N41 EXECUTE (2026-11-17):** onda **1** entregue — rotas `/ordens` e `/historico` no menu após login; mapa e `docs/DASHBOARD-OPERATIONS.md` atualizados em N41.4. **Épico permanece aberto** até ondas N42–N47 e critério de fechamento acima. Não fecha ISS-007, ISS-010, ISS-011.
 
 **Nota N42 EXECUTE (2026-11-17):** onda **2** entregue — rotas `/estrategias` e `GET /api/estrategias` no menu após login; mapa área **3** e `docs/DASHBOARD-OPERATIONS.md` atualizados em N42.4. Vazio `Catálogo indisponível (ledger)`; página **sem** controles de promoção de fase; **sem** POST de ordem. **Épico permanece aberto** até ondas N43–N47 e critério de fechamento acima. Não fecha ISS-007, ISS-010, ISS-011.
+
+**Nota N43 EXECUTE (2026-11-17):** onda **3** entregue — rotas `/analise-google` e `GET /api/analise-google` no menu após login; mapa área **9** (`docs/OPERATOR-PANEL-MAP.md`) e `docs/DASHBOARD-OPERATIONS.md` atualizados em N43.4. Vazio `Análise Google indisponível: modelo ou dependência ausente.`; página **sem** envio de ordem; pesquisa **não** autoriza ordem; `LIVE_TRADING_ENABLED=false`. **Épico permanece aberto** até ondas N44–N47 e critério de fechamento acima. Não fecha ISS-007, ISS-010, ISS-011.
 
 ---

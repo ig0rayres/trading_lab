@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N42 validada",
+  "fase_nome": "N43 entregue (docs closeout)",
   "sprint_pending_merge": null,
   "sprint_pr": 61,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T15:30:00-03:00",
+  "ultimo_update": "2026-11-17T16:35:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Campanha ISS-017: N42 onda 2 entregue; N43 PLAN TimesFM visível; rebuild EasyPanel operador",
+    "Campanha ISS-017: N44 homolog US+cripto pelo painel (stub); ISS-017 permanece aberto",
     "Operador-gated: N29.5 Clear/OANDA; N17.2 G-FORM; rebuild EasyPanel após merge",
-    "LIVE_TRADING_ENABLED=false; TimesFM research-only (N43)"
+    "LIVE_TRADING_ENABLED=false; Análise Google no menu (N43); dica não autoriza ordem"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -122,17 +122,88 @@
     "/pmo plan N39",
     "/pmo plan N40",
     "/pmo plan N41",
-    "/pmo plan N42"
+    "/pmo plan N42",
+    "/pmo plan N43"
   ],
-  "contexto_rapido": "N42 entregue: Estratégias no menu; sem promoção na UI; LIVE false; ISS-017 aberto; N42.4 docs.",
-  "sprint_tasks": [],
+  "contexto_rapido": "N43 EXECUTE: Análise Google no menu; TimesFM research-only; fail-closed; LIVE false; ISS-017 aberto; aguarda verify/PR.",
+  "sprint_tasks": [
+    {
+      "id": "N43.0",
+      "title": "Inventariar o reuso da análise Google antes de desenhar o menu",
+      "size": "P",
+      "status": "done",
+      "depends_on": [],
+      "files": [
+        "docs/.briefs/N43-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N43.brief.md"
+      ],
+      "file": "docs/.briefs/N43-GIT-FIRST-REUSE.md, docs/.briefs/N43.brief.md"
+    },
+    {
+      "id": "N43.1",
+      "title": "Carregar o bloco TimesFM e as dicas rotuladas no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "depends_on": [
+        "N43.0"
+      ],
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N43.2",
+      "title": "Colocar Análise Google no menu do dia a dia",
+      "size": "M",
+      "status": "done",
+      "depends_on": [
+        "N43.1"
+      ],
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N43.3",
+      "title": "Provar vazio com motivo, rótulo de pesquisa e que a tela não envia ordem",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N43.2"
+      ],
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N43.4",
+      "title": "Atualizar o mapa e os chamados depois da tela existir",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N43.3"
+      ],
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/ISSUES.md"
+      ],
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md"
+    }
+  ],
   "checkpoint": {
-    "phase": "validated",
+    "phase": "planning",
+    "sprint": "N43",
+    "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N42.4",
+    "last_completed_task": "N43.4",
     "validation_gate_ref": ".beesy/sprints/N42.json",
-    "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N42",
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N43",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
       "result": "APROVADA",
@@ -144,33 +215,31 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
+      "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "9ee42188726e50564e4e335c046c2620c85c4a67",
-      "stamped_at": "2026-11-17T16:09:06Z",
+      "last_validated_sha": "b90e5d311118963ebd855446371cbf38eb02fda2",
+      "stamped_at": "2026-11-17T16:32:39Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "f49019101efde614471ef35dbc484641401516ae93eb10d1c16adcaf79624ba9",
-      "patch_id": "e7674f5a505d0a43c91d2abadbb505fad3d41d04",
+      "content_hash": "68b030da7893c11d744a3208c13b0b47beec82c8df72c74b465a1c1f773e33b2",
+      "patch_id": "f40d361a8ee246e75748800f04fdb5f8d7af9a9a",
       "patch_id_version": 2
     },
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N42",
+      "sprint": "N43",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-17T16:06:03Z",
+      "recorded_at": "2026-11-17T16:31:54Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N42 closeout restamp; 42 OK",
+      "notes": "N43 Análise Google; 49 OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
-    }
+    },
+    "plan_only": false
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -192,12 +261,12 @@
   ],
   "anchor": {
     "persona": "planejador-tarefas",
-    "phase": "N42 entregue",
-    "intent": "Campanha ISS-017 onda 2: estratégias e fases no menu do dia a dia.",
-    "changes_made": "N42.4 docs — mapa área 3 VISÍVEL; DASHBOARD-OPERATIONS; ISS-017 onda 2; ROADMAP/DIARY; briefs plan_only false.",
-    "decisions": "no phase promotion from new page; ISS-017 epic open; ISS-007/010/011 open; LIVE false; no commit this turn.",
-    "next_steps": "rock-finalize / PR; rebuild EasyPanel operador; N43 PLAN.",
-    "updated_at": "2026-11-17T15:30:00-03:00"
+    "phase": "N43 entregue",
+    "intent": "Campanha ISS-017 onda 3: análise Google / TimesFM visível e rotulada no menu do dia a dia.",
+    "changes_made": "N43.4 docs — OPERATOR-PANEL-MAP §9, DASHBOARD-OPERATIONS, ISS-017 nota EXECUTE, DIARY, ROADMAP concluida; session last_completed N43.4.",
+    "decisions": "research does not authorize order; fail-closed Portuguese copy; ISS-017 epic open; ISS-007/010/011 open; LIVE false; no commit this turn.",
+    "next_steps": "/qa validar N43; PR; rebuild EasyPanel operador; N44 stub.",
+    "updated_at": "2026-11-17T16:35:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -258,8 +327,8 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N42",
-  "sprint_atual": null,
-  "sprint_nome": "Mostrar estrategias e fases no menu do dia a dia",
+  "sprint_atual": "N43",
+  "sprint_nome": "Mostrar a analise Google so como pesquisa",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -542,6 +611,30 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N42; checkpoint.phase=planning; preserve N41 stamp and autopilot",
         "rationale": "Deliverable list asked sprint_atual=N42; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-17T13:20:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-com-dominio; skip Passo2 (Feature 11 + OPERATOR-PANEL-MAP TimesFM + DESIGN Sugestões already specify); skip ISSUES preview (ISS-017 exists); sprint_id=N43; review=senior+qa",
+        "rationale": "Operator «Vamos avançar» after N42; campaign onda 3. Autopilot no AskQuestion. Heuristic matched ui/tela; REQUIREMENTS Feature 11 already closed Design/Requisitos for labeled tips."
+      },
+      {
+        "timestamp": "2026-11-17T13:20:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "expand stub N43 (do not allocate N48); 2M+3P DAG; HTML /analise-google + GET /api/analise-google; fail-closed Portuguese copy; no paper submit; no Clear/OANDA; LIVE false; TimesFM not required image dep",
+        "rationale": "Reuse timesfm_context + N25/N41/N42 panel_ops shell; adapter already research-only"
+      },
+      {
+        "timestamp": "2026-11-17T13:20:00-03:00",
+        "file": "docs/ISSUES.md",
+        "decision": "note under ISS-017; keep ISS-007/010/011/016/017 open",
+        "rationale": "Epic stays open until campaign close; N43 is wave 3 only"
+      },
+      {
+        "timestamp": "2026-11-17T13:20:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N43; checkpoint.phase=planning; preserve N42 stamp, previous_sprint=N42 and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N43; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -557,6 +650,8 @@
     "2026-11-17: campaign ISS-017 + N41 PLAN orders/history UI; Clear/OANDA/N17.2 operator-gated; TimesFM research-only; LIVE false",
     "2026-11-17: N41.4 docs — mapa Ordens/Histórico VISÍVEL; ISS-017 onda 1 anotada; campanha CAMPAIGN-PLATFORM-DELIVERY; no commit",
     "2026-11-17: N42 PLAN — estratégias/fases no menu; sem promoção; LIVE false; ISS-017 aberto; plan_only",
-    "2026-11-17: N42.4 docs — mapa Estratégias VISÍVEL; ISS-017 onda 2 anotada; ROADMAP concluida; no commit"
+    "2026-11-17: N42.4 docs — mapa Estratégias VISÍVEL; ISS-017 onda 2 anotada; ROADMAP concluida; no commit",
+    "2026-11-17: N43 PLAN — Análise Google no menu; TimesFM research-only; fail-closed; LIVE false; ISS-017 aberto; plan_only",
+    "2026-11-17: N43.4 docs — mapa área 9 VISÍVEL; ISS-017 onda 3 EXECUTE; ROADMAP concluida; no commit"
   ]
 }

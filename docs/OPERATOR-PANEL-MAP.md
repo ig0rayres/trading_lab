@@ -1,6 +1,6 @@
 # Mapa operador — onde está cada coisa no painel
 
-> Sprint **N42** (2026-11-17) · somente leitura · `LIVE_TRADING_ENABLED=false` · mapa base **N40** / **ISS-016**  
+> Sprint **N43** (2026-11-17) · somente leitura · `LIVE_TRADING_ENABLED=false` · mapa base **N40** / **ISS-016**  
 > Épico histórico do painel único: **ISS-007** (permanece aberto). Orientação: **ISS-016** (mapa existe; chamado de orientação continua registrado).  
 > Não confundir semáforo no ar, fila ou HTTP 200 com **fill** na corretora.
 
@@ -13,7 +13,7 @@ O serviço publicado no EasyPanel (**`trading-lab`**, comando **`v4-ops`**) escu
 | **Menu do dia a dia** | `panel_ops_html` (`src/panel_ops_html.py`) | Depois de `GET /login`, com cookie de operador (`DASHBOARD_OPERATOR_SESSION` no ambiente do container). `GET /` vira **Central** com menu lateral. |
 | **Command Panel v1** (página única) | `render_page` (`src/v4_web_dashboard.py`) | `GET /` **somente** quando a variável de sessão de operador **não** está definida (modo bearer/HTML legado). Com sessão de operador ligada, esta página **não** aparece em `/` — o menu da Central toma o lugar. |
 
-Rotas do menu (após login): **`/`** (Central), **`/sinais`**, **`/estrategias`**, **`/ordens`**, **`/historico`**, **`/prodigy`**, **`/performance`**. Ainda não há item de menu para Tá Barato nem melhoria contínua (eventos de evolução).
+Rotas do menu (após login): **`/`** (Central), **`/sinais`**, **`/estrategias`**, **`/analise-google`**, **`/ordens`**, **`/historico`**, **`/prodigy`**, **`/performance`**. Ainda não há item de menu para Tá Barato nem melhoria contínua (eventos de evolução).
 
 JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `command_panel`, `platform_health` e chaves citadas abaixo, **independente** de qual superfície HTML você usaria.
 
@@ -137,12 +137,13 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 | Campo | Detalhe |
 |-------|---------|
-| **Onde clicar** | **Sem** secção HTML em qualquer superfície (`timesfm_context.py` — research-only). |
-| **Superfície** | Nenhuma página; contexto entra no relatório diário de evolução, não autoriza ordem. |
-| **Fonte de dados** | `src/timesfm_context.py`, `evolution_engine` (relatório diário); estado típico `timesfm_status: UNAVAILABLE` até dependência opcional existir. |
-| **Com dado** | Campos no relatório/JSON de evolução, não no menu. |
-| **Vazio** | UNAVAILABLE / ausência de bloco no HTML. |
-| **Selo** | **SÓ-API-OU-JSONL** (pesquisa; **não** é sinal de trading) |
+| **Onde clicar** | Menu → **Análise Google**, ou `GET /analise-google`. API: `GET /api/analise-google` (sessão de operador, como `/api/signals`). |
+| **Superfície** | **Menu do dia a dia** — `render_analise_google_page` (`src/panel_ops_html.py`). Relatório diário e `timesfm_context` continuam research-only; **não** há secção equivalente no Command Panel v1. |
+| **Fonte de dados** | `load_panel_timesfm` em `build_panel_bundle` (`src/panel_ops_data.py`): último `evolution/daily/*.json` com bloco `timesfm`, ou `build_timesfm_block` (adaptador opcional). |
+| **Com dado** | Tabela de dicas com rótulos `dica de pesquisa` / `sugestão`; subtítulo `Dica de pesquisa — não autoriza ordem. Live desligado.`; rodapé `Esta análise é só pesquisa. Não autoriza ordem.` |
+| **Vazio** | Indisponível: `Análise Google indisponível: modelo ou dependência ausente.` + linha `Motivo: …` · Relatório OK sem linhas: `Nenhuma dica de pesquisa neste relatório.` |
+| **Envio de ordem** | **Nenhum** — pesquisa **não** autoriza ordem; JSON expõe `execution_authorized=false`. |
+| **Selo** | **VISÍVEL** no menu do dia a dia · modelo/relatório ausente = **VAZIO-COMUM** (fail-closed com motivo) |
 
 ---
 
@@ -165,7 +166,7 @@ No deploy típico com **sessão de operador** configurada (dia a dia EasyPanel),
 
 ## Fora deste mapa (decisão de sprint)
 
-- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
+- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; **Análise Google** (`/analise-google`) — entregue em **N43** / **ISS-017** onda 3 (só pesquisa); campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
 - Rebuild da imagem EasyPanel, credenciais demo (**ISS-010** / N29.5), homologação Tá Barato — **operador**.
 - Dinheiro real: permanece **desligado**.
 

@@ -534,6 +534,142 @@ def load_panel_signals(root: Path, conn_factory: Callable[..., Any] | None, flag
     return signals_from_reports(root)
 
 
+_TIMESFM_RESEARCH_LABELS = frozenset({'research_tip', 'suggestion'})
+_TIMESFM_NOTE_TO_REASON = {
+    'TIMESFM_ENABLED off': 'modelo desligado neste ambiente.',
+    'TIMESFM_CHECKPOINT unset': 'checkpoint não configurado.',
+    'insufficient_context_series': 'série de contexto insuficiente.',
+    'runtime_unavailable': 'modelo ou dependência ausente.',
+}
+def _operator_reason_from_note(note: str | None) -> str:
+    raw = (note or '').strip()
+    return _TIMESFM_NOTE_TO_REASON.get(raw, 'modelo ou dependência ausente.')
+
+
+def _read_latest_daily_timesfm(root: Path) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    daily_dir = root / 'evolution' / 'daily'
+    if not daily_dir.is_dir():
+        return None
+    daily_files = sorted(daily_dir.glob('*.json'), reverse=True)
+    if not daily_files:
+        return None
+    try:
+        payload = json.loads(daily_files[0].read_text(encoding='utf-8'))
+    except (json.JSONDecodeError, OSError):
+        return None
+    timesfm = payload.get('timesfm')
+    if not isinstance(timesfm, dict):
+        return None
+    return timesfm, payload
+
+
+def _cheap_context_series(root: Path) -> list[float]:
+    series: list[float] = []
+    for row in read_jsonl(root / 'webhooks' / 'journal.jsonl'):
+        res = row.get('result') if isinstance(row.get('result'), dict) else {}
+        added = False
+        for key in ('fill_qty', 'qty', 'score'):
+            if key in res:
+                try:
+                    series.append(float(res[key]))
+                    added = True
+                except (TypeError, ValueError):
+                    pass
+                break
+        if not added:
+            series.append(float(len(series) + 1))
+    return series[-64:]
+
+
+def _sanitize_research_tip(tip: dict[str, Any]) -> dict[str, Any]:
+    label = tip.get('label') or 'suggestion'
+    if label not in _TIMESFM_RESEARCH_LABELS:
+        label = 'suggestion'
+    summary = tip.get('summary') or tip.get('note')
+    return {
+        'label': _panel_json_value(label),
+        'kind': _panel_json_value(tip.get('kind')),
+        'summary': _panel_json_value(summary),
+        'execution_authorized': False,
+        'paper_allowed': False,
+        'orders_sent': _panel_json_value(tip.get('orders_sent', 0)),
+    }
+
+
+def _append_research_tips(
+    dest: list[dict[str, Any]],
+    seen: set[tuple[Any, Any]],
+    rows: list[Any],
+) -> None:
+    for tip in rows:
+        if not isinstance(tip, dict):
+            continue
+        if (tip.get('label') or '') not in _TIMESFM_RESEARCH_LABELS:
+            continue
+        sanitized = _sanitize_research_tip(tip)
+        key = (sanitized.get('label'), sanitized.get('summary'))
+        if key in seen:
+            continue
+        seen.add(key)
+        dest.append(sanitized)
+
+
+def _collect_research_tips(
+    timesfm: dict[str, Any],
+    daily_payload: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    tips: list[dict[str, Any]] = []
+    seen: set[tuple[Any, Any]] = set()
+    _append_research_tips(tips, seen, list(timesfm.get('tips') or []))
+    if daily_payload:
+        _append_research_tips(tips, seen, list(daily_payload.get('tips') or []))
+    return tips
+
+
+def _panel_timesfm_shape(
+    *,
+    status: str,
+    note: str | None,
+    tips: list[dict[str, Any]],
+) -> dict[str, Any]:
+    out: dict[str, Any] = {
+        'timesfm_status': status,
+        'tips': tips if status == 'OK' else [],
+        'operator_reason': _operator_reason_from_note(note),
+        'execution_authorized': False,
+        'paper_allowed': False,
+    }
+    if note:
+        out['note'] = _panel_json_value(note)
+    return out
+
+
+def load_panel_timesfm(root: Path) -> dict[str, Any]:
+    root = Path(root)
+    latest = _read_latest_daily_timesfm(root)
+    if latest is not None:
+        timesfm, payload = latest
+        status = str(timesfm.get('timesfm_status') or 'UNAVAILABLE')
+        note = timesfm.get('note')
+        note_str = str(note) if note is not None else None
+        if status == 'OK':
+            tips = _collect_research_tips(timesfm, payload)
+        else:
+            tips = []
+        return _panel_timesfm_shape(status=status, note=note_str, tips=tips)
+    day = date.today().isoformat()
+    try:
+        from timesfm_context import build_timesfm_block
+    except ImportError:
+        return _panel_timesfm_shape(status='UNAVAILABLE', note=None, tips=[])
+    block = build_timesfm_block(day=day, context_values=_cheap_context_series(root))
+    status = str(block.get('timesfm_status') or 'UNAVAILABLE')
+    note = block.get('note')
+    note_str = str(note) if note is not None else None
+    tips = _collect_research_tips(block, None) if status == 'OK' else []
+    return _panel_timesfm_shape(status=status, note=note_str, tips=tips)
+
+
 def load_panel_strategy_catalog(
     conn_factory: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
@@ -588,5 +724,6 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
         },
         'performance': perf,
         'strategy_catalog': load_panel_strategy_catalog(conn_factory),
+        'timesfm': load_panel_timesfm(root),
         'live_trading_ui': {'enabled': False, 'control_visible': False},
     }

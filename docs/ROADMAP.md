@@ -67,7 +67,7 @@
 | N40 | N | Mapa honesto: onde está cada coisa no painel (docs-only) | concluida | 5 | docs, observability | Orientação operador ISS-016 | *(abaixo)* |
 | N41 | N | Menu Ordens + Histórico (listas); painel sem envio; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 1 | *(abaixo)* |
 | N42 | N | Menu Estratégias com fases; sem promoção; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 2 | *(abaixo)* |
-| N43 | N | TimesFM / dicas visíveis e rotuladas (não autorizam ordem) | planejada | stub | research | Campanha ISS-017 onda 3 | *(abaixo)* |
+| N43 | N | TimesFM / dicas visíveis e rotuladas (não autorizam ordem) | concluida | 5 | observability, research | Campanha ISS-017 onda 3 | *(abaixo)* |
 | N44 | N | Homologar operar US+cripto pelo painel | planejada | stub | docs, operador | Campanha ISS-017 onda 4 | *(abaixo)* |
 | N45 | N | Tá Barato no menu — bloqueado em N17.2 | planejada | stub | strategy-catalog | Campanha ISS-017 onda 5 | *(abaixo)* |
 | N46 | N | B3 Clear no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 6 | *(abaixo)* |
@@ -125,7 +125,7 @@
 | N40 | skip | Mapa operador das duas superfícies; zero M; sem `src/` |
 | N41 | senior+qa | Ordens e histórico no menu do dia a dia; AgentCoder |
 | N42 | senior+qa | stub campanha — catálogo de fases no menu |
-| N43 | senior+qa | stub campanha — TimesFM rotulado |
+| N43 | senior+qa | Análise Google no menu; TimesFM só pesquisa |
 | N44 | skip | stub campanha — homologação operador US+cripto |
 | N45 | senior+qa | stub campanha — Tá Barato; não arranca sem N17.2 |
 | N46 | comprehensive | stub campanha — Clear; não arranca sem N29.5 |
@@ -2951,7 +2951,7 @@ P task. Files: `.cursorsession`, `docs/ROADMAP.md` (tick N40.0–N40.4 only; do 
 | 0 | esta folha | Matriz honesta; fila; ISS-017 | plan_only |
 | 1 | **N41** | Ordens abertas + histórico no menu (listas) | concluida (decomposta abaixo) |
 | 2 | N42 | Estratégias e fases no menu do dia a dia | concluida |
-| 3 | N43 | TimesFM / dicas visíveis e rotuladas | stub |
+| 3 | **N43** | TimesFM / dicas visíveis e rotuladas | concluida |
 | 4 | N44 | Homologar operar US+cripto pelo painel | stub; rebuild seu |
 | 5 | N45 | Tá Barato no menu | stub; bloqueado em N17.2 |
 | 6 | N46 | B3 via Clear simulada | stub; bloqueado em N29.5 |
@@ -3406,9 +3406,220 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `do
 
 ## Sprint N43 — Mostrar a análise Google só como pesquisa
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-017 onda 3 · ISS-007 área Tips / sugestões · mapa N40 TimesFM SÓ-API-OU-JSONL  
 > titulo_humano: Ver a previsão do modelo como dica, nunca como ordem  
-> Campanha ISS-017 onda 3 (stub). TimesFM fail-closed se indisponível; rótulo de pesquisa; **não** autoriza ordem nem inventa limiar. LIVE false.
+> resumo_humano: Depois do login você clica em Análise Google e vê a dica de pesquisa — ou o vazio com o motivo se o modelo faltar. Isso não autoriza ordem. Bolsa brasileira e câmbio não entram nesta rodada.  
+> Gate: menu com Análise Google; bloco a partir do adaptador/relatório diário; vazio com frase e motivo; sessão obrigatória; pesquisa não autoriza ordem; zero envio pelo painel; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N43.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N42 concluida · Release: campanha ISS-017 onda 3  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Você passa a ver, no mesmo menu do dia a dia, a análise Google como dica de pesquisa — e, se o modelo faltar, o motivo — sem isso virar autorização de ordem.
+
+### O que muda para você
+
+- Depois do login aparece o item **Análise Google** ao lado de Sinais, Ordens e Estratégias
+- Se o modelo ou a dependência faltar, a tela mostra o motivo em português — não some em silêncio
+- O texto deixa claro que pesquisa não autoriza ordem
+- Bolsa brasileira, câmbio e Tá Barato não entram; o painel não envia ordem
+- Dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Inventário do relatório TimesFM que já existe | Abrir o inventário e ver que a dica já nasce no relatório diário, mas o menu do dia a dia ainda não a mostra |
+| 2 | Análise Google no menu | Entrar no painel, abrir Análise Google, ver a dica rotulada ou o vazio com motivo — sem botão de enviar ordem |
+| 3 | Falha fechada com motivo | Com o modelo desligado ou ausente, a frase combinada e o motivo aparecem; nenhum número inventado |
+| 4 | Mapa e chamado atualizados | O mapa deixa de dizer que a análise só existe em arquivo; a campanha aponta esta onda |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N43.0 Inventariar o reuso da análise Google antes de desenhar o menu | `/git` | — |
+| [x] | M | N43.1 Carregar o bloco TimesFM e as dicas rotuladas no pacote do painel | `/dev` | N43.0 |
+| [x] | M | N43.2 Colocar Análise Google no menu do dia a dia | `/dev` | N43.1 |
+| [x] | P | N43.3 Provar vazio com motivo, rótulo de pesquisa e que a tela não envia ordem | `/qa testes` | N43.2 |
+| [x] | P | N43.4 Atualizar o mapa e os chamados depois da tela existir | docs | N43.3 |
+
+### Quality Brief (Sprint N43)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds.
+Maintain: TimesFM stays optional and fail-closed; missing import/checkpoint/env omits numeric forecast.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds (ISS-010); zero Alpaca POST from this sprint.
+Avoid: required TimesFM image dependency; calling evolution CLI on GET; TimesFM as order auth; rewriting Command Panel v1; closing ISS-007/010/011/017.
+
+### Fora de escopo
+
+- Autorizar ordem a partir da dica
+- Inventar limiar / stop / entrada a partir do horizonte
+- POST ou cancelamento de ordem pelo painel
+- Promover fase; aplicar parâmetro
+- Tela própria de Tá Barato (N45)
+- Eventos completos de melhoria contínua nessa página
+- Clear / OANDA / N29.5 / adapters B3
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-013 / ISS-016 / ISS-017
+
+### Task N43.0 — Inventariar o reuso da análise Google antes de desenhar o menu
+
+**Entrega:** Inventário curto dizendo que a dica TimesFM já existe no relatório diário, e que o menu do dia a dia ainda não a mostra.
+**Como conferir:** O inventário cita o adaptador, o relatório do dia, o menu atual e deixa envio, câmbio e limiar inventado de fora.
+**Por quê:** Sem essa lista o EXECUTE reimplementa o modelo ou trata a dica como ordem.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N43-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `build_timesfm_block`; `evolution_engine.review` `timesfm` payload; `_nav` without Análise Google; official PyPI `timesfm` optional; do not plan Alpaca HTTP from the panel; do not call `evolution_engine.main()` from GET.
+
+### Task N43.1 — Carregar o bloco TimesFM e as dicas rotuladas no pacote do painel
+
+**Entrega:** O pacote do painel passa a carregar o estado da análise Google e as dicas já rotuladas, sem inventar número quando o modelo falta.
+**Como conferir:** Pedir o teste de dados em que o modelo desligado traz status indisponível sem previsão numérica, e um relatório do dia com dica rotulada aparece no pacote.
+**Por quê:** Hoje só o relatório/JSON guarda o bloco; sem linhas no pacote a tela nova nasceria vazia por desenho.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/panel_ops_data.py`
+
+**executor_prompt**:
+
+```yaml
+id: N43.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N43.0"]
+files:
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/timesfm_context.py
+    reuse_as: call
+    convergence_check: rg "build_timesfm_block" src/panel_ops_data.py
+  - component: src/trading_dashboard_data.py
+    reuse_as: copy_pattern
+    convergence_check: rg "research_tip" src/panel_ops_data.py && rg "timesfm_status" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "build_panel_bundle" src/panel_ops_data.py && rg "timesfm" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n43-1-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'HF_TOKEN' not in t; assert 'AKIA' not in t"
+    pass_condition: no broker or Hugging Face secret values hardcoded
+  - class: subagent-safety
+    id: n43-1-no-order-no-cli-write
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'process_after_gate_b' not in t; assert 'paper-api.alpaca.markets' not in t; assert 'evolution_engine.main' not in t; assert 'apply_strategy_patch' not in t"
+    pass_condition: panel data loader does not submit paper, write daily reports, or patch strategies
+```
+
+### Quality Brief (Sprint N43)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: TimesFM optional and fail-closed; never fabricate forecast numbers.
+Avoid: required timesfm image dependency; calling evolution CLI on GET; TimesFM as order auth.
+
+Melhoria: expose a TimesFM / labeled-tips block on `build_panel_bundle`.
+Contexto: `timesfm_context.build_timesfm_block` already returns `timesfm_status` OK|UNAVAILABLE and `research_tip` items with `execution_authorized=false`. `evolution_engine.review` stores `timesfm` on `evolution/daily/{day}.json` via CLI only. Login menu bundle has signals, orders, history, catalog — no TimesFM. Feature 11 forbids treating tips as orders. Default `TIMESFM_ENABLED` is off.
+Objetivo: (1) Add `load_panel_timesfm(root)` (name may vary) that prefers the latest `evolution/daily/*.json` `timesfm` object when present; otherwise call `build_timesfm_block` with the day and any cheap context series already on disk — do **not** call `evolution_engine.main()` or `review()` just to render the panel. (2) Shape: `{timesfm_status, note, operator_reason, tips, execution_authorized: false, paper_allowed: false}`. Map internal notes to operator_reason keys: `TIMESFM_ENABLED off` → `modelo desligado neste ambiente.`; `TIMESFM_CHECKPOINT unset` → `checkpoint não configurado.`; `insufficient_context_series` → `série de contexto insuficiente.`; `runtime_unavailable` / missing / unknown → `modelo ou dependência ausente.` (3) Tips from the TimesFM block plus daily tips whose label is in `{research_tip, suggestion}` — keep label, summary, kind; drop numeric `forecast` / `forecast_values`. (4) UNAVAILABLE → empty tips, no invented numbers. (5) Do not import `process_after_gate_b`. Do not add timesfm to Dockerfile/requirements. Do not touch Clear/OANDA. (6) Keep existing bundle keys. LIVE false.
+Arquivos: src/panel_ops_data.py.
+Critério de pronto: `build_panel_bundle` includes `timesfm`; rg shows `build_timesfm_block`; no `forecast_values` fabricated on UNAVAILABLE.
+Cenários de teste (implement in N43.3):
+1. Default env (TIMESFM_ENABLED off, no daily file) → timesfm_status UNAVAILABLE, tips [], no forecast/forecast_values, operator_reason for modelo desligado or dependência ausente.
+2. Fixture daily JSON with timesfm_status OK and one research_tip → same tip on the bundle; execution_authorized false; paper_allowed false.
+3. Fixture UNAVAILABLE note runtime_unavailable → tips [], operator_reason modelo ou dependência ausente.
+4. Regressão: signals, open_orders, order_history, strategy_catalog, performance still present on the bundle.
+
+### Task N43.2 — Colocar Análise Google no menu do dia a dia
+
+**Entrega:** Depois do login, o menu ganha Análise Google, com a dica rotulada ou a frase de vazio e o motivo, no mesmo visual das outras páginas.
+**Como conferir:** Abrir o painel logado, clicar em Análise Google, ver a dica ou o vazio com motivo, e confirmar o aviso de que pesquisa não autoriza ordem e que não há botão de enviar.
+**Por quê:** Os dados sozinhos não aparecem no clique do dia a dia; o mapa marcou a análise como só arquivo.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N43.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N43.1"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: rg "/analise-google" src/panel_ops_html.py && rg "def _nav" src/panel_ops_html.py
+  - component: src/panel_ops_html.py
+    reuse_as: copy_pattern
+    convergence_check: rg "def render_analise_google_page" src/panel_ops_html.py && rg "def render_strategies_page" src/panel_ops_html.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/analise-google" src/v4_web_dashboard.py && rg "/api/analise-google" src/v4_web_dashboard.py && rg "serve_operator_panel" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n43-2-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'HF_TOKEN' not in t"
+    pass_condition: no live keys in HTML or dashboard routes
+  - class: subagent-safety
+    id: n43-2-research-only-page
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); dash=Path('src/v4_web_dashboard.py').read_text(); assert 'não autoriza ordem' in html; assert 'modelo ou dependência ausente' in html; assert 'process_after_gate_b' not in html; assert 'process_after_gate_b' not in dash"
+    pass_condition: page states research does not authorize order; fail-closed copy present; dashboard still does not call paper submit
+```
+
+### Quality Brief (Sprint N43)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of the new page; same shell as Sinais/Ordens/Estratégias.
+Maintain: do not rewrite render_page as the daily UI; login menu is panel_ops_html.
+Maintain: empty copy is explicit Portuguese; research does not authorize order.
+Avoid: Live button; order submit/cancel controls; inventing a public hostname; TimesFM inference inside the HTML renderer.
+
+Melhoria: add authenticated GET /analise-google to the daily menu; GET /api/analise-google mirroring /api/signals.
+Contexto: OPERATOR_PANEL_PATHS has /, /central, /sinais, /estrategias, /prodigy, /performance, /ordens, /historico, /login. _nav has seven items. serve_operator_panel 404s /analise-google. DESIGN.md sidebar says Sugestões — operator-facing nav label is **Análise Google** (campaign/ROADMAP), not Central parameter apply.
+Objetivo: (1) Extend OPERATOR_PANEL_PATHS and _nav with Análise Google (/analise-google). (2) render_analise_google_page copy render_strategies_page / render_signals_page (side nav, table or list, muted disclaimer). Title Análise Google. Subtitle exactly `Dica de pesquisa — não autoriza ordem. Live desligado.` When timesfm_status is not OK: primary empty copy exactly `Análise Google indisponível: modelo ou dependência ausente.` plus muted `Motivo: {operator_reason}` using the mapped Portuguese reason. When OK: list tip summaries with Portuguese labels `dica de pesquisa` / `sugestão`; if no tips, `Nenhuma dica de pesquisa neste relatório.` Footer always `Esta análise é só pesquisa. Não autoriza ordem.` Optional research metadata (model id, horizon) is allowed; never print forecast arrays as entry/stop. (3) serve_operator_panel branch; session required like /sinais. (4) serve_panel_json for GET /api/analise-google (status + tips + operator_reason + execution_authorized false). Register the path next to /api/estrategias. (5) No form/button that submits or cancels orders. No Live button. Do not call Alpaca. Do not call evolution CLI. Do not replace render_page. Do not wire POST /api/strategy-parameters.
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /analise-google returns HTML with nav label; unauthenticated still blocked; HTML contains `não autoriza ordem` and the UNAVAILABLE copy string; rg shows /analise-google in _nav and serve_operator_panel.
+Cenários de teste (implement in N43.3):
+1. Sem cookie → redirect/401 like /sinais.
+2. Com cookie, default env → primary empty copy + Motivo + `não autoriza ordem`.
+3. Com fixture OK + research_tip → summary visível; rótulo dica de pesquisa; sem array de forecast como ordem.
+4. Nav contém Análise Google.
+5. Página sem controle de envio (sem process_after_gate_b, sem form POST de ordem).
+6. Regressão: /sinais /ordens /historico /estrategias /performance /central still render.
+
+### Task N43.3 — Provar vazio com motivo, rótulo de pesquisa e que a tela não envia ordem
+
+**Entrega:** Testes mostram a tela com e sem modelo, recusa sem login, o aviso de pesquisa, e que a página nova não envia ordem.
+**Como conferir:** Pedir essa bateria e ver falha se o menu não tiver Análise Google, se a página abrir sem sessão, se faltar o motivo, ou se aparecer controle de envio.
+**Por quê:** Sem prova, o mapa poderia marcar visível com a tela ainda mentindo número ou ordem.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated /analise-google matches /sinais; empty copy `Análise Google indisponível: modelo ou dependência ausente.`; HTML contains `não autoriza ordem`; fixture OK research_tip shows Portuguese `dica de pesquisa`; GET /api/analise-google requires session and has execution_authorized false; regression previous menu routes. Assert no numeric forecast keys on UNAVAILABLE JSON. Do not call real Alpaca. Do not install timesfm in CI. Do not weaken `tests/test_timesfm_context.py`. LIVE false in env. No secret values.
+
+### Task N43.4 — Atualizar o mapa e os chamados depois da tela existir
+
+**Entrega:** O mapa deixa de dizer que a análise Google só existe em arquivo; os chamados apontam a campanha e não fecham corretoras terceiras.
+**Como conferir:** Abrir o mapa: Análise Google no menu com selo visível ou vazio comum; ISS-017 aberto; ISS-010 e o épico antigo do painel único continuam.
+**Por quê:** Sem esse recorte, a próxima rodada acha que a dica ainda está só no relatório.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-017 keep **aberto**; ISS-007 keep open; ISS-016 stays orientation). Flip map section `## 9. TimesFM / Google (pesquisa)` from SÓ-API-OU-JSONL to VISÍVEL / VAZIO-COMUM using the real empty string `Análise Google indisponível: modelo ou dependência ausente.`; melhoria contínua events may remain Command Panel v1 / JSON. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017. Do not claim EasyPanel rebuild. Do not claim TimesFM is installed in production. LIVE false.
 
 ---
 

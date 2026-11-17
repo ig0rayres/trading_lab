@@ -31,6 +31,8 @@
 
 **Honestidade:** painel só leitura — **sem** POST de ordem; dica de pesquisa **não** autoriza ordem; vazio `Análise Google indisponível: modelo ou dependência ausente.` quando o modelo ou dependência falta; melhoria contínua continua no Command Panel v1; B3/Clear/OANDA fora; rebuild EasyPanel operador; **ISS-007** / **ISS-010** / **ISS-011** / **ISS-016** não fechados; `LIVE_TRADING_ENABLED=false`.
 
+
+**Closeout:** feat em main via PR **#63** (`8bbb6ad`); sessão finalized; rebuild EasyPanel ainda na mão do operador.
 ---
 
 ## Sprint N42 — Estratégias e fases no menu (ISS-017 onda 2)

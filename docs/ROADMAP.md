@@ -61,7 +61,7 @@
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
 | N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
 | N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | concluida | 3 | observability | Copy UX kill switch | *(abaixo)* |
-| N37 | N | Saúde automática + Central semáforo + defaults ON | em execucao | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
+| N37 | N | Saúde automática + Central semáforo + defaults ON | concluida | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
 | N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | concluida | 3 | observability | UX estado visual do freio | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
@@ -2432,7 +2432,8 @@ Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion w
 ## Sprint N37 — Saúde automática e plataforma ON por padrão
 
 > Categoria: N
-> Status: em execucao
+> Status: concluida
+> Closeout: PR **#52** merged (`3bebe1c`); deploy EasyPanel 2026-11-17; Central semáforo agregado **ok** (webhook `skipped` sem `WEBHOOK_HEALTH_URL`).
 > Issue: **ISS-014**
 > titulo_humano: Central mostra se tudo está vivo — sem checklist manual
 > resumo_humano: A Central vira o semáforo único da plataforma: painel, banco, worker e webhook checados sozinhos. Instalação nova nasce com operação demo e mercados ligados; só desliga quando o operador pedir. Conta real continua sem botão.

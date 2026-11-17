@@ -17,7 +17,7 @@
 | ISS-011 | aberto | ISS-010 B3/FOREX + N17.2 G-FORM (pós-N33) | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 | ISS-013 | aberto | N36 | Copy do freio na Central: Ligar/Desligar parada parece ligar o sistema |
-| ISS-014 | em execucao | N37 | Saúde automática da plataforma + defaults operacionais ON |
+| ISS-014 | fechado | N37 | Saúde automática da plataforma + defaults operacionais ON |
 | ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -362,13 +362,15 @@
 |-------|--------|
 | Categoria | feature-com-dominio |
 | Sprint | N37 |
-| Status | em execucao |
+| Status | fechado |
 
 **Impacto:** Operador depende de checklist manual (EasyPanel, Exec, curl) para saber se painel, worker, webhook e gatilhos estão vivos. A Central mostra “Operando” só pela parada geral, não pela stack.
 
 **Critério de fechamento:** Central e `/api/status` expõem `platform_health`; probes no `v4-ops`; defaults ON no migrate sem apagar OFF do operador; pytest verde; `LIVE_TRADING_ENABLED=false`.
 
-**Fontes:** operador 2026-11-17; frente `front/n20-platform-health` (código ex-PR #50).
+**Evidência:** PR #52; deploy EasyPanel 2026-11-17; Central **Plataforma — semáforo** agregado ok (operador).
+
+**Fontes:** operador 2026-11-17; frente `front/n20-platform-health` → PR #52 (PR #50 fechado).
 
 ---
 

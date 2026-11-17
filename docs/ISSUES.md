@@ -24,6 +24,7 @@
 | ISS-018 | fechado | N48 | Alinhar a tela Sinais ao conceito de cópia de terceiros |
 | ISS-019 | aberto | N49 | Sinais: proveniência ordem↔sinal, inventário/assinaturas, critérios + pool Prodígio |
 | ISS-020 | aberto | N50 | Habilitar Collective2 + reorganizar tela Sinais; Prodígio provider None |
+| ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -572,5 +573,35 @@
 **Nota PLAN N50 (2026-11-17):** sprint **N50** planejada (`docs/.briefs/N50.brief.md`). Política = lista nomeada (padrão vazia). Tela `/sinais` reorganizada em operação vs auditoria vs candidatos. Bug Provedor `None` = `provider_id`. **Não** fecha ISS-007 / ISS-017 / ISS-010 / ISS-011 / ISS-019. N45–N47 intactos. `LIVE_TRADING_ENABLED=false`.
 
 **Nota N50 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — allowlist `config/c2_paper_copy_allowlist.json`; `REQUIREMENTS` v0.5; `/sinais` reordenado (operação → inventário → Collective2 → Prodígio → critérios → auditoria); `provider_id` no pool; `tests/test_panel_ops.py` **60 passed**. **Chamado permanece aberto** até operador preencher lista (se desejar C2), rebuild EasyPanel e confirmação visual.
+
+**Nota operador (2026-11-17):** JSON/env inadequado — lacuna de UX/política → **ISS-021** (pré-aprovação no painel + métricas).
+
+---
+
+## ISS-021 — Pré-aprovação manual no painel + métricas de decisão (todas as fontes)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / enhancement |
+| Sprint | N51 (não roubar N45–N47) |
+| Status | aberto |
+| Impacto | Allowlist via JSON/env (N50) é inviável no dia a dia. Operador exige fila de **pré-aprovação** e **aprovar/rejeitar no painel**. Precisa de métricas (assertividade, % ganho, etc.) que **pesem** na decisão — mesmas regras para Collective2, Prodígio, TradingView ou qualquer fonte. |
+
+**Diretrizes do operador (2026-11-17):**
+1. Todo **novo candidato** entra em **pré-aprovação**; aprovação **manual no painel** — sem env, arquivo de texto ou rebuild só para nomear ID.
+2. Mostrar **índice de assertividade / % ganho / métricas** úteis à decisão (reusar campos do rank/pesquisa quando existirem; não inventar fórmula se não recuperada — rotular research; documentar gap).
+3. Regras iguais para **qualquer plataforma de sinais**.
+
+**Reuso:** N50 allowlist (evoluir para persistência + ação autenticada); JSON research C2/Prodígio; Feature 4/9; sessão do painel. LIVE false; aprovação ≠ fill; painel não posta ordem de mercado.
+
+**Não fecha:** ISS-007, ISS-017, ISS-010, ISS-011, ISS-019, ISS-020. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-17; N50 allowlist; REQUIREMENTS v0.5 Feature 4.
+
+**Nota autopilot:** registro automático ISS-021.
+
+**Nota planejamento (2026-11-17):** sprint **N51** planejada (`docs/.briefs/N51.brief.md`). EXECUTE ainda não rodou.
+
+**Nota N51 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — fila `copy.preapproval` em `/sinais` e `GET /api/signals`; `POST /api/signals/providers` autenticado; migration `003_signal_provider_approvals`; métricas reutilizadas do rank; pytest painel verde. **Chamado permanece aberto** até operador aplicar `003` no Postgres da instância, rebuild EasyPanel e confirmar decisões no ar.
 
 ---

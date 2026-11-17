@@ -235,6 +235,20 @@ Não há tabela de usuário. O operador é um só. A linha não guarda segredo.
 - Candle e relatório de pesquisa.
 - Tabela de ajuste automático de estratégia. Espera fill real.
 
+### 6.4.1 Pré-aprovação de provedores (migration `003`, N51)
+
+Tabela `signal_provider_approvals`. Decisão do operador no painel — **não** é âncora de risco (`control_flags` inalterado).
+
+| Coluna | Regra |
+|--------|--------|
+| `platform` | `collective2`, `prodigy`, `tradingview`, … |
+| `provider_id` | Identificador da fonte (ID numérico C2, provider Prodígio, origem TV) |
+| `status` | `pending`, `approved`, `rejected` |
+| `source` | `panel`, `seed_json`, `seed_env`, `discovered` |
+| `decided_at` | Preenchido quando o operador decide no painel |
+
+Par único `(platform, provider_id)`. Apply via `ledger-migrate apply` após merge.
+
 ### 6.7 Próxima migration
 
 A `002` adiciona colunas e as duas tabelas novas. Não reescreve a `001`. Não apaga fill. Não roda nesta fase.

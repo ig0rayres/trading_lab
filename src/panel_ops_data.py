@@ -909,6 +909,266 @@ def _build_copy_inventory(
     }
 
 
+PREAPPROVAL_METRIC_KEYS = (
+    'win_rate_pct',
+    'shrunk_win_rate_pct',
+    'profit_factor_reported',
+    'reported_pnl_sum',
+    'net_return_pct',
+    'max_drawdown_pct',
+    'prodigy_score',
+    'score',
+    'status',
+    'eligible',
+    'copy_approved',
+)
+PREAPPROVAL_METRICS_LABEL = 'research_only'
+_PREAPPROVAL_PLATFORMS = frozenset({'collective2', 'prodigy', 'tradingview'})
+
+
+def _overlay_research_metrics(row: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(row, dict):
+        return {}
+    out: dict[str, Any] = {}
+    for key in PREAPPROVAL_METRIC_KEYS:
+        if key not in row:
+            continue
+        val = row[key]
+        if val is None:
+            continue
+        out[key] = _panel_json_value(val)
+    return out
+
+
+def fetch_signal_provider_approvals(conn_factory: Callable[..., Any]) -> list[dict[str, Any]]:
+    with conn_factory() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT platform, provider_id, status, source, decided_at '
+                'FROM signal_provider_approvals ORDER BY platform, provider_id'
+            )
+            rows = []
+            for platform, provider_id, status, source, decided_at in cur.fetchall():
+                rows.append(
+                    {
+                        'platform': platform,
+                        'provider_id': provider_id,
+                        'status': status,
+                        'source': source,
+                        'decided_at': decided_at.isoformat()
+                        if isinstance(decided_at, datetime)
+                        else decided_at,
+                    }
+                )
+            return rows
+
+
+def upsert_signal_provider_approval(
+    conn_factory: Callable[..., Any],
+    platform: str,
+    provider_id: str,
+    action: str,
+) -> dict[str, Any]:
+    plat = str(platform or '').strip().lower()
+    pid = str(provider_id or '').strip()
+    if plat not in _PREAPPROVAL_PLATFORMS or not pid:
+        raise ValueError('INVALID_BODY')
+    if action not in ('approve', 'reject'):
+        raise ValueError('INVALID_BODY')
+    status = 'approved' if action == 'approve' else 'rejected'
+    with conn_factory() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                '''
+                INSERT INTO signal_provider_approvals (
+                    platform, provider_id, status, source, decided_at
+                ) VALUES (%s, %s, %s, 'panel', now())
+                ON CONFLICT (platform, provider_id) DO UPDATE SET
+                    status = EXCLUDED.status,
+                    source = 'panel',
+                    decided_at = now(),
+                    updated_at = now()
+                ''',
+                (plat, pid, status),
+            )
+        conn.commit()
+    return {'platform': plat, 'provider_id': pid, 'status': status, 'source': 'panel'}
+
+
+def _provider_approval_map(
+    conn_factory: Callable[..., Any] | None,
+) -> dict[tuple[str, str], dict[str, Any]]:
+    if conn_factory is None:
+        return {}
+    try:
+        rows = fetch_signal_provider_approvals(conn_factory)
+    except Exception:
+        return {}
+    return {(str(r['platform']), str(r['provider_id'])): r for r in rows}
+
+
+def _c2_seed_source_for_id(root: Path, provider_id: str) -> str:
+    env_ids = set(_c2_approved_ids_from_env())
+    if provider_id in env_ids:
+        return 'seed_env'
+    for path in _load_c2_allowlist_config_paths(root):
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if provider_id in _parse_numeric_ids(payload.get('approved_ids')):
+            return 'seed_json'
+    return 'seed_json'
+
+
+def resolve_c2_paper_copy_approved_ids(
+    root: Path,
+    conn_factory: Callable[..., Any] | None,
+) -> list[str]:
+    seed = load_c2_paper_copy_approved_ids(root)
+    ledger = _provider_approval_map(conn_factory)
+    approved: set[str] = set()
+    for (plat, pid), row in ledger.items():
+        if plat == 'collective2' and row.get('status') == 'approved':
+            approved.add(pid)
+    for pid in seed:
+        key = ('collective2', pid)
+        row = ledger.get(key)
+        if row and row.get('status') == 'rejected':
+            continue
+        if row and row.get('status') == 'approved':
+            continue
+        if row and row.get('status') == 'pending':
+            continue
+        if row is None:
+            approved.add(pid)
+    return sorted(approved, key=int)
+
+
+def _load_c2_research_rows(root: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for rel in (
+        'intelligence/provider-research-top10-latest.json',
+        'reports/intelligence/provider-research-top10-latest.json',
+    ):
+        path = Path(root) / rel
+        if not path.is_file():
+            path = _repo_config_root() / rel
+        if not path.is_file():
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        for row in payload.get('top_10_research') or []:
+            if isinstance(row, dict):
+                rows.append(dict(row))
+        if rows:
+            break
+    return rows
+
+
+def _load_prodigy_research_rows(root: Path) -> list[dict[str, Any]]:
+    path = Path(root) / 'intelligence' / 'prodigy-top10-latest.json'
+    if not path.is_file():
+        path = _repo_config_root() / 'intelligence' / 'prodigy-top10-latest.json'
+    if not path.is_file():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError, TypeError):
+        return []
+    if not isinstance(payload, dict) or payload.get('mode') != 'PRODIGY_RANK_RESEARCH_ONLY':
+        return []
+    out: list[dict[str, Any]] = []
+    for row in payload.get('top_10_research') or payload.get('providers') or []:
+        if isinstance(row, dict):
+            out.append(dict(row))
+    return out
+
+
+def _unique_tradingview_origins(signals: list[dict[str, Any]]) -> list[str]:
+    seen: set[str] = set()
+    origins: list[str] = []
+    for row in signals:
+        if not isinstance(row, dict):
+            continue
+        origin = str(row.get('origin') or row.get('source') or '').strip()
+        if not origin or origin.lower() == 'unknown':
+            continue
+        key = origin.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        origins.append(origin)
+    return sorted(origins, key=str.lower)
+
+
+def build_preapproval_queue(
+    root: Path,
+    conn_factory: Callable[..., Any] | None,
+    signals: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    ledger = _provider_approval_map(conn_factory)
+    seen: set[tuple[str, str]] = set()
+    queue: list[dict[str, Any]] = []
+
+    def add(platform: str, provider_id: str, metrics_row: dict[str, Any] | None, *, seed: bool = False) -> None:
+        pid = str(provider_id or '').strip()
+        if not pid:
+            return
+        key = (platform, pid)
+        if key in seen:
+            return
+        seen.add(key)
+        row = ledger.get(key)
+        if row:
+            status = row['status']
+            source = row['source']
+        elif seed and platform == 'collective2':
+            status = 'pending'
+            source = _c2_seed_source_for_id(root, pid)
+        else:
+            status = 'pending'
+            source = 'discovered'
+        queue.append(
+            {
+                'platform': platform,
+                'provider_id': pid,
+                'status': status,
+                'source': source,
+                'metrics': _overlay_research_metrics(metrics_row or {}),
+                'metrics_label': PREAPPROVAL_METRICS_LABEL,
+            }
+        )
+
+    metrics_by_c2: dict[str, dict[str, Any]] = {}
+    for row in _load_c2_research_rows(root):
+        pid = row.get('provider_id') or row.get('provider')
+        if pid is not None:
+            metrics_by_c2[str(pid).strip()] = row
+            add('collective2', str(pid), row)
+
+    for pid in load_c2_paper_copy_approved_ids(root):
+        add('collective2', pid, metrics_by_c2.get(pid), seed=True)
+
+    for row in _load_prodigy_research_rows(root):
+        pid = row.get('provider') or row.get('provider_id')
+        if pid is not None:
+            add('prodigy', str(pid), row)
+
+    sigs = signals if signals is not None else []
+    for origin in _unique_tradingview_origins(sigs):
+        add('tradingview', origin, None)
+
+    queue.sort(key=lambda item: (item['platform'], item['provider_id']))
+    return {'queue': queue, 'metrics_label': PREAPPROVAL_METRICS_LABEL}
+
+
 _C2_ALLOWLIST_FILENAME = 'c2_paper_copy_allowlist.json'
 _C2_NAMED_ID_RE = re.compile(r'^\d+$')
 _C2_SNAPSHOT_NOT_TICKET_PT = (
@@ -1002,14 +1262,14 @@ def _load_c2_research_candidates(root: Path) -> list[dict[str, Any]]:
             pid_text = str(pid).strip()
             if not pid_text:
                 continue
-            candidates.append(
-                {
-                    'provider_id': pid_text,
-                    'name': row.get('name') or pid_text,
-                    'label': 'research_only',
-                    'eligible_for_copy': False,
-                }
-            )
+            item = {
+                'provider_id': pid_text,
+                'name': row.get('name') or pid_text,
+                'label': 'research_only',
+                'eligible_for_copy': False,
+            }
+            item.update(_overlay_research_metrics(row))
+            candidates.append(item)
         if candidates:
             break
     return candidates
@@ -1102,7 +1362,7 @@ def _build_copy_adoption(strategy_catalog: dict[str, Any] | None) -> dict[str, A
         'Risco paper inicial sugerido: R$ 20; fase padrão pesquisa; ranking não promove sozinho.',
         'Fases: pesquisa, sombra, paper limitado, paper validado — promoção somente operador.',
         'Live desligado; fase não sobe por lucratividade aparente nem HTTP 200.',
-        'Collective2: cópia paper só para identificadores na lista nomeada (padrão vazia = fechada).',
+        'Collective2: cópia paper só após pré-aprovação no painel; JSON/ambiente são semente se não houver decisão no livro-razão.',
         'Performance e inventário: somente fill confirmado (valores brutos se o custo faltar).',
     ]
     return {
@@ -1141,10 +1401,12 @@ def build_panel_copy(
     research_copies: list[dict[str, Any]],
     *,
     strategy_catalog: dict[str, Any] | None = None,
+    conn_factory: Callable[..., Any] | None = None,
+    signals: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     operating = _signal_copy_rows(open_orders)
     history = _signal_copy_rows(order_history)
-    approved_ids = load_c2_paper_copy_approved_ids(root)
+    approved_ids = resolve_c2_paper_copy_approved_ids(root, conn_factory)
     collective2 = _build_collective2_block(root, approved_ids)
     c2_operating = _collective2_operating_rows(open_orders, order_history)
     adoption = _build_copy_adoption(strategy_catalog)
@@ -1160,6 +1422,7 @@ def build_panel_copy(
         'inventory': _build_copy_inventory(operating, history),
         'adoption': adoption,
         'prodigy_pool': _build_prodigy_pool(root),
+        'preapproval': build_preapproval_queue(root, conn_factory, signals=signals),
     }
 
 
@@ -1179,9 +1442,10 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
     open_orders = load_panel_open_orders(root, conn_factory)
     order_history = load_panel_order_history(root, conn_factory)
     strategy_catalog = load_panel_strategy_catalog(conn_factory)
+    signals = load_panel_signals(root, conn_factory, flags)
     return {
         'generated_at': datetime.now(timezone.utc).isoformat(),
-        'signals': load_panel_signals(root, conn_factory, flags),
+        'signals': signals,
         'open_orders': open_orders,
         'order_history': order_history,
         'prodigy': {
@@ -1197,6 +1461,8 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
             perf,
             research_copies,
             strategy_catalog=strategy_catalog,
+            conn_factory=conn_factory,
+            signals=signals,
         ),
         'strategy_catalog': strategy_catalog,
         'timesfm': load_panel_timesfm(root),

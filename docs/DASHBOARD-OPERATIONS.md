@@ -76,7 +76,7 @@ Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está
 | Ver âncoras, mercados, freio | `GET /` (Central) após login |
 | Ativar freio | Com o freio liberado, só aparece **Ativar freio** na faixa da Central → `PATCH /api/triggers` com `kill_switch_on: true` (cookie obrigatório). |
 | Liberar freio | Com o freio ativo, só aparece **Liberar freio** na faixa → `PATCH /api/triggers` com `kill_switch_on: false` (cookie obrigatório). Liberar o freio não liga a operação demo (`demo_operation_on` permanece separado). |
-| Ver cópia de terceiros, proveniência ordem↔sinal, inventário, critérios de adoção, pool Prodígio (pesquisa) + auditoria de ingresso | `GET /sinais` ou `GET /api/signals` (objeto `copy` com `inventory`, `adoption`, `prodigy_pool` + lista `signals`) |
+| Ver cópia de terceiros, fila de pré-aprovação, proveniência ordem↔sinal, inventário, critérios de adoção, pool Prodígio (pesquisa) + auditoria de ingresso | `GET /sinais` ou `GET /api/signals` (objeto `copy` com `preapproval`, `inventory`, `adoption`, `prodigy_pool` + lista `signals`). Decisão: `POST /api/signals/providers` (sessão obrigatória; não envia ordem). |
 | Ver catálogo de fases (somente leitura) | `GET /estrategias` ou `GET /api/estrategias` |
 | Ver dicas Análise Google (só pesquisa) | `GET /analise-google` ou `GET /api/analise-google` |
 | Ver ranking Prodígio | `GET /prodigy` |

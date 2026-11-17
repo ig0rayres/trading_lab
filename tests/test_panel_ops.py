@@ -15,12 +15,16 @@ from gate_b_risk import evaluate_signed_signal
 from panel_ops_html import render_central_page
 from panel_ops_data import (
     PERFORMANCE_LABEL_GROSS,
+    PREAPPROVAL_METRICS_LABEL,
     blocked_context,
     build_panel_bundle,
+    build_preapproval_queue,
     load_c2_paper_copy_approved_ids,
     load_panel_signals,
     performance_from_snapshots,
+    resolve_c2_paper_copy_approved_ids,
     signal_destination,
+    upsert_signal_provider_approval,
 )
 from v4_web_dashboard import build_snapshot, make_handler
 
@@ -42,6 +46,101 @@ def _get(url, *, session=None):
     if session:
         headers['Cookie'] = 'trading_lab_session=' + session
     return Request(url, headers=headers)
+
+
+def _post(url, body, *, session=None):
+    headers = {'Content-Type': 'application/json'}
+    if session:
+        headers['Cookie'] = 'trading_lab_session=' + session
+    return Request(url, data=json.dumps(body).encode('utf-8'), headers=headers, method='POST')
+
+
+def _write_c2_research_fixture(root: Path, *, provider_id: str = '501', win_rate: float = 55.0) -> None:
+    intel = root / 'intelligence'
+    intel.mkdir(parents=True, exist_ok=True)
+    (intel / 'provider-research-top10-latest.json').write_text(
+        json.dumps(
+            {
+                'top_10_research': [
+                    {
+                        'provider_id': provider_id,
+                        'name': 'C2-%s' % provider_id,
+                        'win_rate_pct': win_rate,
+                        'reported_pnl_sum': 900.25,
+                    }
+                ]
+            }
+        ),
+        encoding='utf-8',
+    )
+
+
+class _ApprovalsMemoryCursor:
+    def __init__(self, store):
+        self._store = store
+        self._all = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def execute(self, sql, params=None):
+        params = params or ()
+        normalized = ' '.join(sql.split())
+        if 'FROM signal_provider_approvals ORDER' in normalized:
+            self._all = [
+                (
+                    row['platform'],
+                    row['provider_id'],
+                    row['status'],
+                    row['source'],
+                    None,
+                )
+                for row in self._store['signal_provider_approvals'].values()
+            ]
+            return
+        if normalized.startswith('INSERT INTO signal_provider_approvals'):
+            platform, provider_id, status = params[:3]
+            key = (platform, provider_id)
+            self._store['signal_provider_approvals'][key] = {
+                'platform': platform,
+                'provider_id': provider_id,
+                'status': status,
+                'source': 'panel',
+            }
+            return
+        raise AssertionError('unexpected SQL: %s' % normalized)
+
+    def fetchall(self):
+        return self._all or []
+
+    def fetchone(self):
+        return None
+
+
+class _ApprovalsMemoryConn:
+    def __init__(self, store):
+        self._store = store
+
+    def cursor(self):
+        return _ApprovalsMemoryCursor(self._store)
+
+    def commit(self):
+        return None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+def _approvals_memory_connect(store):
+    def connect():
+        return _ApprovalsMemoryConn(store)
+    return connect
 
 
 def _write_webhook_journal(root: Path, rows: list[dict]) -> None:
@@ -1654,6 +1753,142 @@ class PanelKillSwitchCycleTests(unittest.TestCase):
                 conn_factory=conn_factory,
             )
         self.assertEqual(decision['reject_code'], 'KILL_SWITCH')
+
+
+N51_PREAPPROVAL_SECTION = 'Pré-aprovação de provedores'
+N51_PREAPPROVAL_EMPTY = 'Nenhum candidato em pré-aprovação.'
+
+
+class PanelSinaisN51Tests(unittest.TestCase):
+    def _server(self, root, *, connect_factory=None, session='panel-secret'):
+        handler = make_handler(
+            root,
+            operator_session=session,
+            connect_factory=connect_factory,
+        )
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n51_preapproval_metrics_reused_not_zero(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='777', win_rate=61.2)
+            queue = build_preapproval_queue(root, None, signals=[])
+            item = queue['queue'][0]
+            self.assertEqual(item['metrics']['win_rate_pct'], 61.2)
+            self.assertEqual(item['metrics_label'], PREAPPROVAL_METRICS_LABEL)
+            self.assertNotIn('eligible', item['metrics'])
+
+    def test_n51_tradingview_without_rank_unavailable(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            signals = [{'origin': 'tradingview:alerts', 'source': 'tradingview', 'symbol': 'SPY'}]
+            queue = build_preapproval_queue(root, None, signals=signals)
+            tv = [r for r in queue['queue'] if r['platform'] == 'tradingview'][0]
+            self.assertEqual(tv['metrics'], {})
+
+    def test_n51_reject_beats_seed(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, ['100'])
+            store = {'signal_provider_approvals': {}}
+            conn = _approvals_memory_connect(store)
+            upsert_signal_provider_approval(conn, 'collective2', '100', 'reject')
+            ids = resolve_c2_paper_copy_approved_ids(root, conn)
+            self.assertNotIn('100', ids)
+
+    def test_n51_seed_without_ledger_still_eligible(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, ['200'])
+            ids = resolve_c2_paper_copy_approved_ids(root, None)
+            self.assertEqual(ids, ['200'])
+
+    def test_n51_html_preapproval_section(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N51_PREAPPROVAL_SECTION, body)
+                self.assertIn('55.0', body)
+                self.assertIn('Aprovar', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n51_post_providers_requires_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            server, thread, base = self._server(root)
+            try:
+                req = _post(
+                    base + '/api/signals/providers',
+                    {'platform': 'collective2', 'provider_id': '1', 'action': 'approve'},
+                )
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(req, timeout=3)
+                self.assertEqual(caught.exception.code, 401)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n51_post_providers_persists_approve(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            store = {'signal_provider_approvals': {}}
+            server, thread, base = self._server(root, connect_factory=_approvals_memory_connect(store))
+            try:
+                req = _post(
+                    base + '/api/signals/providers',
+                    {'platform': 'collective2', 'provider_id': '42', 'action': 'approve'},
+                    session='panel-secret',
+                )
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.loads(resp.read().decode('utf-8'))
+                self.assertEqual(payload['status'], 'approved')
+                self.assertFalse(payload.get('execution_authorized'))
+                self.assertEqual(payload.get('orders_sent'), 0)
+                key = ('collective2', '42')
+                self.assertEqual(store['signal_provider_approvals'][key]['status'], 'approved')
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n51_post_root_still_read_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            server, thread, base = self._server(root)
+            try:
+                req = _post(base + '/api/orders', {}, session='panel-secret')
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(req, timeout=3)
+                self.assertEqual(caught.exception.code, 405)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n51_api_signals_json_preapproval(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.loads(resp.read().decode('utf-8'))
+                pre = payload['copy']['preapproval']
+                self.assertIn('queue', pre)
+                self.assertTrue(pre['queue'])
+            finally:
+                self._shutdown(server, thread)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

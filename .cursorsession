@@ -232,13 +232,10 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
+      "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "e9687ad8756bfd0d97b90c180026bbf0779a79f3",
-      "stamped_at": "2026-11-17T17:42:53Z",
+      "last_validated_sha": "aba6d36edd3ab111d2daef6d5cb5b50275191631",
+      "stamped_at": "2026-11-17T17:43:28Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

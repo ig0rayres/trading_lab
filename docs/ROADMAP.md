@@ -75,6 +75,7 @@
 | N48 | N | Sinais = cópia de terceiros + auditoria; sem fill inventado; LIVE false | concluida | 5 | observability | ISS-018 alinhamento Sinais↔copy | *(abaixo)* |
 | N49 | N | Ordem paper mostra o sinal; inventário e critérios visíveis; LIVE false | planejada | 6 | observability | ISS-019 proveniência e pool | *(abaixo)* |
 | N50 | N | Lista nomeada Collective2; Sinais em operação vs auditoria vs Prodígio; Provedor visível; LIVE false | planejada | 6 | observability | ISS-020 C2 + reorganizar Sinais | *(abaixo)* |
+| N51 | N | Fila de pré-aprovação no painel com métricas de pesquisa; aprovar não envia ordem; LIVE false | planejada | 6 | observability, ledger | ISS-021 pré-aprovação + métricas | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -4553,13 +4554,265 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `do
 
 ---
 
+## Sprint N51 — Colocar a pré-aprovação de provedores no painel com métricas de pesquisa
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-021 · Feature 4 já define lista nomeada (Passo 2: revisar política para o painel, não inventar score)  
+> titulo_humano: Pré-aprovação no painel com métricas de pesquisa  
+> resumo_humano: Depois do login você vê uma fila de provedores novos, com percentual de acertos e ganho só quando o ranking de pesquisa já gravou o campo. Aprovar ou rejeitar é no painel e não envia ordem. Arquivo e ambiente viram semente.  
+> Gate: Requisitos com pré-aprovação no painel (arquivo/ambiente = semente); fila com métricas reutilizadas; aprovar/rejeitar autenticado persiste; rejeitado não volta pela semente; sessão obrigatória; zero envio; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N51.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N50 planejada/entregue · N49 planejada · N48 concluida · Release: ISS-021 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Todo provedor de sinal novo entra numa fila de pré-aprovação no painel; você aprova ou rejeita logado, vendo as métricas de pesquisa já gravadas, e isso não envia ordem.
+
+### O que muda para você
+
+- Aprovar ou rejeitar um provedor passa a ser um clique no painel, não editar lista, variável de ambiente ou rebuild
+- A fila mostra percentual de acertos, resultado reportado e demais campos já existentes no ranking de pesquisa; se o campo não existir, aparece indisponível — sem fórmula nova
+- A mesma regra vale para Collective2, Prodígio, TradingView e fontes futuras
+- Aprovar não é fill e não dispara ordem; dinheiro real permanece desligado
+- A lista em arquivo e a variável de ambiente ficam só como semente se o livro-razão ainda não tiver decisão
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Política de pré-aprovação no painel | Ler os requisitos: o caminho do dia a dia é aprovar no painel; arquivo e ambiente são semente; ranking não aprova sozinho |
+| 2 | Fila persistida | Depois de um rebuild, a decisão de aprovar ou rejeitar continua; um rejeitado não volta pela semente |
+| 3 | Métricas visíveis na decisão | Na fila, cada candidato mostra acertos e ganho só se o campo já existir no ranking; falta = indisponível, rotulado pesquisa |
+| 4 | Aprovar e rejeitar no painel | Logado, clicar aprovar ou rejeitar muda o status; sem login a ação é recusada; nenhum controle de envio de ordem |
+| 5 | Mapa e chamado atualizados | O mapa descreve a fila; o chamado ISS-021 aponta esta sprint |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N51.0 Inventariar o reuso da fila de pré-aprovação e das métricas já gravadas | `/git` | — |
+| [ ] | P | N51.1 Atualizar a política de aprovação nos requisitos | docs | N51.0 |
+| [ ] | M | N51.2 Persistir as decisões no livro-razão e montar a fila com métricas reutilizadas | `/dev` | N51.1 |
+| [ ] | M | N51.3 Mostrar a fila no painel com aprovar, rejeitar e métricas visíveis | `/dev` | N51.2 |
+| [ ] | P | N51.4 Provar fila, métricas reutilizadas, recusa sem login e ausência de envio | `/qa testes` | N51.3 |
+| [ ] | P | N51.5 Atualizar o mapa e o chamado depois da fila no painel | docs | N51.4 |
+
+### Quality Brief (Sprint N51)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; approval is not a fill.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds; do not call `prodigy_rank.calculate` or Collective2 HTTP from the panel.
+Maintain: confirmed fills only; `queued_intent` and HTTP 200 are not fills; gross label when costs incomplete.
+Maintain: N50 JSON/env is seed/fallback; ledger reject wins; rank eligibility is not paper-copy approval; H10 remains historical.
+Avoid: mutating `control_flags`; parallel `/aprovacoes`; filling missing metrics with 0; stealing N45–N47; closing ISS-007/010/011/017/019/020; auto-promote; printing API keys.
+
+### Fora de escopo
+
+- Inventar fórmula de assertividade ou score composto
+- Tratar ranking como aprovação de cópia paper
+- Chamar o poller Collective2 ou o cálculo de ranking a partir do painel
+- POST ou cancelamento de ordem pelo painel
+- Alterar âncoras de risco
+- Reescrever o webhook TradingView
+- Aprovar em lote os dez candidatos históricos
+- Tela própria de Tá Barato (N45)
+- Clear / OANDA / N29.5
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-017 / ISS-019 / ISS-020
+- Roubar identificadores N45–N47
+
+### Task N51.0 — Inventariar o reuso da fila de pré-aprovação e das métricas já gravadas
+
+**Entrega:** Inventário curto dizendo que a sessão do painel e a lista nomeada já existem, que o ranking já emite percentual de acertos e ganho, e que o livro-razão ainda não guarda decisão de provedor.
+**Como conferir:** O inventário cita sessão autenticada, semente da lista nomeada, campos de ranking reutilizáveis, tabela nova no livro-razão, e deixa envio pelo painel, fórmula nova e os dez candidatos automáticos de fora.
+**Por quê:** Sem essa lista o EXECUTE inventa score, reabre variável de ambiente como caminho do operador, ou dispara ordem ao aprovar.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N51-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `operator_session_authorized`; `load_c2_paper_copy_approved_ids`; `prodigy_rank` `win_rate_pct` / `profit_factor_reported` / `reported_pnl_sum`; `provider_rank` `net_return_pct`; `ledger_migrate` 001+002; Feature 4 / H10. Do not plan Alpaca HTTP from the panel. Do not steal N45–N47. Do not invent an assertiveness formula.
+
+### Task N51.1 — Atualizar a política de aprovação nos requisitos
+
+**Entrega:** Os requisitos passam a dizer que o caminho do dia a dia é pré-aprovar no painel, que arquivo e ambiente são só semente, e que as métricas exibidas são campos já recuperados — com lacuna explícita se o nome pedido pelo operador não existir no código.
+**Como conferir:** Abrir os requisitos: Feature 4, integrações e fora de escopo falam em fila no painel; a linha H10 ainda descreve os dez candidatos daquele corte; percentual de acertos aponta para o campo já gravado no ranking.
+**Por quê:** Ligar o clique sem gravar a política deixaria o contrato na lista em arquivo que o operador recusou.
+
+**Detalhe técnico**
+
+P task (docs-only). File: `docs/REQUIREMENTS.md` bump to **v0.6** with a revision-history row. Rewrite Feature 4 signal-copy paragraph and acceptance bullet: every new provider candidate enters a pre-approval queue; approve/reject is the authenticated panel; N50 `config/c2_paper_copy_allowlist.json` and `C2_PAPER_COPY_APPROVED_IDS` are seed/fallback when the ledger has no row for that id; a ledger reject wins. Display `win_rate_pct` as percentual de acertos (pesquisa); there is **no** recovered field named assertividade — document the gap; never invent a composite. H10 row stays historical. §5 Integrações Collective2: marketplace + panel pre-approval; panel does not call the API. §7 Fora de Escopo: forbid copy of a provider not approved in the panel (except seed until first decision); forbid treating rank eligible as approval; forbid panel order POST. Do not invent scores, windows, or min-trades. Do not mark Feature 4 checkboxes as newly proven paper fills. LIVE false.
+
+### Task N51.2 — Persistir as decisões no livro-razão e montar a fila com métricas reutilizadas
+
+**Entrega:** O pacote do painel monta uma fila de candidatos de qualquer fonte, com status pendente/aprovado/rejeitado gravado no livro-razão, e anexa só as métricas que o ranking de pesquisa já tiver.
+**Como conferir:** Pedir o teste de dados em que a fila nasce pendente, um aprovado persiste, um rejeitado não volta pela semente, e um candidato sem campo de ranking mostra indisponível — nunca zero inventado.
+**Por quê:** Hoje a lista nomeada some no rebuild ou exige editar arquivo; o ranking já tem os números e o painel não os mostra para decidir.
+
+**Detalhe técnico**
+
+- **Estado atual:** `load_c2_paper_copy_approved_ids` unions committed JSON + env. No SQL table for provider adoption. Candidate loader drops rank metrics. `control_flags` is risk anchors only.
+- **Estado desejado:** migration `003` table `signal_provider_approvals`; queue union of discovered candidates; metrics overlay from on-disk rank JSON; seed only when no ledger row; reject wins. No HTTP, no tickets, no new score.
+- **Fonte(s):** ISS-021, Feature 4 / H10, `prodigy_rank` fields, N50 `build_panel_copy`, `ledger_migrate` 002 pattern.
+- **Risco:** MEDIUM — env overlay resurrecting a reject, or inventing metrics, would violate the operator contract.
+- **Arquivo(s):** `src/panel_ops_data.py`, `src/ledger_migrate.py`, `migrations/003_signal_provider_approvals_up.sql`, `migrations/003_signal_provider_approvals_down.sql`
+
+**executor_prompt**:
+
+```yaml
+id: N51.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N51.1"]
+files:
+  - src/panel_ops_data.py
+  - src/ledger_migrate.py
+  - migrations/003_signal_provider_approvals_up.sql
+  - migrations/003_signal_provider_approvals_down.sql
+reuse_targets:
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "def load_c2_paper_copy_approved_ids" src/panel_ops_data.py && rg "preapproval" src/panel_ops_data.py && rg "signal_provider_approvals" src/panel_ops_data.py
+  - component: src/ledger_migrate.py
+    reuse_as: extend
+    convergence_check: rg "VERSION_TRIGGERS" src/ledger_migrate.py && rg "001_ledger" src/ledger_migrate.py
+  - component: migrations/002_triggers_up.sql
+    reuse_as: copy_pattern
+    convergence_check: rg "CREATE TABLE IF NOT EXISTS trigger_changes" migrations/002_triggers_up.sql && rg "schema_migrations" migrations/002_triggers_up.sql
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: rg "win_rate_pct" src/prodigy_rank.py && ! rg "def calculate" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n51-2-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text()+Path('src/ledger_migrate.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: loaders and migrate do not embed Collective2 or broker keys
+  - class: subagent-safety
+    id: n51-2-ledger-not-risk-anchors
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; d=Path('src/panel_ops_data.py').read_text(); m=Path('src/ledger_migrate.py').read_text(); t=Path('migrations/002_triggers_up.sql').read_text(); assert 'process_after_gate_b' not in d; assert 'fetch_orders' not in d; assert 'VERSION_TRIGGERS' in m; assert 'control_flags' in t"
+    pass_condition: no paper submit from panel loader; 003 must not alter control_flags (file tests in N51.4)
+```
+
+### Quality Brief (Sprint N51)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds; do not call prodigy_rank.calculate or Collective2 HTTP from the panel.
+Maintain: confirmed fills only; queued_intent is not a fill; PERFORMANCE_LABEL_GROSS when costs incomplete.
+Maintain: N50 JSON/env seed only; ledger reject wins; rank eligible is not approval.
+Avoid: mutating control_flags; filling missing metrics with 0; bulk-approving H10 ten; synthesizing tickets.
+
+Melhoria: persist provider pre-approval in the ledger and attach recovered research metrics to a unified queue.
+Contexto: Operator rejected JSON/env/rebuild as the daily path. prodigy_rank already has win_rate_pct, shrunk_win_rate_pct, profit_factor_reported, reported_pnl_sum, prodigy_score. provider_rank has win_rate_pct, net_return_pct, max_drawdown_pct, score. No recovered field named assertividade. control_flags is risk anchors — do not migrate those.
+Objetivo: (1) Add migrations/003_signal_provider_approvals_up.sql creating signal_provider_approvals (platform, provider_id, status pending|approved|rejected, source panel|seed_json|seed_env, decided_at, timestamps, unique platform+provider_id). Down drops only that table. (2) Extend ledger_migrate apply/status/rollback for 003 without rewriting 001/002. (3) Discover candidates from existing on-disk C2 rank/history, Prodígio pool, and unique TradingView origins already in the copy/signals bundle — do not call calculate/fetch. (4) Overlay metrics dict with only present recovered keys; never coerce missing to 0. (5) Eligibility: ledger approved ∪ (N50 seed ids with no ledger row); ledger rejected excluded even if still in JSON/env. (6) copy.preapproval.queue on build_panel_copy. (7) copy.collective2.approved_ids follows eligibility. (8) Do not import signal_copy. Do not import process_after_gate_b. Do not import prodigy_rank.calculate. LIVE false.
+Arquivos: src/panel_ops_data.py, src/ledger_migrate.py, migrations/003_signal_provider_approvals_up.sql, migrations/003_signal_provider_approvals_down.sql.
+Critério de pronto: 003 SQL exists; rg shows signal_provider_approvals and win_rate_pct in panel_ops_data; C2_API4_KEY absent; no ALTER TABLE control_flags in 003; no fetch_orders in panel_ops_data.
+Cenários de teste (implement in N51.4):
+1. No ledger rows + empty seed → queue pending or empty honest; approved_for_paper_copy false.
+2. Seed id without ledger row → appears approved with source seed; not mixed into invented fills.
+3. Ledger reject of a seed id → excluded from approved_ids; still listed as rejected.
+4. Rank fixture with win_rate_pct → queue item metrics include that field labeled research_only.
+5. Rank fixture missing net_return_pct → key absent or indisponível; not 0.
+6. TradingView origin without rank JSON → metrics empty/indisponível.
+7. Regressão: copy.operating/history/inventory/adoption/prodigy_pool and N50 collective2 snapshot-not-ticket still present.
+
+### Task N51.3 — Mostrar a fila no painel com aprovar, rejeitar e métricas visíveis
+
+**Entrega:** A mesma tela Sinais ganha a fila de pré-aprovação em português, com botões de aprovar e rejeitar só para quem está logado, métricas de pesquisa visíveis, e sem botão de enviar ordem.
+**Como conferir:** Abrir o painel logado, clicar em Sinais, ver a fila, aprovar um pendente e ver o status mudar; sair da sessão e confirmar que a ação é recusada; confirmar que não existe controle de envio.
+**Por quê:** Sem a superfície autenticada o operador continua dependendo de arquivo, ambiente ou rebuild — exatamente o que recusou.
+
+**Detalhe técnico**
+
+- **Estado atual:** `render_signals_page` has N50 sections; `do_POST` allows login + strategy-parameters only, else 405 Read only. No provider approve POST.
+- **Estado desejado:** Portuguese section Pré-aprovação de provedores; Aprovar/Rejeitar posts to `/api/signals/providers`; session required; metrics columns from recovered fields; footer still says the panel does not send orders.
+- **Fonte(s):** ISS-021 diretrizes 1–3, OPERATOR-PANEL-MAP §2, N50 HTML shell, `operator_session_authorized`.
+- **Risco:** MEDIUM — a button that submits paper, or metrics shown as proven edge, would break Feature 4/10.
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N51.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N51.2"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def render_signals_page" src/panel_ops_html.py && rg "Pré-aprovação de provedores" src/panel_ops_html.py && rg "Aprovar" src/panel_ops_html.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: copy_pattern
+    convergence_check: rg "operator_session_authorized" src/v4_web_dashboard.py && rg "/api/signals/providers" src/v4_web_dashboard.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/api/signals" src/v4_web_dashboard.py && rg "serve_panel_json" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n51-3-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no live keys or Collective2 API key in HTML or dashboard routes
+  - class: subagent-safety
+    id: n51-3-approve-not-order
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); dash=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in html; assert 'process_after_gate_b' not in dash; assert 'Pré-aprovação de provedores' in html; assert '/api/signals/providers' in dash; assert 'paper-api.alpaca.markets' not in dash"
+    pass_condition: same /sinais route; preapproval visible; dashboard still does not call paper submit
+```
+
+### Quality Brief (Sprint N51)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of /sinais and POST; do not add a parallel route.
+Maintain: Feature 9 ingest table remains; N50 operation/audit/Prodígio headings remain.
+Maintain: metrics labeled pesquisa; missing field Portuguese indisponível; Aprovar não envia ordem.
+Avoid: Live button; order submit/cancel; calling signal_copy.validate; rewriting Feature 4 numbers; listing H10 ten as approved.
+
+Melhoria: extend authenticated GET /sinais and POST /api/signals/providers with a pre-approval queue and reused research metrics.
+Contexto: N50 still requires JSON/env as the operator path. Operator 2026-11-17 demanded panel approve/reject and metrics that weigh the decision.
+Objetivo: (1) Keep OPERATOR_PANEL_PATHS and _nav Sinais → /sinais (no /copy, no /aprovacoes). (2) Section `Pré-aprovação de provedores` with table: plataforma, identificador, status, percentual de acertos (pesquisa), resultado reportado (pesquisa), ações Aprovar/Rejeitar. (3) Empty: `Nenhum candidato em pré-aprovação.` (4) Subtitle: `Pesquisa — não autoriza ordem. Aprovar não é fill.` (5) POST /api/signals/providers JSON {platform, provider_id, action} only when operator_session_authorized; 401 otherwise; 422 invalid; 503 ledger unavailable. (6) serve_panel_json /api/signals includes copy.preapproval from N51.2. (7) Footer unchanged: painel não envia ordem. Live desligado. (8) Copy authenticated mutation pattern from strategy-parameters POST (JSON body, respond_mutation) — do not call Alpaca. (9) Portuguese UI. LIVE false.
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /sinais HTML contains Pré-aprovação de provedores and Aprovar; unauthenticated POST 401; OPERATOR_PANEL_PATHS still has no /copy; process_after_gate_b absent from both files.
+Cenários de teste (implement in N51.4):
+1. Sem cookie → GET /sinais redirect/401; POST /api/signals/providers 401.
+2. Fila vazia → string nenhum candidato.
+3. Candidato com win_rate_pct → célula mostra o número e o rótulo pesquisa.
+4. Candidato sem métricas → indisponível, não 0.
+5. POST approve autenticado → status aprovado no GET seguinte; HTML sem controle de envio.
+6. Regressão: /ordens /historico /estrategias /performance /central /prodigy and N50 headings still render.
+
+### Task N51.4 — Provar fila, métricas reutilizadas, recusa sem login e ausência de envio
+
+**Entrega:** Testes mostram fila pendente, aprovação persistida, rejeição vencendo a semente, métricas só quando o campo existe, recusa sem login, migration da tabela nova, e que a página não envia ordem nem inventa fill.
+**Como conferir:** Pedir essa bateria e ver falha se a semente reaprovar um rejeitado, se faltar métrica virar zero, se aparecer controle de envio, ou se a tabela nova alterar âncoras de risco.
+**Por quê:** Sem prova, o mapa poderia marcar completo com a lista em arquivo ainda sendo o caminho do operador.
+
+**Detalhe técnico**
+
+P task. Files: `tests/test_panel_ops.py`, `tests/test_ledger_migration.py` (extend; 2 files). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated GET/POST; empty queue Portuguese; approve persists; reject wins over seed; win_rate_pct displayed from fixture; missing metric not 0; TradingView without rank → indisponível; 003 SQL creates signal_provider_approvals and does not ALTER control_flags; no process_after_gate_b / order form; regression N48–N50 headings and inventory/adoption. Do not call real Alpaca or Collective2 HTTP. Do not put C2_API4_KEY in tests. LIVE false in env. No secret values.
+
+### Task N51.5 — Atualizar o mapa e o chamado depois da fila no painel
+
+**Entrega:** O mapa descreve a fila de pré-aprovação e o significado de cada métrica; o chamado ISS-021 aponta esta sprint; a campanha e o épico antigo continuam abertos.
+**Como conferir:** Abrir o mapa na área Sinais: fila, semente, métricas pesquisa, aprovar não envia ordem; ISS-021 ligado a N51; ISS-017, ISS-019, ISS-020 e o épico antigo do painel único continuam abertos.
+**Por quê:** Sem esse recorte, a próxima rodada acha que a lista em arquivo ainda é o caminho do dia a dia ou que a campanha fechou.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/DATABASE.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-021 keep **aberto** until EXECUTE evidence + operator confirm; ISS-020 keep **aberto** unless operator already closed; ISS-019 keep **aberto**; ISS-017 keep **aberto**; ISS-007 keep open). Update area 2 Sinais: Pré-aprovação; recovered metrics table; seed vs ledger; real empty queue string. DATABASE § new 003 note — do not rewrite §6 risk anchors. DASHBOARD-OPERATIONS «Ver sinais» mentions the queue. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017 / ISS-019 / ISS-020. Do not claim EasyPanel rebuild. Do not mark N45–N47 started. LIVE false.
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
 |------|--------|-------|
 | Estratégias Ta Barato / Prodigy / momentum (fórmulas) | LEGACY-ANALYSIS | N7 cobre fases; **não** inventar limiares de scoring |
 | Walk-forward / Lean | RESEARCH_ROADMAP | Motor separado |
-| Collective2 paper-copy | Feature 4 / N50 | Lista nomeada (padrão vazia); H10 permanece histórico; não aprovar os dez em lote |
+| Collective2 paper-copy | Feature 4 / N51 | Pré-aprovação no painel (N50 JSON/env = semente); H10 histórico; não aprovar os dez em lote |
 | CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria (fora de N8) |
 | Submodule pin vs clone raso | D1 | Preferir pin revisado, não `main` cego |
 | F-003 orb-parity (`parity.py`) | D1 / FINDINGS | **Congelado até N12.4/ISS-005** (fill Feature 5); N13 repo não descongela |

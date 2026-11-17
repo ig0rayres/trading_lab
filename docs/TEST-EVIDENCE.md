@@ -452,3 +452,15 @@ LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_platfor
 ```
 
 **Operador:** rebuild EasyPanel `trading-lab` necessário para ver o semáforo em produção — fora desta evidência pytest.
+
+## Sprint N44 — Passeio painel US + cripto (ISS-017 onda 4)
+
+> `LIVE_TRADING_ENABLED=false` · **roteiro** `docs/HOMOLOGATION.md` § **Homologar operar US + cripto pelo menu do painel** · **pytest ≠ passeio** · **não** colar tokens, chaves Alpaca nem ids completos  
+> O agente **não** preenche estas linhas — só o operador, após rebuild EasyPanel e caminhada real no menu.
+
+| Critério / mercado | Evidência (operador redige) | Status | Resultado |
+|--------------------|-----------------------------|--------|-----------|
+| N44 passeio **US equity** — Sinais → Ordens → confirmação corretora → Histórico → Performance | *(pendente)* | pendente | — |
+| N44 passeio **cripto** — mesmos cinco passos com ativo cripto paper | *(pendente)* | pendente | — |
+
+**Não usar como evidência N44:** fill AAPL 2026-10-29 (§ Sprint N20) sozinho; Feature 7 pytest; HTTP 200; fila sem fill; rebuild sem observação no painel publicado.

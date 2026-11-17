@@ -68,7 +68,7 @@
 | N41 | N | Menu Ordens + Histórico (listas); painel sem envio; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 1 | *(abaixo)* |
 | N42 | N | Menu Estratégias com fases; sem promoção; LIVE false | concluida | 5 | observability | Campanha ISS-017 onda 2 | *(abaixo)* |
 | N43 | N | TimesFM / dicas visíveis e rotuladas (não autorizam ordem) | concluida | 5 | observability, research | Campanha ISS-017 onda 3 | *(abaixo)* |
-| N44 | N | Homologar operar US+cripto pelo painel | planejada | stub | docs, operador | Campanha ISS-017 onda 4 | *(abaixo)* |
+| N44 | N | Homologar operar US+cripto pelo painel (roteiro; sem fill inventado) | concluida | 5 | docs, operador | Campanha ISS-017 onda 4 — **runbook entregue; passeio operador pendente** | *(abaixo)* |
 | N45 | N | Tá Barato no menu — bloqueado em N17.2 | planejada | stub | strategy-catalog | Campanha ISS-017 onda 5 | *(abaixo)* |
 | N46 | N | B3 Clear no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 6 | *(abaixo)* |
 | N47 | N | OANDA Practice no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 7 | *(abaixo)* |
@@ -126,7 +126,7 @@
 | N41 | senior+qa | Ordens e histórico no menu do dia a dia; AgentCoder |
 | N42 | senior+qa | stub campanha — catálogo de fases no menu |
 | N43 | senior+qa | Análise Google no menu; TimesFM só pesquisa |
-| N44 | skip | stub campanha — homologação operador US+cripto |
+| N44 | skip | Homologação operador US+cripto pelo painel; zero M; sem src/ |
 | N45 | senior+qa | stub campanha — Tá Barato; não arranca sem N17.2 |
 | N46 | comprehensive | stub campanha — Clear; não arranca sem N29.5 |
 | N47 | comprehensive | stub campanha — OANDA; não arranca sem N29.5 |
@@ -2952,7 +2952,7 @@ P task. Files: `.cursorsession`, `docs/ROADMAP.md` (tick N40.0–N40.4 only; do 
 | 1 | **N41** | Ordens abertas + histórico no menu (listas) | concluida (decomposta abaixo) |
 | 2 | N42 | Estratégias e fases no menu do dia a dia | concluida |
 | 3 | **N43** | TimesFM / dicas visíveis e rotuladas | concluida |
-| 4 | N44 | Homologar operar US+cripto pelo painel | stub; rebuild seu |
+| 4 | **N44** | Homologar operar US+cripto pelo painel | runbook entregue (docs); **passeio operador pendente** |
 | 5 | N45 | Tá Barato no menu | stub; bloqueado em N17.2 |
 | 6 | N46 | B3 via Clear simulada | stub; bloqueado em N29.5 |
 | 7 | N47 | Forex via OANDA Practice | stub; bloqueado em N29.5 |
@@ -3625,11 +3625,119 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `do
 
 ## Sprint N44 — Homologar operar ação americana e cripto pelo painel
 > Categoria: N  
-> Status: planejada  
-> titulo_humano: Percorrer sinal, ordem aberta, fill e resultado sem o Exec  
-> Campanha ISS-017 onda 4 (stub). Depende de N41 no ar + rebuild EasyPanel (você). Não é fill inventado. Clear/OANDA fora. LIVE false.
+> Status: concluida *(entrega docs/runbook N44.0–N44.4; **passeio operador e evidência TEST-EVIDENCE ainda pendentes**)*  
+> Gerado via: `/pmo plan` 2026-11-17 · EXECUTE docs 2026-11-17 · fonte ISS-017 onda 4 · pós-N43 PR #64 · **docs/operador, zero M**  
+> titulo_humano: Percorrer sinal, ordem, fill ou recusa e resultado no painel paper  
+> resumo_humano: Você ganha um roteiro para percorrer no painel o caminho sinal → ordem aberta → fill ou recusa → resultado, em ação americana e cripto na conta paper. Rebuild da imagem publicada continua seu. A suíte de testes não substitui o que você viu. Dinheiro real permanece desligado.  
+> Gate: roteiro do passeio publicado; folha de evidência com linhas pendentes (não inventadas); ISS-017 anotado e aberto; ISS-007/010/011 abertos; zero src/; LIVE false  
+> review: skip  
+> Brief: `docs/.briefs/N44.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N43 concluida · Release: campanha ISS-017 onda 4  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Você ganha um roteiro para percorrer no painel o caminho sinal → ordem aberta → fill ou recusa → resultado, em ação americana e cripto na conta paper — sem o laboratório inventar fill nem ligar dinheiro real.
+
+### O que muda para você
+
+- Reconstruir a imagem do painel publicado continua na sua mão; sem isso o menu novo não aparece no ar
+- O passeio é o critério desta onda — a suíte de testes verde não substitui o que você viu
+- Vazio honesto nas listas não é fill; recusa com motivo conta
+- Bolsa brasileira e câmbio continuam barrados até você credenciar
+- Dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Inventário honesto do que já existe | Abrir o inventário e ver o que o menu e o laço paper já fazem, e quando código entra ou fica de fora |
+| 2 | Roteiro do passeio | Ler o roteiro: ação americana e cripto, o que conta e o que não conta |
+| 3 | Folha de evidência | Ver as linhas pendentes para ação americana e cripto — preenchidas só com o que você viu |
+| 4 | Campanha anotada | Abrir a lista de problemas: a onda 4 está planejada; os chamados da campanha, da bolsa brasileira e do câmbio continuam abertos |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N44.0 Inventariar o que já existe no laço paper e no menu | `/git` | — |
+| [x] | P | N44.1 Escrever o roteiro do passeio no painel | docs | N44.0 |
+| [x] | P | N44.2 Abrir a folha de evidência do passeio | docs | N44.1 |
+| [x] | P | N44.3 Ligar o roteiro na folha do dia a dia e no mapa | docs | N44.1 |
+| [x] | P | N44.4 Anotar a campanha e o diário sem fechar os chamados | docs | N44.2, N44.3 |
+
+### Quality Brief (Sprint N44)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; docs-only sprint — zero diff em `src/`; não inventar fill nem limiar de scoring.
+Maintain: dashboard does not submit or cancel orders; load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds (ISS-010); zero Alpaca POST from this sprint.
+Maintain: **ISS-017 aberto**; **ISS-007 / ISS-010 / ISS-011** permanecem abertos.
+Avoid: treating pytest/HTTP 200/queue/rebuild as fill; Alpaca poll from the panel; Live button; closing the campaign epic without operator walk evidence.
+
+### Fora de escopo
+
+- Qualquer `src/` ou `tests/`
+- Poll HTTP Alpaca a partir do painel
+- POST / cancelamento de ordem pelo painel
+- Inventar fill / limiar / score
+- Clear / OANDA / N29.5 / Tá Barato (N45)
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-013 / ISS-016 / ISS-017
+- Rebuild EasyPanel (você)
+- `LIVE_TRADING_ENABLED=true`
+
+### Task N44.0 — Inventariar o que já existe no laço paper e no menu
+
+**Entrega:** Inventário curto dizendo que as listas do menu e o laço paper já existem, e que esta onda é roteiro — código só se o passeio provar lista cega.
+**Como conferir:** O inventário cita as listas do menu, o laço paper, a evidência antiga de fill e deixa bolsa brasileira, câmbio e envio pelo painel de fora.
+**Por quê:** Sem essa lista o EXECUTE reimplementa o laço ou inventa um fill.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N44-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `load_panel_open_orders` / `load_panel_order_history`; empty strings `Nenhuma ordem aberta no paper.` / `Nenhum fill confirmado no histórico.`; Feature 5 AAPL 2026-10-29; Feature 7 pytest US+CRYPTO; paper runner **not** called from panel. Code IN only if a later operator walk proves missing rows — then STOP, do not patch here.
+
+### Task N44.1 — Escrever o roteiro do passeio no painel
+
+**Entrega:** Um roteiro que você segue depois do login: sinal, ordem aberta, fill ou recusa, resultado — ação americana e cripto.
+**Como conferir:** O roteiro lista os dois mercados, o que conta, o que não conta, o vazio honesto e o pedido de rebuild na sua mão.
+**Por quê:** Sem o roteiro, pytest e o fill antigo de ação americana fingem que a onda 4 acabou.
+
+**Detalhe técnico**
+
+P task. File: `docs/HOMOLOGATION.md` (append a section, do not rewrite Feature 5 / G-MKT). Portuguese operator prose. Copy the walk checklist from `docs/.briefs/N44.brief.md` (`## Checklist de passeio`). Reuse N41 empty strings verbatim. State rebuild EasyPanel is operator. State pytest / HTTP 200 / queue / semaphore ≠ fill. Refusal with reason counts. Historical AAPL fill may appear in Histórico after rebuild if volume still has rows — cite as “lists not blind”, not as the crypto walk. LIVE false. No secrets.
+
+### Task N44.2 — Abrir a folha de evidência do passeio
+
+**Entrega:** Uma folha com linhas pendentes para ação americana e cripto, prontas para você preencher o que viu — sem número inventado.
+**Como conferir:** Abrir a folha e achar duas linhas (ação americana e cripto) em status pendente, sem fill fingido.
+**Por quê:** Sem a folha, o próximo chat não tem onde colar o passeio redigido.
+
+**Detalhe técnico**
+
+P task. File: `docs/TEST-EVIDENCE.md` (append Sprint N44 section). One pending row for US equity panel walk; one pending row for crypto panel walk. Columns like N20 (criterion, evidence, status, result). Status `pendente`. Do **not** copy AAPL 2026-10-29 as N44 crypto evidence. Do not paste tokens. Do not mark ok. Pointer from HOMOLOGATION N44 section. LIVE false.
+
+### Task N44.3 — Ligar o roteiro na folha do dia a dia e no mapa
+
+**Entrega:** A folha do dia a dia e o mapa apontam o roteiro do passeio, para o próximo login não recomeçar do zero.
+**Como conferir:** Abrir a folha operacional e o mapa e achar um parágrafo que manda seguir o passeio de ação americana e cripto depois do rebuild.
+**Por quê:** Sem esse ponteiro, o roteiro fica órfão no repositório.
+
+**Detalhe técnico**
+
+P task. Files: `docs/DASHBOARD-OPERATIONS.md`, `docs/OPERATOR-PANEL-MAP.md` (2 files). Short operator paragraph + markdown link to the new HOMOLOGATION N44 section under «Dia a dia do operador». Map «Fora deste mapa»: onda 4 is homologation walk, not a new screen; rebuild still operator. Do not rewrite bearer/kill-switch tables. Do not add a fake public URL. Do not edit `src/`. Do not flip Ordens/Histórico selos (already VISÍVEL).
+
+### Task N44.4 — Anotar a campanha e o diário sem fechar os chamados
+
+**Entrega:** O chamado da campanha registra a onda 4 planejada (e, na execução, que o roteiro existe); o diário ganha uma linha desta sprint; os chamados da bolsa brasileira, do câmbio e do painel único continuam abertos.
+**Como conferir:** Abrir a lista de problemas: a campanha aponta esta onda e permanece aberta; os outros chamados listados continuam; o diário tem a linha.
+**Por quê:** Sem a nota, a próxima rodada pode achar que faltou código ou que a campanha já fechou.
+
+**Detalhe técnico**
+
+P task. Files: `docs/ISSUES.md`, `docs/DIARY.md` (2 files). ISS-017 keep **aberto**; add EXECUTE note “onda 4 runbook published; walk still operator; do not claim campaign complete without operator evidence”. Do **not** close ISS-017 / ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-016. Optional one-liner under ISS-007: N44 is homologation, not a new 1.0 screen. DIARY: short `## Sprint N44` row — docs/runbook; operator walk; LIVE false; EasyPanel rebuild still operator; PR #64 is N43 closeout not N44 fill.
 
 ---
+
 
 ## Sprint N45 — Trazer Tá Barato para o menu, só com fórmula recuperada
 > Categoria: N  

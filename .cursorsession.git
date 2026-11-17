@@ -1,2 +1,3 @@
 {"ts": "2026-11-16T18:57:51.258289+00:00", "event": "sprint_planned", "sprint": "N32", "branch": "front/n27-alpaca-loop", "sha": "d38046976be09ee390bb58cb64311a51795c2b19", "via": "/pmo plan", "details": ""}
 {"ts": "2026-11-16T20:17:01.672487+00:00", "event": "sprint_planned", "sprint": "N33", "branch": "front/n27-alpaca-loop", "sha": "2ebe79711e23b5e214e2a72c3923e769bfe4a04c", "via": "/pmo plan", "details": ""}
+{"ts": "2026-11-17T18:12:07.100507+00:00", "event": "sprint_planned", "sprint": "N49", "branch": "front/n27-alpaca-loop", "sha": "497de3b83a32bcfdd6c072f0581ad08053846eb0", "via": "/pmo plan", "details": "ISS-019 provenance inventory Feature 4/9/10 criteria; plan_only"}

@@ -4,6 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
+| N49 | panel_ops, docs | Proveniência ordem↔sinal; inventário fill-only; critérios Feature 4/9/10; pool Prodígio pesquisa; ISS-019 aberto | 26–34 |
 | N48 | panel_ops, docs | Sinais = cópia de terceiros + auditoria; ISS-018; Collective2 fechado; família bruta | 28–36 |
 | N44 | docs | Roteiro homologação US+cripto pelo menu; ISS-017 onda 4; evidência pendente operador | 40–46 |
 | N43 | panel_ops, docs | Análise Google no menu; TimesFM research-only; ISS-017 onda 3; fail-closed | 26–34 |
@@ -22,6 +23,18 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N49 — Proveniência, inventário e critérios na tela Sinais (ISS-019)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue (N49.1–N49.4):** JOIN ledger `signal_events` + overlay `paper/signal-orders.jsonl`; `copy.inventory` / `adoption` / `prodigy_pool`; `/sinais` com Origem/Sinal, inventário, critérios Feature 4/9/10, pool Prodígio (`research_tip`); testes `tests/test_panel_ops.py` (55 passed).
+
+**Entregue (N49.5 docs):** `docs/OPERATOR-PANEL-MAP.md` §2; `docs/DASHBOARD-OPERATIONS.md`; `docs/ISSUES.md` (**ISS-019** anotado; **permanece aberto** até rebuild + confirmação operador); `docs/DIARY.md`.
+
+**Honestidade:** vínculo ausente → `origem desconhecida` / `sem vínculo com sinal`; performance por sinal só com fill confirmado; sem `prodigy_rank.calculate`; Collective2 fechado; **rebuild EasyPanel operador**; ISS-007/017/010/011 abertos; N45–N47 intactos; `LIVE_TRADING_ENABLED=false`.
 
 ---
 

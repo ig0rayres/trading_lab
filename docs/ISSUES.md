@@ -21,7 +21,8 @@
 | ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 | ISS-016 | aberto | N40 | Orientação no painel: mapa «onde está cada coisa» (docs; não é tela de ordens) |
 | ISS-017 | aberto | N41+ / N42 / N43 / N44 | Épico: entrega do painel operacional completo (campanha pós-N40) |
-| ISS-018 | aberto | N48 | Alinhar a tela Sinais ao conceito de cópia de terceiros |
+| ISS-018 | fechado | N48 | Alinhar a tela Sinais ao conceito de cópia de terceiros |
+| ISS-019 | aberto | N49 | Sinais: proveniência ordem↔sinal, inventário/assinaturas, critérios + pool Prodígio |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -489,7 +490,7 @@
 |-------|--------|
 | Categoria | feature-com-dominio / enhancement |
 | Sprint | N48 |
-| Status | aberto |
+| Status | fechado |
 | Impacto | No produto, Sinais = ordens/cópia de terceiros (TradingView / família de cópia / provedores). A tela atual só mostra auditoria de ingresso (origem, destino fila/bloqueado, motivo). O operador não vê o que está sendo copiado, o que opera, nem resultado/ordens/custos por sinal ou provedor — e pode confundir ingresso com fill. |
 
 **Critério de aceite:** `GET /sinais` (mesma rota) com seção de cópia de terceiros e seção de auditoria de ingresso claramente distintas; vazio honesto em português quando não houver cópia em operação; resultado só de fill confirmado, rotulado bruto se o custo não estiver completo; total honesto por família de cópia (ordens paper hoje não têm provedor/`signal_id` — não inventar P&L por sinal/provedor); Collective2 visível como cópia fechada (`approved_for_paper_copy` falso); painel sem POST de ordem; Feature 9 (origem/destino/motivo) permanece; `LIVE_TRADING_ENABLED=false`. Sem superfície paralela. Sem fill inventado.
@@ -501,5 +502,42 @@
 **Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N48.brief.md`.
 
 **Nota N48 EXECUTE (2026-11-17):** sprint **N48** entregue em N48.1–N48.3 (tela `/sinais` com seções **Cópia de terceiros** e **Auditoria de ingresso**; `GET /api/signals` estendido; testes `tests/test_panel_ops.py`) e **N48.4** (mapa §2, folha do dia a dia, esta nota, `docs/DIARY.md`, `docs/ROADMAP.md`). Vazios reais: `Nenhuma cópia de terceiro em operação.` · `Sem fills confirmados nesta cópia.` · `Nenhum sinal neste destino.` · Collective2 `Collective2: cópia fechada — nenhum provedor aprovado.`; totais **brutos** por família `signal_copy` (`gross_unverified_costs`) — **sem** P&L inventado por sinal/provedor. **ISS-018 permanece aberto** até o operador confirmar no deploy (rebuild EasyPanel) que a tela no ar bate com o conceito. **Não** fecha **ISS-007** / **ISS-017** / **ISS-010** / **ISS-011**. Rebuild EasyPanel **operador**. N45–N47 não arrancados. `LIVE_TRADING_ENABLED=false`.
+
+**Fechamento (2026-11-17):** operador confirmou EasyPanel no ar + screenshot `/sinais` (cópia AAPL paper + auditoria TradingView). Conceito N48 ok. Lacuna restante (ordem↔`signal_id`, inventário/assinaturas, critérios visíveis, pool Prodígio) → **ISS-019** — **não** reabre ISS-018.
+
+---
+
+## ISS-019 — Sinais: proveniência ordem↔sinal, inventário e critérios (reuso Feature 4/9)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / enhancement |
+| Sprint | N49 |
+| Status | aberto |
+| Impacto | Sem vínculo claro ordem paper → sinal de origem, performance por sinal é impossível. Sinais no produto = inventário do que está assinado/em operação + performance + origem + lista; Prodígio deve monitorar candidatos ao pool. Critérios de adoção **já** estão em REQUIREMENTS Feature 4/9 — falta superfície e ligação honesta no painel/ledger. |
+
+**Diretrizes do operador (2026-11-17) — mandatório:**
+1. Ordem aberta (paper) deve mostrar **qual sinal** a abriu (`signal_id` / origem) — sem isso não há performance por origem.
+2. `/sinais` = inventário: sinais assinados, performance de cada um, origem, lista acessível; Prodígio monitora novos/bons candidatos ao pool (reuso `prodigy-rank` / Feature 9 — sem inventar score).
+3. Critérios de adoção **visíveis na feature** — reusar texto já definido (Feature 4: signal copy + Prodigy 15d + fases; Feature 9; C2 fechado; promoção só operador).
+
+**Reuso obrigatório (não reinventar):**
+- `docs/REQUIREMENTS.md` Feature 4 (signal copy, Prodigy 15d: janela 15d, ≥5 ops / ≥3 dias, retorno líquido +, drawdown/consistência; fase research default; R$ 20; sem promoção automática; C2 sem `approved_for_paper_copy`).
+- Feature 9 (lista origem/destino/motivo; ranking + cópias Prodígio).
+- Feature 10 (P&L só de fill confirmado; bruto rotulado).
+- Ledger: `risk_decisions.signal_event_id` ↔ `paper_orders`; N48 `copy` bundle; `prodigy_rank` / `prodigy_copied_signals`.
+- Sem limiar inventado; `LIVE_TRADING_ENABLED=false`; painel sem POST de ordem.
+
+**Critério de aceite (esboço para o planejador):** painel/API mostram proveniência ordem→sinal; inventário de assinados/em pool com performance só de fill (ou vazio honesto); critérios de adoção Feature 4/9 visíveis; candidatos Prodígio research distintos de paper; Collective2 fechado; testes de regressão painel; sem fill inventado.
+
+**Não fecha:** ISS-007, ISS-017, ISS-010, ISS-011. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-17 (3 diretrizes); REQUIREMENTS Features 4, 9, 10; ISS-018/N48 (família ok, sem per-signal); OPERATOR-PANEL-MAP §2; `paper_gateway_queue` / `signal_events`.
+
+**Nota autopilot:** Passo 2 fases — requisitos já em Feature 4/9; skip AskQuestion. Passo 3 — registro automático ISS-019.
+
+**Nota N49 PLAN (2026-11-17):** sprint **N49** planejada (`docs/.briefs/N49.brief.md`). Critérios **reusados** de REQUIREMENTS Feature 4, 9 e 10 — não inventados. **Não** fecha ISS-007 / ISS-017 / ISS-010 / ISS-011. Não arranca N45–N47. `LIVE_TRADING_ENABLED=false`.
+
+**Nota N49 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — JOIN ledger `signal_events` + overlay `paper/signal-orders.jsonl`; `/sinais` com colunas Origem/Sinal, inventário fill-only, bloco critérios Feature 4/9/10, pool `_load_prodigy_opportunities` (`research_tip`); `tests/test_panel_ops.py` 55 passed. **Chamado permanece aberto** até rebuild EasyPanel + confirmação visual do operador (mesma política de ISS-018).
 
 ---

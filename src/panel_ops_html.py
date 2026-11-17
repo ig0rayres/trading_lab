@@ -37,6 +37,12 @@ _N48_FOOTER = (
     'O painel não envia ordem. Live desligado. Valores brutos se o custo não estiver completo.'
 )
 _N48_RESEARCH_NOTE = 'Cópias de pesquisa (Prodígio) — não são operação.'
+_N49_INVENTORY_SECTION = 'Inventário de sinais'
+_N49_ADOPTION_SECTION = 'Critérios de adoção'
+_N49_POOL_SECTION = 'Candidatos ao pool (Prodígio)'
+_N49_INVENTORY_EMPTY = 'Nenhum sinal neste inventário.'
+_N49_POOL_EMPTY = 'Nenhum candidato de pesquisa no pool.'
+_N49_POOL_SUBTITLE = 'Pesquisa — não autoriza ordem / não promove.'
 
 _STRATEGY_PHASE_LABELS = {
     'research': 'pesquisa',
@@ -285,19 +291,27 @@ def render_strategies_page(bundle: dict[str, Any]) -> str:
 <p class="muted">{esc(disclaimer)}</p></main></div></body></html>'''
 
 
+def _order_signal_cell(row: dict[str, Any]) -> str:
+    if row.get('signal_id'):
+        return f'<code>{esc(row.get("signal_id"))}</code>'
+    return esc(row.get('signal_link_notice') or 'sem vínculo com sinal')
+
+
 def _signals_copy_operating_html(operating: list[dict[str, Any]]) -> str:
     if not operating:
         return f'<p class="muted">{esc(_N48_COPY_EMPTY)}</p>'
     rows = ''.join(
         f'<tr><td class="mono">{esc(o.get("client_order_id") or "—")}</td>'
         f'<td>{esc(o.get("symbol"))}</td><td>{esc(o.get("side"))}</td>'
+        f'<td>{esc(o.get("origin") or "origem desconhecida")}</td>'
+        f'<td>{_order_signal_cell(o)}</td>'
         f'<td>{esc(o.get("broker_status") or o.get("paper_status") or "—")}</td>'
         f'<td class="mono">{esc(o.get("remaining_qty") or o.get("entry_qty") or "—")}</td></tr>'
         for o in operating
     )
     head = (
         '<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th>'
-        '<th>Status</th><th>Qtd rest.</th></tr></thead><tbody>'
+        '<th>Origem</th><th>Sinal</th><th>Status</th><th>Qtd rest.</th></tr></thead><tbody>'
     )
     return f'{head}{rows}</tbody></table>'
 
@@ -331,6 +345,89 @@ def _signals_copy_research_html(research: list[dict[str, Any]]) -> str:
     return (
         f'<h3>Pesquisa (Prodígio)</h3><p class="muted">{esc(_N48_RESEARCH_NOTE)}</p>'
         f'<table><tbody>{rows}</tbody></table>'
+    )
+
+
+def _signals_inventory_html(inventory: dict[str, Any]) -> str:
+    items = inventory.get('items') or []
+    if not items:
+        empty = inventory.get('empty_label') or _N49_INVENTORY_EMPTY
+        return (
+            f'<h2>{esc(_N49_INVENTORY_SECTION)}</h2>'
+            f'<p class="muted">{esc(empty)}</p>'
+        )
+    label = esc(inventory.get('pnl_label') or PERFORMANCE_LABEL_GROSS)
+    rows = ''.join(
+        f'<tr><td>{esc(it.get("origin"))}</td>'
+        f'<td><code>{esc(it.get("signal_id") or it.get("signal_event_id") or "—")}</code></td>'
+        f'<td class="mono">{esc(it.get("operating"))}</td>'
+        f'<td class="mono">{esc(it.get("fills_confirmed"))}</td>'
+        f'<td class="mono">{esc(it.get("gross_usd_total") or "—")}</td>'
+        f'<td>{label}</td></tr>'
+        for it in items
+    )
+    unknown = inventory.get('unknown_unlinked_count') or 0
+    extra = ''
+    if unknown:
+        extra = (
+            f'<p class="muted">Vínculo desconhecido em {esc(unknown)} linha(s) — '
+            'sem resultado por sinal inventado.</p>'
+        )
+    return (
+        f'<h2>{esc(_N49_INVENTORY_SECTION)}</h2>'
+        '<p class="muted">Resultado por sinal só com fill confirmado; valores brutos se o custo faltar.</p>'
+        '<table><thead><tr><th>Origem</th><th>Sinal</th><th>Em operação</th>'
+        f'<th>Fills</th><th>Resultado</th><th>Rótulo</th></tr></thead><tbody>{rows}</tbody></table>'
+        f'{extra}'
+    )
+
+
+def _signals_adoption_html(adoption: dict[str, Any]) -> str:
+    criteria = adoption.get('criteria_pt') or []
+    bullets = ''.join(f'<li>{esc(line)}</li>' for line in criteria)
+    phases = adoption.get('catalog_phases') or []
+    phase_rows = ''.join(
+        f'<tr><td class="mono">{esc(p.get("strategy_key"))}</td>'
+        f'<td>{esc(_strategy_phase_label(p.get("phase")))}</td>'
+        f'<td>{"sim" if p.get("paper_allowed") else "não"}</td></tr>'
+        for p in phases
+    )
+    phase_table = ''
+    if phase_rows:
+        phase_table = (
+            '<h3>Fases no catálogo</h3>'
+            '<table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead>'
+            f'<tbody>{phase_rows}</tbody></table>'
+        )
+    return (
+        f'<h2>{esc(_N49_ADOPTION_SECTION)}</h2>'
+        f'<ul>{bullets}</ul>'
+        f'{phase_table}'
+    )
+
+
+def _signals_prodigy_pool_html(pool: dict[str, Any]) -> str:
+    items = pool.get('items') or []
+    if not items:
+        return (
+            f'<h2>{esc(_N49_POOL_SECTION)}</h2>'
+            f'<p class="muted">{esc(_N49_POOL_SUBTITLE)}</p>'
+            f'<p class="muted">{esc(_N49_POOL_EMPTY)}</p>'
+        )
+    rows = ''.join(
+        f'<tr><td>{esc(it.get("provider"))}</td>'
+        f'<td>{esc(it.get("status"))}</td>'
+        f'<td class="mono">{esc(it.get("prodigy_score"))}</td>'
+        f'<td><code>{esc(it.get("label") or "research_tip")}</code></td></tr>'
+        for it in items
+    )
+    disclaimer = esc(pool.get('disclaimer') or 'Research rank only; does not authorize orders.')
+    return (
+        f'<h2>{esc(_N49_POOL_SECTION)}</h2>'
+        f'<p class="muted">{esc(_N49_POOL_SUBTITLE)}</p>'
+        f'<p class="muted">{disclaimer}</p>'
+        f'<table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th>'
+        f'<th>Rótulo</th></tr></thead><tbody>{rows}</tbody></table>'
     )
 
 
@@ -386,12 +483,18 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     copy = bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {}
     signals = bundle.get('signals') or []
     copy_body = _signals_copy_section_html(copy)
+    inventory_body = _signals_inventory_html(copy.get('inventory') or {})
+    adoption_body = _signals_adoption_html(copy.get('adoption') or {})
+    pool_body = _signals_prodigy_pool_html(copy.get('prodigy_pool') or {})
     audit_body = _signals_audit_section_html(signals)
     footer = f'<p class="muted">{esc(_N48_FOOTER)}</p>'
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Sinais</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("sinais")}<main class="main">
 <h1>Sinais</h1>
 {copy_body}
+{inventory_body}
+{adoption_body}
+{pool_body}
 {audit_body}
 {footer}</main></div></body></html>'''
 

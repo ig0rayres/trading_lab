@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N48 concluída (aguarda operador)",
+  "fase_nome": "N49 EXECUTE ISS-019",
   "sprint_pending_merge": null,
   "sprint_pr": 65,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T18:00:00-03:00",
+  "ultimo_update": "2026-11-17T15:17:19-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Operador: rebuild EasyPanel trading-lab e confirmar Sinais (cópia + auditoria) no HTTPS",
-    "Fechar ISS-018 só após confirmação explícita do operador",
-    "ISS-007/017/010/011 abertos; N45–N47 stubs; LIVE_TRADING_ENABLED=false"
+    "Parent: Fable / plan-verifier N49; EXECUTE só depois",
+    "Operador: rebuild EasyPanel após merge N49 para ver proveniência no ar",
+    "ISS-019 aberto; ISS-018 fechado; ISS-007/017/010/011 abertos; N45–N47 stubs; LIVE_TRADING_ENABLED=false"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -125,38 +125,52 @@
     "/pmo plan N42",
     "/pmo plan N43",
     "/pmo plan N44",
-    "/pmo plan N48"
+    "/pmo plan N48",
+    "/pmo plan N49"
   ],
-  "contexto_rapido": "N48 EXECUTE N48.4 docs; ISS-018 aberto até operador; rebuild EasyPanel operador; LIVE false; ISS-007/017 abertos.",
+  "contexto_rapido": "N49 PLAN ISS-019 proveniência/inventário/critérios Feature 4/9/10; plan_only; N48 concluída ISS-018 fechado; LIVE false; N45–N47 stubs.",
   "sprint_tasks": [
     {
-      "id": "N48.0",
-      "title": "Inventariar o reuso da cópia de terceiros antes de redesenhar Sinais",
+      "id": "N49.0",
+      "title": "Inventariar o reuso da proveniência, do inventário e do pool",
       "size": "P",
       "status": "done",
       "files": [
-        "docs/.briefs/N48-GIT-FIRST-REUSE.md",
-        "docs/.briefs/N48.brief.md"
+        "docs/.briefs/N49-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N49.brief.md"
       ],
       "depends_on": [],
-      "file": "docs/.briefs/N48-GIT-FIRST-REUSE.md, docs/.briefs/N48.brief.md"
+      "file": "docs/.briefs/N49-GIT-FIRST-REUSE.md, docs/.briefs/N49.brief.md"
     },
     {
-      "id": "N48.1",
-      "title": "Montar a vista de cópia e operação no pacote do painel",
+      "id": "N49.1",
+      "title": "Ligar cada ordem paper ao sinal que a abriu",
       "size": "M",
       "status": "done",
       "files": [
         "src/panel_ops_data.py"
       ],
       "depends_on": [
-        "N48.0"
+        "N49.0"
       ],
       "file": "src/panel_ops_data.py"
     },
     {
-      "id": "N48.2",
-      "title": "Mostrar cópia e auditoria na mesma tela de Sinais",
+      "id": "N49.2",
+      "title": "Montar o inventário de sinais e o pool de candidatos",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "depends_on": [
+        "N49.1"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N49.3",
+      "title": "Mostrar proveniência, inventário e critérios na tela Sinais",
       "size": "M",
       "status": "done",
       "files": [
@@ -164,26 +178,26 @@
         "src/v4_web_dashboard.py"
       ],
       "depends_on": [
-        "N48.1"
+        "N49.2"
       ],
       "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
     },
     {
-      "id": "N48.3",
-      "title": "Provar cópia, vazio honesto, auditoria e que o painel não envia ordem",
+      "id": "N49.4",
+      "title": "Provar proveniência, vazio honesto e critérios visíveis",
       "size": "P",
       "status": "done",
       "files": [
         "tests/test_panel_ops.py"
       ],
       "depends_on": [
-        "N48.2"
+        "N49.3"
       ],
       "file": "tests/test_panel_ops.py"
     },
     {
-      "id": "N48.4",
-      "title": "Atualizar o mapa e os chamados depois da tela alinhada",
+      "id": "N49.5",
+      "title": "Atualizar o mapa e o chamado depois da tela completa",
       "size": "P",
       "status": "done",
       "files": [
@@ -193,30 +207,30 @@
         "docs/DIARY.md"
       ],
       "depends_on": [
-        "N48.3"
+        "N49.4"
       ],
       "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md"
     }
   ],
   "checkpoint": {
-    "phase": "docs_closeout",
-    "sprint": "N48",
+    "phase": "implementation",
+    "sprint": "N49",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N48.4",
+    "last_completed_task": "N49.5",
     "validation_gate_ref": ".beesy/sprints/N48.json",
-    "sprint_delivery": "verify_green",
-    "sprint_delivery_sprint": "N48",
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N49",
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N48",
+      "sprint": "N49",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-17T17:42:32Z",
+      "recorded_at": "2026-11-17T18:19:03Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N48 Sinais copy; 56 OK",
+      "notes": "N49 Sinais provenance; 55 panel OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
@@ -228,19 +242,19 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "f17b55e382985f6e664c98a10771e36f69a330f9",
-      "stamped_at": "2026-11-17T17:44:09Z",
+      "last_validated_sha": "b17fa805ebaf8468f13763664f9d9d90e32b5fbd",
+      "stamped_at": "2026-11-17T18:20:21Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "794bae526e3a4b78be3ef32ddddf21a327b8dd8a781a0aa6b1dab00c62868110",
-      "patch_id": "d887417269b3ebdca0b5dc698d9e7ff9db12f8a9",
+      "content_hash": "e4a96da88be64b92ce906ff184fa73e42b63cdb980eccdb9f57e22d113d3dd33",
+      "patch_id": "68742c7ae6ded5691d213ae7a81339e52af02933",
       "patch_id_version": 2
     }
   },
@@ -263,13 +277,13 @@
     ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-tarefas",
-    "phase": "N48 N48.4 docs",
-    "intent": "Closeout docs N48.4 ISS-018; keep open until operator confirms deploy.",
-    "changes_made": "N48.4: OPERATOR-PANEL-MAP §2, DASHBOARD-OPERATIONS, ISS-018 EXECUTE note, DIARY, ROADMAP [x], session last_completed N48.4; briefs ready; zero src/ in this pass.",
-    "decisions": "ISS-018 aberto; ISS-007/017 abertos; rebuild EasyPanel operador; family totals bruto only; LIVE false.",
-    "next_steps": "Operador rebuild + confirmar Sinais; parent commit quando pedido.",
-    "updated_at": "2026-11-17T18:00:00-03:00"
+    "persona": "planejador-melhorias",
+    "phase": "N49 planning",
+    "intent": "Plan N49 ISS-019 provenance/inventory/Feature 4-9-10 criteria; plan_only until parent Fable.",
+    "changes_made": "N49 PLAN: ROADMAP block + index, N49.brief, N49-GIT-FIRST-REUSE, ISS-019 sprint N49, session plan_only.",
+    "decisions": "Reuse Feature 4/9/10 criteria; ledger join not new SQL column; prodigy pool research; C2 closed; LIVE false; do not steal N45-N47.",
+    "next_steps": "Parent Fable/plan-verifier then /pmo sprint. Do not start AgentCoder from this plan-only.",
+    "updated_at": "2026-11-17T15:25:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -329,9 +343,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N44",
-  "sprint_atual": "N48",
-  "sprint_nome": "Mostrar na tela Sinais o que se copia e o que opera",
+  "previous_sprint": "N48",
+  "sprint_atual": "N49",
+  "sprint_nome": "Mostrar qual sinal abriu cada ordem e os critérios de adoção",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -680,6 +694,24 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N48; checkpoint.phase=planning; preserve N44 stamp and autopilot",
         "rationale": "Deliverable list asked sprint_atual=N48; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-17T15:25:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-com-dominio; skip Passo2 (Feature 4/9/10 already in REQUIREMENTS; operator forbade inventing adoption criteria); sprint_id=N49; review=senior+qa; plan_only=true; sprint_atual=N49; previous_sprint=N48; do not steal N45–N47",
+        "rationale": "Parent classified N / feature-com-dominio / N49; ISS-019; ISS-018 closed by operator screenshot. Reuse Feature 4/9/10. Honest provenance via ledger join or stored overlay; no invented fill/P&L."
+      },
+      {
+        "timestamp": "2026-11-17T15:25:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "append N49 (do not allocate N45–N47); 3M+3P DAG; provenance JOIN + inventory + Feature 4 adoption visible + prodigy pool research; Collective2 closed; LIVE false",
+        "rationale": "Reuse panel_ops N48 copy bundle, risk_decisions.signal_event_id, prodigy opportunities loader; no new SQL column; no prodigy_rank.calculate from panel"
+      },
+      {
+        "timestamp": "2026-11-17T15:25:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N49; checkpoint.phase=planning; previous_sprint=N48; preserve N48 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N49; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -701,6 +733,7 @@
     "2026-11-17: N44 PLAN — homologação operador US+cripto pelo painel; docs/runbook; zero M; ISS-017 aberto; ISS-007/010/011 abertos; plan_only; PR #64 foi closeout N43",
     "2026-11-17: N44 EXECUTE docs — runbook HOMOLOGATION § N44; TEST-EVIDENCE pendente US+cripto; ISS-017 onda 4 anotada; passeio não feito; zero src/; no commit",
     "2026-11-17: N48 PLAN — Sinais = cópia de terceiros + auditoria; extend /sinais; sem fill inventado; LIVE false; ISS-018; ISS-007/017 abertos; plan_only; N45–N47 stubs",
-    "2026-11-17: N48.4 docs — mapa §2 cópia+auditoria; ISS-018 EXECUTE nota aberto; ROADMAP concluida* operador; rebuild EasyPanel operador; no commit"
+    "2026-11-17: N48.4 docs — mapa §2 cópia+auditoria; ISS-018 EXECUTE nota aberto; ROADMAP concluida* operador; rebuild EasyPanel operador; no commit",
+    "2026-11-17: N49 PLAN — proveniência ordem↔sinal, inventário, critérios Feature 4/9/10 visíveis, pool Prodígio pesquisa; ISS-019; ISS-018 fechado; plan_only; N45–N47 stubs; LIVE false"
   ]
 }

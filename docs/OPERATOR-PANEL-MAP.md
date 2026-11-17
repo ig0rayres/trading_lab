@@ -46,7 +46,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | Campo | Detalhe |
 |-------|---------|
 | **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. |
-| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48**); duas seções `h2` na mesma página (padrão Prodígio). **Não** é página separada no Command Panel v1. |
+| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48** + **N49**); seções `h2` na mesma página (cópia, inventário, critérios, pool Prodígio, auditoria). **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
 
 ### Cópia de terceiros (seção superior)
@@ -54,12 +54,36 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | Campo | Detalhe |
 |-------|---------|
 | **Subtítulo (sempre)** | `Cópia de terceiros (TradingView / provedores). Não é fill.` |
-| **Fonte de dados** | Pacote `copy` em `build_panel_bundle`: ordens abertas e histórico com `strategy_key=signal_copy`; performance agregada da família `signal_copy`; cópias Prodígio só pesquisa (`research_copies`); estado Collective2. |
-| **Com dado** | Tabelas «em operação» e histórico da família de cópia; totais **brutos** por `strategy_key` com rótulo `gross_unverified_costs` — **sem** P&L por sinal nem por provedor (ordens paper **não** trazem `provider` / `signal_id`). |
+| **Fonte de dados** | Pacote `copy` em `build_panel_bundle`: ordens abertas e histórico com `strategy_key=signal_copy`; JOIN ledger `paper_orders` → `risk_decisions` → `signal_events` para **origem**; overlay honesto de `signal_id` via `paper/signal-orders.jsonl` (`client_order_id`); performance agregada da família; cópias Prodígio só pesquisa (`research_copies`); estado Collective2. |
+| **Com dado** | Tabela «em operação» com colunas **Origem** e **Sinal**; histórico da família de cópia; totais **brutos** por `strategy_key` com rótulo `gross_unverified_costs`. **Sem** engenharia reversa do hash de idempotência. |
+| **Vínculo ausente** | `origem desconhecida` e `sem vínculo com sinal` — não inventar P&L por sinal. |
 | **Vazio — operação** | `Nenhuma cópia de terceiro em operação.` |
 | **Vazio — performance nesta cópia** | `Sem fills confirmados nesta cópia.` |
 | **Collective2** | `Collective2: cópia fechada — nenhum provedor aprovado.` (`approved_for_paper_copy` permanece falso.) |
 | **Selo** | **VISÍVEL** · vazio honesto = **VAZIO-COMUM** |
+
+### Inventário de sinais (**N49**)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Fonte** | `copy.inventory` — chave por origem + `signal_id` / `signal_event_id` quando `provenance_status=linked`. |
+| **Performance por sinal** | Somente **fill confirmado**; rótulo `gross_unverified_costs`; fila / `queued_intent` **não** entra. |
+| **Vazio** | `Nenhum sinal neste inventário.` |
+
+### Critérios de adoção (**N49**)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Texto** | Reuso **Feature 4 / 9 / 10** (`copy.adoption.criteria_pt`): cópia de terceiros; Prodígio janela 15 dias, ≥5 operações em ≥3 dias, R$ 20 paper inicial, fases, C2 fechado, sem promoção automática, Live desligado. |
+| **Fases** | Catálogo `signal_copy` / `prodigy_15d` somente leitura (mesmo bloco que Estratégias). |
+
+### Candidatos ao pool Prodígio (**N49**)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Fonte** | `copy.prodigy_pool` via `_load_prodigy_opportunities` (`intelligence/prodigy-top10-latest.json`) — **research_tip**; não chama `prodigy_rank.calculate`. |
+| **Vazio** | `Nenhum candidato de pesquisa no pool.` |
+| **Rótulo** | `Pesquisa — não autoriza ordem / não promove.` |
 
 ### Auditoria de ingresso (seção inferior)
 

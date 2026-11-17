@@ -72,7 +72,8 @@
 | N45 | N | Tá Barato no menu — bloqueado em N17.2 | planejada | stub | strategy-catalog | Campanha ISS-017 onda 5 | *(abaixo)* |
 | N46 | N | B3 Clear no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 6 | *(abaixo)* |
 | N47 | N | OANDA Practice no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 7 | *(abaixo)* |
-| N48 | N | Sinais = cópia de terceiros + auditoria; sem fill inventado; LIVE false | concluida *(rebuild EasyPanel e confirmação ISS-018 ainda operador)* | 5 | observability | ISS-018 alinhamento Sinais↔copy | *(abaixo)* |
+| N48 | N | Sinais = cópia de terceiros + auditoria; sem fill inventado; LIVE false | concluida | 5 | observability | ISS-018 alinhamento Sinais↔copy | *(abaixo)* |
+| N49 | N | Ordem paper mostra o sinal; inventário e critérios visíveis; LIVE false | planejada | 6 | observability | ISS-019 proveniência e pool | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -132,6 +133,7 @@
 | N46 | comprehensive | stub campanha — Clear; não arranca sem N29.5 |
 | N47 | comprehensive | stub campanha — OANDA; não arranca sem N29.5 |
 | N48 | senior+qa | Tela Sinais: cópia de terceiros + auditoria; sem fill inventado |
+| N49 | senior+qa | Proveniência ordem↔sinal + inventário/critérios visíveis; sem fill inventado |
 
 ---
 
@@ -3992,6 +3994,310 @@ P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTest
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-018 keep **aberto** until EXECUTE evidence; ISS-017 keep **aberto**; ISS-007 keep open). Update area 2 Sinais: copy section + ingest section; real empty strings; Collective2 closed. DASHBOARD-OPERATIONS row «Ver sinais» mentions copy concept, not only motivo. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017. Do not claim EasyPanel rebuild. Do not mark N45–N47 started. LIVE false.
+
+---
+
+## Sprint N49 — Mostrar qual sinal abriu cada ordem e os critérios de adoção
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-019 · correção do operador 2026-11-17 · Feature 4/9/10 já em REQUIREMENTS (Passo 2 pulado)  
+> titulo_humano: Ver qual sinal abriu cada ordem e os critérios de adoção  
+> resumo_humano: Depois do login você abre Sinais e vê qual sinal abriu cada ordem paper — ou o aviso honesto de que o vínculo não existe. A lista do que está assinado traz resultado só de fill. Os critérios de adoção já combinados aparecem na tela. O Prodígio só sugere candidatos de pesquisa. Collective2 permanece fechado. O painel não envia ordem.  
+> Gate: Ordem paper em operação mostra origem/identificador do sinal ou vazio honesto; inventário com performance só de fill; critérios Feature 4/9/10 visíveis; pool Prodígio pesquisa separado de paper; Collective2 fechado; sessão obrigatória; zero envio pelo painel; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N49.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N48 concluida · N25 concluida · N26 concluida · N42 concluida · Release: ISS-019 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Na tela Sinais, cada ordem paper aberta mostra qual sinal a abriu, a lista de sinais em uso traz resultado só de fill, e os critérios de adoção já combinados aparecem na própria feature — com o Prodígio só sugerindo candidatos de pesquisa.
+
+### O que muda para você
+
+- Cada ordem paper aberta mostra origem e identificador do sinal, ou diz com clareza que o vínculo não existe
+- Você vê o inventário do que está assinado ou em operação, com resultado por sinal só quando houver fill confirmado
+- Os critérios de adoção (cópia, janela de quinze dias do Prodígio, fases, Collective2 fechado, sem promoção automática) ficam visíveis na tela
+- O Prodígio continua só monitorando candidatos de pesquisa para o pool; não promove sozinho
+- O painel não envia ordem; dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Ligação honesta entre ordem paper e o sinal que a abriu | Abrir Sinais, olhar uma ordem em operação e ver origem/identificador — ou o aviso de que o vínculo não existe |
+| 2 | Inventário de sinais com resultado só de fill | Ver a lista do que está assinado ou em operação; números só quando houver fill, rotulados brutos se o custo faltar |
+| 3 | Critérios de adoção e pool de pesquisa na mesma tela | Ler o bloco de critérios (cópia, quinze dias, fases, Collective2 fechado) e a lista de candidatos do Prodígio marcada como pesquisa |
+| 4 | Mapa e chamado atualizados | O mapa descreve proveniência e inventário; o chamado ISS-019 aponta esta sprint; a campanha e o épico antigo continuam abertos |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N49.0 Inventariar o reuso da proveniência, do inventário e do pool | `/git` | — |
+| [ ] | M | N49.1 Ligar cada ordem paper ao sinal que a abriu | `/dev` | N49.0 |
+| [ ] | M | N49.2 Montar o inventário de sinais e o pool de candidatos | `/dev` | N49.1 |
+| [ ] | M | N49.3 Mostrar proveniência, inventário e critérios na tela Sinais | `/dev` | N49.2 |
+| [ ] | P | N49.4 Provar proveniência, vazio honesto e critérios visíveis | `/qa testes` | N49.3 |
+| [ ] | P | N49.5 Atualizar o mapa e o chamado depois da tela completa | docs | N49.4 |
+
+### Quality Brief (Sprint N49)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds; do not call `prodigy_rank.calculate` from the panel.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds (ISS-010); zero Alpaca POST from this sprint.
+Maintain: performance counts confirmed fills only; `queued_intent` and HTTP 200 are not fills; gross label when costs incomplete.
+Avoid: inventing `signal_id` or per-signal P&L when join/overlay is missing; reversing `idempotency_key`; new SQL column; parallel `/copy`; approving Collective2; stealing N45–N47; closing ISS-007/010/011/017; auto-promote.
+
+### Fora de escopo
+
+- Rota nova de cópia, provedores ou assinaturas
+- POST ou cancelamento de ordem pelo painel
+- Inventar fill, custo líquido, P&L por sinal sem fill, ou identificador por engenharia reversa do hash
+- Nova coluna SQL
+- Redefinir critérios de adoção (Feature 4/9/10 já definem)
+- Chamar o cálculo de ranking do Prodígio a partir do painel ou alterar a janela de quinze dias / o mínimo de operações
+- Aprovar Collective2
+- Tela própria de Tá Barato (N45)
+- Clear / OANDA / N29.5
+- Inventar limiar / promover Prodígio / ORB paper
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-013 / ISS-016 / ISS-017
+- Roubar identificadores N45–N47
+
+### Task N49.0 — Inventariar o reuso da proveniência, do inventário e do pool
+
+**Entrega:** Inventário curto dizendo que a ligação ordem↔sinal já existe no ledger, que o painel hoje a omite, e que ranking, cópia e critérios já estão escritos para reusar.
+**Como conferir:** O inventário cita a cadeia do ledger, o diário de ordens com identificador de sinal, o ranking de pesquisa do Prodígio e deixa Collective2, câmbio e envio pelo painel de fora.
+**Por quê:** Sem essa lista o EXECUTE inventa coluna, score ou critério de adoção.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N49-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `open_orders_from_ledger`; `persist_risk_decision`; `record_signal_event`; `signal-orders.jsonl`; `build_panel_copy`; `_load_prodigy_opportunities`; Feature 4/9/10 headings. Do not plan Alpaca HTTP from the panel. Do not steal N45–N47. Do not invent adoption numbers.
+
+### Task N49.1 — Ligar cada ordem paper ao sinal que a abriu
+
+**Entrega:** Cada ordem paper em operação (e o histórico de fill da família de cópia) traz origem e identificador do sinal quando o ledger ou o diário já têm o vínculo — ou o aviso honesto de que o vínculo não existe.
+**Como conferir:** Pedir o teste de dados em que uma ordem ligada mostra origem e identificador, e uma ordem sem vínculo mostra o aviso em português, sem inventar número de resultado.
+**Por quê:** Sem essa ligação não existe performance por origem, que é o pedido obrigatório desta sprint.
+
+**Detalhe técnico**
+
+- **Estado atual:** `open_orders_from_ledger` / `order_history_from_ledger` JOIN `risk_decisions` only for `strategy_key`. `order_row_from_snapshot` has no origin/`signal_id`. N48 operating table hides provenance.
+- **Estado desejado:** same loaders plus honest `origin`, `signal_event_id` (ledger UUID when JOIN hits), ticket `signal_id` only when already stored on `paper/signal-orders.jsonl` (match `client_order_id`), `provenance_status` `linked`|`unknown`. Portuguese unknown; no invented P&L.
+- **Fonte(s):** ISS-019 diretriz 1, Feature 9 origem, DATABASE `risk_decisions.signal_event_id`, N48 copy rows.
+- **Risco:** MEDIUM — shared order rows; invented id/P&L would lie.
+- **Arquivo(s):** `src/panel_ops_data.py`
+
+**executor_prompt**:
+
+```yaml
+id: N49.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N49.0"]
+files:
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "def open_orders_from_ledger" src/panel_ops_data.py && rg "def order_history_from_ledger" src/panel_ops_data.py && rg "signal_events" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "def order_row_from_snapshot" src/panel_ops_data.py && rg "provenance_status" src/panel_ops_data.py
+  - component: src/paper_gateway_queue.py
+    reuse_as: call
+    convergence_check: rg "def persist_risk_decision" src/paper_gateway_queue.py && rg "signal_event_id" src/paper_gateway_queue.py
+guardrail_contract:
+  - class: secrets
+    id: n49-1-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'AKIA' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no broker or webhook secret values hardcoded
+  - class: subagent-safety
+    id: n49-1-honest-provenance
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'process_after_gate_b' not in t; assert 'paper-api.alpaca.markets' not in t; assert 'from signal_copy' not in t; assert 'import signal_copy' not in t; assert 'provenance_status' in t; assert 'signal_events' in t"
+    pass_condition: panel data loader joins existing ledger events, does not submit paper, does not import HMAC copy module, records provenance_status
+```
+
+### Quality Brief (Sprint N49)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: confirmed fills only; queued_intent is not a fill; PERFORMANCE_LABEL_GROSS when costs incomplete.
+Maintain: do not reverse idempotency_key SHA; ticket signal_id only from an existing stored record.
+Avoid: adding a SQL column; synthesizing signal_id; treating unknown rows as linked; calling persist_risk_decision from the panel.
+
+Melhoria: expose honest provenance on open and history order rows without replacing N48 copy filters.
+Contexto: paper_orders already FK to risk_decisions; risk_decisions already has signal_event_id; signal_events.source is origin. Panel SELECT drops the join. Ticket signal_id is not a SQL column (hashed into idempotency_key). signal-orders.jsonl already stores provider+signal_id+client_order_id on the runner path. Snapshots from paper_monitor lack signal_id.
+Objetivo: (1) Extend open_orders_from_ledger and order_history_from_ledger to JOIN signal_events on rd.signal_event_id; add origin=source, signal_event_id=se.id, provenance_status=linked when the join hits. (2) Overlay ticket signal_id from reports paper/signal-orders.jsonl by client_order_id when that field already exists — never invent, never unhash. (3) Snapshot/unknown rows: provenance_status=unknown; origin may be missing; do not invent P&L keys. (4) Keep _sanitize_order_row. Keep strategy_key. Do not add SQL migrations. Do not import signal_copy. Do not import process_after_gate_b. Do not touch Clear/OANDA. LIVE false.
+Arquivos: src/panel_ops_data.py.
+Critério de pronto: rg shows signal_events and provenance_status in panel_ops_data.py; JOIN present; no process_after_gate_b and no import signal_copy in this file.
+Cenários de teste (implement in N49.4):
+1. Ledger fixture paper_order + risk_decision + signal_event source=tradingview → operating row origin tradingview, provenance_status linked, signal_event_id set.
+2. Same plus signal-orders.jsonl line with matching client_order_id and signal_id → ticket signal_id appears as stored.
+3. Order without join and without journal line → provenance_status unknown; no invented signal_id; no per-signal P&L key.
+4. Hashed webhook signal_id stored in journal is shown as stored, not reversed to plaintext.
+5. queued_intent remains is_fill false.
+6. Regressão: N48 copy.operating still filters strategy_key=signal_copy; signals[] unchanged.
+
+### Task N49.2 — Montar o inventário de sinais e o pool de candidatos
+
+**Entrega:** O pacote do painel passa a trazer a lista do que está assinado ou em operação, o resultado por sinal só de fill, as fases já persistidas, e o pool de candidatos do Prodígio como pesquisa.
+**Como conferir:** Pedir o teste de dados em que o inventário agrupa por origem/sinal com resultado bruto só quando há fill, o pool vem do ranking já gravado com rótulo de pesquisa, e Collective2 continua fechado.
+**Por quê:** A ligação sozinha não entrega a lista acessível nem o monitoramento contínuo de candidatos que o operador pediu.
+
+**Detalhe técnico**
+
+- **Estado atual:** `copy` has operating/history/family performance/research_copies/providers/collective2. No inventory, no per-signal fill totals, no prodigy_pool, no adoption object. `prodigy.ranking` is None on the bundle.
+- **Estado desejado:** `copy.inventory`, `copy.adoption` (Feature 4 text + catalog phases, no new numbers), `copy.prodigy_pool` from `_load_prodigy_opportunities`. Per-signal totals only from confirmed fills with linked provenance.
+- **Fonte(s):** ISS-019 diretrizes 2–3, Feature 4/9/10, N25 ranking, N42 catalog.
+- **Risco:** MEDIUM — invented per-signal P&L or new score would violate Feature 4/10.
+- **Arquivo(s):** `src/panel_ops_data.py`
+
+**executor_prompt**:
+
+```yaml
+id: N49.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N49.1"]
+files:
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "def build_panel_copy" src/panel_ops_data.py && rg "inventory" src/panel_ops_data.py && rg "prodigy_pool" src/panel_ops_data.py && rg "adoption" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: rg "PERFORMANCE_LABEL_GROSS" src/panel_ops_data.py && rg "def prodigy_copied_signals" src/panel_ops_data.py && rg "def load_panel_strategy_catalog" src/panel_ops_data.py
+  - component: src/trading_dashboard_data.py
+    reuse_as: call
+    convergence_check: rg "def _load_prodigy_opportunities" src/trading_dashboard_data.py && rg "_load_prodigy_opportunities" src/panel_ops_data.py
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: rg "WINDOW_DAYS = 15" src/prodigy_rank.py && rg "MIN_TRADES = 5" src/prodigy_rank.py && ! rg "def calculate" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n49-2-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no live keys or webhook secrets
+  - class: subagent-safety
+    id: n49-2-no-invented-score-or-fill
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'process_after_gate_b' not in t; assert 'from prodigy_rank import calculate' not in t; assert 'import prodigy_rank' not in t; assert 'PERFORMANCE_LABEL_GROSS' in t; assert 'approved_for_paper_copy' in t; assert 'research_tip' in t or 'prodigy_pool' in t"
+    pass_condition: no paper submit, no prodigy_rank.calculate, gross label kept, Collective2 closed, pool research-labeled
+```
+
+### Quality Brief (Sprint N49)
+
+Maintain: LIVE_TRADING_ENABLED=false; confirmed fills only; PERFORMANCE_LABEL_GROSS when costs incomplete.
+Maintain: Feature 4 adoption text reused (15-day window, min 5 operations in at least 3 days, net positive, drawdown/consistency, formula pending, R$ 20, default research, no auto-promote, C2 closed, phases RESEARCH/SHADOW/PAPER_LIMITED/PAPER_VALIDATED, LIVE off). Do not invent new numbers.
+Maintain: prodigy pool from existing intelligence/prodigy-top10-latest.json loader; label research_tip; not operating.
+Avoid: grouping unfilled orders into per-signal P&L; calling prodigy_rank.calculate; editing WINDOW_DAYS/MIN_TRADES; auto-promote.
+
+Melhoria: attach inventory, fill-only per-signal performance, Feature 4 adoption object, and research prodigy pool on copy without dropping N48 keys.
+Contexto: N48 family totals only. Feature 10 groups by strategy_key from confirmed fills. Feature 9 already has ranking via _load_prodigy_opportunities. Feature 4 already writes Prodigy 15d and C2 closed. Operator wants inventory of subscribed/operating signals and continuous research monitoring of candidates — reuse, do not rescore.
+Objetivo: (1) copy.inventory = unique operating/subscribed rows keyed by origin + signal_id or signal_event_id; include origin; performance gross only from confirmed fills with provenance_status=linked; unknown provenance excluded from per-signal totals (optional unknown_unlinked count, no fake P&L). (2) copy.adoption = Portuguese Feature 4 facts (signal copy; Prodigy 15d window / min 5 ops / min 3 days / net positive / drawdown and consistency / formula pending / R$ 20 / default research / rank does not promote; phases; C2 closed; operator-only promotion) plus catalog phase for signal_copy and prodigy_15d from load_panel_strategy_catalog. (3) copy.prodigy_pool = _load_prodigy_opportunities(root) items, label research_tip, never merged into operating. (4) Keep collective2 closed, research_copies labeled research. (5) Do not import prodigy_rank. Do not import process_after_gate_b. Do not add SQL columns. LIVE false.
+Arquivos: src/panel_ops_data.py.
+Critério de pronto: build_panel_copy / bundle copy includes inventory, adoption, prodigy_pool; rg shows _load_prodigy_opportunities and PERFORMANCE_LABEL_GROSS; no import prodigy_rank; approved_for_paper_copy still present.
+Cenários de teste (implement in N49.4):
+1. Two confirmed fills same signal_id → inventory row counts both with PERFORMANCE_LABEL_GROSS; queued_intent excluded.
+2. Unlinked fill → not attributed to a fabricated signal; no invented P&L.
+3. prodigy_pool items labeled research_tip and not inside operating.
+4. adoption text includes 15 dias, 5 operações, 3 dias, R$ 20, pesquisa as default, Collective2 fechado, sem promoção automática — and does not introduce a new numeric threshold.
+5. catalog phase for prodigy_15d remains research unless already paper in DB (do not UPDATE strategy_states).
+6. Regressão: copy.operating/history/performance/collective2/research_copies still present.
+
+### Task N49.3 — Mostrar proveniência, inventário e critérios na tela Sinais
+
+**Entrega:** A tela Sinais, no mesmo menu, mostra a origem do sinal em cada ordem em operação, o inventário, o bloco de critérios de adoção e o pool de pesquisa — sem botão de enviar ordem.
+**Como conferir:** Abrir o painel logado, clicar em Sinais, ver as colunas de origem na ordem, a lista, o texto dos critérios (quinze dias, fases, Collective2 fechado) e os candidatos marcados como pesquisa; a auditoria de ingresso continua abaixo.
+**Por quê:** Os dados sozinhos não mudam o que o operador lê; hoje a ordem em operação não diz qual sinal a abriu e os critérios não aparecem na feature.
+
+**Detalhe técnico**
+
+- **Estado atual:** `render_signals_page` is N48 copy + ingest; operating table has no origin/signal columns; no adoption/pool sections. `GET /api/signals` returns `signals` + `copy` N48 keys.
+- **Estado desejado:** same `/sinais`; operating table adds origem / sinal / aviso de vínculo; inventory + adoption + prodigy pool sections in Portuguese; JSON extends `copy`. No `/copy`. No order POST.
+- **Fonte(s):** ISS-019, OPERATOR-PANEL-MAP §2, Feature 4/9/10, N48 HTML shell.
+- **Risco:** MEDIUM — operator-facing copy; invented fill or new criterion text would break the contract.
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N49.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N49.2"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def render_signals_page" src/panel_ops_html.py && rg "Cópia de terceiros" src/panel_ops_html.py && rg "Auditoria de ingresso" src/panel_ops_html.py && rg "Critérios de adoção" src/panel_ops_html.py'
+  - component: src/panel_ops_html.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "origem desconhecida" src/panel_ops_html.py && rg "Collective2: cópia fechada" src/panel_ops_html.py && rg "def render_prodigy_page" src/panel_ops_html.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/api/signals" src/v4_web_dashboard.py && rg "serve_panel_json" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n49-3-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no live keys or webhook secrets in HTML or dashboard routes
+  - class: subagent-safety
+    id: n49-3-read-only-page
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); dash=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in html; assert 'process_after_gate_b' not in dash; assert 'Critérios de adoção' in html; assert 'Auditoria de ingresso' in html; paths=html.split('OPERATOR_PANEL_PATHS',1)[1].split(')',1)[0]; assert '/copy' not in paths"
+    pass_condition: same /sinais route; adoption visible; dashboard still does not call paper submit
+```
+
+### Quality Brief (Sprint N49)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of /sinais; do not add a parallel route.
+Maintain: Feature 9 ingest table remains under a distinct heading. N48 copy heading remains.
+Maintain: empty provenance is explicit Portuguese; Collective2 closed copy is always visible; prodigy pool says research not operating.
+Avoid: Live button; order submit/cancel controls; calling signal_copy.validate; rewriting Feature 4 numbers; DESIGN ingest-filter chips.
+
+Melhoria: extend authenticated GET /sinais and GET /api/signals with provenance columns, inventory, Feature 4 adoption block, and research pool; keep N48 sections.
+Contexto: operating HTML has client id, symbol, side, status, qty — no origin. Operator cannot see which signal opened the order. Adoption criteria live only in REQUIREMENTS. Prodígio ranking lives on /prodigy. Same page, not a new path.
+Objetivo: (1) Keep OPERATOR_PANEL_PATHS and _nav Sinais → /sinais (no /copy). (2) Operating table columns include Origem and Sinal; unknown: `origem desconhecida` and `sem vínculo com sinal`. (3) Section `Inventário de sinais` with empty `Nenhum sinal neste inventário.` (4) Section `Critérios de adoção` with Feature 4 Portuguese facts: cópia de terceiros; Prodígio janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, retorno líquido positivo, drawdown e consistência, fórmula de pontuação ainda pendente, risco paper inicial R$ 20, fase padrão pesquisa, ranking não promove sozinho; fases pesquisa / sombra / paper limitado / paper validado; Live desligado; fase não sobe por lucratividade aparente nem HTTP 200; promoção só operador; Collective2 cópia fechada. Do not add a new numeric rule. (5) Section `Candidatos ao pool (Prodígio)` labeled pesquisa — não autoriza ordem / não promove. Empty: `Nenhum candidato de pesquisa no pool.` (6) Keep N48 strings (Cópia de terceiros, Auditoria de ingresso, Collective2 fechado, vazios N48). (7) serve_panel_json /api/signals: keep signals and copy; copy includes inventory, adoption, prodigy_pool. Session required. (8) No POST handlers. No Live button. Do not add /copy.
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /sinais HTML contains Critérios de adoção, origem desconhecida (or linked origin in fixture), Inventário de sinais, Candidatos ao pool; Collective2 closed; unauthenticated still blocked; /api/signals JSON has copy.inventory, copy.adoption, copy.prodigy_pool; OPERATOR_PANEL_PATHS still has no /copy.
+Cenários de teste (implement in N49.4):
+1. Sem cookie → redirect/401 like today /sinais.
+2. Ordem sem vínculo → `origem desconhecida` e `sem vínculo com sinal`.
+3. Inventário vazio → `Nenhum sinal neste inventário.`
+4. Critérios de adoção HTML contains 15 dias, 5 operações, 3 dias, R$ 20, pesquisa, Collective2 fechado, não promove.
+5. Pool HTML says pesquisa and not operating; empty `Nenhum candidato de pesquisa no pool.`
+6. Seção de auditoria ainda mostra origem/destino/motivo (Feature 9). HTML sem controle de envio. Regressão: /ordens /historico /estrategias /performance /central /prodigy still render.
+
+### Task N49.4 — Provar proveniência, vazio honesto e critérios visíveis
+
+**Entrega:** Testes mostram ordem ligada e ordem sem vínculo, inventário só com fill, critérios na tela, pool de pesquisa, Collective2 fechado, recusa sem login, e que a página não envia ordem nem inventa fill.
+**Como conferir:** Pedir essa bateria e ver falha se a origem sumir, se aparecer resultado sem fill, se faltar o texto dos critérios, se o pool parecer operação, ou se aparecer controle de envio.
+**Por quê:** Sem prova, o mapa poderia marcar completo com a ordem ainda sem sinal.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated /sinais; linked provenance; unknown provenance strings `origem desconhecida` and `sem vínculo com sinal`; inventory empty `Nenhum sinal neste inventário.`; Feature 4 adoption strings (15 dias, 5 operações, 3 dias, R$ 20, não promove); prodigy_pool research_tip not merged into operating; Feature 10 queued_intent excluded from per-signal totals; Feature 9 origin/destination/reject_reason still on /api/signals `signals`; copy object still has operating/history/performance/collective2; HTML has Critérios de adoção and no process_after_gate_b / order form; regression previous menu routes and N48 headings. Do not call real Alpaca. Do not weaken existing Feature 9/10/N48 tests. LIVE false in env. No secret values.
+
+### Task N49.5 — Atualizar o mapa e o chamado depois da tela completa
+
+**Entrega:** O mapa descreve Sinais com proveniência, inventário e critérios; o chamado ISS-019 aponta esta sprint; a campanha e o épico antigo continuam abertos.
+**Como conferir:** Abrir o mapa na área Sinais: colunas de origem, inventário, critérios, pool de pesquisa; ISS-019 ligado a N49; ISS-017 e o épico antigo do painel único continuam abertos.
+**Por quê:** Sem esse recorte, a próxima rodada acha que Sinais ainda é só família de cópia ou que a campanha fechou.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-019 keep **aberto** until EXECUTE evidence + operator confirm; ISS-017 keep **aberto**; ISS-007 keep open; ISS-018 stays **fechado**). Update area 2 Sinais: provenance columns; inventory; Feature 4 adoption block; prodigy pool research. Real empty strings. Collective2 closed. DASHBOARD-OPERATIONS row «Ver cópia» mentions origin/inventory/criteria. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017. Do not claim EasyPanel rebuild. Do not mark N45–N47 started. LIVE false.
 
 ---
 

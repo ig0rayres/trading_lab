@@ -86,6 +86,36 @@ def _write_prodigy_research_copy(
     )
 
 
+def _write_signal_orders_journal(
+    root: Path,
+    rows: list[dict],
+) -> None:
+    paper = root / 'paper'
+    paper.mkdir(parents=True, exist_ok=True)
+    (paper / 'signal-orders.jsonl').write_text(
+        '\n'.join(json.dumps(r) for r in rows),
+        encoding='utf-8',
+    )
+
+
+def _write_prodigy_pool_fixture(root: Path) -> None:
+    intel = root / 'intelligence'
+    intel.mkdir(parents=True, exist_ok=True)
+    payload = {
+        'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
+        'as_of': '2026-11-17',
+        'top_10_research': [
+            {
+                'provider': 'prov-a',
+                'status': 'candidate',
+                'prodigy_score': '0.42',
+            },
+        ],
+        'score_warning': 'Research rank only; does not authorize orders.',
+    }
+    (intel / 'prodigy-top10-latest.json').write_text(json.dumps(payload), encoding='utf-8')
+
+
 def _write_signal_copy_panel_fixture(root: Path) -> None:
     _write_order_snapshots(
         root,
@@ -475,7 +505,17 @@ class PanelOpsDataTests(unittest.TestCase):
             def fetchall(self):
                 if 'from paper_orders po' in self._sql and 'paper_fills' not in self._sql:
                     return [
-                        ('cid-1', 'AAPL', 'buy', 'accepted', Decimal('2.5'), 'brk-1', 'signal_copy'),
+                        (
+                            'cid-1',
+                            'AAPL',
+                            'buy',
+                            'accepted',
+                            Decimal('2.5'),
+                            'brk-1',
+                            'signal_copy',
+                            'tradingview',
+                            'se-uuid-1',
+                        ),
                     ]
                 if 'pf.filled_at' in self._sql:
                     filled = datetime(2026, 11, 17, 12, 0, tzinfo=timezone.utc)
@@ -490,6 +530,8 @@ class PanelOpsDataTests(unittest.TestCase):
                             Decimal('1'),
                             1500,
                             filled,
+                            'tradingview',
+                            'se-uuid-2',
                         ),
                     ]
                 if 'from signal_events' in self._sql:
@@ -1200,7 +1242,15 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
         thread.join(3)
 
     def _assert_copy_object_shape(self, copy: dict) -> None:
-        for key in ('operating', 'history', 'performance', 'collective2'):
+        for key in (
+            'operating',
+            'history',
+            'performance',
+            'collective2',
+            'inventory',
+            'adoption',
+            'prodigy_pool',
+        ):
             self.assertIn(key, copy)
         collective2 = copy['collective2']
         self.assertIsInstance(collective2, dict)
@@ -1334,6 +1384,88 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
                 with urlopen(nav_req, timeout=3) as nav_resp:
                     nav = nav_resp.read().decode('utf-8')
                 self.assertNotIn('href="/copy"', nav)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n49_unknown_provenance_strings_on_operating_rows(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_signal_copy_panel_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('origem desconhecida', body)
+                self.assertIn('sem vínculo com sinal', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n49_linked_provenance_with_signal_orders_overlay(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_signal_copy_panel_fixture(root)
+            _write_signal_orders_journal(
+                root,
+                [
+                    {
+                        'client_order_id': 'copy-open-aapl',
+                        'provider': 'tradingview',
+                        'signal_id': 'abc123hashed',
+                    },
+                ],
+            )
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                operating = payload['copy']['operating']
+                aapl = next(r for r in operating if r.get('symbol') == 'AAPL')
+                self.assertEqual(aapl.get('origin'), 'tradingview')
+                self.assertEqual(aapl.get('signal_id'), 'abc123hashed')
+                self.assertEqual(aapl.get('provenance_status'), 'linked')
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n49_adoption_inventory_pool_api_shape(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_prodigy_pool_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                copy = payload['copy']
+                self._assert_copy_object_shape(copy)
+                adoption = copy['adoption']
+                joined = ' '.join(adoption.get('criteria_pt') or [])
+                self.assertIn('15 dias', joined)
+                self.assertIn('5 operações', joined)
+                self.assertIn('3 dias', joined)
+                self.assertIn('R$ 20', joined)
+                self.assertFalse(adoption.get('auto_promote'))
+                pool = copy['prodigy_pool']
+                self.assertTrue(pool.get('items'))
+                self.assertEqual((pool['items'][0].get('label') or ''), 'research_tip')
+                inventory = copy['inventory']
+                self.assertEqual(inventory.get('empty_label'), 'Nenhum sinal neste inventário.')
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n49_sinais_html_sections_visible(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('Critérios de adoção', body)
+                self.assertIn('Inventário de sinais', body)
+                self.assertIn('Candidatos ao pool (Prodígio)', body)
+                self.assertIn(N48_SECTION_COPY, body)
+                self.assertIn(N48_SECTION_AUDIT, body)
             finally:
                 self._shutdown(server, thread)
 

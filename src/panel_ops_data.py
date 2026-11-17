@@ -28,6 +28,10 @@ OPEN_ORDER_BROKER_STATUSES = frozenset({
 })
 PERFORMANCE_LABEL_GROSS = 'gross_unverified_costs'
 SIGNAL_COPY_STRATEGY_KEY = 'signal_copy'
+PROVENANCE_UNKNOWN_ORIGIN = 'origem desconhecida'
+PROVENANCE_UNKNOWN_SIGNAL = 'sem vínculo com sinal'
+INVENTORY_EMPTY_PT = 'Nenhum sinal neste inventário.'
+PRODIGY_POOL_EMPTY_PT = 'Nenhum candidato de pesquisa no pool.'
 
 
 def _panel_json_value(value: Any) -> Any:
@@ -233,6 +237,56 @@ def snapshot_is_open_order(snap: dict[str, Any]) -> bool:
     return broker_status in OPEN_ORDER_BROKER_STATUSES
 
 
+def _signal_orders_overlay_by_client_id(root: Path) -> dict[str, dict[str, Any]]:
+    by_cid: dict[str, dict[str, Any]] = {}
+    for rel in ('paper/signal-orders.jsonl', 'reports/paper/signal-orders.jsonl'):
+        for row in read_jsonl(Path(root) / rel):
+            cid = row.get('client_order_id')
+            if not cid:
+                continue
+            entry: dict[str, Any] = {}
+            if row.get('signal_id') is not None:
+                entry['signal_id'] = row['signal_id']
+            if row.get('provider') is not None:
+                entry['provider'] = row['provider']
+            if entry:
+                by_cid[str(cid)] = entry
+    return by_cid
+
+
+def _apply_ticket_overlay(row: dict[str, Any], overlay: dict[str, dict[str, Any]]) -> None:
+    cid = str(row.get('client_order_id') or '')
+    journal = overlay.get(cid) or {}
+    if journal.get('signal_id') is not None:
+        row['signal_id'] = journal['signal_id']
+    if row.get('provenance_status') != 'linked' and journal.get('provider'):
+        row['origin'] = journal['provider']
+        row['provenance_status'] = 'linked'
+
+
+def _finalize_order_provenance(row: dict[str, Any]) -> dict[str, Any]:
+    status = row.get('provenance_status')
+    if status != 'linked':
+        row['provenance_status'] = 'unknown'
+        if not row.get('origin') or row.get('origin') == 'unknown':
+            row['origin'] = PROVENANCE_UNKNOWN_ORIGIN
+    if not row.get('signal_id'):
+        row['signal_link_notice'] = PROVENANCE_UNKNOWN_SIGNAL
+    return row
+
+
+def _decorate_order_rows(
+    rows: list[dict[str, Any]],
+    overlay: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        item = dict(row)
+        _apply_ticket_overlay(item, overlay)
+        out.append(_finalize_order_provenance(item))
+    return out
+
+
 def order_row_from_snapshot(snap: dict[str, Any], *, history: bool = False) -> dict[str, Any]:
     row: dict[str, Any] = {
         'client_order_id': snap.get('client_order_id'),
@@ -247,6 +301,11 @@ def order_row_from_snapshot(snap: dict[str, Any], *, history: bool = False) -> d
         'broker_order_id': snap.get('broker_order_id'),
         'market': snap.get('market') or 'US_EQUITY',
     }
+    if snap.get('origin'):
+        row['origin'] = snap.get('origin')
+        row['provenance_status'] = 'linked'
+    if snap.get('signal_id'):
+        row['signal_id'] = snap.get('signal_id')
     if history:
         row['realized_gross_pnl_usd'] = snap.get('realized_gross_pnl_usd')
         row['pnl_label'] = PERFORMANCE_LABEL_GROSS
@@ -255,20 +314,24 @@ def order_row_from_snapshot(snap: dict[str, Any], *, history: bool = False) -> d
 
 
 def open_orders_from_snapshots(root: Path) -> list[dict[str, Any]]:
+    overlay = _signal_orders_overlay_by_client_id(root)
     rows = [
         order_row_from_snapshot(snap)
         for snap in latest_monitored_snapshots(root).values()
         if snapshot_is_open_order(snap)
     ]
+    rows = _decorate_order_rows(rows, overlay)
     return sorted(rows, key=lambda item: str(item.get('symbol') or ''))
 
 
 def order_history_from_snapshots(root: Path) -> list[dict[str, Any]]:
+    overlay = _signal_orders_overlay_by_client_id(root)
     rows = [
         order_row_from_snapshot(snap, history=True)
         for snap in latest_monitored_snapshots(root).values()
         if snapshot_is_confirmed_fill(snap)
     ]
+    rows = _decorate_order_rows(rows, overlay)
     return sorted(rows, key=lambda item: str(item.get('symbol') or ''))
 
 
@@ -280,8 +343,10 @@ def _ledger_open_order_row(
     qty: Any,
     broker_id: Any,
     strategy_key: Any,
+    signal_source: Any = None,
+    signal_event_id: Any = None,
 ) -> dict[str, Any]:
-    return _sanitize_order_row({
+    row: dict[str, Any] = {
         'client_order_id': cid,
         'symbol': symbol,
         'side': side,
@@ -291,7 +356,12 @@ def _ledger_open_order_row(
         'broker_order_id': broker_id,
         'strategy_key': strategy_key,
         'market': 'US_EQUITY',
-    })
+    }
+    if signal_source and signal_event_id:
+        row['origin'] = signal_source
+        row['signal_event_id'] = signal_event_id
+        row['provenance_status'] = 'linked'
+    return _sanitize_order_row(row)
 
 
 def open_orders_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str, Any]] | None:
@@ -300,9 +370,10 @@ def open_orders_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str, 
             with conn.cursor() as cur:
                 cur.execute(
                     'SELECT po.client_order_id, po.symbol, po.side, po.status, po.qty, '
-                    'po.broker_order_id, rd.strategy_key '
+                    'po.broker_order_id, rd.strategy_key, se.source, se.id '
                     'FROM paper_orders po '
                     'JOIN risk_decisions rd ON rd.id = po.risk_decision_id AND rd.deleted_at IS NULL '
+                    'LEFT JOIN signal_events se ON se.id = rd.signal_event_id AND se.deleted_at IS NULL '
                     'WHERE po.deleted_at IS NULL AND po.status != %s '
                     'ORDER BY po.created_at DESC LIMIT 100',
                     ('filled',),
@@ -311,8 +382,10 @@ def open_orders_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str, 
         if not fetched:
             return None
         rows = [
-            _ledger_open_order_row(cid, symbol, side, status, qty, broker_id, strategy_key)
-            for cid, symbol, side, status, qty, broker_id, strategy_key in fetched
+            _ledger_open_order_row(
+                cid, symbol, side, status, qty, broker_id, strategy_key, signal_source, signal_event_id,
+            )
+            for cid, symbol, side, status, qty, broker_id, strategy_key, signal_source, signal_event_id in fetched
             if str(status) != 'filled'
         ]
         return rows or None
@@ -330,13 +403,15 @@ def _ledger_history_row(
     qty: Any,
     cents: Any,
     filled_at: Any,
+    signal_source: Any = None,
+    signal_event_id: Any = None,
 ) -> dict[str, Any] | None:
     if str(status) in EXCLUDED_PNL_ORDER_STATUSES:
         return None
     gross = None
     if cents is not None:
         gross = str(Decimal(cents) / Decimal(100))
-    return _sanitize_order_row({
+    row: dict[str, Any] = {
         'client_order_id': cid,
         'symbol': symbol,
         'side': side,
@@ -350,7 +425,12 @@ def _ledger_history_row(
         'broker_fill_confirmed': True,
         'filled_at': filled_at,
         'market': 'US_EQUITY',
-    })
+    }
+    if signal_source and signal_event_id:
+        row['origin'] = signal_source
+        row['signal_event_id'] = signal_event_id
+        row['provenance_status'] = 'linked'
+    return _sanitize_order_row(row)
 
 
 def order_history_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str, Any]] | None:
@@ -359,10 +439,11 @@ def order_history_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str
             with conn.cursor() as cur:
                 cur.execute(
                     'SELECT po.client_order_id, po.symbol, po.side, po.status, po.broker_order_id, '
-                    'rd.strategy_key, pf.qty, le.amount_cents, pf.filled_at '
+                    'rd.strategy_key, pf.qty, le.amount_cents, pf.filled_at, se.source, se.id '
                     'FROM paper_fills pf '
                     'JOIN paper_orders po ON po.id = pf.paper_order_id AND po.deleted_at IS NULL '
                     'JOIN risk_decisions rd ON rd.id = po.risk_decision_id AND rd.deleted_at IS NULL '
+                    'LEFT JOIN signal_events se ON se.id = rd.signal_event_id AND se.deleted_at IS NULL '
                     'JOIN ledger_entries le ON le.paper_fill_id = pf.id AND le.deleted_at IS NULL '
                     "WHERE pf.deleted_at IS NULL AND le.kind = %s AND po.status NOT IN %s "
                     'ORDER BY pf.filled_at DESC NULLS LAST LIMIT 100',
@@ -382,11 +463,12 @@ def order_history_from_ledger(conn_factory: Callable[..., Any]) -> list[dict[str
 
 
 def load_panel_open_orders(root: Path, conn_factory: Callable[..., Any] | None) -> list[dict[str, Any]]:
+    overlay = _signal_orders_overlay_by_client_id(root)
     if conn_factory is not None:
         try:
             from_db = open_orders_from_ledger(conn_factory)
             if from_db:
-                return from_db
+                return _decorate_order_rows(from_db, overlay)
         except Exception:
             pass
     try:
@@ -396,11 +478,12 @@ def load_panel_open_orders(root: Path, conn_factory: Callable[..., Any] | None) 
 
 
 def load_panel_order_history(root: Path, conn_factory: Callable[..., Any] | None) -> list[dict[str, Any]]:
+    overlay = _signal_orders_overlay_by_client_id(root)
     if conn_factory is not None:
         try:
             from_db = order_history_from_ledger(conn_factory)
             if from_db:
-                return from_db
+                return _decorate_order_rows(from_db, overlay)
         except Exception:
             pass
     try:
@@ -745,19 +828,152 @@ def _copy_performance_slice(perf: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
+def _inventory_key(row: dict[str, Any]) -> str | None:
+    if row.get('provenance_status') != 'linked':
+        return None
+    origin = str(row.get('origin') or '')
+    sid = row.get('signal_id') or row.get('signal_event_id')
+    if not origin or not sid:
+        return None
+    return f'{origin}|{sid}'
+
+
+def _inventory_upsert(
+    items_map: dict[str, dict[str, Any]],
+    row: dict[str, Any],
+) -> dict[str, Any] | None:
+    key = _inventory_key(row)
+    if key is None:
+        return None
+    if key not in items_map:
+        items_map[key] = {
+            'origin': row.get('origin'),
+            'signal_id': row.get('signal_id'),
+            'signal_event_id': row.get('signal_event_id'),
+            'provenance_status': 'linked',
+            'operating': 0,
+            'fills_confirmed': 0,
+            'gross_usd_total': None,
+            'pnl_label': PERFORMANCE_LABEL_GROSS,
+        }
+    return items_map[key]
+
+
+def _build_copy_inventory(
+    operating: list[dict[str, Any]],
+    history: list[dict[str, Any]],
+) -> dict[str, Any]:
+    items_map: dict[str, dict[str, Any]] = {}
+    unknown_unlinked = 0
+    for row in operating:
+        if row.get('provenance_status') != 'linked':
+            unknown_unlinked += 1
+            continue
+        entry = _inventory_upsert(items_map, row)
+        if entry is None:
+            unknown_unlinked += 1
+            continue
+        entry['operating'] += 1
+    for row in history:
+        if str(row.get('paper_status') or '') == 'queued_intent':
+            continue
+        if not row.get('broker_fill_confirmed') and row.get('realized_gross_pnl_usd') is None:
+            continue
+        if row.get('provenance_status') != 'linked':
+            unknown_unlinked += 1
+            continue
+        entry = _inventory_upsert(items_map, row)
+        if entry is None:
+            unknown_unlinked += 1
+            continue
+        try:
+            gross = Decimal(str(row.get('realized_gross_pnl_usd') or 0))
+        except (InvalidOperation, TypeError):
+            gross = Decimal(0)
+        entry['fills_confirmed'] += 1
+        prior = entry.get('gross_usd_total')
+        try:
+            prior_dec = Decimal(str(prior)) if prior is not None else Decimal(0)
+        except (InvalidOperation, TypeError):
+            prior_dec = Decimal(0)
+        entry['gross_usd_total'] = str(prior_dec + gross)
+    items = sorted(items_map.values(), key=lambda item: str(item.get('origin') or ''))
+    return {
+        'items': items,
+        'unknown_unlinked_count': unknown_unlinked,
+        'empty_label': INVENTORY_EMPTY_PT,
+        'source': 'confirmed_fills_only',
+        'pnl_label': PERFORMANCE_LABEL_GROSS,
+    }
+
+
+def _build_copy_adoption(strategy_catalog: dict[str, Any] | None) -> dict[str, Any]:
+    catalog = strategy_catalog if isinstance(strategy_catalog, dict) else {}
+    phases: list[dict[str, Any]] = []
+    for row in catalog.get('strategies') or []:
+        if not isinstance(row, dict):
+            continue
+        key = str(row.get('strategy_key') or '')
+        if key in ('signal_copy', 'prodigy_15d'):
+            phases.append(row)
+    criteria_pt = [
+        'Cópia de sinais de terceiros (TradingView / provedores).',
+        'Prodígio: janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, '
+        'retorno líquido positivo, drawdown e consistência; fórmula de pontuação ainda pendente.',
+        'Risco paper inicial sugerido: R$ 20; fase padrão pesquisa; ranking não promove sozinho.',
+        'Fases: pesquisa, sombra, paper limitado, paper validado — promoção somente operador.',
+        'Live desligado; fase não sobe por lucratividade aparente nem HTTP 200.',
+        'Collective2: cópia fechada — nenhum provedor aprovado.',
+        'Performance e inventário: somente fill confirmado (valores brutos se o custo faltar).',
+    ]
+    return {
+        'criteria_pt': criteria_pt,
+        'catalog_phases': phases,
+        'collective2_closed': True,
+        'auto_promote': False,
+        'live_trading_enabled': False,
+        'source': 'REQUIREMENTS Feature 4, 9 and 10',
+    }
+
+
+def _build_prodigy_pool(root: Path) -> dict[str, Any]:
+    try:
+        from trading_dashboard_data import _load_prodigy_opportunities
+    except ImportError:
+        return {
+            'status': 'UNAVAILABLE',
+            'items': [],
+            'label': 'research_tip',
+            'disclaimer': 'Research rank only; does not authorize orders.',
+        }
+    pool = _load_prodigy_opportunities(root)
+    if isinstance(pool, dict):
+        pool = dict(pool)
+        pool.setdefault('label', 'research_tip')
+    return pool
+
+
 def build_panel_copy(
+    root: Path,
     open_orders: list[dict[str, Any]],
     order_history: list[dict[str, Any]],
     perf: dict[str, Any] | None,
     research_copies: list[dict[str, Any]],
+    *,
+    strategy_catalog: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    operating = _signal_copy_rows(open_orders)
+    history = _signal_copy_rows(order_history)
     return {
-        'operating': _signal_copy_rows(open_orders),
-        'history': _signal_copy_rows(order_history),
+        'operating': operating,
+        'history': history,
         'performance': _copy_performance_slice(perf),
         'collective2': {'approved_for_paper_copy': False, 'status': 'closed'},
         'research_copies': list(research_copies),
         'providers': _copy_providers(research_copies),
+        'inventory': _build_copy_inventory(operating, history),
+        'adoption': _build_copy_adoption(strategy_catalog),
+        'prodigy_pool': _build_prodigy_pool(root),
     }
 
 
@@ -776,6 +992,7 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
     research_copies = prodigy_copied_signals(root)
     open_orders = load_panel_open_orders(root, conn_factory)
     order_history = load_panel_order_history(root, conn_factory)
+    strategy_catalog = load_panel_strategy_catalog(conn_factory)
     return {
         'generated_at': datetime.now(timezone.utc).isoformat(),
         'signals': load_panel_signals(root, conn_factory, flags),
@@ -787,8 +1004,15 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
             'disclaimer': 'research_only_not_order_auth',
         },
         'performance': perf,
-        'copy': build_panel_copy(open_orders, order_history, perf, research_copies),
-        'strategy_catalog': load_panel_strategy_catalog(conn_factory),
+        'copy': build_panel_copy(
+            root,
+            open_orders,
+            order_history,
+            perf,
+            research_copies,
+            strategy_catalog=strategy_catalog,
+        ),
+        'strategy_catalog': strategy_catalog,
         'timesfm': load_panel_timesfm(root),
         'live_trading_ui': {'enabled': False, 'control_visible': False},
     }

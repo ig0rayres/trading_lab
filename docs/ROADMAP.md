@@ -74,6 +74,7 @@
 | N47 | N | OANDA Practice no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 7 | *(abaixo)* |
 | N48 | N | Sinais = cópia de terceiros + auditoria; sem fill inventado; LIVE false | concluida | 5 | observability | ISS-018 alinhamento Sinais↔copy | *(abaixo)* |
 | N49 | N | Ordem paper mostra o sinal; inventário e critérios visíveis; LIVE false | planejada | 6 | observability | ISS-019 proveniência e pool | *(abaixo)* |
+| N50 | N | Lista nomeada Collective2; Sinais em operação vs auditoria vs Prodígio; Provedor visível; LIVE false | planejada | 6 | observability | ISS-020 C2 + reorganizar Sinais | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -134,6 +135,7 @@
 | N47 | comprehensive | stub campanha — OANDA; não arranca sem N29.5 |
 | N48 | senior+qa | Tela Sinais: cópia de terceiros + auditoria; sem fill inventado |
 | N49 | senior+qa | Proveniência ordem↔sinal + inventário/critérios visíveis; sem fill inventado |
+| N50 | senior+qa | Collective2 lista nomeada + reorganizar Sinais + Provedor visível; sem fill inventado |
 
 ---
 
@@ -4301,13 +4303,263 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `do
 
 ---
 
+## Sprint N50 — Habilitar Collective2 por lista nomeada e reorganizar Sinais
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-020 · Feature 4 já define C2 fechado (Passo 2: revisar política, não inventar score)  
+> titulo_humano: Collective2 por lista nomeada e tela Sinais sem salada  
+> resumo_humano: Depois do login você abre Sinais e vê o que está em operação separado da auditoria e dos candidatos de pesquisa. Collective2 só entra em cópia paper se você nomear o identificador; lista vazia continua fechada. O Prodígio mostra o provedor. O painel não envia ordem.  
+> Gate: Requisitos com lista nomeada (vazia = cópia Collective2 fechada; H10 histórico); tela separa operação, auditoria e candidatos; pool mostra provedor; um ID nomeado não aprova os outros; sessão obrigatória; zero envio; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N50.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N49 planejada/entregue · N48 concluida · Release: ISS-020 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+A tela Sinais separa o que está em operação do que é auditoria e do que é só candidato de pesquisa; o Collective2 só entra em cópia paper com identificadores que você nomear; o Prodígio deixa de mostrar provedor vazio.
+
+### O que muda para você
+
+- Collective2 deixa de ser um bloqueio total: a cópia paper só abre para os identificadores que você colocar na lista nomeada (vazia = continua fechado)
+- A tela Sinais deixa claro o que está ativo ou assinado versus a auditoria de ingresso versus os candidatos do Prodígio
+- O pool do Prodígio mostra o identificador do provedor em vez de vazio
+- Os dez candidatos observados no passado não entram sozinhos na lista
+- O painel não envia ordem; dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Política de aprovação por identificador nomeado | Ler os requisitos: lista vazia fecha a cópia; só entra quem você nomear; o relato antigo dos dez candidatos continua histórico |
+| 2 | Marketplace visível sem aprovar todo mundo | Abrir Sinais: sem nomes na lista, a cópia Collective2 aparece fechada; com um identificador nomeado, só esse aparece como assinado |
+| 3 | Tela em três papéis claros | Ver operação/assinados no topo, auditoria no fim, candidatos do Prodígio no meio, cada um com título próprio |
+| 4 | Provedor do Prodígio visível | No pool, a coluna de provedor mostra o identificador — não vazio |
+| 5 | Mapa e chamado atualizados | O mapa descreve a lista nomeada e as três seções; o chamado ISS-020 aponta esta sprint |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N50.0 Inventariar o reuso do Collective2, do painel de Sinais e do campo do Prodígio | `/git` | — |
+| [ ] | P | N50.1 Atualizar a política de Collective2 nos requisitos | docs | N50.0 |
+| [ ] | M | N50.2 Ligar a lista nomeada de Collective2 e corrigir o provedor do Prodígio | `/dev` | N50.1 |
+| [ ] | M | N50.3 Reorganizar a tela Sinais em operação, auditoria e candidatos | `/dev` | N50.2 |
+| [ ] | P | N50.4 Provar lista vazia, provedor visível e seções distintas | `/qa testes` | N50.3 |
+| [ ] | P | N50.5 Atualizar o mapa e o chamado depois da tela reorganizada | docs | N50.4 |
+
+### Quality Brief (Sprint N50)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds; do not call `prodigy_rank.calculate` or Collective2 HTTP from the panel.
+Maintain: confirmed fills only; `queued_intent` and HTTP 200 are not fills; gross label when costs incomplete.
+Maintain: named Collective2 allowlist defaults empty; never bulk-approve H10’s ten; rank eligibility is not paper-copy approval; active-order snapshots are not tickets.
+Avoid: mapping only `row.get('provider')`; parallel `/c2`; new SQL column; stealing N45–N47; closing ISS-007/010/011/017/019; auto-promote; printing API keys.
+
+### Fora de escopo
+
+- Aprovar em lote os dez candidatos históricos ou copiar IDs de exemplo do feed
+- Tratar ranking como aprovação de cópia paper
+- Chamar o poller Collective2 ou o cálculo de ranking a partir do painel
+- Sintetizar ticket a partir de ordem ativa Collective2
+- Nova coluna SQL
+- Inventar fill, custo líquido, P&L ou score
+- POST ou cancelamento de ordem pelo painel
+- Tela própria de Tá Barato (N45)
+- Clear / OANDA / N29.5
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-017 / ISS-019
+- Roubar identificadores N45–N47
+
+### Task N50.0 — Inventariar o reuso do Collective2, do painel de Sinais e do campo do Prodígio
+
+**Entrega:** Inventário curto dizendo que o feed e o ranking Collective2 já existem, que a tela hoje mistura papéis, e que o Prodígio já emite o identificador do provedor que o painel ignora.
+**Como conferir:** O inventário cita o poller só leitura, o ranking de pesquisa, a lista nomeada vazia, o campo errado do provedor, e deixa envio pelo painel, câmbio e os dez candidatos automáticos de fora.
+**Por quê:** Sem essa lista o EXECUTE aprova todo mundo, inventa score ou sintetiza ticket.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N50-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `c2_signal_feed.snapshot`; `c2_history_collect`; `prodigy_rank` `provider_id`; `_load_prodigy_opportunities`; `build_panel_copy` collective2 hardcoded closed; Feature 4 / H10. Do not plan Alpaca HTTP from the panel. Do not steal N45–N47. Do not copy example strategy IDs into the allowlist.
+
+### Task N50.1 — Atualizar a política de Collective2 nos requisitos
+
+**Entrega:** Os requisitos passam a dizer que a cópia Collective2 abre só para identificadores que o operador nomear, com a lista vazia como padrão, e que o relato antigo dos dez candidatos continua histórico.
+**Como conferir:** Abrir os requisitos: Feature 4, integrações e fora de escopo falam em lista nomeada; a linha H10 ainda descreve os dez candidatos daquele corte, sem transformá-los em aprovados.
+**Por quê:** Ligar o marketplace sem gravar a política faria o código contradizer o contrato que já fechava a cópia.
+
+**Detalhe técnico**
+
+P task (docs-only). File: `docs/REQUIREMENTS.md` bump to **v0.5** with a revision-history row. Rewrite Feature 4 signal-copy paragraph and acceptance bullet: no Collective2 provider enters copy unless its numeric id is on the named allowlist (default empty). H10 row stays historical (10 candidates, 0 eligible); add one sentence that eligibility from rank is not approval. §5 Integrações Collective2: marketplace + named allowlist; panel does not call the API. §7 Fora de Escopo: forbid copying a provider **not** on the allowlist; forbid synthesizing a ticket from an active-order snapshot; keep the H10 ten unapproved until named. Do not invent scores, windows, or min-trades. Do not mark Feature 4 checkboxes as newly proven paper fills. LIVE false.
+
+### Task N50.2 — Ligar a lista nomeada de Collective2 e corrigir o provedor do Prodígio
+
+**Entrega:** O pacote do painel lê uma lista nomeada vazia por padrão; só os identificadores listados entram como assinados Collective2; o pool do Prodígio passa a exibir o identificador do provedor.
+**Como conferir:** Pedir o teste de dados em que a lista vazia deixa a cópia fechada, um identificador nomeado aparece sozinho como assinado, e o item do Prodígio traz o provedor preenchido.
+**Por quê:** Hoje o banner diz fechado para sempre e o pool mostra provedor vazio mesmo com ranking gravado.
+
+**Detalhe técnico**
+
+- **Estado atual:** `copy.collective2` is always `{approved_for_paper_copy: false, status: closed}`. `_load_prodigy_opportunities` sets `provider` from `row.get('provider')` while rank JSON has `provider_id`.
+- **Estado desejado:** empty JSON allowlist + optional numeric env overlay; `copy.collective2.approved_ids`; closed if empty; Prodígio `provider` falls back to `provider_id`. No HTTP, no tickets from snapshots.
+- **Fonte(s):** ISS-020, Feature 4 / H10, `prodigy_rank.provider_id`, N49 `build_panel_copy`.
+- **Risco:** MEDIUM — silent approve-all or invented tickets would violate Feature 4 / the C2 feed contract.
+- **Arquivo(s):** `src/panel_ops_data.py`, `src/trading_dashboard_data.py`, `config/c2_paper_copy_allowlist.json`
+
+**executor_prompt**:
+
+```yaml
+id: N50.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N50.1"]
+files:
+  - src/panel_ops_data.py
+  - src/trading_dashboard_data.py
+  - config/c2_paper_copy_allowlist.json
+reuse_targets:
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "def build_panel_copy" src/panel_ops_data.py && rg "approved_ids" src/panel_ops_data.py && rg "c2_paper_copy_allowlist" src/panel_ops_data.py
+  - component: src/trading_dashboard_data.py
+    reuse_as: extend
+    convergence_check: rg "def _load_prodigy_opportunities" src/trading_dashboard_data.py && rg "provider_id" src/trading_dashboard_data.py
+  - component: src/c2_signal_feed.py
+    reuse_as: call
+    convergence_check: rg "execution_authorized" src/c2_signal_feed.py && rg "active-orders-latest.json" src/panel_ops_data.py
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: rg "provider_id" src/prodigy_rank.py && ! rg "def calculate" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n50-2-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text()+Path('src/trading_dashboard_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: panel loaders do not embed or read the Collective2 API key
+  - class: subagent-safety
+    id: n50-2-named-allowlist
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; import json; t=Path('src/panel_ops_data.py').read_text(); d=Path('src/trading_dashboard_data.py').read_text(); a=json.loads(Path('config/c2_paper_copy_allowlist.json').read_text()); assert a.get('approved_ids')==[]; assert 'process_after_gate_b' not in t; assert 'fetch_orders' not in t; assert '30415311' not in t; assert 'provider_id' in d; assert 'approved_ids' in t"
+    pass_condition: empty allowlist committed; no bulk example IDs; no paper submit; prodigy loader reads provider_id
+```
+
+### Quality Brief (Sprint N50)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds; do not call prodigy_rank.calculate or Collective2 HTTP from the panel.
+Maintain: confirmed fills only; queued_intent is not a fill; PERFORMANCE_LABEL_GROSS when costs incomplete.
+Maintain: named allowlist defaults empty; never bulk-approve H10 ten; rank eligible is not approval.
+Avoid: seeding example strategy IDs; synthesizing tickets from active-order snapshots; mapping only row.get('provider').
+
+Melhoria: attach a named Collective2 allowlist to copy.collective2 and map prodigy provider_id into provider without rescoring.
+Contexto: Feature 4 / H10 close all C2 copy. Operator wants the other marketplace enabled honestly. Rank JSON uses provider_id; loader and HTML read provider, so the pool shows None. c2_signal_feed forbids treating active orders as tickets. control_flags has no allowlist column — do not migrate risk anchors.
+Objetivo: (1) Add config/c2_paper_copy_allowlist.json {"approved_ids":[]} committed. (2) Loader unions that list with optional env C2_PAPER_COPY_APPROVED_IDS (comma-separated digits only; ignore junk). (3) copy.collective2 = {approved_ids, approved_for_paper_copy: bool(approved_ids), status: closed|allowlist, candidates: research-labeled from existing on-disk rank/history if present, never merged into operating}. (4) If reports/providers/signals/active-orders-latest.json exists, attach a snapshot object with execution_authorized false and a Portuguese label that it is not a ticket; do not call fetch_orders. (5) Operating C2 rows = existing paper orders whose origin is collective2 OR allowlisted ids shown as subscribed even with zero orders (honest empty). (6) _load_prodigy_opportunities: provider = row.get('provider') or row.get('provider_id'); keep status, prodigy_score, research_tip. (7) Do not import signal_copy. Do not import process_after_gate_b. Do not import prodigy_rank.calculate. Do not hardcode 30415311 or the H10 ten. LIVE false.
+Arquivos: src/panel_ops_data.py, src/trading_dashboard_data.py, config/c2_paper_copy_allowlist.json.
+Critério de pronto: allowlist JSON exists with approved_ids []; rg shows approved_ids and provider_id; C2_API4_KEY absent from those two py files; no fetch_orders in panel_ops_data.
+Cenários de teste (implement in N50.4):
+1. Empty allowlist → approved_for_paper_copy false, status closed, no operating C2 ids.
+2. One named id in JSON or env → only that id in approved_ids; others remain candidates/research.
+3. Rank fixture with provider_id and no provider → pool item provider equals that id (not None).
+4. Missing snapshot file → no invented active orders.
+5. Present snapshot → listed as not a ticket; execution_authorized false.
+6. Regressão: copy.operating/history/inventory/adoption/prodigy_pool still present; PERFORMANCE_LABEL_GROSS kept.
+
+### Task N50.3 — Reorganizar a tela Sinais em operação, auditoria e candidatos
+
+**Entrega:** A mesma tela Sinais mostra em operação/assinados no topo, Collective2 e Prodígio como papéis distintos, e a auditoria de ingresso por último — sem botão de enviar ordem.
+**Como conferir:** Abrir o painel logado, clicar em Sinais, ver os títulos nessa ordem, Collective2 fechado se a lista estiver vazia, e o provedor preenchido no pool.
+**Por quê:** Hoje cópia, inventário, critérios, pool e auditoria aparecem misturados no mesmo scroll; o operador não distingue o que opera do que só audita.
+
+**Detalhe técnico**
+
+- **Estado atual:** `render_signals_page` order is copy, inventory, adoption, pool, audit. Collective2 is one closed sentence inside copy. Pool Provedor column uses `it.get("provider")`.
+- **Estado desejado:** headings in Portuguese: operação/assinados first, inventory, Collective2 marketplace, Prodígio research candidates, adoption, audit last. Fallback provider or provider_id in the table. Same `/sinais`. No POST.
+- **Fonte(s):** ISS-020 diretrizes 2–3, OPERATOR-PANEL-MAP §2, N48/N49 HTML shell.
+- **Risco:** MEDIUM — operator-facing copy; a closed banner that claims all ten are approved would break the contract.
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N50.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N50.2"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def render_signals_page" src/panel_ops_html.py && rg "Em operação / assinados" src/panel_ops_html.py && rg "Auditoria de ingresso" src/panel_ops_html.py && rg "Candidatos Prodígio" src/panel_ops_html.py'
+  - component: src/panel_ops_html.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "lista nomeada" src/panel_ops_html.py && rg "def _signals_prodigy_pool_html" src/panel_ops_html.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/api/signals" src/v4_web_dashboard.py && rg "serve_panel_json" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n50-3-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no live keys or Collective2 API key in HTML or dashboard routes
+  - class: subagent-safety
+    id: n50-3-read-only-page
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); dash=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in html; assert 'process_after_gate_b' not in dash; assert 'Em operação / assinados' in html; assert 'Auditoria de ingresso' in html; assert 'Candidatos Prodígio' in html; paths=html.split('OPERATOR_PANEL_PATHS',1)[1].split(')',1)[0]; assert '/c2' not in paths; assert '/copy' not in paths"
+    pass_condition: same /sinais route; three roles visible; dashboard still does not call paper submit
+```
+
+### Quality Brief (Sprint N50)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of /sinais; do not add a parallel route.
+Maintain: Feature 9 ingest table remains under a distinct heading at the bottom. N48/N49 inventory and adoption remain.
+Maintain: empty allowlist copy is explicit Portuguese; prodigy pool says research not operating; provider column uses provider or provider_id.
+Avoid: Live button; order submit/cancel; calling signal_copy.validate; rewriting Feature 4 numbers; listing H10 ten as approved.
+
+Melhoria: extend authenticated GET /sinais and GET /api/signals with a clear ACTIVE vs audit vs Prodígio research layout and honest Collective2 allowlist copy.
+Contexto: five h2 blocks already exist but read as a salad. Operator asked what is active/subscribed/operating vs audit vs Prodigy candidates. Collective2 must remain closed when the allowlist is empty.
+Objetivo: (1) Keep OPERATOR_PANEL_PATHS and _nav Sinais → /sinais (no /copy, no /c2). (2) Section order: `Em operação / assinados` (TradingView signal_copy + allowlisted C2); `Inventário de sinais`; `Collective2`; `Candidatos Prodígio (pesquisa)`; `Critérios de adoção`; `Auditoria de ingresso` last. (3) Empty operating stays `Nenhuma cópia de terceiro em operação.` (4) Collective2 empty: `Collective2: cópia paper fechada — nenhum provedor na lista nomeada.` Collective2 with ids: `Collective2: cópia paper só para os provedores nomeados.` (5) Pool subtitle stays pesquisa — não autoriza ordem / não promove. Table cell uses provider or provider_id. (6) Audit subtitle unchanged: origem, destino e motivo. Não é fill. (7) Footer unchanged: painel não envia ordem. Live desligado. (8) serve_panel_json /api/signals keeps signals and copy; copy.collective2 matches N50.2. Session required. (9) No POST. Update adoption bullet that previously said Collective2 always closed so it matches named allowlist (empty = closed).
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /sinais HTML contains the three role headings in that relative order (operação before audit, Prodígio candidates distinct); empty Collective2 string; unauthenticated still blocked; OPERATOR_PANEL_PATHS still has no /copy and no /c2.
+Cenários de teste (implement in N50.4):
+1. Sem cookie → redirect/401 like today /sinais.
+2. Lista vazia → string de cópia paper fechada / lista nomeada; nenhum ID aparece como assinado Collective2.
+3. Um ID nomeado → esse ID visível como assinado; os demais não.
+4. Pool com provider_id → coluna Provedor não é None/NONE.
+5. Auditoria ainda mostra origem/destino/motivo (Feature 9) e vem depois da operação.
+6. HTML sem controle de envio. Regressão: /ordens /historico /estrategias /performance /central /prodigy still render.
+
+### Task N50.4 — Provar lista vazia, provedor visível e seções distintas
+
+**Entrega:** Testes mostram lista vazia fechada, um identificador nomeado sozinho, provedor do Prodígio visível, as três seções na ordem combinada, recusa sem login, e que a página não envia ordem nem inventa fill.
+**Como conferir:** Pedir essa bateria e ver falha se a cópia Collective2 parecer toda aprovada, se o provedor voltar vazio, se a auditoria subir para o topo, ou se aparecer controle de envio.
+**Por quê:** Sem prova, o mapa poderia marcar completo com a salada e o Provedor None ainda no ar.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated /sinais; empty allowlist Portuguese closed string; one named id only; prodigy pool provider from provider_id (not None); headings `Em operação / assinados`, `Candidatos Prodígio`, `Auditoria de ingresso` with operação before audit; Feature 9 origin/destination/reject_reason still on /api/signals `signals`; copy.collective2.approved_ids; snapshot not a ticket; no process_after_gate_b / order form; regression previous menu routes and N48/N49 inventory/adoption. Do not call real Alpaca or Collective2 HTTP. Do not put C2_API4_KEY in tests. LIVE false in env. No secret values.
+
+### Task N50.5 — Atualizar o mapa e o chamado depois da tela reorganizada
+
+**Entrega:** O mapa descreve Sinais em operação, auditoria e candidatos, com Collective2 por lista nomeada; o chamado ISS-020 aponta esta sprint; a campanha e o épico antigo continuam abertos.
+**Como conferir:** Abrir o mapa na área Sinais: três papéis, lista nomeada, provedor visível; ISS-020 ligado a N50; ISS-017, ISS-019 e o épico antigo do painel único continuam abertos.
+**Por quê:** Sem esse recorte, a próxima rodada acha que Collective2 ainda está interditado para sempre ou que a campanha fechou.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-020 keep **aberto** until EXECUTE evidence + operator confirm; ISS-019 keep **aberto** unless operator already closed; ISS-017 keep **aberto**; ISS-007 keep open). Update area 2 Sinais: ACTIVE vs audit vs Prodígio; named allowlist; real empty Collective2 string; provider_id mapping. DASHBOARD-OPERATIONS «Ver sinais» mentions the three roles. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017 / ISS-019. Do not claim EasyPanel rebuild. Do not mark N45–N47 started. LIVE false.
+
+---
+
 ## Fora do roadmap D (backlog N)
 
 | Tema | Origem | Notas |
 |------|--------|-------|
 | Estratégias Ta Barato / Prodigy / momentum (fórmulas) | LEGACY-ANALYSIS | N7 cobre fases; **não** inventar limiares de scoring |
 | Walk-forward / Lean | RESEARCH_ROADMAP | Motor separado |
-| Collective2 paper-copy | Feature 4 | Fora de N7; `approved_for_paper_copy` permanece falso |
+| Collective2 paper-copy | Feature 4 / N50 | Lista nomeada (padrão vazia); H10 permanece histórico; não aprovar os dez em lote |
 | CI deploy EasyPanel | Operador | N6 feito; bump de imagem só com sprint própria (fora de N8) |
 | Submodule pin vs clone raso | D1 | Preferir pin revisado, não `main` cego |
 | F-003 orb-parity (`parity.py`) | D1 / FINDINGS | **Congelado até N12.4/ISS-005** (fill Feature 5); N13 repo não descongela |

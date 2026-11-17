@@ -23,6 +23,7 @@
 | ISS-017 | aberto | N41+ / N42 / N43 / N44 | Épico: entrega do painel operacional completo (campanha pós-N40) |
 | ISS-018 | fechado | N48 | Alinhar a tela Sinais ao conceito de cópia de terceiros |
 | ISS-019 | aberto | N49 | Sinais: proveniência ordem↔sinal, inventário/assinaturas, critérios + pool Prodígio |
+| ISS-020 | aberto | N50 | Habilitar Collective2 + reorganizar tela Sinais; Prodígio provider None |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -539,5 +540,35 @@
 **Nota N49 PLAN (2026-11-17):** sprint **N49** planejada (`docs/.briefs/N49.brief.md`). Critérios **reusados** de REQUIREMENTS Feature 4, 9 e 10 — não inventados. **Não** fecha ISS-007 / ISS-017 / ISS-010 / ISS-011. Não arranca N45–N47. `LIVE_TRADING_ENABLED=false`.
 
 **Nota N49 EXECUTE (2026-11-17):** frente `front/n27-alpaca-loop` — JOIN ledger `signal_events` + overlay `paper/signal-orders.jsonl`; `/sinais` com colunas Origem/Sinal, inventário fill-only, bloco critérios Feature 4/9/10, pool `_load_prodigy_opportunities` (`research_tip`); `tests/test_panel_ops.py` 55 passed. **Chamado permanece aberto** até rebuild EasyPanel + confirmação visual do operador (mesma política de ISS-018).
+
+**Nota operador (2026-11-17 pós-deploy #67):** N49 no ar; lacunas de UX/C2 → **ISS-020** (não reabre escopo N49 além do bug `provider` vs `provider_id` no pool).
+
+---
+
+## ISS-020 — Habilitar Collective2 + reorganizar Sinais (salada + Prodígio None)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / enhancement (+ bug mapeamento Prodígio) |
+| Sprint | N50 (não roubar N45–N47) |
+| Status | aberto |
+| Impacto | Operador quer sinais C2 operando; tela `/sinais` confusa (cópia + audit + inventário + critérios + pool misturados); pool Prodígio mostra Provedor `None`/`NONE` — rank usa `provider_id`, loader lê `provider`. |
+
+**Diretrizes do operador (2026-11-17):**
+1. **Habilitar Collective2** (outro marketplace de sinais) — hoje fechado por H10/Feature 4 (`approved_for_paper_copy` falso; 10 candidatos, 0 elegíveis). Plano deve definir processo de aprovação honesto (não flip cego) + superfície no painel; LIVE false.
+2. **Reorganizar `/sinais`** — deixar claro o que está **ativo/assinado/operando** vs audit vs candidatos; acabar com a “salada”.
+3. **Corrigir Prodígio pool** — `provider` None: bug de campo (`provider_id` → exibir como provedor).
+
+**Ativos hoje (honesto):** canal paper ativo = TradingView / família `signal_copy`; C2 = fechado; Prodígio pool = research-only (e IDs quebrados na UI).
+
+**Reuso:** `src/c2_signal_feed.py`, `c2_history_collect.py`, REQUIREMENTS Feature 4 H10, N49 panel_ops, `prodigy_rank` (`provider_id`), `_load_prodigy_opportunities`. Sem limiar inventado; sem fill inventado.
+
+**Não fecha:** ISS-007, ISS-017, ISS-010, ISS-011. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-17; REQUIREMENTS Feature 4/H10; `trading_dashboard_data._load_prodigy_opportunities` L180; ISS-019/N49.
+
+**Nota autopilot:** registro automático ISS-020; Passo 2 — requisitos C2 já em Feature 4 (revisar política H10 com plano, não inventar score).
+
+**Nota PLAN N50 (2026-11-17):** sprint **N50** planejada (`docs/.briefs/N50.brief.md`). Política = lista nomeada (padrão vazia). Tela `/sinais` reorganizada em operação vs auditoria vs candidatos. Bug Provedor `None` = `provider_id`. **Não** fecha ISS-007 / ISS-017 / ISS-010 / ISS-011 / ISS-019. N45–N47 intactos. `LIVE_TRADING_ENABLED=false`.
 
 ---

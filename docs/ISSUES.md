@@ -634,4 +634,6 @@
 
 **Nota planejamento (2026-11-17):** Design DONE (`docs/design/DESIGN.md`, `mockups/sinais.md`, `mockups/panel-overview.md`). Sprint **N52** planejada (`docs/.briefs/N52.brief.md`). EXECUTE ainda não rodou. Entrega «finalizado» só após merge no ramo principal.
 
+**Nota N52 EXECUTE (2026-11-17):** `panel_ops_html` cockpit + métricas completas na pré-aprovação; testes painel 75 OK. **Chamado aberto** até merge `main` + rebuild EasyPanel + confirmação visual. «Finalizado» só pós-merge.
+
 ---

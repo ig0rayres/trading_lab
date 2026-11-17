@@ -1408,9 +1408,11 @@ class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
                 req = _get(base + '/sinais', session='panel-secret')
                 with urlopen(req, timeout=3) as resp:
                     body = resp.read().decode('utf-8')
+                self.assertIn(N51_PREAPPROVAL_SECTION, body)
                 self.assertIn(N50_OPERATING_SECTION, body)
                 self.assertIn(N48_SECTION_AUDIT, body)
                 self.assertIn(N50_C2_SECTION, body)
+                self.assertLess(body.index(N51_PREAPPROVAL_SECTION), body.index(N50_OPERATING_SECTION))
                 self.assertLess(body.index(N50_OPERATING_SECTION), body.index(N48_SECTION_AUDIT))
                 self.assertLess(body.index(N50_C2_SECTION), body.index(N48_SECTION_AUDIT))
                 self.assertIn(N48_COPY_EMPTY, body)
@@ -1756,7 +1758,20 @@ class PanelKillSwitchCycleTests(unittest.TestCase):
 
 
 N51_PREAPPROVAL_SECTION = 'Pré-aprovação de provedores'
-N51_PREAPPROVAL_EMPTY = 'Nenhum candidato em pré-aprovação.'
+N51_PREAPPROVAL_EMPTY = (
+    'Nenhum provedor aguardando análise no momento. Novos candidatos aparecerão aqui.'
+)
+N52_PREAPPROVAL_METRIC_SNIPPETS = (
+    'Percentual de acertos (pesquisa)',
+    'Acertos encolhidos % (pesquisa)',
+    'Fator de lucro (pesquisa)',
+    'Resultado reportado (pesquisa)',
+    'Retorno líquido % (pesquisa)',
+    'Drawdown máximo % (pesquisa)',
+    'Score Prodígio (pesquisa)',
+    'Score (pesquisa)',
+    'Status (pesquisa)',
+)
 
 
 class PanelSinaisN51Tests(unittest.TestCase):
@@ -1887,6 +1902,147 @@ class PanelSinaisN51Tests(unittest.TestCase):
                 pre = payload['copy']['preapproval']
                 self.assertIn('queue', pre)
                 self.assertTrue(pre['queue'])
+            finally:
+                self._shutdown(server, thread)
+
+
+class PanelSinaisN52Tests(unittest.TestCase):
+    def _server(self, root, *, connect_factory=None, session='panel-secret'):
+        handler = make_handler(
+            root,
+            operator_session=session,
+            connect_factory=connect_factory,
+        )
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n52_unauthenticated_sinais_and_provider_post(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                sinais_unauth = _unauthenticated_panel_status(base, '/sinais')
+                self.assertNotEqual(sinais_unauth, 200)
+                req = _post(
+                    base + '/api/signals/providers',
+                    {'platform': 'collective2', 'provider_id': '1', 'action': 'approve'},
+                )
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(req, timeout=3)
+                self.assertEqual(caught.exception.code, 401)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n52_empty_preapproval_humanized(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N51_PREAPPROVAL_EMPTY, body)
+                self.assertIn('empty-state', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n52_preapproval_research_metrics_visible(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            intel = root / 'intelligence'
+            intel.mkdir(parents=True, exist_ok=True)
+            (intel / 'provider-research-top10-latest.json').write_text(
+                json.dumps(
+                    {
+                        'top_10_research': [
+                            {
+                                'provider_id': '132169',
+                                'win_rate_pct': 65.4,
+                                'profit_factor_reported': 1.82,
+                                'max_drawdown_pct': -12.4,
+                            }
+                        ]
+                    }
+                ),
+                encoding='utf-8',
+            )
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('metrics-block', body)
+                self.assertIn('65.4', body)
+                self.assertIn('1.82', body)
+                self.assertIn('-12.4', body)
+                self.assertIn('pesquisa', body)
+                for snippet in N52_PREAPPROVAL_METRIC_SNIPPETS:
+                    self.assertIn(snippet, body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n52_missing_metric_shows_indisponivel_not_zero(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='304', win_rate=50.0)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                idx_net = body.find('Retorno líquido % (pesquisa)')
+                self.assertGreater(idx_net, -1)
+                chunk = body[idx_net : idx_net + 120]
+                self.assertIn('indisponível', chunk)
+                self.assertNotRegex(
+                    chunk,
+                    r'Retorno líquido % \(pesquisa\):\s*</strong>\s*0\b',
+                )
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n52_html_section_hierarchy_decision_first(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertLess(
+                    body.index(N51_PREAPPROVAL_SECTION),
+                    body.index(N50_OPERATING_SECTION),
+                )
+                self.assertLess(
+                    body.index(N50_OPERATING_SECTION),
+                    body.index(N48_SECTION_AUDIT),
+                )
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n52_design_tokens_and_no_order_submit_in_sinais(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    sinais = resp.read().decode('utf-8')
+                self.assertIn('--bg-canvas', sinais)
+                self.assertIn('metrics-block', sinais)
+                self.assertNotIn('process_after_gate_b', sinais)
+                self.assertNotIn('method="post"', sinais.lower())
+                req_c = _get(base + '/central', session='panel-secret')
+                with urlopen(req_c, timeout=3) as resp:
+                    central = resp.read().decode('utf-8')
+                self.assertIn('brake-strip--active', central)
+                self.assertIn('--bg-canvas', central)
             finally:
                 self._shutdown(server, thread)
 

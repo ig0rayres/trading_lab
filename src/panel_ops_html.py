@@ -54,7 +54,22 @@ _N51_PREAPPROVAL_SECTION = 'Pré-aprovação de provedores'
 _N51_PREAPPROVAL_SUBTITLE = (
     'Pesquisa — não autoriza ordem. Aprovar não é fill. Métricas rotuladas pesquisa.'
 )
-_N51_PREAPPROVAL_EMPTY = 'Nenhum candidato em pré-aprovação.'
+_N51_PREAPPROVAL_EMPTY = (
+    'Nenhum provedor aguardando análise no momento. Novos candidatos aparecerão aqui.'
+)
+_N48_COPY_EMPTY_HINT = 'Aprove um provedor acima para iniciar.'
+_PREAPPROVAL_METRIC_LABELS: dict[str, str] = {
+    'win_rate_pct': 'Percentual de acertos (pesquisa)',
+    'shrunk_win_rate_pct': 'Acertos encolhidos % (pesquisa)',
+    'profit_factor_reported': 'Fator de lucro (pesquisa)',
+    'reported_pnl_sum': 'Resultado reportado (pesquisa)',
+    'net_return_pct': 'Retorno líquido % (pesquisa)',
+    'max_drawdown_pct': 'Drawdown máximo % (pesquisa)',
+    'prodigy_score': 'Score Prodígio (pesquisa)',
+    'score': 'Score (pesquisa)',
+    'status': 'Status (pesquisa)',
+}
+_PREAPPROVAL_DISPLAY_METRIC_KEYS = tuple(_PREAPPROVAL_METRIC_LABELS.keys())
 
 _STRATEGY_PHASE_LABELS = {
     'research': 'pesquisa',
@@ -64,14 +79,40 @@ _STRATEGY_PHASE_LABELS = {
 }
 
 _PANEL_CSS = '''
-body{font:16px "IBM Plex Sans",system-ui,sans-serif;margin:0;background:var(--bg,#f3f5f8);color:var(--fg,#1c2430)}
+:root{
+--bg-canvas:#F8FAFC;--bg-card:#FFFFFF;--text-primary:#0F172A;--text-muted:#64748B;
+--border-subtle:#E2E8F0;--action-primary:#0369A1;--action-danger:#B91C1C;
+--status-research-bg:#F1F5F9;--status-research-text:#475569;
+--status-active-bg:#ECFDF5;--status-active-text:#065F46;
+--status-warning-bg:#FFFBEB;--status-warning-text:#92400E;
+--radius-sm:4px;--radius-md:8px;
+--text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:18px;
+}
+body{font:var(--text-base) "IBM Plex Sans",system-ui,sans-serif;margin:0;
+background:var(--bg-canvas);color:var(--text-primary)}
 .layout{display:flex;min-height:100vh}.side{width:240px;background:#1a2332;color:#e8eef6;padding:20px}
 .side a{color:#e8eef6;text-decoration:none;display:block;padding:10px 0}.main{flex:1;padding:24px}
-.card{background:#fff;border:1px solid #d5dee8;border-radius:8px;padding:16px;margin:8px 0}
-.muted{color:#5c6b7c}.btn{display:inline-block;padding:10px 16px;border-radius:8px;border:none;cursor:pointer}
-.btn-primary{background:#2c4a6e;color:#f7fafc}.btn-danger{background:#8f2d2d;color:#fff}
-table{width:100%;border-collapse:collapse}td,th{border:1px solid #d5dee8;padding:8px;text-align:left}
-.warn{background:#fff3cd;border:1px solid #e6c48a;padding:12px;border-radius:8px}
+.card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+padding:16px;margin:8px 0}
+.muted{color:var(--text-muted)}
+.btn{display:inline-block;padding:10px 16px;border-radius:var(--radius-md);border:none;cursor:pointer;
+font-weight:600;font-size:var(--text-sm)}
+.btn-primary{background:var(--action-primary);color:#fff}
+.btn-danger-outline{background:transparent;color:var(--action-danger);
+border:1px solid var(--action-danger)}
+.metrics-block{display:flex;flex-direction:column;gap:4px;font-size:var(--text-sm)}
+.metrics-block .metric{display:block;color:var(--text-primary)}
+.empty-state{padding:16px;border-radius:var(--radius-md);background:var(--status-research-bg);
+color:var(--status-research-text);border:1px solid var(--border-subtle)}
+.badge-status{display:inline-block;padding:4px 8px;border-radius:var(--radius-sm);
+font-size:var(--text-xs);font-weight:500}
+.badge-status--pending{background:var(--status-research-bg);color:var(--status-research-text)}
+.badge-status--approved{background:var(--status-active-bg);color:var(--status-active-text)}
+.badge-status--rejected{background:var(--status-warning-bg);color:var(--status-warning-text)}
+table{width:100%;border-collapse:collapse}td,th{border:1px solid var(--border-subtle);padding:12px 16px;
+text-align:left;font-size:var(--text-sm)}
+.warn{background:var(--status-warning-bg);border:1px solid #e6c48a;padding:12px;border-radius:var(--radius-md);
+color:var(--status-warning-text)}
 .brake-strip{padding:12px 16px;border-radius:8px;margin:8px 0;display:flex;flex-wrap:wrap;
 align-items:center;gap:12px;justify-content:space-between;transition:background .2s,color .2s}
 .brake-strip--active{background:#7A1218;color:#FFF7F5}
@@ -326,7 +367,10 @@ def _order_signal_cell(row: dict[str, Any]) -> str:
 
 def _signals_copy_operating_html(operating: list[dict[str, Any]]) -> str:
     if not operating:
-        return f'<p class="muted">{esc(_N48_COPY_EMPTY)}</p>'
+        return (
+            f'<div class="empty-state">{esc(_N48_COPY_EMPTY)} '
+            f'{esc(_N48_COPY_EMPTY_HINT)}</div>'
+        )
     rows = ''.join(
         f'<tr><td class="mono">{esc(o.get("client_order_id") or "—")}</td>'
         f'<td>{esc(o.get("symbol"))}</td><td>{esc(o.get("side"))}</td>'
@@ -568,39 +612,62 @@ def _format_research_metric(metrics: dict[str, Any] | None, key: str) -> str:
     return esc(block[key])
 
 
+def _preapproval_metrics_block_html(metrics: dict[str, Any] | None) -> str:
+    block = metrics if isinstance(metrics, dict) else {}
+    spans = []
+    for key in _PREAPPROVAL_DISPLAY_METRIC_KEYS:
+        label = _PREAPPROVAL_METRIC_LABELS[key]
+        value = _format_research_metric(block, key)
+        spans.append(
+            f'<span class="metric"><strong>{esc(label)}:</strong> {value}</span>'
+        )
+    return f'<div class="metrics-block">{"".join(spans)}</div>'
+
+
+def _preapproval_status_badge(status: Any) -> str:
+    raw = str(status or 'pending').lower()
+    if raw == 'approved':
+        css = 'badge-status badge-status--approved'
+    elif raw == 'rejected':
+        css = 'badge-status badge-status--rejected'
+    else:
+        css = 'badge-status badge-status--pending'
+    return f'<span class="{css}">{esc(status or "pending")}</span>'
+
+
 def _signals_preapproval_section_html(preapproval: dict[str, Any]) -> str:
     block = preapproval if isinstance(preapproval, dict) else {}
     queue = block.get('queue') or []
     if not queue:
-        body = f'<p class="muted">{esc(_N51_PREAPPROVAL_EMPTY)}</p>'
+        body = f'<div class="empty-state">{esc(_N51_PREAPPROVAL_EMPTY)}</div>'
     else:
         rows = []
         for item in queue:
             metrics = item.get('metrics') if isinstance(item.get('metrics'), dict) else {}
-            win = _format_research_metric(metrics, 'win_rate_pct')
-            pnl = _format_research_metric(metrics, 'reported_pnl_sum')
+            metrics_block = _preapproval_metrics_block_html(metrics)
             plat_raw = str(item.get('platform') or '—')
             pid_raw = str(item.get('provider_id') or '—')
             plat = esc(plat_raw)
             pid = esc(pid_raw)
             plat_attr = html.escape(plat_raw, quote=True)
             pid_attr = html.escape(pid_raw, quote=True)
-            status = esc(item.get('status') or 'pending')
+            status_badge = _preapproval_status_badge(item.get('status'))
             approve = (
                 f'<button type="button" class="btn btn-primary" data-provider-action="approve" '
                 f'data-platform="{plat_attr}" data-provider-id="{pid_attr}">Aprovar</button>'
             )
             reject = (
-                f'<button type="button" class="btn btn-danger" data-provider-action="reject" '
+                f'<button type="button" class="btn btn-danger-outline" data-provider-action="reject" '
                 f'data-platform="{plat_attr}" data-provider-id="{pid_attr}">Rejeitar</button>'
             )
             rows.append(
-                f'<tr><td>{plat}</td><td class="mono">{pid}</td><td>{status}</td>'
-                f'<td>{win}</td><td>{pnl}</td><td>{approve} {reject}</td></tr>'
+                f'<tr><td>{plat}</td><td class="mono">{pid}</td>'
+                f'<td>{metrics_block}</td><td>{status_badge}</td>'
+                f'<td>{approve} {reject}</td></tr>'
             )
         body = (
-            '<table><thead><tr><th>Plataforma</th><th>Identificador</th><th>Status</th>'
-            '<th>Acertos % (pesquisa)</th><th>Resultado reportado (pesquisa)</th><th>Ações</th>'
+            '<table><thead><tr><th>Plataforma</th><th>Identificador</th>'
+            '<th>Métricas vitais (pesquisa)</th><th>Status</th><th>Ações</th>'
             f'</tr></thead><tbody>{"".join(rows)}</tbody></table>'
         )
     return (
@@ -641,8 +708,9 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Sinais</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("sinais")}<main class="main">
 <h1>Sinais</h1>
-{operating_body}
+<p class="muted">Cockpit de decisão — cópia de terceiros (pesquisa). Live desligado.</p>
 {preapproval_body}
+{operating_body}
 {inventory_body}
 {c2_body}
 {pool_body}

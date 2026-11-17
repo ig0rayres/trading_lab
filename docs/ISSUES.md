@@ -16,6 +16,7 @@
 | ISS-010 | aberto | N29 | Adapters demo G-MKT: Clear (B3), Alpaca (cripto), OANDA (forex) |
 | ISS-011 | aberto | ISS-010 B3/FOREX + N17.2 G-FORM (pós-N33) | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
+| ISS-013 | aberto | N36 | Copy do freio na Central: Ligar/Desligar parada parece ligar o sistema |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -335,5 +336,22 @@
 **Fontes:** operador `/pmo plan` 2026-11-16 (+ TimesFM); REQUIREMENTS Feature 11 + dúvida #8 (Respondida); ROADMAP N31 (bloco N28 intocado); ISS-011.
 
 **Nota headless:** TimesFM entra na task dedicada **N31.2** (adapter opcional, fail-closed, rótulo `research_tip`). N31.1 = job diário fills+não-fills. N31.3 = desbloqueia caminho N28.2–4 suggestion-first, sem inventar scoring. Brief: `docs/.briefs/N31.brief.md`.
+
+---
+
+## ISS-013 — Copy do freio na Central (Ligar/Desligar parada)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-sem-dominio / enhancement |
+| Sprint | N36 |
+| Status | aberto |
+| Impacto | Na Central, «Ligar parada» / «Desligar parada» e «Parada geral ligada» parecem ligar ou desligar o laboratório. O campo já bloqueia ordem demo nova quando verdadeiro; o texto é que confunde. |
+
+**Critério de aceite:** status «Freio de emergência ativo» / «Freio liberado (outros limites ainda valem)»; botões «Ativar freio» (`kill_switch_on=true`) e «Liberar freio» (`kill_switch_on=false`); testes afirmam as frases novas e a ausência das antigas (sem «operação demo permitida» nem «Liberar operação demo»); sem botão Live; `kill_switch_on` e Gate B inalterados; `demo_operation_on` fora desta sprint; `LIVE_TRADING_ENABLED=false`.
+
+**Fontes:** operador `/pmo plan` 2026-11-17 (demanda aprovada); `src/panel_ops_html.py` `render_central_page`; `docs/DASHBOARD-OPERATIONS.md`.
+
+**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N36.brief.md`.
 
 ---

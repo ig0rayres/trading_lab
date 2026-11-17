@@ -219,16 +219,18 @@
         }
       ],
       "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/"
+        ".beesy/stamp-gate-logs/",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "86e00bc289f779ebe3c75cf014d847b0529bb65e",
-      "stamped_at": "2026-11-17T14:48:16Z",
+      "last_validated_sha": "446e70b7858095aa5f24c173da6653eaf13484e8",
+      "stamped_at": "2026-11-17T14:55:00Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "5865484838e07889ce3bd7e9df88d3a1d8d0c46cb8dab9fc13482f5af3a85577",
-      "patch_id": "749df55d87b16a4a51558f491074bd384c66b6f0",
+      "content_hash": "29781553717715edf15540a2880047d6d198d576cea79498c1dd2107fe4fc982",
+      "patch_id": "786aa86d48ab1a8b4ea0365f3558a127be5ea0b4",
       "patch_id_version": 2
     },
     "plan_only": false,

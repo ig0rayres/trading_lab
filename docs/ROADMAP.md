@@ -76,6 +76,7 @@
 | N49 | N | Ordem paper mostra o sinal; inventário e critérios visíveis; LIVE false | planejada | 6 | observability | ISS-019 proveniência e pool | *(abaixo)* |
 | N50 | N | Lista nomeada Collective2; Sinais em operação vs auditoria vs Prodígio; Provedor visível; LIVE false | planejada | 6 | observability | ISS-020 C2 + reorganizar Sinais | *(abaixo)* |
 | N51 | N | Fila de pré-aprovação no painel com métricas de pesquisa; aprovar não envia ordem; LIVE false | planejada | 6 | observability, ledger | ISS-021 pré-aprovação + métricas | *(abaixo)* |
+| N52 | N | Cockpit Sinais: decisão no topo, todos os números de pesquisa, visual do desenho; LIVE false | planejada | 4 | observability | ISS-022 redesign UX Sinais | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -137,6 +138,8 @@
 | N48 | senior+qa | Tela Sinais: cópia de terceiros + auditoria; sem fill inventado |
 | N49 | senior+qa | Proveniência ordem↔sinal + inventário/critérios visíveis; sem fill inventado |
 | N50 | senior+qa | Collective2 lista nomeada + reorganizar Sinais + Provedor visível; sem fill inventado |
+| N51 | senior+qa | Pré-aprovação no painel + métricas reutilizadas; sem fill inventado |
+| N52 | senior+qa | Cockpit Sinais: métricas completas + hierarquia + tokens visuais; sem fill inventado |
 
 ---
 
@@ -4803,6 +4806,174 @@ P task. Files: `tests/test_panel_ops.py`, `tests/test_ledger_migration.py` (exte
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/DATABASE.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-021 keep **aberto** until EXECUTE evidence + operator confirm; ISS-020 keep **aberto** unless operator already closed; ISS-019 keep **aberto**; ISS-017 keep **aberto**; ISS-007 keep open). Update area 2 Sinais: Pré-aprovação; recovered metrics table; seed vs ledger; real empty queue string. DATABASE § new 003 note — do not rewrite §6 risk anchors. DASHBOARD-OPERATIONS «Ver sinais» mentions the queue. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017 / ISS-019 / ISS-020. Do not claim EasyPanel rebuild. Do not mark N45–N47 started. LIVE false.
+
+---
+
+## Sprint N52 — Transformar Sinais num cockpit de decisão com todos os números de pesquisa
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-17 · fonte ISS-022 · Design já em `docs/design/` (Passo 2 pulado)  
+> titulo_humano: Cockpit de decisão na tela Sinais com todos os números de pesquisa  
+> resumo_humano: Depois do login a tela Sinais abre na fila de aprovar ou rejeitar, com todos os números de pesquisa já gravados. O que opera fica no meio; auditoria no fim. Aprovar não envia ordem. Entrega só depois de entrar no ramo principal.  
+> Gate: Sinais logado com decisão no topo, todos os números recuperados ou indisponível, operação no meio, auditoria no fim, visual do desenho, pytest do painel verde, mapa atualizado, LIVE false; «finalizado» só após merge no ramo principal  
+> review: senior+qa  
+> Brief: `docs/.briefs/N52.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N51 planejada/entregue · N50 planejada · N49 planejada · N48 concluida · Release: ISS-022 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+A tela Sinais passa a ser um cockpit: você decide no topo, vendo todos os números de pesquisa já gravados, e só depois o que opera e o que é auditoria.
+
+### O que muda para você
+
+- A fila de aprovar ou rejeitar sobe para o começo da tela, com todos os números recuperáveis visíveis
+- O que já opera e o inventário ficam no meio; pesquisa e auditoria descem para o fim
+- Campo ausente aparece como indisponível — sem fórmula nova e sem zero inventado
+- Cores e botões seguem o desenho já aprovado; as outras telas não são redesenhadas nesta rodada
+- Aprovar continua não enviando ordem; dinheiro real permanece desligado; «finalizado» só depois de entrar no ramo principal
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Cockpit de decisão no topo | Abrir Sinais logado: a fila de aprovar ou rejeitar é o primeiro bloco |
+| 2 | Todos os números de pesquisa visíveis | Em cada candidato, acertos, fator de lucro, drawdown, score e demais campos recuperados aparecem ou dizem indisponível |
+| 3 | Operação no meio, auditoria no fim | O que já opera vem depois da fila; ingresso e candidatos de pesquisa ficam por último |
+| 4 | Visual alinhado ao desenho | Botão aprovar destacado, rejeitar distinto, estados vazios em português |
+| 5 | Mapa e chamado atualizados | O mapa descreve a nova ordem; o chamado aponta esta sprint |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N52.0 Inventariar o reuso do cockpit e das métricas já na fila | `/git` | — |
+| [ ] | M | N52.1 Reestruturar a tela Sinais como cockpit de decisão | `/dev` | N52.0 |
+| [ ] | P | N52.2 Provar hierarquia, números completos e ausência de envio | `/qa testes` | N52.1 |
+| [ ] | P | N52.3 Atualizar o mapa e o chamado depois do cockpit | docs | N52.2 |
+
+### Quality Brief (Sprint N52)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; approval is not a fill.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds; do not call `prodigy_rank.calculate` or Collective2 HTTP from the panel.
+Maintain: N51 overlay keys; missing = indisponível (never 0); rank eligible is not paper-copy approval.
+Maintain: N38 brake-strip colors; other routes keep their HTML.
+Avoid: rewriting `panel_ops_data` unless a listed key never reaches HTML; stealing N45–N47; closing ISS-007/010/011/017/019/020/021; Live button; printing API keys.
+
+### Fora de escopo
+
+- Inventar fórmula de assertividade ou score composto
+- Preencher métrica ausente com zero
+- Tratar ranking como aprovação de cópia paper
+- Redesign HTML das outras rotas
+- POST ou cancelamento de ordem pelo painel
+- Tela própria de Tá Barato (N45)
+- Clear / OANDA / N29.5
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-017 / ISS-019 / ISS-020 / ISS-021
+- Marcar «finalizado» antes do merge no ramo principal
+- Roubar identificadores N45–N47
+
+### Task N52.0 — Inventariar o reuso do cockpit e das métricas já na fila
+
+**Entrega:** Inventário curto dizendo que a fila e o overlay de números já existem, que a tela só mostra dois campos, e que o desenho do cockpit já está no repositório.
+**Como conferir:** O inventário cita a sessão autenticada, as chaves já gravadas no overlay, a ordem atual da tela, os tokens do desenho, e deixa envio pelo painel, fórmula nova e as outras telas de fora.
+**Por quê:** Sem essa lista o EXECUTE inventa score, mexe no pacote de dados sem necessidade, ou redesenha o painel inteiro.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N52-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `render_signals_page` order; `_signals_preapproval_section_html` two-column metrics; `PREAPPROVAL_METRIC_KEYS`; `_PANEL_CSS`; `docs/design/mockups/sinais.md`; `docs/design/DESIGN.md`. Do not plan Alpaca HTTP from the panel. Do not steal N45–N47. Do not invent an assertiveness formula.
+
+### Task N52.1 — Reestruturar a tela Sinais como cockpit de decisão
+
+**Entrega:** A mesma tela Sinais abre na fila de decisão, com todos os números de pesquisa visíveis ou marcados indisponível, operação no meio, auditoria no fim, e visual alinhado ao desenho — sem botão de enviar ordem.
+**Como conferir:** Abrir o painel logado, ir em Sinais, ver a fila no topo com acertos, fator de lucro, drawdown, score e status; rolar até operação e depois auditoria; confirmar que aprovar não envia ordem e que a Central ainda mostra o freio.
+**Por quê:** Hoje a decisão fica no meio da salada e só dois números aparecem — exatamente o que o operador recusou.
+
+**Detalhe técnico**
+
+- **Estado atual:** `render_signals_page` emits operating → preapproval → inventory → C2/pool/adoption/audit. Pre-approval table shows only `win_rate_pct` and `reported_pnl_sum`. `_PANEL_CSS` is a compact untokenized block. Approve/reject POST already exists.
+- **Estado desejado:** Portuguese cockpit per `docs/design/mockups/sinais.md`: (1) pre-approval first with `metrics-block` for every recovered key; (2) operating then inventory; (3) C2, Prodígio pool, adoption, audit last. DESIGN.md tokens in `_PANEL_CSS`. Empty states humanized. Other routes' HTML unchanged. Brake-strip colors unchanged.
+- **Fonte(s):** ISS-022, `docs/design/DESIGN.md`, `docs/design/mockups/sinais.md`, N51 overlay, N50 headings.
+- **Risco:** MEDIUM — treating rank status as copy approval, inventing metrics, or restyling the brake would break Feature 4 / N38.
+- **Arquivo(s):** `src/panel_ops_html.py`
+
+**executor_prompt**:
+
+```yaml
+id: N52.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N52.0"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def render_signals_page" src/panel_ops_html.py && rg "def _signals_preapproval_section_html" src/panel_ops_html.py && rg "metrics-block" src/panel_ops_html.py && rg "Pré-aprovação de provedores" src/panel_ops_html.py'
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg -- "--bg-canvas" src/panel_ops_html.py && rg -- "--action-primary" src/panel_ops_html.py && rg -- "--action-danger" src/panel_ops_html.py && rg "_PANEL_CSS" src/panel_ops_html.py'
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: rg "PREAPPROVAL_METRIC_KEYS" src/panel_ops_data.py && rg "win_rate_pct" src/panel_ops_html.py && rg "shrunk_win_rate_pct" src/panel_ops_html.py && rg "profit_factor_reported" src/panel_ops_html.py && rg "max_drawdown_pct" src/panel_ops_html.py
+  - component: docs/design/mockups/sinais.md
+    reuse_as: copy_pattern
+    convergence_check: 'rg "empty-state" src/panel_ops_html.py && rg "Nenhum provedor aguardando análise" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n52-1-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no live keys or Collective2 API key in HTML
+  - class: subagent-safety
+    id: n52-1-cockpit-not-order
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); assert 'process_after_gate_b' not in html; assert 'paper-api.alpaca.markets' not in html; i=html.find('def render_signals_page'); assert i>=0; fn=html[i:i+2500]; pre=fn.find('preapproval_body'); op=fn.find('operating_body'); au=fn.find('audit_body'); assert 0<=pre<op<au; assert 'win_rate_pct' in html and 'profit_factor_reported' in html and 'max_drawdown_pct' in html and 'shrunk_win_rate_pct' in html; assert 'brake-strip--active' in html"
+    pass_condition: same /sinais route; decision before operating before audit; recovered keys in HTML; brake strip preserved; no paper submit
+```
+
+### Quality Brief (Sprint N52)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of /sinais and POST; do not add a parallel route.
+Maintain: Feature 9 ingest table remains; N50 operation/C2/Prodígio headings remain as inner titles.
+Maintain: metrics labeled pesquisa; missing field Portuguese indisponível; Aprovar não envia ordem.
+Maintain: N38 brake-strip modifiers unchanged; other pages keep their HTML structure.
+Avoid: Live button; order submit/cancel; calling signal_copy.validate; rewriting Feature 4 numbers; listing H10 ten as approved; rewriting panel_ops_data unless a listed key is missing from the overlay.
+
+Melhoria: restyle authenticated GET /sinais as the ISS-022 decision cockpit using DESIGN.md tokens and the sinais mockup, without changing the N51 approve POST.
+Contexto: N51 HTML shows only win_rate_pct and reported_pnl_sum and places operating above the queue. Operator 2026-11-17 demanded all recovered metrics and a decision-first hierarchy. Designer already wrote docs/design/.
+Objetivo: (1) Keep OPERATOR_PANEL_PATHS and _nav Sinais → /sinais (no /copy, no /aprovacoes). (2) render_signals_page order: preapproval_body, operating_body, inventory_body, then c2/pool/adoption/audit. (3) Pre-approval metrics-block must render win_rate_pct, shrunk_win_rate_pct, profit_factor_reported, reported_pnl_sum, net_return_pct, max_drawdown_pct, prodigy_score or score, and status via _format_research_metric (indisponível when absent). Label win_rate_pct as percentual de acertos (pesquisa) — there is no assertividade field. Do not display eligible or copy_approved as paper approval. (4) Empty pre-approval: `Nenhum provedor aguardando análise no momento. Novos candidatos aparecerão aqui.` Empty operating may keep Nenhuma cópia de terceiro em operação and may add the mockup second sentence. Use class empty-state. (5) Put DESIGN.md tokens into _PANEL_CSS as CSS variables (--bg-canvas, --bg-card, --text-primary, --text-muted, --border-subtle, --action-primary, --action-danger, --status-research, --status-active, --status-warning, --radius-sm, --radius-md). Map .btn-primary / .btn-danger to those tokens. Do not restyle .brake-strip--active / .brake-strip--released hex colors. (6) Portuguese UI. Footer unchanged: painel não envia ordem. Live desligado. (7) Do not edit panel_ops_data.py unless EXECUTE proves a listed key is absent from copy.preapproval.queue[].metrics. (8) Do not rewrite HTML of / /ordens /historico /estrategias /prodigy /performance /analise-google except inherited CSS variables. LIVE false.
+Arquivos: src/panel_ops_html.py.
+Critério de pronto: logged-in GET /sinais HTML contains Pré-aprovação before Em operação / assinados before Auditoria de ingresso; metrics-block includes shrunk_win_rate_pct, profit_factor_reported, max_drawdown_pct; --bg-canvas in _PANEL_CSS; process_after_gate_b absent; brake-strip--active still in file.
+Cenários de teste (implement in N52.2):
+1. Sem cookie → GET /sinais redirect/401; POST /api/signals/providers 401.
+2. Fila vazia → string nenhum provedor aguardando análise.
+3. Candidato com win_rate_pct e profit_factor_reported → ambos visíveis, rótulo pesquisa.
+4. Candidato sem net_return_pct → indisponível, não 0.
+5. Ordem HTML: pré-aprovação < operação < auditoria.
+6. Central ainda tem faixa do freio; demais rotas do menu ainda renderizam. HTML sem controle de envio.
+
+### Task N52.2 — Provar hierarquia, números completos e ausência de envio
+
+**Entrega:** Testes mostram a fila no topo com todos os números recuperados, indisponível quando falta campo, estados vazios em português, recusa sem login, freio da Central intacto, e que a página não envia ordem nem inventa fill.
+**Como conferir:** Pedir essa bateria e ver falha se a auditoria subir ao topo, se faltar um número recuperado, se ausência virar zero, se aparecer controle de envio, ou se a Central perder o freio.
+**Por quê:** Sem prova, o mapa poderia marcar completo com a salada e só dois números ainda no ar.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTests / PanelSinaisN51Tests cookie pattern. Nodeids for: unauthenticated GET/POST; empty queue Portuguese (`Nenhum provedor aguardando análise`); all recovered keys rendered or `indisponível`; missing metric not 0; heading order preapproval < operating < audit (keep N50 operating < audit); no process_after_gate_b / order form; Central still contains brake-strip; regression N48–N51 headings and previous menu routes. Do not call real Alpaca or Collective2 HTTP. Do not put C2_API4_KEY in tests. LIVE false in env. No secret values. Do not require panel_ops_data contract change.
+
+### Task N52.3 — Atualizar o mapa e o chamado depois do cockpit
+
+**Entrega:** O mapa descreve Sinais como cockpit (decisão, operação, auditoria) e lista o significado de cada número; o chamado aponta esta sprint; a campanha e os chamados anteriores continuam abertos.
+**Como conferir:** Abrir o mapa na área Sinais: ordem nova, métricas completas, aprovar não envia ordem; chamado desta sprint ligado; campanha e épico antigo do painel único continuam abertos.
+**Por quê:** Sem esse recorte, a próxima rodada redesenha as outras telas achando que Sinais ainda é a salada, ou fecha a campanha cedo.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-022 keep **aberto** until EXECUTE evidence + operator confirm **and** merge to main; ISS-021 keep **aberto** unless operator already closed; ISS-020/019/017/007 keep open). Update area 2 Sinais: decision-first order; full recovered-metrics table; empty-state strings; tokens note (shared CSS vars, other pages not redesigned). DASHBOARD-OPERATIONS «Ver sinais» mentions the cockpit. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017 / ISS-019 / ISS-020 / ISS-021. Do not claim EasyPanel rebuild. Do not mark the sprint finalizado before merge to main. Do not mark N45–N47 started. LIVE false.
 
 ---
 

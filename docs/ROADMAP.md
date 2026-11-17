@@ -64,6 +64,7 @@
 | N37 | N | Saúde automática + Central semáforo + defaults ON | concluida | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
 | N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | concluida | 3 | observability | UX estado visual do freio | *(abaixo)* |
 | N39 | N | Closeout docs: carimbar N37 saúde automática e fechar ISS-014 | concluida | 5 | docs | Campanha ISS-014 closeout papel | *(abaixo)* |
+| N40 | N | Mapa honesto: onde está cada coisa no painel (docs-only) | planejada | 5 | docs, observability | Orientação operador ISS-016 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -114,6 +115,7 @@
 | N37 | senior+qa | Saúde automática + semáforo Central; defaults ON |
 | N38 | skip | Faixa do freio na Central; um CTA por estado; zero M |
 | N39 | skip | Closeout docs N37 / ISS-014; sem `src/` |
+| N40 | skip | Mapa operador das duas superfícies; zero M; sem `src/` |
 
 ---
 
@@ -2790,6 +2792,136 @@ TEST-EVIDENCE: new `## Sprint N37 — platform_health` section with nodeids from
 P task. File: `.cursorsession` (1 file). After stamps: `previous_sprint=N39` when finalized by parent; during EXECUTE keep `sprint_atual=N39` until closeout. Preserve `autopilot`, `rock_auto`, N38 `validation_gate` history. Do not enable LIVE. Do not start N21/N29/N17.
 
 **Closeout (2026-11-17):** docs-only — ROADMAP N37 `concluida` com prova PR **#52**; **ISS-014** fechado; DIARY + TEST-EVIDENCE alinhados; zero diff `src/`; EasyPanel rebuild, **N29.5** e **N17.2** permanecem operador; `LIVE_TRADING_ENABLED=false`.
+
+---
+
+## Sprint N40 — Mapa honesto de onde está cada coisa no painel
+> Categoria: N  
+> Status: concluida  
+> Gerado via: `/pmo plan` 2026-11-17 · decisão operador opção **2** (mapa, não tela de ordens) · fonte ISS-016 · **não** fecha ISS-007  
+> titulo_humano: Mapa honesto de onde está cada coisa no painel  
+> resumo_humano: Você passa a ter um mapa que diz, para cada área, onde clicar, de onde vem o dado, o que aparece vazio e o que ainda não existe. Não há tela nova de ordens nesta rodada.  
+> Gate: mapa com nove áreas, quatro selos e duas superfícies; folha do dia a dia aponta o mapa; ISS-016 registrado; zero `src/`; LIVE false  
+> review: skip  
+> Brief: `docs/.briefs/N40.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N39 concluida · Release: ISS-016 orientação (docs)  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+Você ganha um mapa honesto: onde clicar, o que alimenta cada área, o que aparece vazio e o que ainda não existe — sem tela nova de ordens.
+
+### O que muda para você
+
+- Fica claro se a área está no menu do dia a dia ou só na página única antiga
+- Vazio por falta de dado deixa de parecer “sumiu”
+- Ordens abertas e histórico não são prometidos como tela nesta rodada
+- Tá Barato, fases do catálogo e melhoria contínua: você vê onde de fato aparecem
+- Dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Mapa das nove áreas do painel | Abrir o mapa e conferir, em cada área: onde clicar, de onde vem o dado, o que aparece vazio e o selo |
+| 2 | Duas superfícies explicadas | Ler no mapa qual endereço o painel publicado mostra depois do login, e qual página só existe no outro modo |
+| 3 | Chamado de orientação aberto | Abrir a lista de problemas: o chamado do mapa está aberto; o épico do painel único não fecha |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N40.0 Inventariar as duas superfícies do painel sem inventar tela | `/git` | — |
+| [x] | P | N40.1 Escrever o mapa de onde está cada coisa | docs | N40.0 |
+| [x] | P | N40.2 Ligar o mapa na folha do dia a dia | docs | N40.1 |
+| [x] | P | N40.3 Registrar o chamado de orientação no painel | docs | N40.1 |
+| [x] | P | N40.4 Atualizar a sessão desta frente após o mapa | session | N40.2, N40.3 |
+
+### Quality Brief (Sprint N40)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; docs-only sprint — zero diff em `src/`; não inventar fill nem limiar de scoring.
+Maintain: map both UIs; do not call the login menu the Command Panel v1 page.
+Maintain: **ISS-016 aberto** até o mapa existir; **ISS-007 / ISS-011 / ISS-010** permanecem como estão.
+Avoid: tela de ordens; adapters Clear/OANDA; tratar EasyPanel/rebuild/semáforo como ordem executada.
+
+### Fora de escopo
+
+- Qualquer `src/`
+- Tela de ordens abertas / histórico de fills
+- Adapters Clear / OANDA (ISS-010 / N29.5)
+- Credenciais demo no Git
+- Fechar ISS-007 / ISS-011 / ISS-010 / ISS-013
+- Rebuild EasyPanel
+- `LIVE_TRADING_ENABLED=true`
+
+### Task N40.0 — Inventariar as duas superfícies do painel sem inventar tela
+
+**Entrega:** Inventário curto dizendo quais páginas o menu do dia a dia realmente tem e o que só existe na página única antiga ou no JSON.
+**Como conferir:** O inventário nomeia as duas superfícies, a porta do painel publicado, e deixa tela de ordens, chaves demo e fórmula Tá Barato de fora.
+**Por quê:** Sem essa lista, o mapa inventaria telas que o operador não consegue clicar.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N40-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. If GitHub unreachable, stop claiming current main. Do not touch `src/`. Do not invent fills. Do not plan `/ordens`.
+
+Cite: `_nav` only Central `/`, Sinais `/sinais`, Prodígio `/prodigy`, Performance `/performance`. `make_handler`: operator session set → `serve_operator_panel` for those paths; `render_page` is Command Panel v1 HTML on `GET /` only when session env is unset. EasyPanel `trading-lab` CMD `v4-ops`, port **8765**, HTTPS. JSON `GET /api/status`.
+
+### Task N40.1 — Escrever o mapa de onde está cada coisa
+
+**Entrega:** Um mapa que o operador lê e entende, para cada área, onde clicar, de onde vem o dado, o que vê vazio e o selo honesto.
+**Como conferir:** As nove áreas pedidas estão no mapa; cada uma tem os quatro campos; nenhum selo inventado fora da lista combinada.
+**Por quê:** Freio e saúde chegaram no menu; o contrato do painel único prometia mais — sem o mapa isso parece sumiço.
+
+**Detalhe técnico**
+
+P task. File: `docs/OPERATOR-PANEL-MAP.md` (1 file; create). Portuguese operator prose. Do **not** put only file paths in the operator table.
+
+Must cover, using labels **VISÍVEL** / **VAZIO-COMUM** / **NÃO-EXISTE-AINDA** / **SÓ-API-OU-JSONL** and the draft table in `docs/.briefs/N40-GIT-FIRST-REUSE.md`:
+
+1. Central (freio, semáforo, mercados, limites)
+2. Sinais (`/sinais`)
+3. Prodígio (`/prodigy`)
+4. Performance (`/performance`)
+5. Ordens abertas / ativas Alpaca paper
+6. Histórico de ordens / fills
+7. Tá Barato
+8. Análise Google / TimesFM (research — not order auth)
+9. Melhoria contínua / catálogo de fases (Command Panel v1 HTML only)
+
+Each row: where to click; which surface; data source; empty vs with data (copy empty strings from `panel_ops_html` / `render_page`); status. Map **both** UIs. Name EasyPanel URL/port from `docs/DASHBOARD-OPERATIONS.md` (8765) without inventing a public hostname. Cite ISS-007 map as the *promised* 1.0 list, not as current click path. LIVE false. HTTP 200 ≠ fill.
+
+### Task N40.2 — Ligar o mapa na folha do dia a dia
+
+**Entrega:** A folha do dia a dia aponta o mapa, para o próximo login não recomeçar do zero.
+**Como conferir:** Abrir a folha operacional e achar um parágrafo que manda ler o mapa antes de achar que a área sumiu.
+**Por quê:** Sem esse ponteiro, o mapa fica órfão no repositório.
+
+**Detalhe técnico**
+
+P task. File: `docs/DASHBOARD-OPERATIONS.md` (1 file). Add a short operator paragraph + markdown link to `OPERATOR-PANEL-MAP.md` under «Dia a dia do operador» (or a new `## Onde está cada coisa` section). Do not rewrite bearer/kill-switch tables. Do not add a fake public URL. Do not edit `src/`.
+
+### Task N40.3 — Registrar o chamado de orientação no painel
+
+**Entrega:** O chamado de orientação descreve a lacuna do mapa (não uma tela nova) e o diário registra esta sprint.
+**Como conferir:** Abrir a lista de problemas: o chamado do mapa existe; o épico do painel único continua; o diário tem uma linha desta sprint.
+**Por quê:** Sem o chamado, a próxima rodada pode achar que falta implementar ordens em vez de orientar.
+
+**Detalhe técnico**
+
+P task. Files: `docs/ISSUES.md`, `docs/DIARY.md` (2 files).
+
+ISSUES: ISS-016 already opened at plan-time — keep **aberto** until the map file exists, then note path + «não fecha ISS-007». Optional one-liner under ISS-007 Command Panel map: N40 is orientation, not orders UI. Do **not** close ISS-007, ISS-011, ISS-010, ISS-013.
+
+DIARY: short `## Sprint N40` row — docs-only map; two UIs; orders screen OUT; LIVE false; EasyPanel rebuild still operator.
+
+### Task N40.4 — Atualizar a sessão desta frente após o mapa
+
+**Entrega:** A sessão desta frente aponta a sprint do mapa, com as tarefas feitas no papel, sem ligar dinheiro real.
+**Como conferir:** A sessão lista as tarefas desta sprint e não deixa a sprint de saúde como se ainda fosse a ativa.
+**Por quê:** Sem isso o próximo ciclo reabre orientação como se faltasse implementar tela.
+
+**Detalhe técnico**
+
+P task. Files: `.cursorsession`, `docs/ROADMAP.md` (tick N40.0–N40.4 only; do not rewrite other sprints). After map: `sprint_atual=N40` until parent closeout; `plan_only` false only at EXECUTE start. Preserve `autopilot`, `rock_auto`, N39 `validation_gate` history. Do not enable LIVE. Do not start orders UI / N17 / N29.
 
 ---
 

@@ -68,6 +68,8 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 
 ## Dia a dia do operador (sem Exec)
 
+Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (Sprint N40): o login diário mostra só **Central / Sinais / Prodígio / Performance**; Tá Barato, catálogo de fases, melhoria contínua e a maior parte das contagens de ordens ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`** — ordens abertas e histórico **não** têm tela dedicada no menu.
+
 | Ação | Onde |
 |------|------|
 | Entrar | `GET /login` → senha não vazia (protótipo) → cookie `trading_lab_session` (= `DASHBOARD_OPERATOR_SESSION` no env) |

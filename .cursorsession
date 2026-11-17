@@ -223,17 +223,17 @@
     "last_completed_task": "N49.5",
     "validation_gate_ref": ".beesy/sprints/N48.json",
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N49",
+    "sprint_delivery_sprint": "N50",
     "plan_only": true,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N49",
+      "sprint": "N50",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-17T18:19:03Z",
+      "recorded_at": "2026-11-17T18:50:21Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N49 Sinais provenance; 55 panel OK",
+      "notes": "N50; 60 panel OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
@@ -251,13 +251,13 @@
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "b17fa805ebaf8468f13763664f9d9d90e32b5fbd",
-      "stamped_at": "2026-11-17T18:20:21Z",
+      "last_validated_sha": "a97c29c5cefabc62b36b594e502b64dcf7ac07c1",
+      "stamped_at": "2026-11-17T18:51:18Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e4a96da88be64b92ce906ff184fa73e42b63cdb980eccdb9f57e22d113d3dd33",
-      "patch_id": "68742c7ae6ded5691d213ae7a81339e52af02933",
+      "content_hash": "6babbe522f701b925da12a8d0d2b6c023c45661c5fef3f81ec8872669e257d9f",
+      "patch_id": "ff21b27a1899ec19c594903607e3b1989d8ac1f5",
       "patch_id_version": 2
     }
   },

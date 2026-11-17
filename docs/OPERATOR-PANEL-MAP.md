@@ -45,12 +45,31 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 | Campo | Detalhe |
 |-------|---------|
-| **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals`. |
-| **Superfície** | **Menu do dia a dia** — **não** é página separada no Command Panel v1. |
-| **Fonte de dados** | Ledger `signal_events` ou, em fallback, `webhooks/journal.jsonl` (`load_panel_signals`). |
-| **Com dado** | Tabela por destino (fila, ordem, bloqueado) com motivo de bloqueio quando aplicável. |
-| **Vazio** | `Nenhum sinal neste destino.` |
+| **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. |
+| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48**); duas seções `h2` na mesma página (padrão Prodígio). **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
+
+### Cópia de terceiros (seção superior)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Subtítulo (sempre)** | `Cópia de terceiros (TradingView / provedores). Não é fill.` |
+| **Fonte de dados** | Pacote `copy` em `build_panel_bundle`: ordens abertas e histórico com `strategy_key=signal_copy`; performance agregada da família `signal_copy`; cópias Prodígio só pesquisa (`research_copies`); estado Collective2. |
+| **Com dado** | Tabelas «em operação» e histórico da família de cópia; totais **brutos** por `strategy_key` com rótulo `gross_unverified_costs` — **sem** P&L por sinal nem por provedor (ordens paper **não** trazem `provider` / `signal_id`). |
+| **Vazio — operação** | `Nenhuma cópia de terceiro em operação.` |
+| **Vazio — performance nesta cópia** | `Sem fills confirmados nesta cópia.` |
+| **Collective2** | `Collective2: cópia fechada — nenhum provedor aprovado.` (`approved_for_paper_copy` permanece falso.) |
+| **Selo** | **VISÍVEL** · vazio honesto = **VAZIO-COMUM** |
+
+### Auditoria de ingresso (seção inferior)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Subtítulo (sempre)** | `Auditoria de ingresso — origem, destino e motivo. Não é fill.` |
+| **Fonte de dados** | Ledger `signal_events` ou, em fallback, `webhooks/journal.jsonl` (`load_panel_signals`). |
+| **Com dado** | Tabela hora, origem, ativo, mercado, destino (fila / ordem / bloqueado), motivo quando bloqueado. |
+| **Vazio** | `Nenhum sinal neste destino.` |
+| **Selo** | **VISÍVEL** · vazio honesto = **VAZIO-COMUM** |
 
 ---
 
@@ -166,7 +185,7 @@ No deploy típico com **sessão de operador** configurada (dia a dia EasyPanel),
 
 ## Fora deste mapa (decisão de sprint)
 
-- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; **Análise Google** (`/analise-google`) — entregue em **N43** / **ISS-017** onda 3 (só pesquisa); **N44** — roteiro de homologação US+cripto pelo menu (`docs/HOMOLOGATION.md` § Sprint N44, áreas **5–7** + Sinais + Performance); folha `docs/TEST-EVIDENCE.md` § Sprint N44; campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
+- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; **Análise Google** (`/analise-google`) — entregue em **N43** / **ISS-017** onda 3 (só pesquisa); **N44** — roteiro de homologação US+cripto pelo menu (`docs/HOMOLOGATION.md` § Sprint N44, áreas **5–7** + Sinais + Performance); folha `docs/TEST-EVIDENCE.md` § Sprint N44; **N48** — tela **Sinais** com **cópia de terceiros** + **auditoria de ingresso** na mesma rota (`ISS-018`; mapa §2); campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
 - Rebuild da imagem EasyPanel, **passeio N44** na corretora paper, credenciais demo (**ISS-010** / N29.5), homologação Tá Barato — **operador**.
 - Dinheiro real: permanece **desligado**.
 

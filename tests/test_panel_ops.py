@@ -65,6 +65,87 @@ def _clear_order_snapshots(root: Path) -> None:
     _write_order_snapshots(root, [])
 
 
+def _write_prodigy_research_copy(
+    root: Path,
+    *,
+    provider: str = 'prov-research',
+    symbol: str = 'META',
+) -> None:
+    evo = root / 'evolution'
+    evo.mkdir(parents=True, exist_ok=True)
+    (evo / 'decisions.jsonl').write_text(
+        json.dumps(
+            {
+                'kind': 'signal_copy',
+                'provider': provider,
+                'symbol': symbol,
+                'signal_id': 'SIG-RES-1',
+            }
+        ),
+        encoding='utf-8',
+    )
+
+
+def _write_signal_copy_panel_fixture(root: Path) -> None:
+    _write_order_snapshots(
+        root,
+        [
+            {
+                'client_order_id': 'copy-open-aapl',
+                'status': 'MONITORED',
+                'symbol': 'AAPL',
+                'side': 'buy',
+                'entry_qty': 1,
+                'remaining_qty': 1,
+                'broker_status': 'accepted',
+                'strategy_key': 'signal_copy',
+            },
+            {
+                'client_order_id': 'copy-fill-msft',
+                'status': 'MONITORED',
+                'symbol': 'MSFT',
+                'side': 'buy',
+                'entry_qty': 1,
+                'remaining_qty': 0,
+                'broker_fill_confirmed': True,
+                'realized_gross_pnl_usd': '7',
+                'strategy_key': 'signal_copy',
+            },
+            {
+                'client_order_id': 'copy-queue-nvda',
+                'status': 'MONITORED',
+                'symbol': 'NVDA',
+                'side': 'buy',
+                'entry_qty': 1,
+                'remaining_qty': 1,
+                'paper_status': 'queued_intent',
+                'strategy_key': 'signal_copy',
+            },
+            {
+                'client_order_id': 'other-momentum',
+                'status': 'MONITORED',
+                'symbol': 'TSLA',
+                'side': 'buy',
+                'entry_qty': 1,
+                'remaining_qty': 0,
+                'broker_fill_confirmed': True,
+                'realized_gross_pnl_usd': '3',
+                'strategy_key': 'momentum',
+            },
+        ],
+    )
+    _write_webhook_journal(
+        root,
+        [
+            {
+                'payload': {'provider': 'tradingview', 'symbol': 'AAPL'},
+                'result': {'reject_code': 'MAX_POSITIONS'},
+                'received_at': '2026-11-16T10:00:00+00:00',
+            },
+        ],
+    )
+
+
 def _write_evolution_daily_timesfm(
     root: Path,
     timesfm: dict,
@@ -1074,6 +1155,200 @@ class PanelAnaliseGoogleHttpTests(unittest.TestCase):
                     ('/ordens', 'Ordens'),
                     ('/historico', 'Histórico'),
                     ('/sinais', 'Sinais'),
+                )
+                for path, needle in cases:
+                    with self.subTest(path=path):
+                        req = _get(base + path, session='panel-secret')
+                        with urlopen(req, timeout=3) as resp:
+                            body = resp.read().decode('utf-8')
+                        self.assertIn(needle, body)
+            finally:
+                self._shutdown(server, thread)
+
+
+N48_SECTION_COPY = 'Cópia de terceiros'
+N48_SECTION_AUDIT = 'Auditoria de ingresso'
+N48_COPY_EMPTY = 'Nenhuma cópia de terceiro em operação.'
+N48_COPY_PERF_EMPTY = 'Sem fills confirmados nesta cópia.'
+N48_COLLECTIVE2 = 'Collective2: cópia fechada — nenhum provedor aprovado.'
+N48_AUDIT_EMPTY = 'Nenhum sinal neste destino.'
+N48_AUDIT_SUBTITLE = 'Auditoria de ingresso — origem, destino e motivo. Não é fill.'
+N48_COPY_SUBTITLE = 'Cópia de terceiros (TradingView / provedores). Não é fill.'
+N48_FOOTER = (
+    'O painel não envia ordem. Live desligado. Valores brutos se o custo não estiver completo.'
+)
+
+
+class PanelSinaisCopyAuditHttpTests(unittest.TestCase):
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
+    def _server(self, tmp, session='panel-secret', token=None):
+        handler = make_handler(Path(tmp), token=token, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        return server, thread, 'http://127.0.0.1:' + str(server.server_port)
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def _assert_copy_object_shape(self, copy: dict) -> None:
+        for key in ('operating', 'history', 'performance', 'collective2'):
+            self.assertIn(key, copy)
+        collective2 = copy['collective2']
+        self.assertIsInstance(collective2, dict)
+        self.assertFalse(collective2.get('approved_for_paper_copy'))
+        lowered = json.dumps(copy).lower()
+        self.assertNotIn('per_signal', lowered)
+        self.assertNotIn('provider_pnl', lowered)
+
+    def test_unauthenticated_sinais_and_api_match_sinais_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                sinais_unauth = _unauthenticated_panel_status(base, '/sinais')
+                self.assertNotEqual(sinais_unauth, 200)
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(base + '/api/signals', timeout=3)
+                self.assertEqual(err.exception.code, 401)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_sinais_auth_empty_copy_audit_strings_and_collective2(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N48_SECTION_COPY, body)
+                self.assertIn(N48_SECTION_AUDIT, body)
+                self.assertLess(body.index(N48_SECTION_COPY), body.index(N48_SECTION_AUDIT))
+                self.assertIn(N48_COPY_EMPTY, body)
+                self.assertIn(N48_COPY_PERF_EMPTY, body)
+                self.assertIn(N48_COLLECTIVE2, body)
+                self.assertIn(N48_AUDIT_EMPTY, body)
+                self.assertIn(N48_AUDIT_SUBTITLE, body)
+                self.assertIn(N48_COPY_SUBTITLE, body)
+                self.assertIn(N48_FOOTER, body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_sinais_fixture_copy_sections_and_audit_feature9(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_signal_copy_panel_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N48_COLLECTIVE2, body)
+                self.assertIn(PERFORMANCE_LABEL_GROSS, body)
+                self.assertIn('AAPL', body)
+                self.assertIn('MSFT', body)
+                self.assertNotIn(N48_COPY_EMPTY, body)
+                self.assertNotIn('TSLA', body)
+                audit_region = body.split(N48_SECTION_AUDIT, 1)[-1]
+                self.assertIn('tradingview', audit_region)
+                self.assertIn('blocked', audit_region)
+                self.assertIn('MAX_POSITIONS', audit_region)
+                lowered = body.lower()
+                self.assertNotIn('por sinal', lowered)
+                self.assertNotIn('p&l por provedor', lowered)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_api_signals_fixture_copy_object_and_feature9_signals(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_signal_copy_panel_fixture(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                signals = payload['signals']
+                self.assertEqual(len(signals), 1)
+                row = signals[0]
+                self.assertEqual(row['origin'], 'tradingview')
+                self.assertEqual(row['destination'], 'blocked')
+                self.assertEqual(row['reject_reason'], 'MAX_POSITIONS')
+                copy = payload['copy']
+                self._assert_copy_object_shape(copy)
+                operating_syms = {r.get('symbol') for r in copy['operating']}
+                history_syms = {r.get('symbol') for r in copy['history']}
+                self.assertIn('AAPL', operating_syms)
+                self.assertIn('MSFT', history_syms)
+                self.assertNotIn('NVDA', history_syms)
+                self.assertIn('NVDA', operating_syms)
+                perf = copy['performance']
+                self.assertEqual(perf.get('pnl_label'), PERFORMANCE_LABEL_GROSS)
+                by_key = {r['strategy_key']: r for r in perf.get('strategies', [])}
+                self.assertIn('signal_copy', by_key)
+                self.assertNotIn('momentum', by_key)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_api_signals_research_copies_not_merged_into_operating(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_prodigy_research_copy(root)
+            _clear_order_snapshots(root)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                copy = payload['copy']
+                self._assert_copy_object_shape(copy)
+                self.assertEqual(copy['operating'], [])
+                research = copy.get('research_copies') or []
+                research_syms = {r.get('symbol') for r in research}
+                self.assertIn('META', research_syms)
+                operating_syms = {r.get('symbol') for r in copy['operating']}
+                self.assertNotIn('META', operating_syms)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_sinais_page_no_order_submit_and_no_copy_route(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                lowered = body.lower()
+                self.assertNotIn('href="/copy"', body)
+                self.assertNotIn('process_after_gate_b', body)
+                self.assertNotIn('method="post"', lowered)
+                self.assertNotIn('enviar ordem', lowered)
+                nav_req = _get(base + '/central', session='panel-secret')
+                with urlopen(nav_req, timeout=3) as nav_resp:
+                    nav = nav_resp.read().decode('utf-8')
+                self.assertNotIn('href="/copy"', nav)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_regression_menu_routes_still_render_after_n48_sinais_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                cases = (
+                    ('/sinais', N48_SECTION_COPY),
+                    ('/ordens', 'Ordens'),
+                    ('/historico', 'Histórico'),
+                    ('/estrategias', 'Estratégias'),
+                    ('/performance', PERFORMANCE_LABEL_GROSS),
+                    ('/central', 'Central'),
+                    ('/prodigy', 'Prodígio'),
                 )
                 for path, needle in cases:
                     with self.subTest(path=path):

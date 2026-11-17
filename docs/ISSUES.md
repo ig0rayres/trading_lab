@@ -21,6 +21,7 @@
 | ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 | ISS-016 | aberto | N40 | Orientação no painel: mapa «onde está cada coisa» (docs; não é tela de ordens) |
 | ISS-017 | aberto | N41+ / N42 / N43 / N44 | Épico: entrega do painel operacional completo (campanha pós-N40) |
+| ISS-018 | aberto | N48 | Alinhar a tela Sinais ao conceito de cópia de terceiros |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -477,5 +478,28 @@
 **Nota N43 EXECUTE (2026-11-17):** onda **3** entregue — rotas `/analise-google` e `GET /api/analise-google` no menu após login; mapa área **9** (`docs/OPERATOR-PANEL-MAP.md`) e `docs/DASHBOARD-OPERATIONS.md` atualizados em N43.4. Vazio `Análise Google indisponível: modelo ou dependência ausente.`; página **sem** envio de ordem; pesquisa **não** autoriza ordem; `LIVE_TRADING_ENABLED=false`. **Épico permanece aberto** até ondas N44–N47 e critério de fechamento acima. Não fecha ISS-007, ISS-010, ISS-011.
 
 **Nota N44 EXECUTE (2026-11-17):** onda **4** runbook **publicado** — `docs/HOMOLOGATION.md` § passeio menu US+cripto; folha pendente `docs/TEST-EVIDENCE.md` § Sprint N44; ponteiros em `docs/DASHBOARD-OPERATIONS.md` e `docs/OPERATOR-PANEL-MAP.md`; **zero** `src/`. Rebuild EasyPanel e **passeio** (sinal → ordem aberta → fill ou recusa → performance) continuam **operador** — **não** declarar campanha fechada nem onda 4 concluída no critério de fechamento sem evidência redigida. Pytest e fill AAPL 2026-10-29 **não** fecham cripto nem substituem o menu. Código só se o passeio provar listas N41 cegas — então STOP/replan, fora desta sprint. **ISS-017 permanece aberto** até critério de fechamento do épico. **Não** fecha ISS-007 / ISS-010 / ISS-011.
+
+**Nota N48 PLAN (2026-11-17):** correção de conceito da tela **Sinais** (ingresso ≠ cópia/operação) registrada em **ISS-018** / sprint **N48**. **Não** é onda 5–7 da campanha (N45–N47 permanecem stubs). **ISS-017 permanece aberto.** **Não** fecha ISS-007 / ISS-010 / ISS-011.
+
+---
+
+## ISS-018 — Alinhar a tela Sinais ao conceito de cópia de terceiros
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / enhancement |
+| Sprint | N48 |
+| Status | aberto |
+| Impacto | No produto, Sinais = ordens/cópia de terceiros (TradingView / família de cópia / provedores). A tela atual só mostra auditoria de ingresso (origem, destino fila/bloqueado, motivo). O operador não vê o que está sendo copiado, o que opera, nem resultado/ordens/custos por sinal ou provedor — e pode confundir ingresso com fill. |
+
+**Critério de aceite:** `GET /sinais` (mesma rota) com seção de cópia de terceiros e seção de auditoria de ingresso claramente distintas; vazio honesto em português quando não houver cópia em operação; resultado só de fill confirmado, rotulado bruto se o custo não estiver completo; total honesto por família de cópia (ordens paper hoje não têm provedor/`signal_id` — não inventar P&L por sinal/provedor); Collective2 visível como cópia fechada (`approved_for_paper_copy` falso); painel sem POST de ordem; Feature 9 (origem/destino/motivo) permanece; `LIVE_TRADING_ENABLED=false`. Sem superfície paralela. Sem fill inventado.
+
+**Não fecha:** ISS-007, ISS-017, ISS-010, ISS-011, ISS-016. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-17 (correção: Sinais = copy de terceiros); `docs/REQUIREMENTS.md` Features 4, 9 e 10; `docs/OPERATOR-PANEL-MAP.md` §2; N25/N26/N41.
+
+**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N48.brief.md`.
+
+**Nota N48 EXECUTE (2026-11-17):** sprint **N48** entregue em N48.1–N48.3 (tela `/sinais` com seções **Cópia de terceiros** e **Auditoria de ingresso**; `GET /api/signals` estendido; testes `tests/test_panel_ops.py`) e **N48.4** (mapa §2, folha do dia a dia, esta nota, `docs/DIARY.md`, `docs/ROADMAP.md`). Vazios reais: `Nenhuma cópia de terceiro em operação.` · `Sem fills confirmados nesta cópia.` · `Nenhum sinal neste destino.` · Collective2 `Collective2: cópia fechada — nenhum provedor aprovado.`; totais **brutos** por família `signal_copy` (`gross_unverified_costs`) — **sem** P&L inventado por sinal/provedor. **ISS-018 permanece aberto** até o operador confirmar no deploy (rebuild EasyPanel) que a tela no ar bate com o conceito. **Não** fecha **ISS-007** / **ISS-017** / **ISS-010** / **ISS-011**. Rebuild EasyPanel **operador**. N45–N47 não arrancados. `LIVE_TRADING_ENABLED=false`.
 
 ---

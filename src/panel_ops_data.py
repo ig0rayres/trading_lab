@@ -27,6 +27,7 @@ OPEN_ORDER_BROKER_STATUSES = frozenset({
     'new', 'accepted', 'pending_new', 'pending_replace', 'partially_filled',
 })
 PERFORMANCE_LABEL_GROSS = 'gross_unverified_costs'
+SIGNAL_COPY_STRATEGY_KEY = 'signal_copy'
 
 
 def _panel_json_value(value: Any) -> Any:
@@ -700,6 +701,66 @@ def load_panel_strategy_catalog(
     }
 
 
+def _is_signal_copy_row(row: dict[str, Any]) -> bool:
+    return str(row.get('strategy_key') or '') == SIGNAL_COPY_STRATEGY_KEY
+
+
+def _signal_copy_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [row for row in rows if _is_signal_copy_row(row)]
+
+
+def _copy_providers(research_copies: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    providers: list[dict[str, Any]] = []
+    for row in research_copies:
+        raw = row.get('provider')
+        provider = str(raw).strip() if raw is not None else ''
+        if not provider or provider in seen:
+            continue
+        seen.add(provider)
+        providers.append({'provider': provider, 'label': 'research_only'})
+    return providers
+
+
+def _copy_performance_slice(perf: dict[str, Any] | None) -> dict[str, Any]:
+    base = perf if isinstance(perf, dict) else {}
+    strategies = _signal_copy_rows(base.get('strategies') or [])
+    total: str | None = None
+    if strategies:
+        gross_vals: list[Decimal] = []
+        for row in strategies:
+            try:
+                gross_vals.append(Decimal(str(row.get('gross_usd') or 0)))
+            except (InvalidOperation, TypeError):
+                continue
+        total = _decimal_sum(gross_vals)
+    return {
+        'schema_version': base.get('schema_version'),
+        'source': base.get('source'),
+        'pnl_label': base.get('pnl_label') or PERFORMANCE_LABEL_GROSS,
+        'strategies': strategies,
+        'total_gross_usd': total,
+        'orders_included': len(strategies) if strategies else 0,
+        'excluded_order_statuses': base.get('excluded_order_statuses'),
+    }
+
+
+def build_panel_copy(
+    open_orders: list[dict[str, Any]],
+    order_history: list[dict[str, Any]],
+    perf: dict[str, Any] | None,
+    research_copies: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        'operating': _signal_copy_rows(open_orders),
+        'history': _signal_copy_rows(order_history),
+        'performance': _copy_performance_slice(perf),
+        'collective2': {'approved_for_paper_copy': False, 'status': 'closed'},
+        'research_copies': list(research_copies),
+        'providers': _copy_providers(research_copies),
+    }
+
+
 def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = None) -> dict[str, Any]:
     flags = None
     if conn_factory is not None:
@@ -712,17 +773,21 @@ def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = Non
     perf = performance_from_ledger(conn_factory) if conn_factory else None
     if perf is None:
         perf = performance_from_snapshots(root)
+    research_copies = prodigy_copied_signals(root)
+    open_orders = load_panel_open_orders(root, conn_factory)
+    order_history = load_panel_order_history(root, conn_factory)
     return {
         'generated_at': datetime.now(timezone.utc).isoformat(),
         'signals': load_panel_signals(root, conn_factory, flags),
-        'open_orders': load_panel_open_orders(root, conn_factory),
-        'order_history': load_panel_order_history(root, conn_factory),
+        'open_orders': open_orders,
+        'order_history': order_history,
         'prodigy': {
             'ranking': None,
-            'copied_signals': prodigy_copied_signals(root),
+            'copied_signals': research_copies,
             'disclaimer': 'research_only_not_order_auth',
         },
         'performance': perf,
+        'copy': build_panel_copy(open_orders, order_history, perf, research_copies),
         'strategy_catalog': load_panel_strategy_catalog(conn_factory),
         'timesfm': load_panel_timesfm(root),
         'live_trading_ui': {'enabled': False, 'control_visible': False},

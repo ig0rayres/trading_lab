@@ -25,6 +25,19 @@ _N43_SUBTITLE = 'Dica de pesquisa — não autoriza ordem. Live desligado.'
 _N43_FOOTER = 'Esta análise é só pesquisa. Não autoriza ordem.'
 _N43_EMPTY_TIPS = 'Nenhuma dica de pesquisa neste relatório.'
 
+_N48_COPY_SECTION = 'Cópia de terceiros'
+_N48_AUDIT_SECTION = 'Auditoria de ingresso'
+_N48_COPY_EMPTY = 'Nenhuma cópia de terceiro em operação.'
+_N48_COPY_PERF_EMPTY = 'Sem fills confirmados nesta cópia.'
+_N48_COLLECTIVE2 = 'Collective2: cópia fechada — nenhum provedor aprovado.'
+_N48_AUDIT_EMPTY = 'Nenhum sinal neste destino.'
+_N48_AUDIT_SUBTITLE = 'Auditoria de ingresso — origem, destino e motivo. Não é fill.'
+_N48_COPY_SUBTITLE = 'Cópia de terceiros (TradingView / provedores). Não é fill.'
+_N48_FOOTER = (
+    'O painel não envia ordem. Live desligado. Valores brutos se o custo não estiver completo.'
+)
+_N48_RESEARCH_NOTE = 'Cópias de pesquisa (Prodígio) — não são operação.'
+
 _STRATEGY_PHASE_LABELS = {
     'research': 'pesquisa',
     'shadow': 'sombra',
@@ -272,19 +285,115 @@ def render_strategies_page(bundle: dict[str, Any]) -> str:
 <p class="muted">{esc(disclaimer)}</p></main></div></body></html>'''
 
 
-def render_signals_page(bundle: dict[str, Any]) -> str:
+def _signals_copy_operating_html(operating: list[dict[str, Any]]) -> str:
+    if not operating:
+        return f'<p class="muted">{esc(_N48_COPY_EMPTY)}</p>'
+    rows = ''.join(
+        f'<tr><td class="mono">{esc(o.get("client_order_id") or "—")}</td>'
+        f'<td>{esc(o.get("symbol"))}</td><td>{esc(o.get("side"))}</td>'
+        f'<td>{esc(o.get("broker_status") or o.get("paper_status") or "—")}</td>'
+        f'<td class="mono">{esc(o.get("remaining_qty") or o.get("entry_qty") or "—")}</td></tr>'
+        for o in operating
+    )
+    head = (
+        '<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th>'
+        '<th>Status</th><th>Qtd rest.</th></tr></thead><tbody>'
+    )
+    return f'{head}{rows}</tbody></table>'
+
+
+def _signals_copy_perf_html(perf: dict[str, Any]) -> str:
+    label = esc(perf.get('pnl_label') or PERFORMANCE_LABEL_GROSS)
+    strategies = perf.get('strategies') or []
+    if not strategies:
+        return f'<p class="muted">{esc(_N48_COPY_PERF_EMPTY)}</p>'
+    rows = ''.join(
+        f'<tr><td>{esc(s.get("strategy_key"))}</td>'
+        f'<td class="mono">{esc(s.get("gross_usd") or "—")}</td><td>{label}</td></tr>'
+        for s in strategies
+    )
+    return (
+        '<h3>Resultado (família de cópia)</h3>'
+        f'<p class="warn">Valores rotulados <b>{label}</b> — fila e HTTP 200 não são fill.</p>'
+        '<table><thead><tr><th>Família</th><th>Resultado</th><th>Rótulo</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table>'
+    )
+
+
+def _signals_copy_research_html(research: list[dict[str, Any]]) -> str:
+    if not research:
+        return ''
+    rows = ''.join(
+        f'<tr><td>{esc(c.get("provider"))}</td><td>{esc(c.get("symbol"))}</td>'
+        f'<td><code>{esc(c.get("label") or "research_copy_not_order_auth")}</code></td></tr>'
+        for c in research
+    )
+    return (
+        f'<h3>Pesquisa (Prodígio)</h3><p class="muted">{esc(_N48_RESEARCH_NOTE)}</p>'
+        f'<table><tbody>{rows}</tbody></table>'
+    )
+
+
+def _signals_copy_section_html(copy: dict[str, Any]) -> str:
+    operating = copy.get('operating') or []
+    history = copy.get('history') or []
+    perf = copy.get('performance') if isinstance(copy.get('performance'), dict) else {}
+    research = copy.get('research_copies') or []
+    label = esc(perf.get('pnl_label') or PERFORMANCE_LABEL_GROSS)
+    hist_rows = ''.join(
+        f'<tr><td class="mono">{esc(h.get("client_order_id") or "—")}</td>'
+        f'<td>{esc(h.get("symbol"))}</td>'
+        f'<td class="mono">{esc(h.get("realized_gross_pnl_usd") or "—")}</td>'
+        f'<td>{label}</td></tr>'
+        for h in history
+    )
+    hist_block = ''
+    if hist_rows:
+        hist_block = (
+            '<h3>Fills confirmados (família de cópia)</h3>'
+            '<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Resultado</th>'
+            f'<th>Rótulo</th></tr></thead><tbody>{hist_rows}</tbody></table>'
+        )
+    return (
+        f'<h2>{esc(_N48_COPY_SECTION)}</h2>'
+        f'<p class="muted">{esc(_N48_COPY_SUBTITLE)}</p>'
+        f'<p class="warn">{esc(_N48_COLLECTIVE2)}</p>'
+        '<h3>Em operação (paper)</h3>'
+        f'{_signals_copy_operating_html(operating)}'
+        f'{hist_block}'
+        f'{_signals_copy_perf_html(perf)}'
+        f'{_signals_copy_research_html(research)}'
+    )
+
+
+def _signals_audit_section_html(signals: list[dict[str, Any]]) -> str:
     rows = ''.join(
         f'<tr><td class="mono">{esc(s.get("received_at") or "—")}</td>'
         f'<td>{esc(s.get("origin"))}</td><td>{esc(s.get("symbol"))}</td>'
         f'<td>{esc(s.get("market"))}</td><td>{esc(s.get("destination"))}</td>'
         f'<td>{esc(s.get("reject_reason") or "—")}</td></tr>'
-        for s in bundle.get('signals') or []
-    ) or '<tr><td colspan="6">Nenhum sinal neste destino.</td></tr>'
+        for s in signals
+    ) or f'<tr><td colspan="6">{esc(_N48_AUDIT_EMPTY)}</td></tr>'
+    return (
+        f'<h2>{esc(_N48_AUDIT_SECTION)}</h2>'
+        f'<p class="muted">{esc(_N48_AUDIT_SUBTITLE)}</p>'
+        '<table><thead><tr><th>Hora</th><th>Origem</th><th>Ativo</th><th>Mercado</th>'
+        f'<th>Destino</th><th>Motivo</th></tr></thead><tbody>{rows}</tbody></table>'
+    )
+
+
+def render_signals_page(bundle: dict[str, Any]) -> str:
+    copy = bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {}
+    signals = bundle.get('signals') or []
+    copy_body = _signals_copy_section_html(copy)
+    audit_body = _signals_audit_section_html(signals)
+    footer = f'<p class="muted">{esc(_N48_FOOTER)}</p>'
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Sinais</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("sinais")}<main class="main">
-<h1>Sinais</h1><p class="muted">Não é fill — auditoria de destino e motivo.</p>
-<table><thead><tr><th>Hora</th><th>Origem</th><th>Ativo</th><th>Mercado</th><th>Destino</th><th>Motivo</th></tr></thead>
-<tbody>{rows}</tbody></table></main></div></body></html>'''
+<h1>Sinais</h1>
+{copy_body}
+{audit_body}
+{footer}</main></div></body></html>'''
 
 
 def render_prodigy_page(bundle: dict[str, Any], opportunities: dict[str, Any]) -> str:

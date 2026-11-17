@@ -773,6 +773,8 @@ def serve_operator_panel(handler, root: Path, path: str, connect_factory):
         page = _panel_html.render_signals_page(bundle)
     elif path == '/estrategias':
         page = _panel_html.render_strategies_page(bundle)
+    elif path == '/analise-google':
+        page = _panel_html.render_analise_google_page(bundle)
     elif path == '/prodigy':
         cp = data.get('command_panel') or {}
         page = _panel_html.render_prodigy_page(bundle, cp.get('opportunities') or {})
@@ -810,6 +812,17 @@ def serve_panel_json(handler, root: Path, path: str):
     elif path == '/api/estrategias':
         catalog = bundle.get('strategy_catalog') or {}
         payload = {'strategies': catalog.get('strategies') or []}
+    elif path == '/api/analise-google':
+        block = bundle.get('timesfm') if isinstance(bundle.get('timesfm'), dict) else {}
+        payload = {
+            'timesfm_status': block.get('timesfm_status', 'UNAVAILABLE'),
+            'tips': block.get('tips') or [],
+            'operator_reason': block.get('operator_reason'),
+            'execution_authorized': False,
+            'paper_allowed': False,
+        }
+        if block.get('note') is not None:
+            payload['note'] = block.get('note')
     elif path == '/api/performance':
         payload = data.get('performance_panel') if isinstance(data, dict) else {}
         payload = payload or {}
@@ -866,6 +879,7 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                 '/api/orders',
                 '/api/history',
                 '/api/estrategias',
+                '/api/analise-google',
             ):
                 if operator_session and not operator_session_authorized(self.headers, operator_session):
                     send_empty_response(self, 401)

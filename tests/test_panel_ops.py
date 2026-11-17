@@ -65,6 +65,20 @@ def _clear_order_snapshots(root: Path) -> None:
     _write_order_snapshots(root, [])
 
 
+def _write_evolution_daily_timesfm(
+    root: Path,
+    timesfm: dict,
+    *,
+    day: str = '2026-11-17',
+) -> None:
+    daily = root / 'evolution' / 'daily'
+    daily.mkdir(parents=True, exist_ok=True)
+    (daily / f'{day}.json').write_text(
+        json.dumps({'day': day, 'timesfm': timesfm}),
+        encoding='utf-8',
+    )
+
+
 def _unauthenticated_panel_status(base: str, path: str) -> int:
     opener = build_opener(_NoRedirect)
     try:
@@ -876,6 +890,187 @@ class PanelStrategiesHttpTests(unittest.TestCase):
             server, thread, base = self._server(d)
             try:
                 cases = (
+                    ('/ordens', 'Ordens'),
+                    ('/historico', 'Histórico'),
+                    ('/sinais', 'Sinais'),
+                )
+                for path, needle in cases:
+                    with self.subTest(path=path):
+                        req = _get(base + path, session='panel-secret')
+                        with urlopen(req, timeout=3) as resp:
+                            body = resp.read().decode('utf-8')
+                        self.assertIn(needle, body)
+            finally:
+                self._shutdown(server, thread)
+
+
+N43_UNAVAILABLE_MAIN = (
+    'Análise Google indisponível: modelo ou dependência ausente.'
+)
+N43_SUBTITLE = 'Dica de pesquisa — não autoriza ordem. Live desligado.'
+N43_FOOTER = 'Esta análise é só pesquisa. Não autoriza ordem.'
+N43_REASON_PREFIX = 'Motivo:'
+_N43_REASON_MARKERS = (
+    'Motivo: modelo ou dependência ausente.',
+    'Motivo: modelo desligado neste ambiente.',
+    'Motivo: checkpoint não configurado.',
+    'Motivo: série de contexto insuficiente.',
+)
+_N43_TIMESFM_OK_FIXTURE = {
+    'timesfm_status': 'OK',
+    'tips': [
+        {
+            'label': 'research_tip',
+            'summary': 'Horizonte de oito barras como contexto de pesquisa.',
+            'execution_authorized': False,
+            'paper_allowed': False,
+            'orders_sent': 0,
+        },
+        {
+            'label': 'suggestion',
+            'summary': 'Revisar parâmetro de risco no catálogo.',
+            'execution_authorized': False,
+            'paper_allowed': False,
+            'orders_sent': 0,
+        },
+    ],
+    'execution_authorized': False,
+    'paper_allowed': False,
+}
+
+
+class PanelAnaliseGoogleHttpTests(unittest.TestCase):
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
+    def _server(self, tmp, session='panel-secret', token=None):
+        handler = make_handler(Path(tmp), token=token, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        return server, thread, 'http://127.0.0.1:' + str(server.server_port)
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def _assert_motivo_present(self, body: str) -> None:
+        self.assertIn(N43_REASON_PREFIX, body)
+        self.assertTrue(any(marker in body for marker in _N43_REASON_MARKERS))
+
+    def test_unauthenticated_analise_google_and_api_match_sinais_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                reference = _unauthenticated_panel_status(base, '/sinais')
+                self.assertEqual(
+                    _unauthenticated_panel_status(base, '/analise-google'),
+                    reference,
+                )
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(base + '/api/analise-google', timeout=3)
+                with self.assertRaises(HTTPError) as sig_err:
+                    urlopen(base + '/api/signals', timeout=3)
+                self.assertEqual(err.exception.code, sig_err.exception.code)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_analise_google_auth_unavailable_shows_empty_main_and_footer(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/analise-google', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(N43_UNAVAILABLE_MAIN, body)
+                self.assertIn(N43_SUBTITLE, body)
+                self.assertIn(N43_FOOTER, body)
+                self._assert_motivo_present(body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_analise_google_fixture_ok_shows_labeled_tips_no_order_auth(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_evolution_daily_timesfm(root, _N43_TIMESFM_OK_FIXTURE)
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/analise-google', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn(
+                    'Horizonte de oito barras como contexto de pesquisa.',
+                    body,
+                )
+                self.assertIn(
+                    'Revisar parâmetro de risco no catálogo.',
+                    body,
+                )
+                self.assertIn('dica de pesquisa', body)
+                self.assertIn('sugestão', body)
+                self.assertIn(N43_SUBTITLE, body)
+                self.assertIn(N43_FOOTER, body)
+                self.assertNotIn('execution_authorized": true', body.lower())
+                self.assertNotIn('execution_authorized":true', body.lower())
+                self.assertNotIn('enviar ordem', body.lower())
+            finally:
+                self._shutdown(server, thread)
+
+    def test_nav_includes_analise_google_menu_link(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/central', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('href="/analise-google"', body)
+                self.assertIn('Análise Google', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_analise_google_page_has_no_order_submit_controls(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/analise-google', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                lowered = body.lower()
+                self.assertNotIn('process_after_gate_b', body)
+                self.assertNotIn('>Live<', body)
+                self.assertNotIn('enviar ordem', lowered)
+                self.assertNotIn('method="post"', lowered)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_api_analise_google_returns_research_payload_with_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/api/analise-google', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                self.assertIn('timesfm_status', payload)
+                self.assertIn('tips', payload)
+                self.assertIsInstance(payload['tips'], list)
+                self.assertFalse(payload.get('execution_authorized'))
+                self.assertFalse(payload.get('paper_allowed', True))
+                self.assertNotIn('forecast', payload)
+                self.assertNotIn('forecast_values', payload)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_regression_estrategias_ordens_historico_sinais_still_render(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                cases = (
+                    ('/estrategias', 'Estratégias'),
                     ('/ordens', 'Ordens'),
                     ('/historico', 'Histórico'),
                     ('/sinais', 'Sinais'),

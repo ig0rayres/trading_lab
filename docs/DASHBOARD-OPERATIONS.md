@@ -68,7 +68,7 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 
 ## Dia a dia do operador (sem Exec)
 
-Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (N40 mapa · **N41** Ordens/Histórico · **N42** Estratégias): o login diário mostra **Central / Sinais / Estratégias / Ordens / Histórico / Prodígio / Performance**. Tá Barato e melhoria contínua ainda ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`**. O painel **não** envia nem cancela ordem (POST continua **405**); a tela **Estratégias** não promove fase.
+Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (N40 mapa · **N41** Ordens/Histórico · **N42** Estratégias · **N43** Análise Google): o login diário mostra **Central / Sinais / Estratégias / Análise Google / Ordens / Histórico / Prodígio / Performance**. **Análise Google** é dica de pesquisa (TimesFM quando disponível) — **não** autoriza ordem; vazio típico `Análise Google indisponível: modelo ou dependência ausente.` Tá Barato e melhoria contínua ainda ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`**. O painel **não** envia nem cancela ordem (POST continua **405**); a tela **Estratégias** não promove fase.
 
 | Ação | Onde |
 |------|------|
@@ -78,6 +78,7 @@ Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está
 | Liberar freio | Com o freio ativo, só aparece **Liberar freio** na faixa → `PATCH /api/triggers` com `kill_switch_on: false` (cookie obrigatório). Liberar o freio não liga a operação demo (`demo_operation_on` permanece separado). |
 | Ver sinais com motivo | `GET /sinais` ou `GET /api/signals` |
 | Ver catálogo de fases (somente leitura) | `GET /estrategias` ou `GET /api/estrategias` |
+| Ver dicas Análise Google (só pesquisa) | `GET /analise-google` ou `GET /api/analise-google` |
 | Ver ranking Prodígio | `GET /prodigy` |
 | Ver performance só de fill | `GET /performance` ou `GET /api/performance` |
 | Ver ordens paper ainda abertas (lista) | `GET /ordens` ou `GET /api/orders` |
@@ -92,7 +93,7 @@ Bearer sozinho **não** autoriza escrita (`PATCH` → **401**); cookie de operad
 
 ## Abrir o HTML no browser
 
-1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Estratégias / Ordens / Histórico / Prodígio / Performance.
+1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Estratégias / Análise Google / Ordens / Histórico / Prodígio / Performance.
 2. **API/monitoramento:** `curl -H "Authorization: Bearer …" https://…/api/status` (token ≥ 32 se remoto).
 3. Sem Bearer nem cookie → **401** ou redirecionamento para `/login` nas rotas operacionais.
 

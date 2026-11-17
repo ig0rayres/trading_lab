@@ -213,10 +213,14 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [],
+      "dirty_production_paths": [
+        ".beesy/stamp-gate-logs/",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
       "missing_backends": [],
-      "last_validated_sha": "7e9e68777b3d31165792ff3c08d3dcd0c4f4d136",
-      "stamped_at": "2026-11-17T14:12:35Z",
+      "last_validated_sha": "23b1eb45b1569845fcbfcdf0c4fc2c8e392d16e0",
+      "stamped_at": "2026-11-17T14:13:00Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

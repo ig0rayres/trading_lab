@@ -174,20 +174,18 @@
         }
       ],
       "dirty_production_paths": [
-        "src/panel_ops_html.py",
-        "tests/test_panel_ops.py",
         ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "1c093961a803979cbc917b5eccb74732cc3d4c5b",
-      "stamped_at": "2026-11-17T09:16:59Z",
+      "last_validated_sha": "4ddce9b7398c3449056746940a20f9d1779d4a72",
+      "stamped_at": "2026-11-17T09:17:42Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "956065eea949e128a3ce79f9885e30618f2bc3fb",
+      "content_hash": "2c8b412bd48ba1a5935f47fc127a4f44c8ba78bef296a3e0ab190578219181a2",
+      "patch_id": "172588f5cece1228ddf10aeb106109d3916e4788",
       "patch_id_version": 2
     },
     "sprint": "N36",

@@ -3,6 +3,7 @@ import os
 import tempfile
 import threading
 import unittest
+from datetime import datetime, timezone
 from decimal import Decimal
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -49,6 +50,28 @@ def _write_webhook_journal(root: Path, rows: list[dict]) -> None:
         '\n'.join(json.dumps(r) for r in rows),
         encoding='utf-8',
     )
+
+
+def _write_order_snapshots(root: Path, rows: list[dict]) -> None:
+    paper = root / 'paper'
+    paper.mkdir(parents=True, exist_ok=True)
+    (paper / 'order-snapshots.jsonl').write_text(
+        '\n'.join(json.dumps(r) for r in rows),
+        encoding='utf-8',
+    )
+
+
+def _clear_order_snapshots(root: Path) -> None:
+    _write_order_snapshots(root, [])
+
+
+def _unauthenticated_panel_status(base: str, path: str) -> int:
+    opener = build_opener(_NoRedirect)
+    try:
+        opener.open(_get(base + path), timeout=3)
+        return 200
+    except HTTPError as exc:
+        return exc.code
 
 
 _OLD_KILL_COPY = (
@@ -276,6 +299,133 @@ class PanelOpsDataTests(unittest.TestCase):
             self.assertIn('copied_signals', bundle['prodigy'])
             self.assertEqual(bundle['prodigy']['copied_signals'][0]['symbol'], 'TSLA')
 
+    def test_build_panel_bundle_open_order_snapshot_row(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_order_snapshots(
+                root,
+                [
+                    {
+                        'client_order_id': 'open-aapl',
+                        'status': 'MONITORED',
+                        'symbol': 'AAPL',
+                        'side': 'buy',
+                        'entry_qty': 2,
+                        'remaining_qty': 2,
+                        'broker_status': 'accepted',
+                        'strategy_key': 'signal_copy',
+                    },
+                ],
+            )
+            bundle = build_panel_bundle(root, conn_factory=None)
+            self.assertIn('open_orders', bundle)
+            self.assertIn('order_history', bundle)
+            open_rows = bundle['open_orders']
+            self.assertEqual(len(open_rows), 1)
+            self.assertEqual(open_rows[0]['symbol'], 'AAPL')
+            self.assertEqual(open_rows[0]['status'], 'MONITORED')
+            self.assertEqual(bundle['order_history'], [])
+
+    def test_build_panel_bundle_confirmed_fill_in_order_history_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_order_snapshots(
+                root,
+                [
+                    {
+                        'client_order_id': 'fill-msft',
+                        'status': 'MONITORED',
+                        'symbol': 'MSFT',
+                        'side': 'buy',
+                        'entry_qty': 1,
+                        'remaining_qty': 0,
+                        'broker_fill_confirmed': True,
+                        'realized_gross_pnl_usd': '12',
+                        'strategy_key': 'signal_copy',
+                    },
+                    {
+                        'client_order_id': 'queue-nvda',
+                        'status': 'MONITORED',
+                        'symbol': 'NVDA',
+                        'side': 'buy',
+                        'entry_qty': 1,
+                        'remaining_qty': 1,
+                        'paper_status': 'queued_intent',
+                        'strategy_key': 'signal_copy',
+                    },
+                ],
+            )
+            bundle = build_panel_bundle(root, conn_factory=None)
+            history = bundle['order_history']
+            symbols_hist = {row['symbol'] for row in history}
+            self.assertIn('MSFT', symbols_hist)
+            self.assertNotIn('NVDA', symbols_hist)
+            open_syms = {row['symbol'] for row in bundle['open_orders']}
+            self.assertIn('NVDA', open_syms)
+
+    def test_ledger_order_rows_json_serializable_with_decimal_qty(self):
+        class _LedgerCursor:
+            def __init__(self) -> None:
+                self._sql = ''
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def execute(self, sql, params=None):
+                self._sql = sql.lower()
+
+            def fetchall(self):
+                if 'from paper_orders po' in self._sql and 'paper_fills' not in self._sql:
+                    return [
+                        ('cid-1', 'AAPL', 'buy', 'accepted', Decimal('2.5'), 'brk-1', 'signal_copy'),
+                    ]
+                if 'pf.filled_at' in self._sql:
+                    filled = datetime(2026, 11, 17, 12, 0, tzinfo=timezone.utc)
+                    return [
+                        (
+                            'cid-2',
+                            'MSFT',
+                            'sell',
+                            'filled',
+                            'brk-2',
+                            'momentum',
+                            Decimal('1'),
+                            1500,
+                            filled,
+                        ),
+                    ]
+                if 'from signal_events' in self._sql:
+                    return []
+                if 'from ledger_entries le' in self._sql:
+                    return [('momentum', 1500, 'filled')]
+                return []
+
+            def fetchone(self):
+                return None
+
+        class _LedgerConn:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def cursor(self):
+                return _LedgerCursor()
+
+        def _factory():
+            return _LedgerConn()
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            bundle = build_panel_bundle(root, conn_factory=_factory)
+            json.dumps(bundle, allow_nan=False)
+            self.assertEqual(bundle['open_orders'][0]['entry_qty'], '2.5')
+            self.assertEqual(bundle['order_history'][0]['entry_qty'], '1')
+
 
 class PanelOpsHttpTests(unittest.TestCase):
     def _server(self, tmp, session='panel-secret', token=None):
@@ -385,6 +535,207 @@ class PanelOpsHttpTests(unittest.TestCase):
                     self.assertEqual(row['reject_reason'], 'MAX_POSITIONS')
                 finally:
                     self._shutdown(server, thread)
+
+
+class PanelOrdersHistoryHttpTests(unittest.TestCase):
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
+    def _server(self, tmp, session='panel-secret', token=None):
+        handler = make_handler(Path(tmp), token=token, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        return server, thread, 'http://127.0.0.1:' + str(server.server_port)
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_unauthenticated_ordens_historico_match_sinais_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                reference = _unauthenticated_panel_status(base, '/sinais')
+                for path in ('/ordens', '/historico'):
+                    with self.subTest(path=path):
+                        self.assertEqual(
+                            _unauthenticated_panel_status(base, path),
+                            reference,
+                        )
+            finally:
+                self._shutdown(server, thread)
+
+    def test_ordens_empty_shows_paper_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            _clear_order_snapshots(Path(d))
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/ordens', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('Nenhuma ordem aberta no paper.', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_historico_empty_shows_confirmed_fill_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            _clear_order_snapshots(Path(d))
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/historico', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('Nenhum fill confirmado no histórico.', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_fixture_open_order_on_ordens_not_as_history_fill(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_order_snapshots(
+                root,
+                [
+                    {
+                        'client_order_id': 'live-open',
+                        'status': 'MONITORED',
+                        'symbol': 'AAPL',
+                        'side': 'buy',
+                        'entry_qty': 1,
+                        'remaining_qty': 1,
+                        'broker_status': 'accepted',
+                        'strategy_key': 'signal_copy',
+                    },
+                ],
+            )
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/ordens', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    ordens = resp.read().decode('utf-8')
+                self.assertIn('AAPL', ordens)
+                self.assertIn('accepted', ordens.lower())
+                req = _get(base + '/historico', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    historico = resp.read().decode('utf-8')
+                self.assertIn('Nenhum fill confirmado no histórico.', historico)
+                self.assertNotIn('live-open', historico)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_fixture_fill_on_historico_queued_intent_excluded(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_order_snapshots(
+                root,
+                [
+                    {
+                        'client_order_id': 'done-msft',
+                        'status': 'MONITORED',
+                        'symbol': 'MSFT',
+                        'side': 'sell',
+                        'entry_qty': 1,
+                        'remaining_qty': 0,
+                        'broker_fill_confirmed': True,
+                        'realized_gross_pnl_usd': '3',
+                        'strategy_key': 'momentum',
+                    },
+                    {
+                        'client_order_id': 'queue-only',
+                        'status': 'MONITORED',
+                        'symbol': 'NVDA',
+                        'side': 'buy',
+                        'entry_qty': 1,
+                        'remaining_qty': 1,
+                        'paper_status': 'queued_intent',
+                        'strategy_key': 'signal_copy',
+                    },
+                ],
+            )
+            server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/historico', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    historico = resp.read().decode('utf-8')
+                self.assertIn('MSFT', historico)
+                self.assertNotIn('queue-only', historico)
+                self.assertNotIn('queued_intent', historico.lower())
+                req = _get(base + '/ordens', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    ordens = resp.read().decode('utf-8')
+                self.assertIn('NVDA', ordens)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_nav_after_login_lists_ordens_and_historico(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/central', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('href="/ordens"', body)
+                self.assertIn('href="/historico"', body)
+                self.assertIn('Ordens', body)
+                self.assertIn('Histórico', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_api_orders_and_history_require_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                signals_code = None
+                for path in ('/api/orders', '/api/history'):
+                    with self.subTest(path=path):
+                        with self.assertRaises(HTTPError) as err:
+                            urlopen(base + path, timeout=3)
+                        if signals_code is None:
+                            with self.assertRaises(HTTPError) as sig_err:
+                                urlopen(base + '/api/signals', timeout=3)
+                            signals_code = sig_err.exception.code
+                        self.assertEqual(err.exception.code, signals_code)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_api_orders_and_history_empty_json_lists(self):
+        with tempfile.TemporaryDirectory() as d:
+            _clear_order_snapshots(Path(d))
+            server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/api/orders', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    orders_payload = json.load(resp)
+                self.assertEqual(orders_payload.get('orders'), [])
+                req = _get(base + '/api/history', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    history_payload = json.load(resp)
+                self.assertEqual(history_payload.get('history'), [])
+            finally:
+                self._shutdown(server, thread)
+
+    def test_regression_sinais_performance_central_still_render(self):
+        with tempfile.TemporaryDirectory() as d:
+            server, thread, base = self._server(d)
+            try:
+                cases = (
+                    ('/sinais', 'Sinais'),
+                    ('/performance', PERFORMANCE_LABEL_GROSS),
+                    ('/central', 'Central'),
+                )
+                for path, needle in cases:
+                    with self.subTest(path=path):
+                        req = _get(base + path, session='panel-secret')
+                        with urlopen(req, timeout=3) as resp:
+                            body = resp.read().decode('utf-8')
+                        self.assertIn(needle, body)
+            finally:
+                self._shutdown(server, thread)
 
 
 class PanelKillSwitchCycleTests(unittest.TestCase):

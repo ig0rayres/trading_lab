@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N40 concluida",
+  "fase_nome": "N41 concluida (docs N41.4)",
   "sprint_pending_merge": null,
   "sprint_pr": 54,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T11:15:00-03:00",
+  "ultimo_update": "2026-11-17T11:45:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,10 +78,10 @@
     }
   ],
   "proximos_passos": [
-    "Parent closeout N40: PR/merge se aplicável; sem commit automático nesta EXECUTE",
-    "Operador: rebuild EasyPanel trading-lab para ler mapa no deploy; N29.5 credenciais demo; N17.2 G-FORM Tá Barato",
-    "ISS-016 mapa em docs/OPERATOR-PANEL-MAP.md (chamado orientação permanece aberto); ISS-007 épico aberto",
-    "LIVE_TRADING_ENABLED=false; tela ordens/histórico fora de N40"
+    "Campanha ISS-017: folha docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md — onda 1 N41 entregue; próxima N42",
+    "Closeout N41: stamp/PR pelo finalizer se verify_green",
+    "Operador-gated: N29.5 Clear/OANDA; N17.2 G-FORM; rebuild EasyPanel após merge",
+    "LIVE_TRADING_ENABLED=false; TimesFM research-only"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -121,87 +121,92 @@
     "/pmo plan N36",
     "/pmo plan N37",
     "/pmo plan N39",
-    "/pmo plan N40"
+    "/pmo plan N40",
+    "/pmo plan N41"
   ],
-  "contexto_rapido": "N40 EXECUTE concluida: docs/OPERATOR-PANEL-MAP.md; plan_only=false; zero src/; ISS-016 aberto com mapa; ISS-007 aberto; LIVE false.",
+  "contexto_rapido": "N41 EXECUTE: Ordens/Histórico no menu; mapa+ISS N41.4; ISS-017 aberto; CAMPAIGN-PLATFORM-DELIVERY; Clear/OANDA/N17.2 operador; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N40.0",
-      "title": "Inventariar as duas superfícies do painel sem inventar tela",
+      "id": "N41.0",
+      "title": "Inventariar o reuso das contagens de ordem antes de desenhar a lista",
       "size": "P",
       "status": "done",
       "files": [
-        "docs/.briefs/N40-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N41-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N41.brief.md",
+        "docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md"
       ],
       "depends_on": [],
-      "file": "docs/.briefs/N40-GIT-FIRST-REUSE.md"
+      "file": "docs/.briefs/N41-GIT-FIRST-REUSE.md, docs/.briefs/N41.brief.md, docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md"
     },
     {
-      "id": "N40.1",
-      "title": "Escrever o mapa de onde está cada coisa",
+      "id": "N41.1",
+      "title": "Montar as linhas de ordens abertas e de histórico no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "depends_on": [
+        "N41.0"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N41.2",
+      "title": "Colocar Ordens e Histórico no menu do dia a dia",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "depends_on": [
+        "N41.1"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N41.3",
+      "title": "Provar listas, vazio, sessão e que fila não é fill",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N41.2"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N41.4",
+      "title": "Atualizar o mapa e os chamados depois das telas existirem",
       "size": "P",
       "status": "done",
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
-        "docs/.briefs/N40.brief.md"
-      ],
-      "depends_on": [
-        "N40.0"
-      ],
-      "file": "docs/OPERATOR-PANEL-MAP.md, docs/.briefs/N40.brief.md"
-    },
-    {
-      "id": "N40.2",
-      "title": "Ligar o mapa na folha do dia a dia",
-      "size": "P",
-      "status": "done",
-      "files": [
-        "docs/DASHBOARD-OPERATIONS.md"
-      ],
-      "depends_on": [
-        "N40.1"
-      ],
-      "file": "docs/DASHBOARD-OPERATIONS.md"
-    },
-    {
-      "id": "N40.3",
-      "title": "Registrar o chamado de orientação no painel",
-      "size": "P",
-      "status": "done",
-      "files": [
+        "docs/DASHBOARD-OPERATIONS.md",
         "docs/ISSUES.md",
-        "docs/DIARY.md"
+        "docs/DIARY.md",
+        "docs/ROADMAP.md",
+        ".cursorsession"
       ],
       "depends_on": [
-        "N40.1"
+        "N41.3"
       ],
-      "file": "docs/ISSUES.md, docs/DIARY.md"
-    },
-    {
-      "id": "N40.4",
-      "title": "Atualizar a sessão desta frente após o mapa",
-      "size": "P",
-      "status": "done",
-      "files": [
-        ".cursorsession",
-        "docs/ROADMAP.md"
-      ],
-      "depends_on": [
-        "N40.2",
-        "N40.3"
-      ],
-      "file": ".cursorsession, docs/ROADMAP.md"
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md, docs/ROADMAP.md, .cursorsession"
     }
   ],
   "checkpoint": {
     "phase": "implementation",
-    "sprint": "N40",
+    "sprint": "N41",
     "branch": "front/n27-alpaca-loop",
     "current_task": null,
-    "last_completed_task": "N40.4",
+    "last_completed_task": "N41.4",
     "validation_gate_ref": ".beesy/sprints/N39.json",
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N40",
+    "sprint_delivery_sprint": "N41",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
       "result": "APROVADA",
@@ -209,36 +214,53 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
+        ".beesy/stamp-gate-logs/"
       ],
       "missing_backends": [],
-      "last_validated_sha": "ef43afb7b6b915bbda22962546d06e6044b1cae7",
-      "stamped_at": "2026-11-17T14:13:04Z",
+      "last_validated_sha": "79c0b01b216efbb2bd37b21777ef93c503f90932",
+      "stamped_at": "2026-11-17T14:55:11Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "d005fa136c33e5b5252df3bf6f80eb1de4ddbcc6afda992ca6a5ea9a60b30011",
-      "patch_id": "a6b53dc774ed17de400de5ba6bc1639da4fec7fc",
+      "content_hash": "29781553717715edf15540a2880047d6d198d576cea79498c1dd2107fe4fc982",
+      "patch_id": "786aa86d48ab1a8b4ea0365f3558a127be5ea0b4",
       "patch_id_version": 2
     },
     "plan_only": false,
     "relevant_paths": [
-      ".cursorsession",
-      "docs/.briefs/N40-GIT-FIRST-REUSE.md",
-      "docs/.briefs/N40.brief.md",
-      "docs/DASHBOARD-OPERATIONS.md",
-      "docs/DIARY.md",
-      "docs/ISSUES.md",
+      "docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md",
+      "docs/.briefs/N41.brief.md",
+      "docs/.briefs/N41-GIT-FIRST-REUSE.md",
       "docs/OPERATOR-PANEL-MAP.md",
-      "docs/ROADMAP.md"
-    ]
+      "docs/DASHBOARD-OPERATIONS.md",
+      "docs/ISSUES.md",
+      "docs/DIARY.md",
+      "docs/ROADMAP.md",
+      "src/panel_ops_data.py",
+      "src/panel_ops_html.py",
+      "src/v4_web_dashboard.py",
+      "tests/test_panel_ops.py",
+      ".cursorsession",
+      ".beesy/sprints/N41.json"
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N41",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T14:41:55Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N41 orders+history; 29 panel_ops OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -259,13 +281,13 @@
     ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-tarefas",
-    "phase": "N40 concluida",
-    "intent": "Mapa docs-only OPERATOR-PANEL-MAP.md (ISS-016); sem tela de ordens.",
-    "changes_made": "docs/OPERATOR-PANEL-MAP.md; N40-GIT-FIRST EXECUTE pin; DASHBOARD-OPERATIONS link; ISSUES/DIARY/ROADMAP/.cursorsession N40 ticks.",
-    "decisions": "category N; review skip; zero M; two UIs mapped; orders UI OUT; LIVE false; ISS-007/016 stay open.",
-    "next_steps": "Parent closeout/PR. Rebuild EasyPanel operador. No src/. No commit in this EXECUTE.",
-    "updated_at": "2026-11-17T11:15:00-03:00"
+    "persona": "executor-docs",
+    "phase": "N41 N41.4 docs closeout",
+    "intent": "Campanha ISS-017 onda 1 entregue; mapa e chamados pós-telas Ordens/Histórico.",
+    "changes_made": "OPERATOR-PANEL-MAP 5-6; DASHBOARD-OPERATIONS; ISSUES ISS-017/016; DIARY N41; ROADMAP ticks; cursorsession N41.4 done.",
+    "decisions": "ISS-017 stays open; ISS-007/010/011 not closed; CAMPAIGN-PLATFORM-DELIVERY tracked; no commit N41.4.",
+    "next_steps": "Finalizer stamp/PR if verify_green; campaign wave N42.",
+    "updated_at": "2026-11-17T11:45:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -325,9 +347,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N39",
-  "sprint_atual": "N40",
-  "sprint_nome": "Mapa honesto de onde esta cada coisa no painel",
+  "previous_sprint": "N40",
+  "sprint_atual": "N41",
+  "sprint_nome": "Ver ordens abertas e historico no menu do dia a dia",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -562,6 +584,30 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N40; checkpoint.phase=planning; preserve N39 stamp and autopilot",
         "rationale": "Deliverable list asked sprint_atual=N40; EXECUTE waits parent Fable/plan-verifier; AgentCoder not needed (zero M)"
+      },
+      {
+        "timestamp": "2026-11-17T11:20:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-com-dominio; skip Passo2 (REQUIREMENTS 7-11 + OPERATOR-PANEL-MAP + ISS-007 already specify screens); sprint_id=N41; review=senior+qa",
+        "rationale": "Operator demanded campaign + first executable orders/history UI. Autopilot no AskQuestion. Heuristic matched ui/screen; REQUIREMENTS already closed Design/Requisitos for Features 6-10."
+      },
+      {
+        "timestamp": "2026-11-17T11:20:00-03:00",
+        "file": "docs/ISSUES.md",
+        "decision": "register ISS-017 campaign epic; keep ISS-007/010/011/016 open; ISS-016 stays orientation; N41 is ISS-017 onda 1",
+        "rationale": "Operator asked ISS-017 if missing; ISS-007 is historical 0.9/1.0/1.1 train, not the operate-from-panel campaign"
+      },
+      {
+        "timestamp": "2026-11-17T11:20:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "sprint_id=N41 (max existing N40); stubs N42-N47 titles only; do not rewrite N17/N28/N29; no Clear/OANDA; LIVE false; TimesFM research-only",
+        "rationale": "Highest-leverage gap for começar a operar is open orders + history UI; B3/OANDA stay operator-gated N29.5"
+      },
+      {
+        "timestamp": "2026-11-17T11:20:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N41; checkpoint.phase=planning; preserve N40 stamp and autopilot",
+        "rationale": "Deliverable list asked fully plan N41 AND campaign brief; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -573,6 +619,8 @@
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health",
     "2026-11-17: N39 docs closeout for N37/ISS-014; EasyPanel rebuild, N29.5, N17.2 remain operator-gated",
-    "2026-11-17: N40 PLAN map-only (ISS-016); option 2; not orders UI; two HTML surfaces; LIVE false"
+    "2026-11-17: N40 PLAN map-only (ISS-016); option 2; not orders UI; two HTML surfaces; LIVE false",
+    "2026-11-17: campaign ISS-017 + N41 PLAN orders/history UI; Clear/OANDA/N17.2 operator-gated; TimesFM research-only; LIVE false",
+    "2026-11-17: N41.4 docs — mapa Ordens/Histórico VISÍVEL; ISS-017 onda 1 anotada; campanha CAMPAIGN-PLATFORM-DELIVERY; no commit"
   ]
 }

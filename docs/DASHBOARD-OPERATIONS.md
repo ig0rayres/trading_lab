@@ -68,7 +68,7 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 
 ## Dia a dia do operador (sem Exec)
 
-Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (Sprint N40): o login diário mostra só **Central / Sinais / Prodígio / Performance**; Tá Barato, catálogo de fases, melhoria contínua e a maior parte das contagens de ordens ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`** — ordens abertas e histórico **não** têm tela dedicada no menu.
+Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (N40 mapa · **N41** telas Ordens/Histórico): o login diário mostra **Central / Sinais / Prodígio / Performance / Ordens / Histórico**. Tá Barato, catálogo de fases e melhoria contínua ainda ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`**. O painel **não** envia nem cancela ordem (POST continua **405**).
 
 | Ação | Onde |
 |------|------|
@@ -79,6 +79,8 @@ Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está
 | Ver sinais com motivo | `GET /sinais` ou `GET /api/signals` |
 | Ver ranking Prodígio | `GET /prodigy` |
 | Ver performance só de fill | `GET /performance` ou `GET /api/performance` |
+| Ver ordens paper ainda abertas (lista) | `GET /ordens` ou `GET /api/orders` |
+| Ver histórico só de fill confirmado | `GET /historico` ou `GET /api/history` |
 | Monitoramento JSON | `GET /api/status` com Bearer (como antes) |
 
 Rotina **não** exige shell no Exec do EasyPanel para parar, ajustar âncora ou ler sinais — só o painel HTTPS. Exec permanece para migrate, segredos e rebuild (operação rara).
@@ -89,7 +91,7 @@ Bearer sozinho **não** autoriza escrita (`PATCH` → **401**); cookie de operad
 
 ## Abrir o HTML no browser
 
-1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Prodígio / Performance.
+1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Prodígio / Performance / Ordens / Histórico.
 2. **API/monitoramento:** `curl -H "Authorization: Bearer …" https://…/api/status` (token ≥ 32 se remoto).
 3. Sem Bearer nem cookie → **401** ou redirecionamento para `/login` nas rotas operacionais.
 

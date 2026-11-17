@@ -776,18 +776,38 @@ def serve_operator_panel(handler, root: Path, path: str, connect_factory):
         page = _panel_html.render_prodigy_page(bundle, cp.get('opportunities') or {})
     elif path == '/performance':
         page = _panel_html.render_performance_page(bundle.get('performance') or {})
+    elif path == '/ordens':
+        page = _panel_html.render_orders_page(bundle)
+    elif path == '/historico':
+        page = _panel_html.render_history_page(bundle)
     else:
         handler.send_error(404)
         return
     send_html_page(handler, page)
 
 
+def _panel_ops_bundle(snapshot: dict) -> dict:
+    bundle = snapshot.get('panel_ops') if isinstance(snapshot, dict) else None
+    if not isinstance(bundle, dict) or bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+        return {}
+    return bundle
+
+
 def serve_panel_json(handler, root: Path, path: str):
-    data = build_snapshot(root)
+    try:
+        data = build_snapshot(root)
+    except Exception:
+        data = {}
+    bundle = _panel_ops_bundle(data)
     if path == '/api/signals':
-        payload = {'signals': (data.get('panel_ops') or {}).get('signals') or []}
+        payload = {'signals': bundle.get('signals') or []}
+    elif path == '/api/orders':
+        payload = {'orders': bundle.get('open_orders') or []}
+    elif path == '/api/history':
+        payload = {'history': bundle.get('order_history') or []}
     elif path == '/api/performance':
-        payload = data.get('performance_panel') or {}
+        payload = data.get('performance_panel') if isinstance(data, dict) else {}
+        payload = payload or {}
     else:
         handler.send_error(404)
         return
@@ -835,7 +855,7 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             if path == '/login':
                 serve_login_page(self)
                 return
-            if path in ('/api/signals', '/api/performance'):
+            if path in ('/api/signals', '/api/performance', '/api/orders', '/api/history'):
                 if operator_session and not operator_session_authorized(self.headers, operator_session):
                     send_empty_response(self, 401)
                     return

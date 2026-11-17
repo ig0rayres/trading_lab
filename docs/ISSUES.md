@@ -20,6 +20,7 @@
 | ISS-014 | fechado | N37 (closeout papel **N39**) | Saúde automática da plataforma + defaults operacionais ON |
 | ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 | ISS-016 | aberto | N40 | Orientação no painel: mapa «onde está cada coisa» (docs; não é tela de ordens) |
+| ISS-017 | aberto | N41+ | Épico: entrega do painel operacional completo (campanha pós-N40) |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -47,6 +48,8 @@
 | Tá Barato no painel | Mesma UI, família upstream | **1.1** |
 
 > **N40 (2026-11-17):** este quadro é a **promessa** MVP-OP-1.0, não o clique do dia a dia. O menu após login (Central / Sinais / Prodígio / Performance) é outra superfície HTML. Mapa honesto → sprint **N40** / **ISS-016**. Não fecha este épico. Não é a tela de ordens.
+
+> **N41 / ISS-017 (2026-11-17):** campanha «operar pelo painel» (`docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`). **N41 entregue:** menu **Ordens** (`/ordens`) e **Histórico** (`/historico`) com listas ou vazio honesto; painel **sem** submit de ordem. **ISS-017 permanece aberto** (campanha). Catálogo de fases, TimesFM visível, Tá Barato, Clear e OANDA ficam nas ondas seguintes — **não** fecha ISS-007 / ISS-010 / ISS-011 nesta onda.
 
 > **Sem N18 separado:** dashboard não é épico paralelo; estende `src/v4_web_dashboard.py` + dados existentes (Feature 6), bearer remoto invariável.
 
@@ -419,12 +422,48 @@
 | Status | aberto |
 | Impacto | Depois das sprints de freio e saúde, o operador não consegue cruzar o menu do dia a dia com o que o painel único prometeu (ordens abertas, histórico, Tá Barato, melhoria contínua). Parece que «sumiu»; na prática há duas superfícies HTML e várias áreas só em JSON. |
 
-**Mapa (N40 EXECUTE):** [`docs/OPERATOR-PANEL-MAP.md`](OPERATOR-PANEL-MAP.md) — nove áreas, quatro selos, duas superfícies (porta **8765**, serviço `trading-lab` / `v4-ops`). O chamado **permanece aberto** como registro de orientação; **não fecha ISS-007** (épico MVP-OP / tela de ordens ainda fora).
+**Mapa (N40 EXECUTE):** [`docs/OPERATOR-PANEL-MAP.md`](OPERATOR-PANEL-MAP.md) — nove áreas, quatro selos, duas superfícies (porta **8765**, serviço `trading-lab` / `v4-ops`). O chamado **permanece aberto** como registro de orientação; **não fecha ISS-007**. A tela de ordens/histórico que este chamado adiou entra na campanha **ISS-017** / sprint **N41** — este ISS-016 continua orientação, não a implementação.
 
 **Critério de aceite:** mapa operador com as nove áreas pedidas; cada linha com onde clicar, fonte, vazio versus com dado, e selo VISÍVEL / VAZIO-COMUM / NÃO-EXISTE-AINDA / SÓ-API-OU-JSONL; as duas superfícies nomeadas (menu após login versus página única); porta 8765 do serviço publicado citada sem hostname inventado; zero `src/`; sem tela de ordens; `LIVE_TRADING_ENABLED=false`.
 
 **Fontes:** operador `/pmo plan` 2026-11-17 opção **2**; `docs/ISSUES.md` mapa ISS-007; `src/panel_ops_html.py` `_nav`; `src/v4_web_dashboard.py` `render_page`; `docs/DASHBOARD-OPERATIONS.md`; ROADMAP N16/N17/N25/N30.
 
-**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N40.brief.md`. Não fecha ISS-007 / ISS-011 / ISS-010. Tela de ordens permanece fora desta sprint.
+**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N40.brief.md`. Não fecha ISS-007 / ISS-011 / ISS-010.
+
+**Nota N41 (2026-11-17):** `docs/OPERATOR-PANEL-MAP.md` atualizado nas áreas **5–6** (Ordens/Histórico **VISÍVEL** no menu); mapa antigo que dizia NÃO-EXISTE-AINDA para essas telas foi corrigido. Implementação da tela foi **ISS-017** / N41 — **ISS-016** continua chamado de orientação, não fecha com N41.
+
+---
+
+## ISS-017 — Entrega do painel operacional completo (campanha pós-N40)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / epic |
+| Sprint | N41+ (primeira onda **N41**) |
+| Status | aberto |
+
+**Impacto:** Depois de muitas sprints o contrato Features 1–11 está quase todo `[x]` em teste, e o operador ainda não opera pelo menu do dia a dia. Faltam listas de ordens abertas e histórico; estratégias/fases e TimesFM não estão nesse menu; B3 e forex esperam credencial. Sem um épico de campanha, cada rodada vira cosmética (mapa, copy, closeout) e a plataforma não fecha.
+
+**Critério de fechamento (epic):** o operador entra no painel (login, sem Exec) e vê estratégias, sinais, ordens abertas, histórico/fills, performance e Prodígio; o caminho de demonstração US+cripto Alpaca paper é acompanhável até fill ou recusa; TimesFM só como pesquisa rotulada (nunca autorização de ordem); B3/Clear e OANDA **não** fecham este épico sem N29.5; `LIVE_TRADING_ENABLED=false`. Folha: `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
+
+**Ondas (não executar todas nesta rodada):**
+
+| Onda | Sprint | Entrega |
+|------|--------|---------|
+| 1 | **N41** | Ordens abertas + histórico no menu |
+| 2 | N42 | Estratégias/fases no menu |
+| 3 | N43 | TimesFM / dicas visíveis e rotuladas |
+| 4 | N44 | Homologar operar US+cripto pelo painel |
+| 5 | N45 | Tá Barato no menu — bloqueado em N17.2 |
+| 6 | N46 | B3 Clear — bloqueado em N29.5 |
+| 7 | N47 | OANDA Practice — bloqueado em N29.5 |
+
+**Não fecha:** ISS-007 (épico histórico 0.9/1.0/1.1; N41 cobre só duas áreas 1.0), ISS-010, ISS-011, ISS-016, ISS-013. Não inventar limiar. Não live.
+
+**Fontes:** operador 2026-11-17 (plano-mestre da plataforma por contrato); `docs/REQUIREMENTS.md` Features 1–11; ISS-007 / ISS-009 / ISS-010 / ISS-011 / ISS-016; `docs/OPERATOR-PANEL-MAP.md`.
+
+**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief da campanha + `docs/.briefs/N41.brief.md`.
+
+**Nota N41 EXECUTE (2026-11-17):** onda **1** entregue — rotas `/ordens` e `/historico` no menu após login; mapa e `docs/DASHBOARD-OPERATIONS.md` atualizados em N41.4. **Épico permanece aberto** até ondas N42–N47 e critério de fechamento acima. Não fecha ISS-007, ISS-010, ISS-011.
 
 ---

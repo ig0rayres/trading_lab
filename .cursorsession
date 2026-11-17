@@ -204,8 +204,8 @@
     "current_task": null,
     "last_completed_task": "N42.4",
     "validation_gate_ref": ".beesy/sprints/N41.json",
-    "sprint_delivery": "finalized",
-    "sprint_delivery_sprint": "N41",
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N42",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
       "result": "APROVADA",
@@ -213,21 +213,22 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/"
+        ".cursorsession.bak",
+        ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "7dec45a337c04f15f32f7d82b53ebd41af22c9d3",
-      "stamped_at": "2026-11-17T14:58:26Z",
+      "last_validated_sha": "f89bdc08bddc69c6a4f79475d3c064403506c6f2",
+      "stamped_at": "2026-11-17T15:59:39Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "c5a781f0761b47805ccff9c23788463c0c644b7a7a754b3e773dfdaf6420c57c",
-      "patch_id": "786aa86d48ab1a8b4ea0365f3558a127be5ea0b4",
+      "content_hash": "22f0cf461f3d1f6da019d5b3958031a21ace6642597549fa5147e5ed9527f4d4",
+      "patch_id": "6c91f994d6c53cc10746c2b05423228e8201ab1f",
       "patch_id_version": 2
     },
     "plan_only": false,
@@ -244,7 +245,20 @@
       "src/panel_ops_html.py",
       "src/v4_web_dashboard.py",
       "tests/test_panel_ops.py"
-    ]
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N42",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T15:59:27Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N42 strategies; 42 OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

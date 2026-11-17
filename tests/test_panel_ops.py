@@ -3,6 +3,7 @@ import os
 import tempfile
 import threading
 import unittest
+from datetime import datetime, timezone
 from decimal import Decimal
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -361,6 +362,69 @@ class PanelOpsDataTests(unittest.TestCase):
             self.assertNotIn('NVDA', symbols_hist)
             open_syms = {row['symbol'] for row in bundle['open_orders']}
             self.assertIn('NVDA', open_syms)
+
+    def test_ledger_order_rows_json_serializable_with_decimal_qty(self):
+        class _LedgerCursor:
+            def __init__(self) -> None:
+                self._sql = ''
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def execute(self, sql, params=None):
+                self._sql = sql.lower()
+
+            def fetchall(self):
+                if 'from paper_orders po' in self._sql and 'paper_fills' not in self._sql:
+                    return [
+                        ('cid-1', 'AAPL', 'buy', 'accepted', Decimal('2.5'), 'brk-1', 'signal_copy'),
+                    ]
+                if 'pf.filled_at' in self._sql:
+                    filled = datetime(2026, 11, 17, 12, 0, tzinfo=timezone.utc)
+                    return [
+                        (
+                            'cid-2',
+                            'MSFT',
+                            'sell',
+                            'filled',
+                            'brk-2',
+                            'momentum',
+                            Decimal('1'),
+                            1500,
+                            filled,
+                        ),
+                    ]
+                if 'from signal_events' in self._sql:
+                    return []
+                if 'from ledger_entries le' in self._sql:
+                    return [('momentum', 1500, 'filled')]
+                return []
+
+            def fetchone(self):
+                return None
+
+        class _LedgerConn:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def cursor(self):
+                return _LedgerCursor()
+
+        def _factory():
+            return _LedgerConn()
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            bundle = build_panel_bundle(root, conn_factory=_factory)
+            json.dumps(bundle, allow_nan=False)
+            self.assertEqual(bundle['open_orders'][0]['entry_qty'], '2.5')
+            self.assertEqual(bundle['order_history'][0]['entry_qty'], '1')
 
 
 class PanelOpsHttpTests(unittest.TestCase):

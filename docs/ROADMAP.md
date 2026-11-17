@@ -62,7 +62,7 @@
 | N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
 | N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | concluida | 3 | observability | Copy UX kill switch | *(abaixo)* |
 | N37 | N | Saúde automática + Central semáforo + defaults ON | em execucao | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
-| N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | planejada | 3 | observability | UX estado visual do freio | *(abaixo)* |
+| N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | concluida | 3 | observability | UX estado visual do freio | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -2640,6 +2640,20 @@ P task. Files: `docs/DASHBOARD-OPERATIONS.md`, `docs/DIARY.md` (2 files). Replac
 DIARY: short `## Sprint N38` + index row. Record: presentation-only halt-light strip; `kill_switch_on=true` still blocks new demo orders; `kill_switch_on=false` only clears the kill gate (does not turn on `demo_operation_on`); Liberar hidden when already released (no-op by design); no Live button; N29.5 still operator. LIVE false.
 
 Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion wording.
+
+### Quality Brief (Sprint N38)
+
+Maintain: `kill_switch_on` PATCH + `gate_b_risk.kill_switch_active` + `signal_paper_runner` demo block — presentation-only in `render_central_page`; do not relax Gate B or rename `demo_operation_on`.
+
+Maintain: copy N36 («Ativar freio» / «Liberar freio» / «Freio de emergência ativo») — extend with state classes, not revert to «Ligar/Desligar parada».
+
+Maintain: `_platform_health_block` on the Central beside the brake strip — health probes stay separate from kill-switch semantics.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; no Live button; HTTP 200 / queued intent are not fills.
+
+Avoid: dual equal-weight kill CTAs; `.warn` yellow strip for both states; inventing platform thresholds or scoring.
+
+**Closeout (2026-11-17):** PR [**#54**](https://github.com/ig0rayres/trading_lab/pull/54) **MERGED**; CI test / docker-smoke / docker-build **SUCCESS**; stamp **APROVADA** — local `tests.test_panel_ops` + `tests.test_platform_health` **24 OK**. Renumbered from planned N37 after main took N37/ISS-014 (platform_health). **ISS-015** fechado; **ISS-013** (copy N36) permanece histórico no índice. Kill-switch semantics unchanged.
 
 ---
 

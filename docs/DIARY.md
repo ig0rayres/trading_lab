@@ -4,10 +4,11 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N37 | panel_ops_html, docs | Faixa do freio (um CTA por estado); apresentação; kill_switch_on inalterado | 18–29 |
-| N36 | panel_ops_html, docs | Copy freio na Central; kill_switch_on inalterado; sem botão Live | 31–42 |
-| N35 | demo_account_gate, docs | env_presence_report + homolog roteiro; N29.5 ainda `[ ]` | 31–45 |
-| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 30–51 |
+| N38 | panel_ops_html, platform_health | Faixa do freio (um CTA por estado) + bloco saúde na Central; kill_switch_on inalterado | 19–32 |
+| N37 | panel_ops_html, docs | *(colisão ID)* copy/freio planeado aqui renumerado → N38; main: N37/ISS-014 saúde | 34–38 |
+| N36 | panel_ops_html, docs | Copy freio na Central; kill_switch_on inalterado; sem botão Live | 40–51 |
+| N35 | demo_account_gate, docs | env_presence_report + homolog roteiro; N29.5 ainda `[ ]` | 54–67 |
+| N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 68–89 |
 | N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 29–55 |
 | N32 | paper-gateway, risk-gate-b | Feature 7 âncoras no laço paper; PR #42; ISS-011 lacuna | 38–63 |
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
@@ -16,15 +17,25 @@
 
 ---
 
-## Sprint N37 — Faixa do freio na Central
+## Sprint N38 — Faixa do freio na Central (estado visual)
 
 **Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
 
-**Entregue:** faixa-luz do freio em `render_central_page` (`brake-strip--active` / `brake-strip--released`); um único CTA por estado; linha muted sem repetir status do freio; testes em `tests/test_panel_ops.py`; folha `docs/DASHBOARD-OPERATIONS.md`.
+**Contexto:** colisão de ID — `main` já tinha **N37/ISS-014** (saúde da plataforma); o freio visual foi renumerado para **N38/ISS-015** no merge. Integrou `_platform_health_block` (origem N37 main) com a faixa do freio em `render_central_page`.
 
-**Honestidade:** só apresentação — `kill_switch_on=true` ainda bloqueia ordens demo novas; `kill_switch_on=false` só limpa o gatilho do freio (não liga `demo_operation_on`); Liberar oculto quando já liberado (no-op por desenho); sem botão Live; N29.5 operador; ROADMAP N37 Status **planejada** até PR; `LIVE_TRADING_ENABLED=false`.
+**Entregue:** faixa-luz `brake-strip--active` / `brake-strip--released`; um único CTA por estado (nunca os dois botões iguais); linha muted `Conta demo · Live desligado`; testes em `tests/test_panel_ops.py` e `tests/test_platform_health.py`; folha `docs/DASHBOARD-OPERATIONS.md`.
 
-**Prova:** `tests.test_panel_ops.RenderCentralPageFreioCopyTests` + `test_kill_switch_from_panel_blocks_next_eval` inalterado.
+**Honestidade:** só apresentação — `kill_switch_on=true` ainda bloqueia ordens demo novas; `kill_switch_on=false` só limpa o gatilho do freio (não liga `demo_operation_on`); Liberar oculto quando já liberado (no-op por desenho); semântica kill switch inalterada; sem botão Live; N29.5 operador; `LIVE_TRADING_ENABLED=false`.
+
+**Decisões:** não fechar **ISS-013** (copy N36) neste closeout — permanece histórico/aberto no índice; **ISS-015** fecha aqui.
+
+**Prova:** PR [**#54**](https://github.com/ig0rayres/trading_lab/pull/54) **MERGED**; CI test / docker-smoke / docker-build verde; local `tests.test_panel_ops` + `tests.test_platform_health` **24 OK**; stamp **APROVADA** / verify_green.
+
+---
+
+## Sprint N37 — Colisão de ID (freio → N38)
+
+**Nota:** o plano original nomeava esta sprint para a faixa do freio; antes do merge, `origin/main` assumiu **N37** para saúde (**ISS-014**). A entrega visual do freio foi renumerada para **N38** (ver seção acima). Saúde automática segue o épico **ISS-014** na frente/main correspondente.
 
 ---
 

@@ -18,7 +18,7 @@
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 | ISS-013 | aberto | N36 | Copy do freio na Central: Ligar/Desligar parada parece ligar o sistema |
 | ISS-014 | em execucao | N37 | Saúde automática da plataforma + defaults operacionais ON |
-| ISS-015 | aberto | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
+| ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -378,7 +378,8 @@
 |-------|--------|
 | Categoria | feature-sem-dominio / enhancement |
 | Sprint | N38 |
-| Status | aberto |
+| Status | fechado |
+| resolved_by | Sprint N38 |
 | Impacto | Depois da copy N36, os dois botões ainda parecem iguais, a faixa fica amarela nos dois estados, o status some na linha fraca, e clicar Liberar com o freio já solto parece não fazer nada. |
 
 **Critério de aceite:** faixa `brake-strip--active` (vermelha) com só Liberar freio; faixa `brake-strip--released` (calma) com só Ativar freio; um único `brake-strip__cta` por estado; textos N36 onde ainda forem certos; testes afirmam classe, copy e ausência dos dois botões iguais; sem botão Live; `kill_switch_on` e Gate B inalterados; `demo_operation_on` fora desta sprint; `LIVE_TRADING_ENABLED=false`.
@@ -386,5 +387,11 @@
 **Fontes:** operador `/pmo plan` 2026-11-17 (demanda aprovada + frontend-design); `src/panel_ops_html.py` `render_central_page`; ISS-013 (copy N36). Colisão de ID: main tomou N37/ISS-014 para saúde; freio renumerado para N38/ISS-015.
 
 **Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N38.brief.md`.
+
+**correcao:** `render_central_page` — faixa `brake-strip--active` / `brake-strip--released`, um CTA por estado, integração com `_platform_health_block`; testes `tests/test_panel_ops.py` e `tests/test_platform_health.py`.
+
+**validacao:** PR [**#54**](https://github.com/ig0rayres/trading_lab/pull/54) merge; CI test / docker-smoke / docker-build verde; stamp **APROVADA** (24 testes locais panel_ops + platform_health); kill-switch semantics inalteradas; `LIVE_TRADING_ENABLED=false`.
+
+**Histórico:** **ISS-013** (copy N36) não foi fechado neste sprint — entrega de texto N36 permanece referência; estado visual era **ISS-015**.
 
 ---

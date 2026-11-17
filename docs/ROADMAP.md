@@ -2435,6 +2435,7 @@ Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion w
 
 > Categoria: N
 > Status: concluida
+> Closeout: PR **#52** merged (`3bebe1c`); deploy EasyPanel 2026-11-17; Central semáforo agregado **ok** (webhook `skipped` sem `WEBHOOK_HEALTH_URL`). Papel **N39** nesta frente (docs-only; não roubar ID N37).
 > Issue: **ISS-014**
 > titulo_humano: Central mostra se tudo está vivo — sem checklist manual
 > resumo_humano: A Central vira o semáforo único da plataforma: painel, banco, worker e webhook checados sozinhos. Instalação nova nasce com operação demo e mercados ligados; só desliga quando o operador pedir. Conta real continua sem botão.

@@ -137,7 +137,7 @@
     {
       "id": "N39.1",
       "title": "Carimbar no plano a saude automatica ja entregue",
-      "file": "docs/ROADMAP.md",
+      "file": "docs/ROADMAP.md, docs/ISSUES.md",
       "files": [
         "docs/ROADMAP.md"
       ],
@@ -226,7 +226,17 @@
       "patch_id_version": 2
     },
     "sprint": "N39",
-    "branch": "front/n27-alpaca-loop"
+    "branch": "front/n27-alpaca-loop",
+    "relevant_paths": [
+      "docs/ISSUES.md",
+      "docs/ROADMAP.md",
+      "docs/DIARY.md",
+      "docs/TEST-EVIDENCE.md",
+      "docs/AGENT-NOTES.md",
+      ".cursorsession",
+      "docs/.briefs/N39.brief.md",
+      "docs/.briefs/N39-GIT-FIRST-REUSE.md"
+    ]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

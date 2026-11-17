@@ -365,13 +365,15 @@
 | Categoria | feature-com-dominio |
 | Sprint | N37 |
 | Status | fechado |
-| resolved_by | Sprint N37 (papel closeout Sprint N39) |
+| resolved_by | Sprint N37 (PR **#52**); closeout docs N39 |
 
 **Impacto:** Operador depende de checklist manual (EasyPanel, Exec, curl) para saber se painel, worker, webhook e gatilhos estão vivos. A Central mostra “Operando” só pela parada geral, não pela stack.
 
 **Critério de fechamento:** Central e `/api/status` expõem `platform_health`; probes no `v4-ops`; defaults ON no migrate sem apagar OFF do operador; pytest verde; `LIVE_TRADING_ENABLED=false`.
 
-**Fontes:** operador 2026-11-17; frente `front/n20-platform-health` (código ex-PR #50).
+**Evidência:** PR #52; deploy EasyPanel 2026-11-17; Central **Plataforma — semáforo** agregado ok (operador).
+
+**Fontes:** operador 2026-11-17; frente `front/n20-platform-health` → PR #52 (PR #50 fechado).
 
 **correcao:** `src/platform_health.py` (`run_probes`, snapshot em reports); semáforo na Central (`_platform_health_block`) e campo `platform_health` em `build_snapshot` / `GET /api/status`; probes no supervisor `scripts/v4_ops_main.sh`; defaults operacionais ON em `operational_defaults` / migrate sem sobrescrever OFF do operador.
 

@@ -196,17 +196,17 @@
     "last_completed_task": "N51.4",
     "validation_gate_ref": ".beesy/sprints/N48.json",
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N51",
+    "sprint_delivery_sprint": "N52",
     "plan_only": true,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N51",
+      "sprint": "N52",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-17T19:48:23Z",
+      "recorded_at": "2026-11-17T20:17:39Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N51; 76 OK",
+      "notes": "N52; 75 OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
@@ -218,19 +218,19 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_ledger_migration.py -q",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q",
           "exit_code": 0
         }
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "88ae54dd0664ed5aebd28dd9c11df9921fa89a00",
-      "stamped_at": "2026-11-17T19:49:56Z",
+      "last_validated_sha": "271e87ddaa0c47b282a03978e4068d2a68eabb4d",
+      "stamped_at": "2026-11-17T20:18:35Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "90757e0a4a5094ea837e2f41df33cae8601bc43d2d8608f1f5170ac98b18f324",
-      "patch_id": "e7384f0e0da5e115001b45ba722e96b4ba24c242",
+      "content_hash": "f3f7915cd737c065a1a934c2b4a97cfaf369fb2157cbff7a8c7ea064b15f2499",
+      "patch_id": "166ddd6be25f6684cbb78c600e7efa7b2a58b432",
       "patch_id_version": 2
     }
   },

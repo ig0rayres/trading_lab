@@ -1,1 +1,144 @@
-{"sprint_id":"N41","status":"implementation","source":"rock-execute"}
+{
+  "sprint_id": "N41",
+  "status": "implementation",
+  "source": "rock-execute",
+  "checkpoint": {
+    "phase": "implementation",
+    "sprint": "N41",
+    "branch": "front/n27-alpaca-loop",
+    "current_task": null,
+    "last_completed_task": "N41.4",
+    "validation_gate_ref": ".beesy/sprints/N39.json",
+    "sprint_delivery": "verify_green",
+    "sprint_delivery_sprint": "N41",
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".beesy/sprints/N41.json",
+        ".beesy/stamp-gate-logs/"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "9e01ac1fc861ce4a329fc849b3f7500791cb73e8",
+      "stamped_at": "2026-11-17T14:58:16Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "29781553717715edf15540a2880047d6d198d576cea79498c1dd2107fe4fc982",
+      "patch_id": "786aa86d48ab1a8b4ea0365f3558a127be5ea0b4",
+      "patch_id_version": 2
+    },
+    "plan_only": false,
+    "relevant_paths": [
+      "docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md",
+      "docs/.briefs/N41.brief.md",
+      "docs/.briefs/N41-GIT-FIRST-REUSE.md",
+      "docs/OPERATOR-PANEL-MAP.md",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "docs/ISSUES.md",
+      "docs/DIARY.md",
+      "docs/ROADMAP.md",
+      "src/panel_ops_data.py",
+      "src/panel_ops_html.py",
+      "src/v4_web_dashboard.py",
+      "tests/test_panel_ops.py",
+      ".cursorsession",
+      ".beesy/sprints/N41.json"
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N41",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T14:41:55Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N41 orders+history; 29 panel_ops OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    }
+  },
+  "archived_at": "2026-11-17T14:57:40Z",
+  "sprint_tasks": [
+    {
+      "id": "N41.0",
+      "title": "Inventariar o reuso das contagens de ordem antes de desenhar a lista",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/.briefs/N41-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N41.brief.md",
+        "docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md"
+      ],
+      "depends_on": [],
+      "file": "docs/.briefs/N41-GIT-FIRST-REUSE.md, docs/.briefs/N41.brief.md, docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md"
+    },
+    {
+      "id": "N41.1",
+      "title": "Montar as linhas de ordens abertas e de histórico no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "depends_on": [
+        "N41.0"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N41.2",
+      "title": "Colocar Ordens e Histórico no menu do dia a dia",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "depends_on": [
+        "N41.1"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N41.3",
+      "title": "Provar listas, vazio, sessão e que fila não é fill",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N41.2"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N41.4",
+      "title": "Atualizar o mapa e os chamados depois das telas existirem",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/ISSUES.md",
+        "docs/DIARY.md",
+        "docs/ROADMAP.md",
+        ".cursorsession"
+      ],
+      "depends_on": [
+        "N41.3"
+      ],
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md, docs/ROADMAP.md, .cursorsession"
+    }
+  ]
+}

@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N36 | panel_ops_html, docs | Copy freio na Central; kill_switch_on inalterado; sem botão Live | 17–28 |
+| N37 | panel_ops_html, docs | Faixa do freio (um CTA por estado); apresentação; kill_switch_on inalterado | 18–29 |
+| N36 | panel_ops_html, docs | Copy freio na Central; kill_switch_on inalterado; sem botão Live | 31–42 |
 | N35 | demo_account_gate, docs | env_presence_report + homolog roteiro; N29.5 ainda `[ ]` | 31–45 |
 | N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 30–51 |
 | N33 | docs | Closeout ISS-011 Alpaca; carimbo N28/N30/N31; PR #43 main; PR #42/EasyPanel attested | 29–55 |
@@ -12,6 +13,18 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N37 — Faixa do freio na Central
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** faixa-luz do freio em `render_central_page` (`brake-strip--active` / `brake-strip--released`); um único CTA por estado; linha muted sem repetir status do freio; testes em `tests/test_panel_ops.py`; folha `docs/DASHBOARD-OPERATIONS.md`.
+
+**Honestidade:** só apresentação — `kill_switch_on=true` ainda bloqueia ordens demo novas; `kill_switch_on=false` só limpa o gatilho do freio (não liga `demo_operation_on`); Liberar oculto quando já liberado (no-op por desenho); sem botão Live; N29.5 operador; ROADMAP N37 Status **planejada** até PR; `LIVE_TRADING_ENABLED=false`.
+
+**Prova:** `tests.test_panel_ops.RenderCentralPageFreioCopyTests` + `test_kill_switch_from_panel_blocks_next_eval` inalterado.
 
 ---
 

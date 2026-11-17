@@ -23,6 +23,18 @@ body{font:16px "IBM Plex Sans",system-ui,sans-serif;margin:0;background:var(--bg
 .btn-primary{background:#2c4a6e;color:#f7fafc}.btn-danger{background:#8f2d2d;color:#fff}
 table{width:100%;border-collapse:collapse}td,th{border:1px solid #d5dee8;padding:8px;text-align:left}
 .warn{background:#fff3cd;border:1px solid #e6c48a;padding:12px;border-radius:8px}
+.brake-strip{padding:12px 16px;border-radius:8px;margin:8px 0;display:flex;flex-wrap:wrap;
+align-items:center;gap:12px;justify-content:space-between;transition:background .2s,color .2s}
+.brake-strip--active{background:#7A1218;color:#FFF7F5}
+.brake-strip--released{background:#1C4A52;color:#E6F4F4}
+.brake-strip__body{flex:1;min-width:200px}
+.brake-strip__title{font-size:22px;font-weight:700;margin:0}
+.brake-strip__help{font-size:14px;margin:4px 0 0}
+.brake-strip__cta{padding:10px 16px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+.brake-strip--active .brake-strip__cta{background:#FFF7F5;color:#7A1218;border:none}
+.brake-strip--released .brake-strip__cta{background:transparent;color:#FFF7F5;border:2px solid #E6B6B6}
+.brake-strip__cta:focus-visible{outline:3px solid #F0C14B;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.brake-strip{transition:none}}
 .mono{font-family:"IBM Plex Mono",monospace}
 '''
 
@@ -56,6 +68,34 @@ def _nav(active: str) -> str:
     return ''.join(parts)
 
 
+def _brake_strip_html(kill_active: bool) -> str:
+    if kill_active:
+        mod = 'brake-strip--active'
+        title = 'Freio de emergência ativo'
+        help_txt = 'Ordens demo novas bloqueadas.'
+        cta = '<button type="button" class="brake-strip__cta" id="kill-off">Liberar freio</button>'
+    else:
+        mod = 'brake-strip--released'
+        title = 'Freio liberado'
+        help_txt = 'Outros limites ainda valem.'
+        cta = '<button type="button" class="brake-strip__cta" id="kill-on">Ativar freio</button>'
+    return (
+        f'<div class="brake-strip {mod}" role="status">'
+        f'<div class="brake-strip__body"><p class="brake-strip__title">{esc(title)}</p>'
+        f'<p class="brake-strip__help">{esc(help_txt)}</p></div>{cta}</div>'
+    )
+
+
+_KILL_PATCH_SCRIPT = '''
+async function patchKill(on){await fetch('/api/triggers',{method:'PATCH',headers:{'Content-Type':'application/json'},
+credentials:'same-origin',body:JSON.stringify({kill_switch_on:on})});location.reload();}
+const killOn=document.getElementById('kill-on');
+if(killOn)killOn.onclick=()=>patchKill(true);
+const killOff=document.getElementById('kill-off');
+if(killOff)killOff.onclick=()=>patchKill(false);
+'''
+
+
 def _platform_health_block(ph: dict[str, Any] | None) -> str:
     ph = ph or {}
     overall = ph.get('overall') or 'unknown'
@@ -77,12 +117,8 @@ def _platform_health_block(ph: dict[str, Any] | None) -> str:
 def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -> str:
     flags = (triggers or {}).get('control_flags') or {}
     markets = (triggers or {}).get('market_controls') or []
-    kill = flags.get('kill_switch_on')
-    status = (
-        'Freio de emergência ativo'
-        if kill
-        else 'Freio liberado (outros limites ainda valem)'
-    )
+    kill_active = flags.get('kill_switch_on') is True
+    brake = _brake_strip_html(kill_active)
     cards = ''.join(
         f'<div class="card"><small class="muted">{esc(label)}</small>'
         f'<div class="mono"><strong>{esc(flags.get(key, "—"))}</strong></div></div>'
@@ -107,21 +143,14 @@ def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -
     ) or '<tr><td colspan="4">Sem sinais recentes</td></tr>'
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Central</title>
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("central")}<main class="main">
-<h1>Central</h1><p class="muted">Conta demo · {esc(status)} · Live desligado (sem botão)</p>
-<div class="warn"><b>Freio de emergência</b> — quando ativo, bloqueia ordens demo novas. Alterações gravam histórico append-only.
-<button class="btn btn-danger" id="kill-on">Ativar freio</button>
-<button class="btn" id="kill-off">Liberar freio</button></div>
+<h1>Central</h1><p class="muted">Conta demo · Live desligado (sem botão)</p>
+{brake}
 {_platform_health_block(data.get("platform_health"))}
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">{cards}</div>
 <h2>Mercados</h2><table><tbody>{market_rows}</tbody></table>
 <h2>Sinais recentes</h2><table><tbody>{sig_rows}</tbody></table>
 <p><a href="/sinais">Ver todos os sinais</a></p></main></div>
-<script>
-async function patchKill(on){{await fetch('/api/triggers',{{method:'PATCH',headers:{{'Content-Type':'application/json'}},
-credentials:'same-origin',body:JSON.stringify({{kill_switch_on:on}})}});location.reload();}}
-document.getElementById('kill-on').onclick=()=>patchKill(true);
-document.getElementById('kill-off').onclick=()=>patchKill(false);
-</script></body></html>'''
+<script>{_KILL_PATCH_SCRIPT}</script></body></html>'''
 
 
 def render_signals_page(bundle: dict[str, Any]) -> str:

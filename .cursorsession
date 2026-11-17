@@ -215,13 +215,10 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
+      "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "3d078113d3905afd3218850d918e56732c38f019",
-      "stamped_at": "2026-11-17T16:32:15Z",
+      "last_validated_sha": "b90e5d311118963ebd855446371cbf38eb02fda2",
+      "stamped_at": "2026-11-17T16:32:39Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

@@ -425,3 +425,30 @@ Roteiro operador: `docs/HOMOLOGATION.md` § **G-MKT Clear simulated + OANDA Prac
 ```bash
 LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_demo_broker_adapters.EnvPresenceReportTests -q
 ```
+
+## Sprint N37 — platform_health (ISS-014)
+
+> `LIVE_TRADING_ENABLED=false` · merge produção PR **#52** · **pytest verde ≠ rebuild EasyPanel ≠ fill** · sem segredos neste arquivo
+
+| Closeout | Prova |
+|----------|-------|
+| Merge produção | PR [**#52**](https://github.com/ig0rayres/trading_lab/pull/52) MERGED `2026-11-17T13:14:04Z` |
+| Commits | feat `76f76b3` `feat(observability): platform health probes and operational defaults (N37)`; follow-up `ae916c6` `test: isolate demo-off gate checks from N37 migrate defaults` |
+| mergeCommit | `3bebe1c7d3236690c67533ef916cbc5be3206d92` |
+| Papel ISS-014 | Sprint **N39** closeout docs (ROADMAP/DIARY/ISSUES); não roubar ID N37 |
+
+| Cenário | Nodeid |
+|---------|--------|
+| Probes gravam snapshot | `tests.test_platform_health.PlatformHealthTests.test_run_probes_writes_snapshot` |
+| Webhook sem URL → skipped | `tests.test_platform_health.PlatformHealthTests.test_webhook_skipped_without_url` |
+| Stamp worker habilita ok | `tests.test_platform_health.PlatformHealthTests.test_worker_stamp_enables_ok_worker` |
+| Fila antiga → degraded | `tests.test_platform_health.PlatformHealthTests.test_stale_queue_degraded` |
+| down vence degraded no agregado | `tests.test_platform_health.PlatformHealthTests.test_aggregate_overall_down_beats_degraded` |
+| Snapshot API inclui health | `tests.test_platform_health.BuildSnapshotHealthTest.test_build_snapshot_includes_platform_health` |
+| Defaults ON migrate (isolamento demo-off) | `tests/test_operational_defaults.py` (cobertura N37.4; ver suite no CI do PR #52) |
+
+```bash
+LIVE_TRADING_ENABLED=false PYTHONPATH=src python3 -m unittest tests.test_platform_health tests.test_operational_defaults -q
+```
+
+**Operador:** rebuild EasyPanel `trading-lab` necessário para ver o semáforo em produção — fora desta evidência pytest.

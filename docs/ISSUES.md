@@ -17,7 +17,7 @@
 | ISS-011 | aberto | ISS-010 B3/FOREX + N17.2 G-FORM (pós-N33) | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 | ISS-013 | aberto | N36 | Copy do freio na Central: Ligar/Desligar parada parece ligar o sistema |
-| ISS-014 | fechado | N37 | Saúde automática da plataforma + defaults operacionais ON |
+| ISS-014 | fechado | N37 (closeout papel **N39**) | Saúde automática da plataforma + defaults operacionais ON |
 | ISS-015 | fechado | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -313,6 +313,8 @@
 
 **Nota N33 (2026-11-16, closeout docs):** N28/N30/N31 carimbadas `concluida` no ROADMAP com SHA/PR citados; sprint N33 `concluida` via PR **#43** merge `fe80f161` (`2026-11-16T20:34:39Z`). **ISS-011 permanece aberto** somente para B3/FOREX (**ISS-010**) e **N17.2** (G-FORM / homologação Tá Barato paper). PR **#42** na linha principal; EasyPanel **#42 no ar** = atestado operador, não fill.
 
+**Nota N39 (2026-11-17):** closeout de **ISS-014** / N37 (saúde automática, PR **#52**) é só papel + pytest — **não** fecha o restante do épico; pendências **ISS-010** / **N29.5** e **N17.2** inalteradas.
+
 **Nota headless:** operador ausente; EasyPanel/rebuild e credenciais 3os → `Pendências operador` sem interromper a campanha de código/testes. Brief N30: `docs/.briefs/N30.brief.md`.
 
 ---
@@ -363,6 +365,7 @@
 | Categoria | feature-com-dominio |
 | Sprint | N37 |
 | Status | fechado |
+| resolved_by | Sprint N37 (PR **#52**); closeout docs N39 |
 
 **Impacto:** Operador depende de checklist manual (EasyPanel, Exec, curl) para saber se painel, worker, webhook e gatilhos estão vivos. A Central mostra “Operando” só pela parada geral, não pela stack.
 
@@ -371,6 +374,12 @@
 **Evidência:** PR #52; deploy EasyPanel 2026-11-17; Central **Plataforma — semáforo** agregado ok (operador).
 
 **Fontes:** operador 2026-11-17; frente `front/n20-platform-health` → PR #52 (PR #50 fechado).
+
+**correcao:** `src/platform_health.py` (`run_probes`, snapshot em reports); semáforo na Central (`_platform_health_block`) e campo `platform_health` em `build_snapshot` / `GET /api/status`; probes no supervisor `scripts/v4_ops_main.sh`; defaults operacionais ON em `operational_defaults` / migrate sem sobrescrever OFF do operador.
+
+**validacao:** PR [**#52**](https://github.com/ig0rayres/trading_lab/pull/52) MERGED `2026-11-17T13:14:04Z`; feat `76f76b3` `feat(observability): platform health probes and operational defaults (N37)`; follow-up `ae916c6` `test: isolate demo-off gate checks from N37 migrate defaults`; mergeCommit `3bebe1c7d3236690c67533ef916cbc5be3206d92`. Pytest: `tests.test_platform_health.PlatformHealthTests.test_run_probes_writes_snapshot`, `test_webhook_skipped_without_url`, `test_worker_stamp_enables_ok_worker`, `test_stale_queue_degraded`, `test_aggregate_overall_down_beats_degraded`; `BuildSnapshotHealthTest.test_build_snapshot_includes_platform_health`; `tests/test_operational_defaults.py`. Sprint **N39** alinhou ROADMAP/DIARY/TEST-EVIDENCE (docs-only; **não** reutilizar o ID N37).
+
+**Nota N39 (2026-11-17, EXECUTE):** fechar no papel **não** atesta rebuild EasyPanel nem semáforo em produção; pytest verde ≠ fill. Rebuild EasyPanel, **N29.5** e **N17.2** continuam operador. `LIVE_TRADING_ENABLED=false`.
 
 ---
 

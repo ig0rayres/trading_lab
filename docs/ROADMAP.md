@@ -63,6 +63,7 @@
 | N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | concluida | 3 | observability | Copy UX kill switch | *(abaixo)* |
 | N37 | N | Saúde automática + Central semáforo + defaults ON | concluida | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
 | N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | concluida | 3 | observability | UX estado visual do freio | *(abaixo)* |
+| N39 | N | Closeout docs: carimbar N37 saúde automática e fechar ISS-014 | concluida | 5 | docs | Campanha ISS-014 closeout papel | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -112,6 +113,7 @@
 | N36 | skip | Copy do freio na Central; testes de string; zero M |
 | N37 | senior+qa | Saúde automática + semáforo Central; defaults ON |
 | N38 | skip | Faixa do freio na Central; um CTA por estado; zero M |
+| N39 | skip | Closeout docs N37 / ISS-014; sem `src/` |
 
 ---
 
@@ -2433,7 +2435,7 @@ Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion w
 
 > Categoria: N
 > Status: concluida
-> Closeout: PR **#52** merged (`3bebe1c`); deploy EasyPanel 2026-11-17; Central semáforo agregado **ok** (webhook `skipped` sem `WEBHOOK_HEALTH_URL`).
+> Closeout: PR **#52** merged (`3bebe1c`); deploy EasyPanel 2026-11-17; Central semáforo agregado **ok** (webhook `skipped` sem `WEBHOOK_HEALTH_URL`). Papel **N39** nesta frente (docs-only; não roubar ID N37).
 > Issue: **ISS-014**
 > titulo_humano: Central mostra se tudo está vivo — sem checklist manual
 > resumo_humano: A Central vira o semáforo único da plataforma: painel, banco, worker e webhook checados sozinhos. Instalação nova nasce com operação demo e mercados ligados; só desliga quando o operador pedir. Conta real continua sem botão.
@@ -2547,11 +2549,13 @@ LIVE false; no new env vars that arm orders.
 - `control_flags` / `market_controls` — política de seed no migrate
 - Arquivo `reports/ops/platform-health-latest.json` (novo artefato operacional, não API pública)
 
+**Closeout (2026-11-17):** PR [**#52**](https://github.com/ig0rayres/trading_lab/pull/52) **MERGED** `2026-11-17T13:14:04Z`; feat `76f76b3` `feat(observability): platform health probes and operational defaults (N37)`; follow-up `ae916c6` `test: isolate demo-off gate checks from N37 migrate defaults`; mergeCommit `3bebe1c7d3236690c67533ef916cbc5be3206d92`. Pytest: `tests.test_platform_health.PlatformHealthTests.test_run_probes_writes_snapshot`, `test_webhook_skipped_without_url`, `test_worker_stamp_enables_ok_worker`, `test_stale_queue_degraded`, `test_aggregate_overall_down_beats_degraded`; `BuildSnapshotHealthTest.test_build_snapshot_includes_platform_health`; `tests/test_operational_defaults.py`. Papel **ISS-014** fechado em sprint **N39** (docs; não roubar ID N37). EasyPanel rebuild permanece operador; pytest verde ≠ painel no ar ≠ fill. `LIVE_TRADING_ENABLED=false`.
+
 ---
 
 ## Sprint N38 — Freio da Central com faixa que muda de cor e um só botão
 > Categoria: N  
-> Status: planejada  
+> Status: concluida  
 > Gerado via: `/pmo plan` 2026-11-17 · pós-N36 · demanda operador (estado visual do freio) · fonte ISS-015  
 > titulo_humano: Freio da Central com faixa que muda de cor e um só botão  
 > resumo_humano: Na Central, o operador vê em menos de um segundo se o freio está ativo. Faixa vermelha com Liberar, ou faixa calma com Ativar — nunca dois botões iguais. Dinheiro real permanece desligado.  
@@ -2655,6 +2659,137 @@ Maintain: `LIVE_TRADING_ENABLED=false`; no Live button; HTTP 200 / queued intent
 Avoid: dual equal-weight kill CTAs; `.warn` yellow strip for both states; inventing platform thresholds or scoring.
 
 **Closeout (2026-11-17):** PR [**#54**](https://github.com/ig0rayres/trading_lab/pull/54) **MERGED**; CI test / docker-smoke / docker-build **SUCCESS**; stamp **APROVADA** — local `tests.test_panel_ops` + `tests.test_platform_health` **24 OK**. Renumbered from planned N37 after main took N37/ISS-014 (platform_health). **ISS-015** fechado; **ISS-013** (copy N36) permanece histórico no índice. Kill-switch semantics unchanged.
+
+---
+
+## Sprint N39 — Carimbar no plano a saúde automática já entregue
+> Categoria: N  
+> Status: concluida  
+> Gerado via: `/pmo plan` 2026-11-17 · pós-N38 `concluida` · fonte ISS-014 · N37 código já no `main` (PR **#52**) · **não** reusa o ID N37  
+> titulo_humano: Saúde automática da plataforma carimbada no plano  
+> resumo_humano: A saúde automática da plataforma já está no código e no pedido 52. Esta sprint só alinha o plano e fecha o chamado, e deixa claro que rebuild do painel, chaves demo e homologação da fórmula Tá Barato continuam com você.  
+> Gate: N37 Status `concluida` só com SHA/PR/nodeid citados; ISS-014 fechado com a mesma prova; DIARY descreve a entrega de saúde; TEST-EVIDENCE pedido 52; zero `src/`; LIVE false  
+> review: skip  
+> Brief: `docs/.briefs/N39.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N37 código no main · N38 concluida · Release: ISS-014 closeout docs  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+O plano passa a mostrar a saúde automática da plataforma como concluída, com a prova do pedido 52, e o chamado correspondente fecha.
+
+### O que muda para você
+
+- A sprint de saúde automática deixa de aparecer como em execução no plano
+- O chamado de saúde da plataforma fecha, com a prova citada
+- O diário registra a entrega real da saúde, não só a colisão de número
+- Rebuild do painel, chaves demo e homologação da fórmula Tá Barato continuam com você
+- Dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Sprint de saúde automática carimbada como concluída | Abrir o plano: a sprint de saúde aparece concluída e aponta o pedido 52 e os testes |
+| 2 | Chamado de saúde da plataforma fechado | Abrir a lista de problemas: o chamado da saúde automática está fechado, com a mesma prova |
+| 3 | Diário e folha de evidência alinhados | Ler o diário e a folha: a entrega de saúde está descrita, sem tratar o painel no ar como ordem executada |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N39.0 Inventariar a prova da saúde automática já entregue | `/git` | — |
+| [x] | P | N39.1 Carimbar no plano a saúde automática já entregue | docs | N39.0 |
+| [x] | P | N39.2 Fechar o chamado da saúde da plataforma | docs | N39.1 |
+| [x] | P | N39.3 Registrar no diário e na evidência o pedido 52 | docs | N39.1 |
+| [x] | P | N39.4 Atualizar a sessão desta sprint após os carimbos | session | N39.2, N39.3 |
+
+### Quality Brief (Sprint N39)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; docs-only sprint — zero diff em `src/`; não inventar fill nem limiar de scoring.
+Maintain: carimbar N37 **somente** com SHA/PR/nodeid citados; não reescrever a tabela histórica de tasks N37 (títulos N20.*) nem N38.
+Maintain: **ISS-014 fechado** com a prova do PR **#52**; **ISS-011 / ISS-010 / ISS-013** permanecem como estão.
+Avoid: adapters Clear/OANDA; reusar o ID N37; tratar EasyPanel/rebuild/semáforo como ordem executada.
+
+### Fora de escopo
+
+- Qualquer `src/`
+- Adapters Clear / OANDA (ISS-010 / N29.5)
+- Credenciais demo no Git
+- Carimbar N21 `concluida`
+- Fechar ISS-011 / ISS-010 / ISS-013
+- Rebuild EasyPanel
+- `LIVE_TRADING_ENABLED=true`
+
+### Task N39.0 — Inventariar a prova da saúde automática já entregue
+
+**Entrega:** Inventário curto dizendo o que já tem prova (código, teste, pedido de revisão) e o que não pode ser carimbado.
+**Como conferir:** O inventário cita a sprint de saúde, o pedido 52 na linha principal, e deixa rebuild, chaves demo e a fórmula Tá Barato de fora.
+**Por quê:** Sem essa lista, o carimbo no plano inventaria entrega.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N39-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs local checkout; do not bump. GitHub `Jakeschincariol/day-trader-skill` `main` was `3d0f4ef` on 2026-11-17 (matches pin). Do not touch `src/`. Do not invent fills. Do not steal N37.
+
+Cite:
+- N37: feat `76f76b3` `feat(observability): platform health probes and operational defaults (N37)`; `ae916c6` demo-off test isolation; PR **#52** MERGED `2026-11-17T13:14:04Z`; mergeCommit `3bebe1c7d3236690c67533ef916cbc5be3206d92`; `tests/test_platform_health.py` `PlatformHealthTests.test_run_probes_writes_snapshot`, `test_webhook_skipped_without_url`, `test_worker_stamp_enables_ok_worker`, `test_stale_queue_degraded`, `test_aggregate_overall_down_beats_degraded`; `BuildSnapshotHealthTest.test_build_snapshot_includes_platform_health`
+- N38: already index `concluida`; PR **#54**; section header may still say `planejada`
+- N21 remains out (tasks `[x]`, do not stamp)
+- N17.2 remains `[ ]` — G-FORM; N29.5 remains operator
+
+### Task N39.1 — Carimbar no plano a saúde automática já entregue
+
+**Entrega:** No plano, a sprint de saúde automática passa a constar como concluída, apontando a prova.
+**Como conferir:** Abrir o índice e o bloco dessa sprint e ver status concluída, sem mudar as linhas de tarefa já marcadas.
+**Por quê:** O código já está na linha principal; o plano ainda diz que essa sprint está em execução.
+
+**Detalhe técnico**
+
+P task. Edit **only Status lines + index rows + optional one-liners**. Do **not** rewrite task tables of N37/N38.
+
+1. `## Sprint N37` `> Status: em execucao` → `concluida`. Index row N37 Status → `concluida`. One-liner after existing N37 notes citing `76f76b3` / `ae916c6` / PR **#52** / nodeids above. Do not rename historical Task N20.* headings inside the N37 block.
+2. `## Sprint N38` `> Status: planejada` → `concluida` **only if still planejada** (index already `concluida`; closeout note already cites PR **#54**).
+3. Do not mark N17, N21, or N29 `concluida`. LIVE false.
+
+### Task N39.2 — Fechar o chamado da saúde da plataforma
+
+**Entrega:** O chamado da saúde automática fecha, com a mesma prova do plano.
+**Como conferir:** Abrir a lista de problemas: o chamado da saúde está fechado; os chamados de bolsa brasileira, câmbio, copy do freio e contrato americano permanecem como estão.
+**Por quê:** O código e o teste já existem; o chamado ainda diz em execução.
+
+**Detalhe técnico**
+
+P task. Files: `docs/ISSUES.md` (1 file).
+
+1. ISSUES-INDEX: ISS-014 Status → `fechado`.
+2. Body ISS-014: Status `fechado`; `resolved_by` Sprint N37; cite PR **#52** `76f76b3` / `ae916c6` / nodeids; note N39 is docs closeout (do not steal N37).
+3. Do **not** close ISS-011, ISS-010, ISS-013, ISS-009.
+4. Optional one-liner under ISS-011: N37/ISS-014 closeout is paper only; remaining still ISS-010 + N17.2.
+
+### Task N39.3 — Registrar no diário e na evidência o pedido 52
+
+**Entrega:** O diário descreve a saúde automática de verdade, e a folha de evidência aponta o pedido 52 e os testes — sem tratar isso como ordem executada.
+**Como conferir:** Ler o diário: além da colisão de número, há a entrega do semáforo; a folha cita o pedido 52 e diz que rebuild e fill continuam fora.
+**Por quê:** Hoje o diário da sprint de saúde só fala da colisão de ID; a folha de evidência para nessa lacuna.
+
+**Detalhe técnico**
+
+P task. Files: `docs/DIARY.md`, `docs/TEST-EVIDENCE.md` (2 files).
+
+DIARY: keep the collision note; add a real `## Sprint N37` health delivery (probes, Central semaphore, defaults ON, PR **#52**) plus short `## Sprint N39` closeout row in the index. Record: docs-only; EasyPanel rebuild still operator; N29.5 still operator; N17.2 still G-FORM; LIVE false.
+
+TEST-EVIDENCE: new `## Sprint N37 — platform_health` section with nodeids from N39.0 and PR **#52** MERGED. Explicit: pytest green ≠ EasyPanel rebuild ≠ fill. Do not copy secrets. Do not add a fake operator smoke.
+
+### Task N39.4 — Atualizar a sessão desta sprint após os carimbos
+
+**Entrega:** A sessão desta frente aponta a sprint de closeout como feita no papel, sem ligar dinheiro real.
+**Como conferir:** A sessão lista as tarefas desta sprint como feitas e não deixa a sprint de saúde como se ainda fosse a ativa de código.
+**Por quê:** Sem isso o próximo ciclo reabre a saúde como se faltasse implementar.
+
+**Detalhe técnico**
+
+P task. File: `.cursorsession` (1 file). After stamps: `previous_sprint=N39` when finalized by parent; during EXECUTE keep `sprint_atual=N39` until closeout. Preserve `autopilot`, `rock_auto`, N38 `validation_gate` history. Do not enable LIVE. Do not start N21/N29/N17.
+
+**Closeout (2026-11-17):** docs-only — ROADMAP N37 `concluida` com prova PR **#52**; **ISS-014** fechado; DIARY + TEST-EVIDENCE alinhados; zero diff `src/`; EasyPanel rebuild, **N29.5** e **N17.2** permanecem operador; `LIVE_TRADING_ENABLED=false`.
 
 ---
 

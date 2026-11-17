@@ -4,8 +4,10 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N38 | panel_ops_html, platform_health | Faixa do freio (um CTA por estado) + bloco saúde na Central; kill_switch_on inalterado | 19–32 |
-| N37 | panel_ops_html, docs | *(colisão ID)* copy/freio planeado aqui renumerado → N38; main: N37/ISS-014 saúde | 34–38 |
+| N39 | docs | Closeout papel N37/ISS-014; prova PR #52; rebuild/N29.5/N17.2 operador | 19–30 |
+| N38 | panel_ops_html, platform_health | Faixa do freio (um CTA por estado) + bloco saúde na Central; kill_switch_on inalterado | 32–45 |
+| N37 | platform_health, operational_defaults, observability | Saúde automática: probes, semáforo Central, defaults ON; PR #52 | 47–62 |
+| N37-colisão | panel_ops_html, docs | *(colisão ID)* freio visual planeado aqui → N38 | 64–68 |
 | N36 | panel_ops_html, docs | Copy freio na Central; kill_switch_on inalterado; sem botão Live | 40–51 |
 | N35 | demo_account_gate, docs | env_presence_report + homolog roteiro; N29.5 ainda `[ ]` | 54–67 |
 | N34 | signal_paper_runner | N27.2 wiring Clear/OANDA fail-closed; PR #45 main; N29.5 pendente | 68–89 |
@@ -14,6 +16,18 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N39 — Closeout docs saúde automática (ISS-014)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** apenas documentos e sessão — ROADMAP N37 `concluida` com prova PR **#52**; **ISS-014** fechado; `docs/TEST-EVIDENCE.md` com nodeids N37; inventário `docs/.briefs/N39-GIT-FIRST-REUSE.md` (N39.0). Zero alteração em `src/`.
+
+**Honestidade:** código N37 já estava em `origin/main` antes desta sprint; carimbo no papel **não** substitui rebuild EasyPanel `trading-lab`; credenciais demo (**N29.5**) e homologação Tá Barato (**N17.2** / G-FORM) continuam operador; semáforo no ar ≠ ordem executada; `LIVE_TRADING_ENABLED=false`.
+
+**Prova citada:** mesma de N37 — PR [**#52**](https://github.com/ig0rayres/trading_lab/pull/52) MERGED `2026-11-17T13:14:04Z`; feat `76f76b3`; follow-up `ae916c6`.
 
 ---
 
@@ -33,9 +47,21 @@
 
 ---
 
+## Sprint N37 — Saúde automática da plataforma (ISS-014)
+
+**Frente:** código mergeado na linha principal (`front/n20-platform-health` → PR **#52**); closeout de papel em N39.
+
+**Entregue:** probes em `src/platform_health.py` (`run_probes`, snapshot JSON sem segredos); loop no supervisor `v4_ops_main.sh`; bloco semáforo na Central (`_platform_health_block`); `platform_health` em `/api/status`; defaults operacionais ON no migrate (`operational_defaults`) sem sobrescrever OFF gravado pelo operador.
+
+**Honestidade:** rotina diária pode usar a Central em vez de checklist EasyPanel; rebuild do painel em produção ainda é passo operador; fila antiga / worker parado aparecem como degraded/down nos testes — não são fill; B3/FOREX continuam `NO_DEMO_ACCOUNT_PATH` sem credenciais (**ISS-010**); `LIVE_TRADING_ENABLED=false`.
+
+**Prova:** PR [**#52**](https://github.com/ig0rayres/trading_lab/pull/52) MERGED `2026-11-17T13:14:04Z`; commits `76f76b3`, `ae916c6`; mergeCommit `3bebe1c7d3236690c67533ef916cbc5be3206d92`; pytest `tests.test_platform_health`, `tests/test_operational_defaults.py` (ver `docs/TEST-EVIDENCE.md`).
+
+---
+
 ## Sprint N37 — Colisão de ID (freio → N38)
 
-**Nota:** o plano original nomeava esta sprint para a faixa do freio; antes do merge, `origin/main` assumiu **N37** para saúde (**ISS-014**). A entrega visual do freio foi renumerada para **N38** (ver seção acima). Saúde automática segue o épico **ISS-014** na frente/main correspondente.
+**Nota:** o plano original nomeava esta sprint para a faixa do freio; antes do merge, `origin/main` assumiu **N37** para saúde (**ISS-014**). A entrega visual do freio foi renumerada para **N38** (ver seção acima).
 
 ---
 

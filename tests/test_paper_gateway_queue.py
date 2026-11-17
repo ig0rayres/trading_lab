@@ -84,8 +84,9 @@ class PaperGatewayQueueTest(unittest.TestCase):
         def fake_run(signal, env, ledger=None, **kwargs):
             raise AssertionError('broker must not run when demo_operation_on is false')
 
-        with patch.object(pgq, 'paper_run', side_effect=fake_run) as broker:
-            out = pgq.process_after_gate_b(_signal(), decision, env, broker_run=broker)
+        with patch('risk_control_flags.demo_send_allowed', return_value=(False, 'DEMO_OPERATION_OFF')):
+            with patch.object(pgq, 'paper_run', side_effect=fake_run) as broker:
+                out = pgq.process_after_gate_b(_signal(), decision, env, broker_run=broker)
         broker.assert_not_called()
         self.assertEqual(out['status'], 'BLOCKED')
         self.assertEqual(out['orders_sent'], 0)

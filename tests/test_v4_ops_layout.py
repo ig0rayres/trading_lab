@@ -26,6 +26,8 @@ class V4OpsLayoutTests(unittest.TestCase):
         self.assertIn('evolution-daily', body)
         self.assertIn('EVOLUTION_DAILY_AUTOSTART', body)
         self.assertIn('EVOLUTION_DAILY_INTERVAL_SEC', body)
+        self.assertIn('PLATFORM_HEALTH_AUTOSTART', body)
+        self.assertIn('platform_health.py', body)
 
     def test_worker_supervisor_does_not_replace_scheduler_exec(self):
         ops = _REPO / 'scripts' / 'v4_ops_main.sh'

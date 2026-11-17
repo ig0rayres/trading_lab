@@ -31,6 +31,22 @@ def _execute_migration(filename: str) -> None:
         conn.commit()
 
 
+def _seed_operational_defaults() -> None:
+    try:
+        from operational_defaults import ensure_operational_defaults
+
+        with _connect() as conn:
+            ensure_operational_defaults(conn)
+            conn.commit()
+    except Exception as exc:
+        err = str(exc).lower()
+        if 'demo_operation_on' in err or 'market_controls' in err or 'undefinedtable' in err:
+            return
+        if 'not set' in err:
+            return
+        raise
+
+
 def _seed_strategy_catalog() -> None:
     from strategy_catalog import DEFAULT_PHASE_BY_KEY, ensure_strategy_defaults
 
@@ -61,6 +77,7 @@ def apply():
         _execute_migration('002_triggers_up.sql')
         applied_any = True
     _seed_strategy_catalog()
+    _seed_operational_defaults()
     status_label = 'applied' if applied_any else 'already_applied'
     return {'status': status_label, 'version': VERSION, 'strategy_seed': 'ok'}
 

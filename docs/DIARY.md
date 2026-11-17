@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N39 | docs | Closeout papel N37/ISS-014; prova PR #52; rebuild/N29.5/N17.2 operador | 19–30 |
+| N40 | docs | Mapa OPERATOR-PANEL-MAP; duas superfícies 8765; ordens UI OUT; ISS-016 mapa existe | 22–32 |
+| N39 | docs | Closeout papel N37/ISS-014; prova PR #52; rebuild/N29.5/N17.2 operador | 34–45 |
 | N38 | panel_ops_html, platform_health | Faixa do freio (um CTA por estado) + bloco saúde na Central; kill_switch_on inalterado | 32–45 |
 | N37 | platform_health, operational_defaults, observability | Saúde automática: probes, semáforo Central, defaults ON; PR #52 | 47–62 |
 | N37-colisão | panel_ops_html, docs | *(colisão ID)* freio visual planeado aqui → N38 | 64–68 |
@@ -16,6 +17,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N40 — Mapa honesto «onde está cada coisa» (ISS-016)
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+**Entregue:** `docs/OPERATOR-PANEL-MAP.md` (nove áreas, selos VISÍVEL / VAZIO-COMUM / NÃO-EXISTE-AINDA / SÓ-API-OU-JSONL); confirmação Git First em `docs/.briefs/N40-GIT-FIRST-REUSE.md` (pin `3d0f4ef`, sem bump); ligação em `docs/DASHBOARD-OPERATIONS.md`; **ISS-016** anotado com caminho do mapa (**permanece aberto**); sessão e ROADMAP tickados. Zero `src/`.
+
+**Honestidade:** menu pós-login ≠ Command Panel v1 em `/` quando `DASHBOARD_OPERATOR_SESSION` está ligado; ordens abertas e histórico **sem** tela dedicada; **ISS-007** / **ISS-011** / **ISS-010** / **ISS-013** não fechados; rebuild EasyPanel, N29.5 e N17.2 continuam operador; `LIVE_TRADING_ENABLED=false`.
 
 ---
 

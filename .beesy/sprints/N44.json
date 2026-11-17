@@ -1,0 +1,77 @@
+{
+  "sprint_id": "N44",
+  "checkpoint": {
+    "phase": "implementation",
+    "sprint": "N44",
+    "branch": "front/n27-alpaca-loop",
+    "current_task": null,
+    "last_completed_task": "N44.4",
+    "validation_gate_ref": ".beesy/sprints/N43.json",
+    "sprint_delivery": "verify_green",
+    "sprint_delivery_sprint": "N44"
+  },
+  "sprint_tasks": [
+    {
+      "id": "N44.0",
+      "file": "docs/.briefs/N44-GIT-FIRST-REUSE.md",
+      "files": [
+        "docs/.briefs/N44-GIT-FIRST-REUSE.md"
+      ],
+      "depends_on": [],
+      "status": "completed",
+      "completed_at": "2026-11-17T17:00:00-03:00"
+    },
+    {
+      "id": "N44.1",
+      "file": "docs/HOMOLOGATION.md",
+      "files": [
+        "docs/HOMOLOGATION.md"
+      ],
+      "depends_on": [
+        "N44.0"
+      ],
+      "status": "completed",
+      "completed_at": "2026-11-17T17:00:00-03:00"
+    },
+    {
+      "id": "N44.2",
+      "file": "docs/TEST-EVIDENCE.md",
+      "files": [
+        "docs/TEST-EVIDENCE.md"
+      ],
+      "depends_on": [
+        "N44.1"
+      ],
+      "status": "completed",
+      "completed_at": "2026-11-17T17:00:00-03:00"
+    },
+    {
+      "id": "N44.3",
+      "file": "docs/DASHBOARD-OPERATIONS.md, docs/OPERATOR-PANEL-MAP.md",
+      "files": [
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/OPERATOR-PANEL-MAP.md"
+      ],
+      "depends_on": [
+        "N44.1"
+      ],
+      "status": "completed",
+      "completed_at": "2026-11-17T17:00:00-03:00"
+    },
+    {
+      "id": "N44.4",
+      "file": "docs/ISSUES.md, docs/DIARY.md",
+      "files": [
+        "docs/ISSUES.md",
+        "docs/DIARY.md"
+      ],
+      "depends_on": [
+        "N44.2",
+        "N44.3"
+      ],
+      "status": "completed",
+      "completed_at": "2026-11-17T17:00:00-03:00"
+    }
+  ],
+  "archived_at": "2026-11-17T16:59:43Z"
+}

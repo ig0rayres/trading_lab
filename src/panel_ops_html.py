@@ -11,8 +11,16 @@ except ImportError:
     from panel_ops_data import PERFORMANCE_LABEL_GROSS
 
 OPERATOR_PANEL_PATHS = frozenset({
-    '/', '/central', '/sinais', '/prodigy', '/performance', '/ordens', '/historico', '/login',
+    '/', '/central', '/sinais', '/estrategias', '/prodigy', '/performance', '/ordens',
+    '/historico', '/login',
 })
+
+_STRATEGY_PHASE_LABELS = {
+    'research': 'pesquisa',
+    'shadow': 'sombra',
+    'paper_limited': 'paper limitado',
+    'paper_validated': 'paper validado',
+}
 
 _PANEL_CSS = '''
 body{font:16px "IBM Plex Sans",system-ui,sans-serif;margin:0;background:var(--bg,#f3f5f8);color:var(--fg,#1c2430)}
@@ -57,6 +65,7 @@ def _nav(active: str) -> str:
     links = (
         ('central', '/', 'Central'),
         ('sinais', '/sinais', 'Sinais'),
+        ('estrategias', '/estrategias', 'Estratégias'),
         ('ordens', '/ordens', 'Ordens'),
         ('historico', '/historico', 'Histórico'),
         ('prodigy', '/prodigy', 'Prodígio'),
@@ -185,6 +194,34 @@ def render_history_page(bundle: dict[str, Any]) -> str:
 <h1>Histórico de fills</h1><p class="muted">Apenas fills confirmados — fila e HTTP 200 não entram.</p>
 <table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Resultado</th><th>Rótulo</th><th>Estratégia</th></tr></thead>
 <tbody>{rows}</tbody></table></main></div></body></html>'''
+
+
+def _strategy_phase_label(phase: Any) -> str:
+    raw = str(phase or '')
+    return _STRATEGY_PHASE_LABELS.get(raw, raw)
+
+
+def render_strategies_page(bundle: dict[str, Any]) -> str:
+    catalog = bundle.get('strategy_catalog') or {}
+    strategies = catalog.get('strategies') or []
+    if catalog.get('status') == 'LEDGER_UNAVAILABLE' or not strategies:
+        rows = (
+            '<tr><td colspan="3">Catálogo indisponível (ledger)</td></tr>'
+        )
+    else:
+        rows = ''.join(
+            f'<tr><td class="mono">{esc(s.get("strategy_key") or "—")}</td>'
+            f'<td>{esc(_strategy_phase_label(s.get("phase")))}</td>'
+            f'<td>{"sim" if s.get("paper_allowed") else "não"}</td></tr>'
+            for s in strategies
+        )
+    disclaimer = 'Promoção de fase: somente operador (fora deste menu).'
+    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Estratégias</title>
+<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("estrategias")}<main class="main">
+<h1>Estratégias</h1><p class="muted">Catálogo de fases — somente leitura. Live desligado.</p>
+<table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead>
+<tbody>{rows}</tbody></table>
+<p class="muted">{esc(disclaimer)}</p></main></div></body></html>'''
 
 
 def render_signals_page(bundle: dict[str, Any]) -> str:

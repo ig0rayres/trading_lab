@@ -1,6 +1,6 @@
 # Mapa operador — onde está cada coisa no painel
 
-> Sprint **N41** (2026-11-17) · somente leitura · `LIVE_TRADING_ENABLED=false` · mapa base **N40** / **ISS-016**  
+> Sprint **N42** (2026-11-17) · somente leitura · `LIVE_TRADING_ENABLED=false` · mapa base **N40** / **ISS-016**  
 > Épico histórico do painel único: **ISS-007** (permanece aberto). Orientação: **ISS-016** (mapa existe; chamado de orientação continua registrado).  
 > Não confundir semáforo no ar, fila ou HTTP 200 com **fill** na corretora.
 
@@ -13,7 +13,7 @@ O serviço publicado no EasyPanel (**`trading-lab`**, comando **`v4-ops`**) escu
 | **Menu do dia a dia** | `panel_ops_html` (`src/panel_ops_html.py`) | Depois de `GET /login`, com cookie de operador (`DASHBOARD_OPERATOR_SESSION` no ambiente do container). `GET /` vira **Central** com menu lateral. |
 | **Command Panel v1** (página única) | `render_page` (`src/v4_web_dashboard.py`) | `GET /` **somente** quando a variável de sessão de operador **não** está definida (modo bearer/HTML legado). Com sessão de operador ligada, esta página **não** aparece em `/` — o menu da Central toma o lugar. |
 
-Rotas do menu (após login): **`/`** (Central), **`/sinais`**, **`/prodigy`**, **`/performance`**, **`/ordens`**, **`/historico`**. Ainda não há item de menu para Tá Barato, catálogo de fases nem melhoria contínua.
+Rotas do menu (após login): **`/`** (Central), **`/sinais`**, **`/estrategias`**, **`/ordens`**, **`/historico`**, **`/prodigy`**, **`/performance`**. Ainda não há item de menu para Tá Barato nem melhoria contínua (eventos de evolução).
 
 JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `command_panel`, `platform_health` e chaves citadas abaixo, **independente** de qual superfície HTML você usaria.
 
@@ -54,7 +54,21 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 3. Prodígio
+## 3. Estratégias (catálogo de fases)
+
+| Campo | Detalhe |
+|-------|---------|
+| **Onde clicar** | Menu → **Estratégias**, ou `GET /estrategias`. API: `GET /api/estrategias` (sessão de operador, como `/api/signals`). |
+| **Superfície** | **Menu do dia a dia** — `render_strategies_page` (`src/panel_ops_html.py`). Command Panel v1 mantém a tabela «Estratégias (catálogo)» na página única legada. |
+| **Fonte de dados** | `build_panel_bundle` → `strategy_catalog` via `list_strategy_states` (`src/panel_ops_data.py`); catálogo persistido em `strategy_states` quando o ledger responde. |
+| **Com dado** | Tabela com chave, fase (pesquisa / sombra / paper) e paper permitido (sim/não). |
+| **Vazio** | `Catálogo indisponível (ledger)` (tabela inteira; ledger ausente ou lista vazia). |
+| **Promoção de fase** | **Nenhum** controle na tela nova — rodapé: «Promoção de fase: somente operador (fora deste menu).» O `PATCH /api/strategies/{key}` existente **não** é exposto nesta página. |
+| **Selo** | **VISÍVEL** no menu do dia a dia · vazio honesto = **VAZIO-COMUM** · tabela no Command Panel v1 = **VISÍVEL** só nessa superfície |
+
+---
+
+## 4. Prodígio
 
 | Campo | Detalhe |
 |-------|---------|
@@ -67,7 +81,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 4. Performance
+## 5. Performance
 
 | Campo | Detalhe |
 |-------|---------|
@@ -80,7 +94,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 5. Ordens abertas Alpaca paper
+## 6. Ordens abertas Alpaca paper
 
 | Campo | Detalhe |
 |-------|---------|
@@ -93,7 +107,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 6. Histórico / fills
+## 7. Histórico / fills
 
 | Campo | Detalhe |
 |-------|---------|
@@ -106,7 +120,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 7. Tá Barato (sombra / homologação)
+## 8. Tá Barato (sombra / homologação)
 
 | Campo | Detalhe |
 |-------|---------|
@@ -119,7 +133,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 8. TimesFM / Google (pesquisa)
+## 9. TimesFM / Google (pesquisa)
 
 | Campo | Detalhe |
 |-------|---------|
@@ -132,16 +146,16 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 ---
 
-## 9. Melhoria contínua / catálogo de fases
+## 10. Melhoria contínua (evolução)
 
 | Campo | Detalhe |
 |-------|---------|
-| **Onde clicar** | **Não** está no menu. No Command Panel v1: **`h2` Estratégias (catálogo)** + secção **Melhoria contínua**. |
-| **Superfície** | **Command Panel v1**; também chaves em `GET /api/status` (`strategy_catalog`, `continuous_improvement`). Promoção de fase = operador fora do painel. |
-| **Fonte de dados** | Ledger / catálogo de estratégias; `evolution/decisions.jsonl` para eventos de melhoria contínua. |
-| **Com dado** | Tabela chave / fase / paper permitido; lista de eventos de evolução. |
-| **Vazio** | Catálogo: `Catálogo indisponível (ledger)` · Melhoria: `Nenhum evento em evolution/decisions.jsonl` |
-| **Selo** | **VISÍVEL** no Command Panel v1 · menu = **NÃO-EXISTE-AINDA** · JSON = **SÓ-API-OU-JSONL** |
+| **Onde clicar** | **Não** está no menu do dia a dia. No Command Panel v1: secção **Melhoria contínua** (catálogo de fases está na área **3** e no v1). |
+| **Superfície** | **Command Panel v1**; também chaves em `GET /api/status` (`continuous_improvement`; `strategy_catalog` espelha área 3). |
+| **Fonte de dados** | `evolution/decisions.jsonl` para eventos de melhoria contínua — **não** misturado com a tela **Estratégias** do menu. |
+| **Com dado** | Lista de eventos de evolução no HTML v1. |
+| **Vazio** | `Nenhum evento em evolution/decisions.jsonl` |
+| **Selo** | **VISÍVEL** só no Command Panel v1 · menu do dia a dia = **NÃO-EXISTE-AINDA** · JSON = **SÓ-API-OU-JSONL** |
 
 ---
 
@@ -151,7 +165,7 @@ No deploy típico com **sessão de operador** configurada (dia a dia EasyPanel),
 
 ## Fora deste mapa (decisão de sprint)
 
-- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
+- **Ordens** e **Histórico** no menu — entregue em **N41** / **ISS-017** onda 1; **Estratégias** (`/estrategias`) — entregue em **N42** / **ISS-017** onda 2; campanha continua em `docs/.briefs/CAMPAIGN-PLATFORM-DELIVERY.brief.md`.
 - Rebuild da imagem EasyPanel, credenciais demo (**ISS-010** / N29.5), homologação Tá Barato — **operador**.
 - Dinheiro real: permanece **desligado**.
 

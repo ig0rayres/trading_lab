@@ -123,46 +123,81 @@
   "contexto_rapido": "N37 plan_only faixa freio Central; N36 concluída PR #51; N29.5 operador; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N37.0",
+      "id": "N38.0",
       "file": "docs/.briefs/N37-GIT-FIRST-REUSE.md",
       "files": [
         "docs/.briefs/N37-GIT-FIRST-REUSE.md"
       ],
       "depends_on": [],
-      "status": "pending"
+      "status": "done"
     },
     {
-      "id": "N37.1",
+      "id": "N38.1",
       "file": "src/panel_ops_html.py, tests/test_panel_ops.py",
       "files": [
         "src/panel_ops_html.py",
         "tests/test_panel_ops.py"
       ],
       "depends_on": [
-        "N37.0"
+        "N38.0"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
-      "id": "N37.2",
+      "id": "N38.2",
       "file": "docs/DASHBOARD-OPERATIONS.md, docs/DIARY.md",
       "files": [
         "docs/DASHBOARD-OPERATIONS.md",
         "docs/DIARY.md"
       ],
       "depends_on": [
-        "N37.0"
+        "N38.0"
       ],
-      "status": "pending"
+      "status": "done"
+    },
+    {
+      "id": "N38.M",
+      "title": "Merge origin/main platform_health into brake UX; renumber freio N38",
+      "file": "docs/.briefs/N20.brief.md, docs/.briefs/N38.brief.md, docs/.briefs/N38-GIT-FIRST-REUSE.md, docs/.briefs/N37-GIT-FIRST-REUSE.md, docs/DASHBOARD-OPERATIONS.md, docs/DIARY.md, docs/DATABASE.md, docs/ISSUES.md, docs/ROADMAP.md, docs/api-spec.yaml, scripts/run.sh, scripts/v4_ops_main.sh, src/ledger_migrate.py, src/operational_defaults.py, src/panel_ops_html.py, src/platform_health.py, src/tradingview_worker.py, src/v4_web_dashboard.py, tests/test_operational_defaults.py, tests/test_paper_gateway_queue.py, tests/test_platform_health.py, tests/test_risk_control_flags.py, tests/test_v4_ops_layout.py, tests/test_panel_ops.py",
+      "files": [
+        "docs/.briefs/N20.brief.md",
+        "docs/.briefs/N38.brief.md",
+        "docs/.briefs/N38-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N37-GIT-FIRST-REUSE.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/DIARY.md",
+        "docs/DATABASE.md",
+        "docs/ISSUES.md",
+        "docs/ROADMAP.md",
+        "docs/api-spec.yaml",
+        "scripts/run.sh",
+        "scripts/v4_ops_main.sh",
+        "src/ledger_migrate.py",
+        "src/operational_defaults.py",
+        "src/panel_ops_html.py",
+        "src/platform_health.py",
+        "src/tradingview_worker.py",
+        "src/v4_web_dashboard.py",
+        "tests/test_operational_defaults.py",
+        "tests/test_paper_gateway_queue.py",
+        "tests/test_platform_health.py",
+        "tests/test_risk_control_flags.py",
+        "tests/test_v4_ops_layout.py",
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N38.1"
+      ],
+      "status": "in_progress"
     }
   ],
   "checkpoint": {
     "phase": "implementation",
-    "sprint": "N37",
-    "current_task": null,
+    "sprint": "N38",
+    "current_task": "N38.M",
     "last_completed_task": "N36.2",
     "validation_gate_ref": ".beesy/sprints/N36.json",
-    "sprint_delivery_sprint": "N37",
+    "sprint_delivery_sprint": "N38",
     "last_validated_sha": "2157b53",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
@@ -194,18 +229,44 @@
     "plan_only": false,
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N37",
+      "sprint": "N38",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
       "recorded_at": "2026-11-17T13:10:58Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N37 brake strip; 18 panel_ops OK",
+      "notes": "N38 brake strip (renumbered from N37 collision); panel_ops+platform_health OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
     },
-    "sprint_delivery": "stamped"
+    "sprint_delivery": "stamped",
+    "relevant_paths": [
+      "docs/.briefs/N20.brief.md",
+      "docs/.briefs/N38.brief.md",
+      "docs/.briefs/N38-GIT-FIRST-REUSE.md",
+      "docs/.briefs/N37-GIT-FIRST-REUSE.md",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "docs/DIARY.md",
+      "docs/DATABASE.md",
+      "docs/ISSUES.md",
+      "docs/ROADMAP.md",
+      "docs/api-spec.yaml",
+      "scripts/run.sh",
+      "scripts/v4_ops_main.sh",
+      "src/ledger_migrate.py",
+      "src/operational_defaults.py",
+      "src/panel_ops_html.py",
+      "src/platform_health.py",
+      "src/tradingview_worker.py",
+      "src/v4_web_dashboard.py",
+      "tests/test_operational_defaults.py",
+      "tests/test_paper_gateway_queue.py",
+      "tests/test_platform_health.py",
+      "tests/test_risk_control_flags.py",
+      "tests/test_v4_ops_layout.py",
+      "tests/test_panel_ops.py"
+    ]
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -293,7 +354,7 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N36",
-  "sprint_atual": "N37",
+  "sprint_atual": "N38",
   "sprint_nome": "Freio faixa-luz Central",
   "autopilot": {
     "active": true,
@@ -500,5 +561,8 @@
   "rock_mandate": "full",
   "active_automation": null,
   "journal": [],
-  "sprint_tasks_sha256": "bca971a0b85248b4248fb0f17dfdc6540d0394377f7f604cc3f97aef08360c6f"
+  "sprint_tasks_sha256": "bca971a0b85248b4248fb0f17dfdc6540d0394377f7f604cc3f97aef08360c6f",
+  "operator_notes": [
+    "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
+  ]
 }

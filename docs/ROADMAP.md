@@ -61,7 +61,8 @@
 | N34 | N | Ligar Clear/OANDA no laço paper fail-closed (N27.2); N29 não concluída | concluida | 4 | paper-gateway | Campanha ISS-010 / N27.2 wiring | *(abaixo)* |
 | N35 | N | Presença das chaves demo (nomes) + roteiro de homologação; N29.5 continua operador | concluida | 4 | paper-gateway, docs | Campanha ISS-010 / pré-homolog N29.5 | *(abaixo)* |
 | N36 | N | Textos do freio na Central; kill_switch inalterado; LIVE false | concluida | 3 | observability | Copy UX kill switch | *(abaixo)* |
-| N37 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | planejada | 3 | observability | UX estado visual do freio | *(abaixo)* |
+| N37 | N | Saúde automática + Central semáforo + defaults ON | em execucao | 5 | observability | Plataforma monitorada sem Exec | *(abaixo)* |
+| N38 | N | Faixa do freio com dois estados e um só botão; kill_switch inalterado; LIVE false | planejada | 3 | observability | UX estado visual do freio | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -109,7 +110,8 @@
 | N34 | comprehensive | Ligar adaptadores demo no laço paper (N27.2); AgentCoder |
 | N35 | senior+qa | Presença de nomes + roteiro homologação demo; zero M |
 | N36 | skip | Copy do freio na Central; testes de string; zero M |
-| N37 | skip | Faixa do freio na Central; um CTA por estado; zero M |
+| N37 | senior+qa | Saúde automática + semáforo Central; defaults ON |
+| N38 | skip | Faixa do freio na Central; um CTA por estado; zero M |
 
 ---
 
@@ -2427,19 +2429,136 @@ DIARY: short `## Sprint N36` + index row. Record: copy-only; `kill_switch_on=tru
 
 Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion wording.
 
+## Sprint N37 — Saúde automática e plataforma ON por padrão
+
+> Categoria: N
+> Status: em execucao
+> Issue: **ISS-014**
+> titulo_humano: Central mostra se tudo está vivo — sem checklist manual
+> resumo_humano: A Central vira o semáforo único da plataforma: painel, banco, worker e webhook checados sozinhos. Instalação nova nasce com operação demo e mercados ligados; só desliga quando o operador pedir. Conta real continua sem botão.
+> Gate: pytest verde; `GET /api/status` inclui `platform_health` verificável; probe grava carimbo sem segredo; defaults ON não apaga OFF do operador; nenhum terceiro app EasyPanel; `LIVE_TRADING_ENABLED=false`
+> review: senior+qa
+> **Depende de:** painel com PATCH de gatilhos (N19.2+ ou frente `panel_ops` mergeada); supervisor `tv-worker` (N18/`TV_WORKER_AUTOSTART`)
+
+### Em uma frase
+
+Você abre a Central e vê de imediato se a plataforma inteira está operacional, sem entrar no EasyPanel.
+
+### O que muda para você
+
+- A Central (e a API) mostram um **semáforo** com painel, Postgres, worker, webhook e fila — não só “Operando” pela parada geral.
+- O processo **`v4-ops`** roda checagens automáticas e grava o último resultado em `/app/reports` (sem credenciais nos logs).
+- **Novas instalações** iniciam com demo ligada, parada geral desligada e **B3, cripto e forex** ligados no painel; se você já desligou algo, o migrate **não** religa sozinho.
+- O runbook operacional deixa de pedir checklist manual de EasyPanel para rotina diária.
+- Política explícita: plataforma **ON até desligar de propósito**; `LIVE_TRADING_ENABLED` permanece false.
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Semáforo na Central e na API | Abrir a Central: bloco de saúde com verde/amarelo/vermelho por componente; ou pedir JSON de status e ver `platform_health` |
+| 2 | Checagens automáticas no container | Após deploy, sem Exec: em alguns minutos o relatório de saúde atualiza; fila antiga aparece como alerta |
+| 3 | Defaults operacionais ON | Migrate em DSN novo: gatilhos nascem ligados; desligar no painel e rodar migrate de novo — permanece desligado |
+| 4 | Documentação sem checklist manual | Folha operacional aponta só para a Central para rotina; EasyPanel só para incidente |
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | M | N37.1 Contrato `platform_health` e inventário de reuso | `/dev` | — |
+| [x] | M | N37.2 Probes no `v4-ops` (ledger, worker, webhook, fila) | `/dev` | N37.1 |
+| [x] | M | N37.3 Semáforo na Central + `GET /api/status` | `/dev` | N37.1, N37.2 |
+| [x] | M | N37.4 Defaults ON no migrate (demo + 3 mercados + kill off) | `/dev` | — |
+| [x] | P | N37.5 Testes + runbook (substituir checklist EasyPanel) | `/qa testes` | N37.2, N37.3, N37.4 |
+
+**Fora de escopo N37:** alertas Slack/e-mail; terceiro serviço EasyPanel; conta real; inventar limiar de scoring; probes que coloquem ordem.
+
+### Task N20.1 — Definir contrato `platform_health` e inventário de reuso
+
+**Entrega:** Esquema documentado (`docs/api-spec.yaml` + nota em `ARCHITECTURE.md`) e lista do que reusa (`v4_ops_main.sh`, `ledger_store`, `trading_dashboard_data`, painel operacional).
+**Como conferir:** Abrir o brief N20: seção Leituras cita trechos lidos; api-spec tem objeto `PlatformHealth` com componentes nomeados.
+**Por quê:** Evita duplicar monitor fora da Central e alinha com Feature 6.
+
+**Detalhe técnico**
+
+**executor_prompt:**
+Inventory `scripts/v4_ops_main.sh`, `src/v4_web_dashboard.py`, `src/trading_dashboard_data.py`, and panel HTML module if present after merge. Add OpenAPI fragment for `platform_health` on `/api/status`. Fields: `generated_at`, `overall` (ok|degraded|down), `components[]` with `id`, `status`, `detail` (no secrets). Reuse heartbeat file under reports root e.g. `reports/ops/platform-health-latest.json`.
+guardrail_contract:
+LIVE_TRADING_ENABLED=false; no broker client in probe path; no secret in JSON; fail-closed overall if ledger DSN missing when required.
+
+### Task N20.2 — Implementar probes no superviso `v4-ops`
+
+**Entrega:** Loop leve que testa ledger (`SELECT 1`), idade do último `tv-worker` (stamp file), webhook HTTP opcional via env interno, contagem de fila/envelhecimento; grava JSON atômico em reports.
+**Como conferir:** Com stack local ou container: após um ciclo, arquivo de saúde existe e `components` refletem worker parado vs rodando.
+**Por quê:** Automatiza o que hoje é checklist manual.
+
+**Detalhe técnico**
+
+**executor_prompt:**
+Extend `scripts/v4_ops_main.sh` or new `src/platform_health.py` called from supervisor. Worker stamp: write at end of `tv-worker --once`. Webhook probe: `WEBHOOK_HEALTH_URL` optional, default skip if unset. Queue stale: read counts from ledger or journal mtime. No Alpaca calls. Interval env `PLATFORM_HEALTH_INTERVAL_SEC` default 60.
+guardrail_contract:
+No live host; probe errors logged stderr without DSN/token; supervisor crash must not stop scheduler foreground.
+
+### Task N20.3 — Expor semáforo na Central e em `/api/status`
+
+**Entrega:** Central mostra bloco “Plataforma” acima de sinais; status agregado distinto de `kill_switch_on`; API inclui `platform_health` espelhando o JSON persistido.
+**Como conferir:** Abrir Central: verde com stack saudável; simular worker parado (env) → amarelo/vermelho com texto legível; Live desligado inalterado.
+**Por quê:** Central é a pérola operacional pedida pelo operador.
+
+**Detalhe técnico**
+
+**executor_prompt:**
+Merge-aware: prefer `panel_ops_html.render_central_page` when present; else extend `render_page` in `v4_web_dashboard.py`. Load latest health snapshot in `build_snapshot`. UI: icon+text per component; link “Ver todos os sinais” unchanged. Session auth unchanged for PATCH.
+guardrail_contract:
+Read-only health block; PATCH still does not insert `paper_orders`; bearer rules unchanged.
+
+### Task N20.4 — Aplicar defaults operacionais ON no migrate
+
+**Entrega:** `ledger-migrate apply` / `ensure_operational_defaults()` liga `demo_operation_on`, `kill_switch_on=false`, e `market_controls.operation_on=true` para B3_EQUITY, CRYPTO, FOREX quando valor ainda é default de criação — **não** UPDATE se operador já gravou OFF.
+**Como conferir:** pytest roundtrip: fresh DB → tudo ON; após PATCH OFF → re-apply migrate → permanece OFF.
+**Por quê:** Política aprovada pelo operador (todos os mercados ON por default).
+
+**Detalhe técnico**
+
+**executor_prompt:**
+Implement in `ledger_migrate.py` or `risk_control_flags.py` helper called from apply path. Align `docs/DATABASE.md` section 6 starting values doc — document policy shift vs N19 gate text. Insert-if-missing only; respect `trigger_changes` audit on panel writes only, not on seed.
+guardrail_contract:
+Never set LIVE; never overwrite non-default operator rows; B3/FOREX orders still blocked at gateway until demo account book exists (N19.4 invariant).
+
+### Task N20.5 — Validar com testes e atualizar runbook
+
+**Entrega:** pytest cobrindo snapshot schema, default seed, e regressão de auth; `docs/DASHBOARD-OPERATIONS.md` e `docs/MVP-DEMO-RUNBOOK.md` sem checklist Exec para rotina.
+**Como conferir:** `pytest` verde local/CI; ler runbook: rotina diária = abrir Central.
+**Por quê:** Fecha ISS-010 com evidência reprodutível.
+
+**Detalhe técnico**
+
+**executor_prompt:**
+Add `tests/test_platform_health.py`, extend panel tests if present. Update docs tables replacing manual EasyPanel checklist with Central semaphore. Record intent in `docs/TEST-EVIDENCE.md` stub section for N20 (no operator tokens).
+guardrail_contract:
+LIVE false; no new env vars that arm orders.
+
+### Assumido (operador confirmou 2026-11-17)
+
+- Defaults ON incluem **os três mercados** do painel; Gate B continua barrando ordem sem livro demo verificado (N19).
+- Probes de webhook usam URL interna configurável; sem URL, componente `webhook` = `skipped` não falha o agregado.
+- Implementação de UI Central pode exigir **merge** da frente com `panel_ops_html.py` antes de N20.3 fechar na mãe.
+
+### Contratos afetados
+
+- `GET /api/status` — campo `platform_health`
+- `control_flags` / `market_controls` — política de seed no migrate
+- Arquivo `reports/ops/platform-health-latest.json` (novo artefato operacional, não API pública)
+
 ---
 
-## Sprint N37 — Freio da Central com faixa que muda de cor e um só botão
+## Sprint N38 — Freio da Central com faixa que muda de cor e um só botão
 > Categoria: N  
 > Status: planejada  
-> Gerado via: `/pmo plan` 2026-11-17 · pós-N36 · demanda operador (estado visual do freio) · fonte ISS-014  
+> Gerado via: `/pmo plan` 2026-11-17 · pós-N36 · demanda operador (estado visual do freio) · fonte ISS-015  
 > titulo_humano: Freio da Central com faixa que muda de cor e um só botão  
 > resumo_humano: Na Central, o operador vê em menos de um segundo se o freio está ativo. Faixa vermelha com Liberar, ou faixa calma com Ativar — nunca dois botões iguais. Dinheiro real permanece desligado.  
 > Gate: faixa com classe de estado + um único botão principal por estado; testes afirmam classe, copy e ausência dos dois botões iguais; PATCH kill_switch_on inalterado; sem botão Live; LIVE false  
 > review: skip  
-> Brief: `docs/.briefs/N37.brief.md`  
+> Brief: `docs/.briefs/N38.brief.md`  
 > bom_ref: BOM-3  
-> Depende de: N36 concluída · Release: ISS-014 UX estado visual  
+> Depende de: N36 concluída · Release: ISS-015 UX estado visual  
 > LIVE_TRADING_ENABLED: false
 
 ### Em uma frase
@@ -2464,11 +2583,11 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [x] | P | N37.0 Inventariar o reuso do painel e da faixa do freio | `/git` | — |
-| [x] | P | N37.1 Distinguir a faixa do freio na Central | `/dev` | N37.0 |
-| [x] | P | N37.2 Alinhar a folha do dia a dia e o diário | docs | N37.0 |
+| [x] | P | N38.0 Inventariar o reuso do painel e da faixa do freio | `/git` | — |
+| [x] | P | N38.1 Distinguir a faixa do freio na Central | `/dev` | N38.0 |
+| [x] | P | N38.2 Alinhar a folha do dia a dia e o diário | docs | N38.0 |
 
-### Task N37.0 — Inventariar o reuso do painel e da faixa do freio
+### Task N38.0 — Inventariar o reuso do painel e da faixa do freio
 
 **Entrega:** Lista curta dizendo onde a faixa amarela e os dois botões iguais moram, o que já bloqueia ordem demo nova, e que o vendor não tem essa tela.
 **Como conferir:** O inventário cita a Central, o PATCH do freio e o bloqueio no risco; marca o checkout do vendor como vazio nesta frente; deixa botão Live de fora; deixa claro que liberar o freio não liga a operação demo.
@@ -2476,11 +2595,11 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 **Detalhe técnico**
 
-P task (docs). Confirm `docs/.briefs/N37-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md`; local `vendor/day-trader-skill` is empty/absent — keep fail-closed. GitHub main not re-checked. Do not bump. Do not change kill-switch semantics. Record: `kill_switch_on=false` only clears the kill gate; it does not turn on `demo_operation_on`. Click Liberar when already released is a no-op by design; N37 hides that button.
+P task (docs). Confirm `docs/.briefs/N38-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md`; local `vendor/day-trader-skill` is empty/absent — keep fail-closed. GitHub main not re-checked. Do not bump. Do not change kill-switch semantics. Record: `kill_switch_on=false` only clears the kill gate; it does not turn on `demo_operation_on`. Click Liberar when already released is a no-op by design; N38 hides that button.
 
 Must cite: `src/panel_ops_html.py` `render_central_page`; `src/v4_web_dashboard.py` `serve_operator_panel`; `src/gate_b_risk.py` `kill_switch_active`; `src/signal_paper_runner.py` `_demo_panel_block`. Gap = visual state of the existing strip. `demo_operation_on` is OUT.
 
-### Task N37.1 — Distinguir a faixa do freio na Central
+### Task N38.1 — Distinguir a faixa do freio na Central
 
 **Entrega:** Na Central, uma faixa-luz mostra se o freio está ativo ou liberado, com um único botão para a transição que faz sentido.
 **Como conferir:** Pedir o teste da Central: freio ativo mostra a faixa ativa, Freio de emergência ativo e só Liberar freio; freio liberado mostra a faixa calma, Freio liberado e só Ativar freio; os dois botões iguais não aparecem; Live desligado continua; não há botão Live.
@@ -2508,7 +2627,7 @@ Tests (rewrite `RenderCentralPageFreioCopyTests` in `tests/test_panel_ops.py`; k
 4. `test_kill_switch_from_panel_blocks_next_eval` unchanged (logic).
 Do not edit `gate_b_risk.py`, `signal_paper_runner.py`, `panel_ops_data.py`, `risk_control_flags.py`, or trigger PATCH handlers. Do not rename or toggle `demo_operation_on`.
 
-### Task N37.2 — Alinhar a folha do dia a dia e o diário
+### Task N38.2 — Alinhar a folha do dia a dia e o diário
 
 **Entrega:** A folha do dia a dia descreve um botão por estado do freio, e o diário anota que só a apresentação mudou.
 **Como conferir:** Abrir a folha operacional e o diário: a linha não diz mais que Liberar usa o outro botão ao lado; o diário diz que o bloqueio ficou igual.
@@ -2518,7 +2637,7 @@ Do not edit `gate_b_risk.py`, `signal_paper_runner.py`, `panel_ops_data.py`, `ri
 
 P task. Files: `docs/DASHBOARD-OPERATIONS.md`, `docs/DIARY.md` (2 files). Replace the day-to-day row that says Liberar uses the other button with: Ativar freio is the only button when released (`kill_switch_on: true`); Liberar freio is the only button when active (`kill_switch_on: false`). Do not write that releasing the brake permits demo operation. Do not rewrite auth, Live, or fill policy.
 
-DIARY: short `## Sprint N37` + index row. Record: presentation-only halt-light strip; `kill_switch_on=true` still blocks new demo orders; `kill_switch_on=false` only clears the kill gate (does not turn on `demo_operation_on`); Liberar hidden when already released (no-op by design); no Live button; N29.5 still operator. LIVE false.
+DIARY: short `## Sprint N38` + index row. Record: presentation-only halt-light strip; `kill_switch_on=true` still blocks new demo orders; `kill_switch_on=false` only clears the kill gate (does not turn on `demo_operation_on`); Liberar hidden when already released (no-op by design); no Live button; N29.5 still operator. LIVE false.
 
 Do not edit DESIGN.md, HOMOLOGATION env kill-switch, or REQUIREMENTS criterion wording.
 

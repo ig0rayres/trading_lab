@@ -321,6 +321,33 @@ components:
         qty:
           type: string
           description: Decimal como texto para nao perder precisao.
+    PlatformHealth:
+      type: object
+      required: [schema_version, generated_at, overall, components]
+      properties:
+        schema_version:
+          type: string
+          enum: [platform-health-1]
+        generated_at:
+          type: string
+          format: date-time
+        overall:
+          type: string
+          enum: [ok, degraded, down]
+        components:
+          type: array
+          items:
+            type: object
+            required: [id, status, detail]
+            properties:
+              id:
+                type: string
+                enum: [ledger, worker, webhook, queue, dashboard]
+              status:
+                type: string
+                enum: [ok, degraded, down, skipped]
+              detail:
+                type: string
     DashboardSnapshot:
       type: object
       required: [orders_sent, kill_switch_on]
@@ -330,6 +357,10 @@ components:
           description: No ciclo de pesquisa permanece 0.
         kill_switch_on:
           type: boolean
+        platform_health:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PlatformHealth'
         research_status:
           type: string
         signal_events:

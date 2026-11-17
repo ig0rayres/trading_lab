@@ -93,6 +93,18 @@ Bearer sozinho **não** autoriza escrita (`PATCH` → **401**); cookie de operad
 
 ---
 
+## Rotina diária (sem Exec)
+
+| Passo | Onde |
+|-------|------|
+| Saúde da stack | Painel HTML: seção **Plataforma — semáforo** ou `GET /api/status` → `platform_health` |
+| Gatilhos | Central / `GET /api/triggers` (sessão operador) |
+| Incidente | EasyPanel só se semáforo vermelho persistente |
+
+Probes automáticos: `v4-ops` com `PLATFORM_HEALTH_AUTOSTART=true` (default); worker com `TV_WORKER_AUTOSTART=true`.
+
+---
+
 ## Checklist operador (hashia / `trading-lab`)
 
 - [ ] `LIVE_TRADING_ENABLED=false`

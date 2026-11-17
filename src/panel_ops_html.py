@@ -96,6 +96,24 @@ if(killOff)killOff.onclick=()=>patchKill(false);
 '''
 
 
+def _platform_health_block(ph: dict[str, Any] | None) -> str:
+    ph = ph or {}
+    overall = ph.get('overall') or 'unknown'
+    comp_rows = ''.join(
+        f'<tr><td>{esc(c.get("id", ""))}</td>'
+        f'<td>{esc(c.get("status", ""))}</td>'
+        f'<td>{esc(c.get("detail", ""))}</td></tr>'
+        for c in (ph.get('components') or [])
+    ) or '<tr><td colspan="3">Aguardando primeira checagem automática (v4-ops)</td></tr>'
+    return (
+        f'<h2>Plataforma — semáforo</h2>'
+        f'<p class="muted">Agregado: <strong>{esc(overall)}</strong> · '
+        f'atualizado em {esc(ph.get("generated_at", "—"))}</p>'
+        f'<table><thead><tr><th>Componente</th><th>Status</th><th>Detalhe</th></tr></thead>'
+        f'<tbody>{comp_rows}</tbody></table>'
+    )
+
+
 def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -> str:
     flags = (triggers or {}).get('control_flags') or {}
     markets = (triggers or {}).get('market_controls') or []
@@ -127,6 +145,7 @@ def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -
 <style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("central")}<main class="main">
 <h1>Central</h1><p class="muted">Conta demo · Live desligado (sem botão)</p>
 {brake}
+{_platform_health_block(data.get("platform_health"))}
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">{cards}</div>
 <h2>Mercados</h2><table><tbody>{market_rows}</tbody></table>
 <h2>Sinais recentes</h2><table><tbody>{sig_rows}</tbody></table>

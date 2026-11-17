@@ -17,7 +17,8 @@
 | ISS-011 | aberto | ISS-010 B3/FOREX + N17.2 G-FORM (pós-N33) | Épico contrato Features 7–11 (Alpaca-only; sem Clear/OANDA) |
 | ISS-012 | fechado (N31 merged PR #38; N28.2–4 entregues nesta frente) | N31/N28 | G-AJUSTE: melhoria contínua diária + TimesFM research-only + ajuste supervisionado Feature 11 |
 | ISS-013 | aberto | N36 | Copy do freio na Central: Ligar/Desligar parada parece ligar o sistema |
-| ISS-014 | aberto | N37 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
+| ISS-014 | em execucao | N37 | Saúde automática da plataforma + defaults operacionais ON |
+| ISS-015 | aberto | N38 | Estado visual do freio na Central: dois botões iguais e faixa sempre amarela |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -355,21 +356,35 @@
 
 **Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N36.brief.md`.
 
+## ISS-014 — Saúde automática da plataforma + defaults operacionais ON
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio |
+| Sprint | N37 |
+| Status | em execucao |
+
+**Impacto:** Operador depende de checklist manual (EasyPanel, Exec, curl) para saber se painel, worker, webhook e gatilhos estão vivos. A Central mostra “Operando” só pela parada geral, não pela stack.
+
+**Critério de fechamento:** Central e `/api/status` expõem `platform_health`; probes no `v4-ops`; defaults ON no migrate sem apagar OFF do operador; pytest verde; `LIVE_TRADING_ENABLED=false`.
+
+**Fontes:** operador 2026-11-17; frente `front/n20-platform-health` (código ex-PR #50).
+
 ---
 
-## ISS-014 — Estado visual do freio na Central (faixa e um só botão)
+## ISS-015 — Estado visual do freio na Central (faixa e um só botão)
 
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-sem-dominio / enhancement |
-| Sprint | N37 |
+| Sprint | N38 |
 | Status | aberto |
 | Impacto | Depois da copy N36, os dois botões ainda parecem iguais, a faixa fica amarela nos dois estados, o status some na linha fraca, e clicar Liberar com o freio já solto parece não fazer nada. |
 
 **Critério de aceite:** faixa `brake-strip--active` (vermelha) com só Liberar freio; faixa `brake-strip--released` (calma) com só Ativar freio; um único `brake-strip__cta` por estado; textos N36 onde ainda forem certos; testes afirmam classe, copy e ausência dos dois botões iguais; sem botão Live; `kill_switch_on` e Gate B inalterados; `demo_operation_on` fora desta sprint; `LIVE_TRADING_ENABLED=false`.
 
-**Fontes:** operador `/pmo plan` 2026-11-17 (demanda aprovada + frontend-design); `src/panel_ops_html.py` `render_central_page`; ISS-013 (copy N36).
+**Fontes:** operador `/pmo plan` 2026-11-17 (demanda aprovada + frontend-design); `src/panel_ops_html.py` `render_central_page`; ISS-013 (copy N36). Colisão de ID: main tomou N37/ISS-014 para saúde; freio renumerado para N38/ISS-015.
 
-**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N37.brief.md`.
+**Nota autopilot:** Passo 3 sem AskQuestion; registro automático. Brief: `docs/.briefs/N38.brief.md`.
 
 ---

@@ -176,20 +176,18 @@
         }
       ],
       "dirty_production_paths": [
-        "src/panel_ops_html.py",
-        "tests/test_panel_ops.py",
         ".beesy/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "fe13153801d4dded053a98b08445a8e8104f55b5",
-      "stamped_at": "2026-11-17T13:11:01Z",
+      "last_validated_sha": "8461931eadb759d79b1b58283553a1382cd580fb",
+      "stamped_at": "2026-11-17T13:11:49Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "8b0323e2031dae7f995c9c1ac1cce98084da920e",
+      "content_hash": "90e2a80e151c6fab09fa83e564a869ed745d07be5b70d52a49f9544aa1560851",
+      "patch_id": "67a32bac7a7465bbfa09c781cf9b277d73a6344d",
       "patch_id_version": 2
     },
     "branch": "front/n27-alpaca-loop",

@@ -213,21 +213,14 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [
-        ".beesy/activate_n32_session.py",
-        ".beesy/archive/",
-        ".beesy/sprints/N40.json",
-        ".beesy/stamp-gate-logs/",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
+      "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "26d36c822281989aa40b9a7fd59f402833d72b5e",
-      "stamped_at": "2026-11-17T14:11:21Z",
+      "last_validated_sha": "7e9e68777b3d31165792ff3c08d3dcd0c4f4d136",
+      "stamped_at": "2026-11-17T14:12:35Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "content_hash": "d005fa136c33e5b5252df3bf6f80eb1de4ddbcc6afda992ca6a5ea9a60b30011",
       "patch_id": "a6b53dc774ed17de400de5ba6bc1639da4fec7fc",
       "patch_id_version": 2
     },

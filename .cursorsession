@@ -219,8 +219,8 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "23b1eb45b1569845fcbfcdf0c4fc2c8e392d16e0",
-      "stamped_at": "2026-11-17T14:13:00Z",
+      "last_validated_sha": "ef43afb7b6b915bbda22962546d06e6044b1cae7",
+      "stamped_at": "2026-11-17T14:13:04Z",
       "validation_gate_keys": [
         "cmd_0"
       ],

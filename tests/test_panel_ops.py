@@ -1907,6 +1907,13 @@ class PanelSinaisN51Tests(unittest.TestCase):
 
 
 class PanelSinaisN52Tests(unittest.TestCase):
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
     def _server(self, root, *, connect_factory=None, session='panel-secret'):
         handler = make_handler(
             root,
@@ -1942,15 +1949,18 @@ class PanelSinaisN52Tests(unittest.TestCase):
 
     def test_n52_empty_preapproval_humanized(self):
         with tempfile.TemporaryDirectory() as d:
-            server, thread, base = self._server(d)
-            try:
-                req = _get(base + '/sinais', session='panel-secret')
-                with urlopen(req, timeout=3) as resp:
-                    body = resp.read().decode('utf-8')
-                self.assertIn(N51_PREAPPROVAL_EMPTY, body)
-                self.assertIn('empty-state', body)
-            finally:
-                self._shutdown(server, thread)
+            root = Path(d)
+            # Isolate from repo intelligence/ allowlist fallback and CI ledger.
+            with patch('panel_ops_data._repo_config_root', return_value=root):
+                server, thread, base = self._server(root)
+                try:
+                    req = _get(base + '/sinais', session='panel-secret')
+                    with urlopen(req, timeout=3) as resp:
+                        body = resp.read().decode('utf-8')
+                    self.assertIn(N51_PREAPPROVAL_EMPTY, body)
+                    self.assertIn('empty-state', body)
+                finally:
+                    self._shutdown(server, thread)
 
     def test_n52_preapproval_research_metrics_visible(self):
         with tempfile.TemporaryDirectory() as d:

@@ -207,7 +207,45 @@
     "validation_gate_ref": ".beesy/sprints/N48.json",
     "sprint_delivery": "verify_green",
     "sprint_delivery_sprint": "N48",
-    "plan_only": false
+    "plan_only": false,
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N48",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T17:42:32Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N48 Sinais copy; 56 OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "e9687ad8756bfd0d97b90c180026bbf0779a79f3",
+      "stamped_at": "2026-11-17T17:42:53Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "794bae526e3a4b78be3ef32ddddf21a327b8dd8a781a0aa6b1dab00c62868110",
+      "patch_id": "d887417269b3ebdca0b5dc698d9e7ff9db12f8a9",
+      "patch_id_version": 2
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

@@ -145,18 +145,17 @@
         ".beesy/sprints/N38.json",
         ".beesy/activate_n32_session.py",
         ".beesy/archive/",
-        ".beesy/sprints/N39.json",
         ".beesy/stamp-gate-logs/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "b8d2570ce8f7fd687914e18c7a4fa42d309aedd3",
-      "stamped_at": "2026-11-17T13:41:25Z",
+      "last_validated_sha": "5e1f8096ec3bf5ff1f7a706d782173b9ed7302f8",
+      "stamped_at": "2026-11-17T13:41:40Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "content_hash": "ab2d8d7ae37fe3ce870051b980b2bfe41c97b71495bb26b0efafec9238c7a490",
       "patch_id": "e8601fb1bc051e2c1c79777ebebd458c3216b8d4",
       "patch_id_version": 2
     }

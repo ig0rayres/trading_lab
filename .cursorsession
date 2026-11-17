@@ -206,7 +206,7 @@
     "last_completed_task": "N41.4",
     "validation_gate_ref": ".beesy/sprints/N39.json",
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N40",
+    "sprint_delivery_sprint": "N41",
     "validation_gate": {
       "produced_by": "validation-stamp.py",
       "result": "APROVADA",
@@ -219,18 +219,17 @@
         }
       ],
       "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "ef43afb7b6b915bbda22962546d06e6044b1cae7",
-      "stamped_at": "2026-11-17T14:13:04Z",
+      "last_validated_sha": "0100c7b10a0e4db73491c16917d2e1d12ca401d3",
+      "stamped_at": "2026-11-17T14:42:02Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "d005fa136c33e5b5252df3bf6f80eb1de4ddbcc6afda992ca6a5ea9a60b30011",
-      "patch_id": "a6b53dc774ed17de400de5ba6bc1639da4fec7fc",
+      "content_hash": "8397f978d4eb097ff8c0cf9144d8990750c0c9d40e67f00994192c463b660993",
+      "patch_id": "3d54c9c4bc3cea4b882759cf72638eeae8fb3c93",
       "patch_id_version": 2
     },
     "plan_only": false,
@@ -249,7 +248,20 @@
       "tests/test_panel_ops.py",
       ".cursorsession",
       ".beesy/sprints/N41.json"
-    ]
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N41",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T14:41:55Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N41 orders+history; 29 panel_ops OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    }
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

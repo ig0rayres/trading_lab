@@ -16,9 +16,9 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N36 implementation — freio labels",
+  "fase_nome": "N36 concluida; restante homolog demo + Tá Barato G-FORM",
   "sprint_pending_merge": null,
-  "sprint_pr": 48,
+  "sprint_pr": 51,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
   "ultimo_update": "2026-11-17T05:58:00-03:00",
@@ -120,91 +120,15 @@
     "/pmo plan N36"
   ],
   "contexto_rapido": "N36 plan_only copy freio Central; N35 concluída PR #48; N29.5 operador; LIVE false.",
-  "sprint_tasks": [
-    {
-      "id": "N36.0",
-      "file": "docs/.briefs/N36-GIT-FIRST-REUSE.md",
-      "files": [
-        "docs/.briefs/N36-GIT-FIRST-REUSE.md"
-      ],
-      "depends_on": [],
-      "status": "pending"
-    },
-    {
-      "id": "N36.1",
-      "file": "src/panel_ops_html.py, tests/test_panel_ops.py",
-      "files": [
-        "src/panel_ops_html.py",
-        "tests/test_panel_ops.py"
-      ],
-      "depends_on": [
-        "N36.0"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "N36.2",
-      "file": "docs/DASHBOARD-OPERATIONS.md, docs/DIARY.md",
-      "files": [
-        "docs/DASHBOARD-OPERATIONS.md",
-        "docs/DIARY.md"
-      ],
-      "depends_on": [
-        "N36.0"
-      ],
-      "status": "pending"
-    }
-  ],
+  "sprint_tasks": [],
   "checkpoint": {
-    "phase": "implementation",
+    "phase": "validated",
     "current_task": null,
-    "last_completed_task": "N35.3",
-    "validation_gate_ref": ".beesy/sprints/N35.json",
+    "last_completed_task": "N36.2",
+    "validation_gate_ref": ".beesy/sprints/N36.json",
+    "sprint_delivery": "finalized",
     "sprint_delivery_sprint": "N36",
-    "last_validated_sha": "e785433",
-    "validation_gate": {
-      "produced_by": "validation-stamp.py",
-      "result": "APROVADA",
-      "validation_mode": "full",
-      "gates": [
-        {
-          "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops -q",
-          "exit_code": 0
-        }
-      ],
-      "dirty_production_paths": [
-        ".beesy/",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
-      "missing_backends": [],
-      "last_validated_sha": "4ddce9b7398c3449056746940a20f9d1779d4a72",
-      "stamped_at": "2026-11-17T09:17:42Z",
-      "validation_gate_keys": [
-        "cmd_0"
-      ],
-      "content_hash": "2c8b412bd48ba1a5935f47fc127a4f44c8ba78bef296a3e0ab190578219181a2",
-      "patch_id": "172588f5cece1228ddf10aeb106109d3916e4788",
-      "patch_id_version": 2
-    },
-    "sprint": "N36",
-    "branch": "front/n27-alpaca-loop",
-    "plan_only": false,
-    "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N36",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS",
-      "findings_registered": [],
-      "recorded_at": "2026-11-17T09:16:57Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N36 freio copy; 17 panel_ops OK",
-      "full_suite_ran": true,
-      "first_pass": true,
-      "senior_status": "PASS"
-    },
-    "sprint_delivery": "stamped"
+    "last_validated_sha": "2157b53"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -247,7 +171,7 @@
     "branch": "front/n27-alpaca-loop",
     "sprint_branch": "front/n27-alpaca-loop"
   },
-  "sprint_branch": "front/n27-alpaca-loop",
+  "sprint_branch": null,
   "sprint_categoria": "N",
   "plan_only": false,
   "validation_gate_qa": {
@@ -291,8 +215,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N35",
-  "sprint_atual": "N36",
+  "previous_sprint": "N36",
+  "sprint_atual": null,
   "sprint_nome": "Freio de emergência na Central",
   "autopilot": {
     "active": true,

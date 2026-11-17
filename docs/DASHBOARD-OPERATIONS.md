@@ -68,7 +68,7 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 
 ## Dia a dia do operador (sem Exec)
 
-Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (N40 mapa · **N41** Ordens/Histórico · **N42** Estratégias · **N43** Análise Google · **N44** passeio homologação): o login diário mostra **Central / Sinais / Estratégias / Análise Google / Ordens / Histórico / Prodígio / Performance**. Depois do rebuild pós-N41–N43, siga o roteiro **ação americana + cripto** em [`docs/HOMOLOGATION.md`](HOMOLOGATION.md) § **Homologar operar US + cripto pelo menu do painel (Sprint N44)** e registre o que viu em [`docs/TEST-EVIDENCE.md`](TEST-EVIDENCE.md) § Sprint N44 — pytest e fila **não** substituem o passeio. **Análise Google** é dica de pesquisa (TimesFM quando disponível) — **não** autoriza ordem; vazio típico `Análise Google indisponível: modelo ou dependência ausente.` Tá Barato e melhoria contínua ainda ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`**. O painel **não** envia nem cancela ordem (POST continua **405**); a tela **Estratégias** não promove fase.
+Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (N40 mapa · **N41** Ordens/Histórico · **N42** Estratégias · **N43** Análise Google · **N44** passeio homologação · **N48** Sinais = cópia + auditoria): o login diário mostra **Central / Sinais / Estratégias / Análise Google / Ordens / Histórico / Prodígio / Performance**. Na tela **Sinais**, a seção de **cópia de terceiros** (o que opera / resultado bruto por família) fica **acima** da **auditoria de ingresso** (origem, destino, motivo) — ingresso **não** é fill; Collective2 continua fechado; rebuild EasyPanel continua **operador** para ver a tela no ar. Depois do rebuild pós-N41–N43, siga o roteiro **ação americana + cripto** em [`docs/HOMOLOGATION.md`](HOMOLOGATION.md) § **Homologar operar US + cripto pelo menu do painel (Sprint N44)** e registre o que viu em [`docs/TEST-EVIDENCE.md`](TEST-EVIDENCE.md) § Sprint N44 — pytest e fila **não** substituem o passeio. **Análise Google** é dica de pesquisa (TimesFM quando disponível) — **não** autoriza ordem; vazio típico `Análise Google indisponível: modelo ou dependência ausente.` Tá Barato e melhoria contínua ainda ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`**. O painel **não** envia nem cancela ordem (POST continua **405**); a tela **Estratégias** não promove fase.
 
 | Ação | Onde |
 |------|------|
@@ -76,7 +76,7 @@ Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está
 | Ver âncoras, mercados, freio | `GET /` (Central) após login |
 | Ativar freio | Com o freio liberado, só aparece **Ativar freio** na faixa da Central → `PATCH /api/triggers` com `kill_switch_on: true` (cookie obrigatório). |
 | Liberar freio | Com o freio ativo, só aparece **Liberar freio** na faixa → `PATCH /api/triggers` com `kill_switch_on: false` (cookie obrigatório). Liberar o freio não liga a operação demo (`demo_operation_on` permanece separado). |
-| Ver sinais com motivo | `GET /sinais` ou `GET /api/signals` |
+| Ver cópia de terceiros + auditoria de ingresso | `GET /sinais` ou `GET /api/signals` (objeto `copy` + lista `signals`) |
 | Ver catálogo de fases (somente leitura) | `GET /estrategias` ou `GET /api/estrategias` |
 | Ver dicas Análise Google (só pesquisa) | `GET /analise-google` ou `GET /api/analise-google` |
 | Ver ranking Prodígio | `GET /prodigy` |

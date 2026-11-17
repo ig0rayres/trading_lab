@@ -1,0 +1,83 @@
+{
+  "sprint_id": "N48",
+  "checkpoint": {
+    "phase": "implementation",
+    "sprint": "N48",
+    "branch": "front/n27-alpaca-loop",
+    "last_completed_task": "N48.4",
+    "sprint_delivery": "verify_green",
+    "sprint_delivery_sprint": "N48",
+    "validation_gate_ref": ".beesy/sprints/N44.json"
+  },
+  "sprint_tasks": [
+    {
+      "id": "N48.0",
+      "title": "Inventariar o reuso da cópia de terceiros antes de redesenhar Sinais",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/.briefs/N48-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N48.brief.md"
+      ],
+      "depends_on": [],
+      "file": "docs/.briefs/N48-GIT-FIRST-REUSE.md, docs/.briefs/N48.brief.md"
+    },
+    {
+      "id": "N48.1",
+      "title": "Montar a vista de cópia e operação no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "depends_on": [
+        "N48.0"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N48.2",
+      "title": "Mostrar cópia e auditoria na mesma tela de Sinais",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "depends_on": [
+        "N48.1"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N48.3",
+      "title": "Provar cópia, vazio honesto, auditoria e que o painel não envia ordem",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N48.2"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N48.4",
+      "title": "Atualizar o mapa e os chamados depois da tela alinhada",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/ISSUES.md",
+        "docs/DIARY.md"
+      ],
+      "depends_on": [
+        "N48.3"
+      ],
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md"
+    }
+  ],
+  "archived_at": "2026-11-17T17:41:32Z"
+}

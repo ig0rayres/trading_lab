@@ -72,6 +72,7 @@
 | N45 | N | Tá Barato no menu — bloqueado em N17.2 | planejada | stub | strategy-catalog | Campanha ISS-017 onda 5 | *(abaixo)* |
 | N46 | N | B3 Clear no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 6 | *(abaixo)* |
 | N47 | N | OANDA Practice no painel — bloqueado em N29.5 | planejada | stub | paper-gateway | Campanha ISS-017 onda 7 | *(abaixo)* |
+| N48 | N | Sinais = cópia de terceiros + auditoria; sem fill inventado; LIVE false | concluida *(rebuild EasyPanel e confirmação ISS-018 ainda operador)* | 5 | observability | ISS-018 alinhamento Sinais↔copy | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -130,6 +131,7 @@
 | N45 | senior+qa | stub campanha — Tá Barato; não arranca sem N17.2 |
 | N46 | comprehensive | stub campanha — Clear; não arranca sem N29.5 |
 | N47 | comprehensive | stub campanha — OANDA; não arranca sem N29.5 |
+| N48 | senior+qa | Tela Sinais: cópia de terceiros + auditoria; sem fill inventado |
 
 ---
 
@@ -3760,6 +3762,236 @@ P task. Files: `docs/ISSUES.md`, `docs/DIARY.md` (2 files). ISS-017 keep **abert
 > Status: planejada  
 > titulo_humano: Ver forex no painel só com a conta Practice credenciada  
 > Campanha ISS-017 onda 7 (stub). **Não arranca** sem N29.5. Host practice, nunca live. LIVE false.
+
+---
+
+## Sprint N48 — Mostrar na tela Sinais o que se copia e o que opera
+> Categoria: N  
+> Status: concluida *(entrega N48.0–N48.4; **rebuild EasyPanel e confirmação ISS-018 ainda operador**)*  
+> Gerado via: `/pmo plan` 2026-11-17 · EXECUTE 2026-11-17 · fonte ISS-018 · correção do operador 2026-11-17 · Feature 9/4/10 já em REQUIREMENTS  
+> titulo_humano: Ver na tela Sinais o que se copia e o que opera  
+> resumo_humano: Depois do login você abre Sinais e vê o que o laboratório copia de terceiros e o que está operando — ou o vazio honesto. A auditoria de ingresso continua na mesma página, claramente à parte. Collective2 permanece fechado. O painel não envia ordem.  
+> Gate: Sinais com seção de cópia e seção de auditoria; vazio em português; resultado só de fill rotulado bruto se o custo faltar; Collective2 fechado; sessão obrigatória; zero envio pelo painel; pytest do painel verde; mapa atualizado; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N48.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N25 concluida · N26 concluida · N41 concluida · Release: ISS-018 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false
+
+### Em uma frase
+
+A tela Sinais passa a mostrar o que o laboratório copia de terceiros e o que está operando, com resultado só de fill — e a auditoria de ingresso continua visível na mesma página, sem se passar por fill.
+
+### O que muda para você
+
+- Sinais deixa de ser só origem, destino e motivo
+- Você vê o que está sendo copiado, o que opera, e o resultado bruto por família de cópia
+- A auditoria de ingresso permanece numa seção à parte, com o texto de que não é fill
+- Collective2 continua fechado; o painel não envia ordem; dinheiro real permanece desligado
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Inventário do que já é cópia e do que é só auditoria | Abrir o inventário e ver que a tela de hoje lista ingresso, enquanto a cópia e o resultado já existem noutros pontos |
+| 2 | Mesma tela de Sinais com cópia e auditoria | Entrar no painel, abrir Sinais, ver a seção de cópia (ou o vazio honesto) e a seção de ingresso |
+| 3 | Tela só leitura, sem fill inventado | Confirmar que não há botão de enviar ordem, que Collective2 aparece fechado, e que o resultado diz bruto quando o custo falta |
+| 4 | Mapa e chamado atualizados | O mapa descreve as duas seções; o chamado de alinhamento aponta esta sprint; a campanha e o épico antigo continuam abertos |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N48.0 Inventariar o reuso da cópia de terceiros antes de redesenhar Sinais | `/git` | — |
+| [x] | M | N48.1 Montar a vista de cópia e operação no pacote do painel | `/dev` | N48.0 |
+| [x] | M | N48.2 Mostrar cópia e auditoria na mesma tela de Sinais | `/dev` | N48.1 |
+| [x] | P | N48.3 Provar cópia, vazio honesto, auditoria e que o painel não envia ordem | `/qa testes` | N48.2 |
+| [x] | P | N48.4 Atualizar o mapa e os chamados depois da tela alinhada | docs | N48.3 |
+
+### Quality Brief (Sprint N48)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not invent scoring thresholds.
+Maintain: B3_EQUITY / FOREX remain fail-closed without operator creds (ISS-010); zero Alpaca POST from this sprint.
+Maintain: performance counts confirmed fills only; `queued_intent` and HTTP 200 are not fills; gross label when costs incomplete.
+Avoid: parallel `/copy` route; calling `signal_copy.validate` from the panel; inventing per-signal P&L; approving Collective2; stealing N45–N47; closing ISS-007/010/011/017.
+
+### Fora de escopo
+
+- Rota nova de cópia ou provedores
+- POST ou cancelamento de ordem pelo painel
+- Inventar fill, custo líquido ou resultado por sinal sem join
+- Aprovar Collective2
+- Tela própria de Tá Barato (N45)
+- Clear / OANDA / N29.5
+- Inventar limiar / promover Prodígio / ORB paper
+- `LIVE_TRADING_ENABLED=true`
+- Fechar ISS-007 / ISS-010 / ISS-011 / ISS-009 / ISS-013 / ISS-016 / ISS-017
+- Roubar identificadores N45–N47
+
+### Task N48.0 — Inventariar o reuso da cópia de terceiros antes de redesenhar Sinais
+
+**Entrega:** Inventário curto dizendo que a tela de hoje é auditoria de ingresso, e que cópia, ordens e resultado já existem noutros pontos para reusar.
+**Como conferir:** O inventário cita a lista de ingresso, a família de cópia, as cópias de pesquisa do Prodígio, o resultado só de fill e deixa Collective2, câmbio e envio pelo painel de fora.
+**Por quê:** Sem essa lista o EXECUTE reimplementa a cópia ou inventa fill.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N48-GIT-FIRST-REUSE.md` (written at plan-time). Re-check vendor pin `docs/VENDOR-PIN.md` vs `git ls-remote` `Jakeschincariol/day-trader-skill` `main`; do not bump. Local vendor may be uninitialized/empty — do not treat it as reviewed main. If GitHub unreachable, stop claiming current main. Do not touch `src/` in this task.
+
+Cite: `load_panel_signals`; `signal_copy.ALLOWED`; `prodigy_copied_signals`; `performance_from_ledger` / `performance_from_snapshots`; `build_panel_bundle`; `render_signals_page`; `GET /api/signals`. Do not plan Alpaca HTTP from the panel. Do not steal N45–N47.
+
+### Task N48.1 — Montar a vista de cópia e operação no pacote do painel
+
+**Entrega:** O pacote do painel passa a carregar, além da auditoria, o que está em cópia e o que opera — só com dados já existentes, sem inventar fill nem custo.
+**Como conferir:** Pedir o teste de dados em que a família de cópia traz ordens e resultado bruto quando houver fill, e o vazio combinado quando não houver; Collective2 continua fechado.
+**Por quê:** Hoje o pacote só entrega ingresso; sem a vista de cópia a tela continuaria mentindo o conceito.
+
+**Detalhe técnico**
+
+- **Estado atual:** `build_panel_bundle` delivers `signals` (ingest audit) plus open_orders / order_history / performance / prodigy.copied_signals. Order rows have `strategy_key` and no `provider` / `signal_id`. `/api/signals` is not this task.
+- **Estado desejado:** same bundle plus `copy` object (operating/history/performance slice for `signal_copy`, Collective2 closed, research copies labeled). Family totals only.
+- **Fonte(s):** ISS-018, Feature 4/9/10, N25/N26/N41.
+- **Risco:** MEDIUM — shared panel bundle; invented provider/P&L would lie.
+- **Arquivo(s):** `src/panel_ops_data.py`
+
+**executor_prompt**:
+
+```yaml
+id: N48.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N48.0"]
+files:
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: rg "def load_panel_signals" src/panel_ops_data.py && rg "def build_panel_bundle" src/panel_ops_data.py && rg "'copy'" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: rg "def prodigy_copied_signals" src/panel_ops_data.py && rg "PERFORMANCE_LABEL_GROSS" src/panel_ops_data.py
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: rg "def performance_from_ledger" src/panel_ops_data.py && rg "def performance_from_snapshots" src/panel_ops_data.py && rg "def load_panel_open_orders" src/panel_ops_data.py
+guardrail_contract:
+  - class: secrets
+    id: n48-1-no-secrets
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'AKIA' not in t; assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no broker or webhook secret values hardcoded
+  - class: subagent-safety
+    id: n48-1-no-invented-fill
+    target: src/panel_ops_data.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_data.py').read_text(); assert 'process_after_gate_b' not in t; assert 'paper-api.alpaca.markets' not in t; assert 'from signal_copy' not in t; assert 'import signal_copy' not in t; assert 'approved_for_paper_copy' in t; assert 'PERFORMANCE_LABEL_GROSS' in t"
+    pass_condition: panel data loader does not submit paper, does not import HMAC copy module, does not invent fills, keeps gross label, records Collective2 closed
+```
+
+### Quality Brief (Sprint N48)
+
+Maintain: LIVE_TRADING_ENABLED=false; paper host only; dashboard does not submit or cancel orders.
+Maintain: load trader-entry|exit|budget|risk|scanner only via src/original.py; do not invent scoring thresholds.
+Maintain: confirmed fills only; queued_intent is not a fill; PERFORMANCE_LABEL_GROSS when costs incomplete.
+Maintain: Collective2 approved_for_paper_copy remains false; prodigy_copied_signals stay research_copy_not_order_auth.
+Avoid: forking a second SELECT on signal_events; calling signal_copy.validate; synthesizing per-signal P&L when signal_id is missing; treating research copies as operating.
+
+Melhoria: expose a `copy` object on `build_panel_bundle` without replacing `signals`.
+Contexto: `load_panel_signals` is ingest audit (origin/destination/reason). Operator concept of Sinais is third-party copy (TradingView / signal_copy / providers) plus what is operating and fill-only performance. Feature 10 already groups performance by strategy_key. N41 already lists open_orders / order_history with strategy_key but **without** provider or signal_id. prodigy_copied_signals is the only existing list with provider and is research. Collective2 is closed. signal_events SELECT has no strategy_key/signal_id — do not add a column. Do not import the HMAC module `signal_copy`.
+Objetivo: (1) Attach `copy` on build_panel_bundle without replacing signals. (2) copy.operating = open_orders where strategy_key=='signal_copy' (existing row fields only). (3) copy.history = order_history where strategy_key=='signal_copy' (already confirmed fills). (4) copy.performance = slice of existing performance.strategies for strategy_key=='signal_copy'; keep pnl_label PERFORMANCE_LABEL_GROSS and source; family totals only. (5) copy.collective2 = {approved_for_paper_copy: false, status: closed} always. (6) copy.research_copies = prodigy_copied_signals() as-is (research_copy_not_order_auth) — NOT operating. (7) copy.providers = unique provider from research_copies only, each labeled research_only. Do NOT invent provider from orders. Do NOT invent per-signal or per-provider P&L. (8) Do not import signal_copy (no validate/sign/preflight). Do not import process_after_gate_b. Do not add SQL columns. Do not touch Clear/OANDA. (9) Keep existing bundle keys. LIVE false.
+Arquivos: src/panel_ops_data.py.
+Critério de pronto: `build_panel_bundle` includes `copy`; rg shows approved_for_paper_copy and PERFORMANCE_LABEL_GROSS; load_panel_signals still present; no process_after_gate_b and no `from signal_copy` / `import signal_copy` in this file.
+Cenários de teste (implement in N48.3):
+1. Fixture open order strategy_key=signal_copy → copy.operating non-empty; is_fill false unless snapshot/ledger fill rules pass; no invented provider field required on that row.
+2. Confirmed fill for signal_copy → copy performance counts it with PERFORMANCE_LABEL_GROSS; queued_intent excluded; no per-signal P&L key invented.
+3. No copy rows → empty operating/history lists, not fake providers.
+4. prodigy_copied_signals remain labeled research_copy_not_order_auth and sit under research_copies, not operating.
+5. collective2.approved_for_paper_copy is false.
+6. Regressão: signals, open_orders, order_history, performance, strategy_catalog still present on the bundle.
+
+### Task N48.2 — Mostrar cópia e auditoria na mesma tela de Sinais
+
+**Entrega:** A tela Sinais, no mesmo menu, mostra primeiro a cópia de terceiros (ou o vazio honesto) e depois a auditoria de ingresso, sem botão de enviar ordem.
+**Como conferir:** Abrir o painel logado, clicar em Sinais, ver as duas seções, Collective2 fechado, e confirmar que a lista antiga de origem/destino/motivo ainda existe.
+**Por quê:** Os dados sozinhos não mudam o que o operador entende por Sinais; a tela hoje só fala de ingresso.
+
+**Detalhe técnico**
+
+- **Estado atual:** `render_signals_page` is one ingest table; `GET /api/signals` returns only `{signals: [...]}`. DESIGN filters Todos/Ordem/Barrado/Fila are not implemented.
+- **Estado desejado:** same `/sinais` with two `h2` sections (copy then ingest audit); JSON keeps `signals` and adds `copy`. No `/copy` route. No order POST.
+- **Fonte(s):** ISS-018, OPERATOR-PANEL-MAP §2, N25 HTML shell.
+- **Risco:** MEDIUM — operator-facing copy; parallel route or invented fill would break the concept.
+- **Arquivo(s):** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N48.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N48.1"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: rg "def render_signals_page" src/panel_ops_html.py && rg "Cópia de terceiros" src/panel_ops_html.py && rg "Auditoria de ingresso" src/panel_ops_html.py
+  - component: src/panel_ops_html.py
+    reuse_as: copy_pattern
+    convergence_check: rg "Nenhuma cópia de terceiro em operação." src/panel_ops_html.py && rg "Nenhum sinal neste destino." src/panel_ops_html.py && rg "def render_prodigy_page" src/panel_ops_html.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/api/signals" src/v4_web_dashboard.py && rg "serve_panel_json" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: secrets
+    id: n48-2-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'SIGNAL_COPY_SECRET' not in t"
+    pass_condition: no live keys or webhook secrets in HTML or dashboard routes
+  - class: subagent-safety
+    id: n48-2-read-only-page
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; html=Path('src/panel_ops_html.py').read_text(); dash=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in html; assert 'process_after_gate_b' not in dash; assert 'Cópia de terceiros' in html; assert 'Auditoria de ingresso' in html; paths=html.split('OPERATOR_PANEL_PATHS',1)[1].split(')',1)[0]; assert '/copy' not in paths"
+    pass_condition: same /sinais route; two labeled sections; dashboard still does not call paper submit
+```
+
+### Quality Brief (Sprint N48)
+
+Maintain: LIVE_TRADING_ENABLED=false; operator session cookie in front of /sinais; do not add a parallel route.
+Maintain: Feature 9 ingest table remains (origin, destination, reason) under a distinct heading.
+Maintain: empty copy is explicit Portuguese; Collective2 closed copy is always visible.
+Avoid: Live button; order submit/cancel controls; calling signal_copy.validate; rewriting render_page as the daily UI.
+
+Melhoria: extend authenticated GET /sinais and GET /api/signals with a copy/operating view; keep ingest audit.
+Contexto: render_signals_page is a single table (hora, origem, ativo, mercado, destino, motivo) with subtitle about destination audit. serve_panel_json /api/signals returns only `{signals: [...]}`. DESIGN.md filters Todos/Ordem/Barrado/Fila are **not** in today's HTML — do not add them in N48. Operator wants copy concept on this page, not /prodigy and not a new path. Two `h2` sections copy the Prodígio page pattern (rank + copied), not a new tab widget.
+Objetivo: (1) Keep OPERATOR_PANEL_PATHS and _nav Sinais → /sinais (no /copy). (2) render_signals_page: heading Sinais; two sections in this order — `Cópia de terceiros` then `Auditoria de ingresso`. Copy empty: `Nenhuma cópia de terceiro em operação.` Copy performance empty: `Sem fills confirmados nesta cópia.` Collective2 line always: `Collective2: cópia fechada — nenhum provedor aprovado.` Audit empty stays `Nenhum sinal neste destino.` Audit subtitle: `Auditoria de ingresso — origem, destino e motivo. Não é fill.` Copy subtitle: `Cópia de terceiros (TradingView / provedores). Não é fill.` Footer: `O painel não envia ordem. Live desligado. Valores brutos se o custo não estiver completo.` Show PERFORMANCE_LABEL_GROSS when a number is shown. Research prodigy copies, if listed, must say they are research not operating. Do not show a provider P&L column. (3) serve_panel_json /api/signals: keep `signals`; add `copy` from the bundle. Session required like today. (4) No POST handlers for placing orders. Do not add Live button. Do not call Alpaca. Do not replace render_page. Do not add /copy to OPERATOR_PANEL_PATHS. Do not implement DESIGN ingest-filter chips.
+Arquivos: src/panel_ops_html.py, src/v4_web_dashboard.py.
+Critério de pronto: logged-in GET /sinais HTML contains both section titles and Collective2 closed copy; unauthenticated still blocked; /api/signals JSON has signals and copy; OPERATOR_PANEL_PATHS still has no /copy.
+Cenários de teste (implement in N48.3):
+1. Sem cookie → redirect/401 like today /sinais.
+2. Com cookie, sem cópia → `Nenhuma cópia de terceiro em operação.` e Collective2 fechado.
+3. Com fixture de cópia + fill → família visível; rótulo bruto; fila não aparece como fill.
+4. Seção de auditoria ainda mostra origem/destino/motivo (Feature 9).
+5. HTML da página sem controle de envio de ordem.
+6. Regressão: /ordens /historico /estrategias /performance /central /prodigy still render.
+
+### Task N48.3 — Provar cópia, vazio honesto, auditoria e que o painel não envia ordem
+
+**Entrega:** Testes mostram a tela com e sem cópia, a auditoria antiga, Collective2 fechado, recusa sem login, e que a página não envia ordem nem inventa fill.
+**Como conferir:** Pedir essa bateria e ver falha se faltar a seção de cópia, se Collective2 parecer aprovado, se a auditoria sumir, ou se aparecer controle de envio.
+**Por quê:** Sem prova, o mapa poderia marcar alinhado com a tela ainda só de ingresso.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTests cookie pattern. Nodeids for: unauthenticated /sinais; empty copy `Nenhuma cópia de terceiro em operação.`; Collective2 closed string; audit empty `Nenhum sinal neste destino.`; Feature 9 origin/destination/reject_reason still on /api/signals `signals`; copy object present with operating/history/performance/collective2; fixture signal_copy fill uses PERFORMANCE_LABEL_GROSS and excludes queued_intent; research_copies not merged into operating; no per-signal P&L key invented; HTML has both headings and no process_after_gate_b / order form; regression previous menu routes. Do not call real Alpaca. Do not weaken existing Feature 9/10 tests. LIVE false in env. No secret values.
+
+### Task N48.4 — Atualizar o mapa e os chamados depois da tela alinhada
+
+**Entrega:** O mapa descreve Sinais como cópia mais auditoria; o chamado de alinhamento aponta esta sprint; a campanha e o épico antigo continuam abertos.
+**Como conferir:** Abrir o mapa na área Sinais: duas seções, vazios reais, Collective2 fechado; ISS-018 ligado a N48; ISS-017 e o épico antigo do painel único continuam abertos.
+**Por quê:** Sem esse recorte, a próxima rodada acha que Sinais ainda é só ingresso ou que a campanha fechou.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-018 keep **aberto** until EXECUTE evidence; ISS-017 keep **aberto**; ISS-007 keep open). Update area 2 Sinais: copy section + ingest section; real empty strings; Collective2 closed. DASHBOARD-OPERATIONS row «Ver sinais» mentions copy concept, not only motivo. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017. Do not claim EasyPanel rebuild. Do not mark N45–N47 started. LIVE false.
 
 ---
 

@@ -16,12 +16,12 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "N44 docs entregues (passeio operador pendente)",
+  "fase_nome": "N48 concluída (aguarda operador)",
   "sprint_pending_merge": null,
-  "sprint_pr": null,
+  "sprint_pr": 65,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T17:00:00-03:00",
+  "ultimo_update": "2026-11-17T18:00:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Campanha ISS-017: rebuild EasyPanel pós-N43; passeio US+cripto pelo menu; preencher docs/TEST-EVIDENCE.md § N44",
-    "Operador-gated: N29.5 Clear/OANDA; N17.2 G-FORM; rebuild EasyPanel após N41–N43 no ar",
-    "LIVE_TRADING_ENABLED=false; pytest ≠ fill; não fechar ISS-017/007/010/011 nesta onda"
+    "Operador: rebuild EasyPanel trading-lab e confirmar Sinais (cópia + auditoria) no HTTPS",
+    "Fechar ISS-018 só após confirmação explícita do operador",
+    "ISS-007/017/010/011 abertos; N45–N47 stubs; LIVE_TRADING_ENABLED=false"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -124,117 +124,90 @@
     "/pmo plan N41",
     "/pmo plan N42",
     "/pmo plan N43",
-    "/pmo plan N44"
+    "/pmo plan N44",
+    "/pmo plan N48"
   ],
-  "contexto_rapido": "N44 EXECUTE docs: runbook HOMOLOGATION + TEST-EVIDENCE pendente; passeio/rebuild operador; ISS-017 aberto; zero src/; LIVE false.",
+  "contexto_rapido": "N48 EXECUTE N48.4 docs; ISS-018 aberto até operador; rebuild EasyPanel operador; LIVE false; ISS-007/017 abertos.",
   "sprint_tasks": [
     {
-      "id": "N44.0",
-      "file": "docs/.briefs/N44-GIT-FIRST-REUSE.md",
+      "id": "N48.0",
+      "title": "Inventariar o reuso da cópia de terceiros antes de redesenhar Sinais",
+      "size": "P",
+      "status": "done",
       "files": [
-        "docs/.briefs/N44-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N48-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N48.brief.md"
       ],
       "depends_on": [],
-      "status": "completed",
-      "completed_at": "2026-11-17T17:00:00-03:00"
+      "file": "docs/.briefs/N48-GIT-FIRST-REUSE.md, docs/.briefs/N48.brief.md"
     },
     {
-      "id": "N44.1",
-      "file": "docs/HOMOLOGATION.md",
+      "id": "N48.1",
+      "title": "Montar a vista de cópia e operação no pacote do painel",
+      "size": "M",
+      "status": "done",
       "files": [
-        "docs/HOMOLOGATION.md"
+        "src/panel_ops_data.py"
       ],
       "depends_on": [
-        "N44.0"
+        "N48.0"
       ],
-      "status": "completed",
-      "completed_at": "2026-11-17T17:00:00-03:00"
+      "file": "src/panel_ops_data.py"
     },
     {
-      "id": "N44.2",
-      "file": "docs/TEST-EVIDENCE.md",
+      "id": "N48.2",
+      "title": "Mostrar cópia e auditoria na mesma tela de Sinais",
+      "size": "M",
+      "status": "done",
       "files": [
-        "docs/TEST-EVIDENCE.md"
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
       ],
       "depends_on": [
-        "N44.1"
+        "N48.1"
       ],
-      "status": "completed",
-      "completed_at": "2026-11-17T17:00:00-03:00"
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
     },
     {
-      "id": "N44.3",
-      "file": "docs/DASHBOARD-OPERATIONS.md, docs/OPERATOR-PANEL-MAP.md",
+      "id": "N48.3",
+      "title": "Provar cópia, vazio honesto, auditoria e que o painel não envia ordem",
+      "size": "P",
+      "status": "done",
       "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N48.2"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N48.4",
+      "title": "Atualizar o mapa e os chamados depois da tela alinhada",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
         "docs/DASHBOARD-OPERATIONS.md",
-        "docs/OPERATOR-PANEL-MAP.md"
-      ],
-      "depends_on": [
-        "N44.1"
-      ],
-      "status": "completed",
-      "completed_at": "2026-11-17T17:00:00-03:00"
-    },
-    {
-      "id": "N44.4",
-      "file": "docs/ISSUES.md, docs/DIARY.md",
-      "files": [
         "docs/ISSUES.md",
         "docs/DIARY.md"
       ],
       "depends_on": [
-        "N44.2",
-        "N44.3"
+        "N48.3"
       ],
-      "status": "completed",
-      "completed_at": "2026-11-17T17:00:00-03:00"
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md"
     }
   ],
   "checkpoint": {
-    "phase": "execution",
-    "sprint": "N44",
+    "phase": "docs_closeout",
+    "sprint": "N48",
     "branch": "front/n27-alpaca-loop",
-    "plan_only": false,
     "current_task": null,
-    "last_completed_task": "N44.4",
-    "validation_gate_ref": ".beesy/sprints/N43.json",
+    "last_completed_task": "N48.4",
+    "validation_gate_ref": ".beesy/sprints/N48.json",
     "sprint_delivery": "verify_green",
-    "sprint_delivery_sprint": "N44",
-    "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N44",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS",
-      "findings_registered": [],
-      "recorded_at": "2026-11-17T16:59:56Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N44 docs runbook; panel suite green",
-      "full_suite_ran": true,
-      "first_pass": true,
-      "senior_status": "PASS"
-    },
-    "validation_gate": {
-      "produced_by": "validation-stamp.py",
-      "result": "APROVADA",
-      "validation_mode": "full",
-      "gates": [
-        {
-          "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
-          "exit_code": 0
-        }
-      ],
-      "dirty_production_paths": [],
-      "missing_backends": [],
-      "last_validated_sha": "d2d36da704af17ec8554e240e50655e749aa18ac",
-      "stamped_at": "2026-11-17T17:02:06Z",
-      "validation_gate_keys": [
-        "cmd_0"
-      ],
-      "content_hash": "3ec452bfb3cc270ac89969f284c3616d0a160654dcc0b565e1afe62794b87828",
-      "patch_id": "7cc5c197cc3f51ad9f7264f1fb8bd49907732077",
-      "patch_id_version": 2
-    }
+    "sprint_delivery_sprint": "N48",
+    "plan_only": false
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -256,12 +229,12 @@
   ],
   "anchor": {
     "persona": "planejador-tarefas",
-    "phase": "N44 docs entregues",
-    "intent": "Campanha ISS-017 onda 4: runbook US+cripto publicado; passeio operador ainda pendente.",
-    "changes_made": "N44 EXECUTE N44.0–N44.4: HOMOLOGATION walk, TEST-EVIDENCE pendente, ponteiros mapa/folha, ISS-017/DIARY/ROADMAP; zero src/.",
-    "decisions": "docs/runbook; pytest ≠ fill; LIVE false; ISS-017/007/010/011 open; campaign not closed; operator walk outside agent.",
-    "next_steps": "Operador: rebuild EasyPanel; passeio menu US+cripto; preencher TEST-EVIDENCE § N44; PR closeout quando pedido.",
-    "updated_at": "2026-11-17T17:00:00-03:00"
+    "phase": "N48 N48.4 docs",
+    "intent": "Closeout docs N48.4 ISS-018; keep open until operator confirms deploy.",
+    "changes_made": "N48.4: OPERATOR-PANEL-MAP §2, DASHBOARD-OPERATIONS, ISS-018 EXECUTE note, DIARY, ROADMAP [x], session last_completed N48.4; briefs ready; zero src/ in this pass.",
+    "decisions": "ISS-018 aberto; ISS-007/017 abertos; rebuild EasyPanel operador; family totals bruto only; LIVE false.",
+    "next_steps": "Operador rebuild + confirmar Sinais; parent commit quando pedido.",
+    "updated_at": "2026-11-17T18:00:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -321,9 +294,9 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N43",
-  "sprint_atual": "N44",
-  "sprint_nome": "Homologar operar ação americana e cripto pelo painel",
+  "previous_sprint": "N44",
+  "sprint_atual": "N48",
+  "sprint_nome": "Mostrar na tela Sinais o que se copia e o que opera",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -654,6 +627,24 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual=N44; checkpoint.phase=planning; preserve N43 stamp, previous_sprint=N43 and autopilot",
         "rationale": "Deliverable list asked sprint_atual=N44; EXECUTE waits parent Fable/plan-verifier; AgentCoder not needed (zero M)"
+      },
+      {
+        "timestamp": "2026-11-17T14:30:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-com-dominio; skip Passo2 (Feature 9/4/10 + DESIGN Sinais + OPERATOR-PANEL-MAP §2); skip ISSUES preview after creating ISS-018; sprint_id=N48; review=senior+qa; plan_only=true; sprint_atual=N48; previous_sprint=N44; do not steal N45–N47",
+        "rationale": "Parent classified N / feature-com-dominio / N48; operator correction 2026-11-17 Sinais=copy. REQUIREMENTS already specify Features 4/9/10. Autopilot no AskQuestion. Honest gap: order rows lack provider/signal_id so family totals only."
+      },
+      {
+        "timestamp": "2026-11-17T14:30:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "expand N48 (do not allocate N45–N47); 2M+3P DAG; HTML /sinais + GET /api/signals; two h2 sections; family totals only; Collective2 closed; LIVE false",
+        "rationale": "Reuse N25/N26/N41 panel_ops; ingest audit stays; no parallel /copy; no invented fill"
+      },
+      {
+        "timestamp": "2026-11-17T14:30:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N48; checkpoint.phase=planning; preserve N44 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N48; EXECUTE waits parent Fable/plan-verifier"
       }
     ]
   },
@@ -673,6 +664,8 @@
     "2026-11-17: N43 PLAN — Análise Google no menu; TimesFM research-only; fail-closed; LIVE false; ISS-017 aberto; plan_only",
     "2026-11-17: N43.4 docs — mapa área 9 VISÍVEL; ISS-017 onda 3 EXECUTE; ROADMAP concluida; no commit",
     "2026-11-17: N44 PLAN — homologação operador US+cripto pelo painel; docs/runbook; zero M; ISS-017 aberto; ISS-007/010/011 abertos; plan_only; PR #64 foi closeout N43",
-    "2026-11-17: N44 EXECUTE docs — runbook HOMOLOGATION § N44; TEST-EVIDENCE pendente US+cripto; ISS-017 onda 4 anotada; passeio não feito; zero src/; no commit"
+    "2026-11-17: N44 EXECUTE docs — runbook HOMOLOGATION § N44; TEST-EVIDENCE pendente US+cripto; ISS-017 onda 4 anotada; passeio não feito; zero src/; no commit",
+    "2026-11-17: N48 PLAN — Sinais = cópia de terceiros + auditoria; extend /sinais; sem fill inventado; LIVE false; ISS-018; ISS-007/017 abertos; plan_only; N45–N47 stubs",
+    "2026-11-17: N48.4 docs — mapa §2 cópia+auditoria; ISS-018 EXECUTE nota aberto; ROADMAP concluida* operador; rebuild EasyPanel operador; no commit"
   ]
 }

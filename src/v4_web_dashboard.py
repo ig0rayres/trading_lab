@@ -804,7 +804,10 @@ def serve_panel_json(handler, root: Path, path: str):
         data = {}
     bundle = _panel_ops_bundle(data)
     if path == '/api/signals':
-        payload = {'signals': bundle.get('signals') or []}
+        payload = {
+            'signals': bundle.get('signals') or [],
+            'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+        }
     elif path == '/api/orders':
         payload = {'orders': bundle.get('open_orders') or []}
     elif path == '/api/history':

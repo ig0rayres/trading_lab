@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N55 (N54 #73 em main) | Critérios ao vivo: fila com elegíveis de todas as plataformas |
+| ISS-024 | aberto | N55 (#74 em main) | Critérios ao vivo: código mergeado; homologação operador pendente |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -678,7 +678,7 @@
 |-------|--------|
 | Categoria | feature-com-dominio |
 | Sprint | **N55** (`front/sinais-live-criteria`; N54 merge **#73** em `main`; não rouba N45–N47) |
-| Status | aberto — N54 job POST em `main` (#73); **permanece aberto** até a fila de pré-aprovação listar todos os elegíveis das três plataformas, testes, merge e homologação operador |
+| Status | aberto — N54 job POST (#73) e fila multiplataforma N55 (#74) em `main`; **permanece aberto** até rebuild EasyPanel + homologação operador (fila C2+Prodígio+TV no painel no ar) |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **aplicar critérios de seleção** nas plataformas e trazer **todos os candidatos elegíveis** (Collective2, Prodígio e TradingView); não basta reler `prodigy-top10` / `provider-research` estáticos nem mostrar só uma origem TradingView sem métricas. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -700,6 +700,8 @@
 
 **Nota planejamento N55 (2026-11-18):** follow-up ISS-024; bloco `## Sprint N55` em `docs/ROADMAP.md`; brief `docs/.briefs/N55.brief.md`. Chamado permanece **aberto** até fila multiplataforma + testes + merge + rebuild operador.
 
-**Nota N55 EXECUTE (2026-11-18):** frente `sinais-live-criteria` — fila união Collective2+Prodígio+TradingView após refresh; `partial` persiste em `copy.candidates_refresh` (`intelligence/candidates-refresh-latest.json`); banner em `/sinais`; Prodígio vazio não sobrescreve JSON; `provider-research` C2 não recebe dump Prodígio; F-018 corrigido. Suíte `N55MultiPlatformLiveCriteriaTests` (7) verde; `tests/test_panel_ops.py` 94 passed. **Não** fecha o chamado até merge em `main` + rebuild/homologação operador.
+**Nota N55 EXECUTE (2026-11-18):** frente `sinais-live-criteria` — fila união Collective2+Prodígio+TradingView após refresh; `partial` persiste em `copy.candidates_refresh` (`intelligence/candidates-refresh-latest.json`); banner em `/sinais`; Prodígio vazio não sobrescreve JSON; `provider-research` C2 não recebe dump Prodígio; F-018 corrigido. Suíte `N55MultiPlatformLiveCriteriaTests` (7) verde; `tests/test_panel_ops.py` verde na frente.
+
+**Nota closeout N55 (2026-11-18):** PR **#74** MERGED → `main` @ `d8870c281a5b87e1e22871632a50e23868ba0c7b`; CI test + docker-smoke + docker-build SUCCESS; sprint N55 Status `concluida` no ROADMAP. Chamado **permanece aberto**: operador deve rebuild EasyPanel (`trading-lab` / `v4-ops`), conferir migration **003** no ledger, montar volume **`reports/providers/raw/`** para Prodígio e definir **`C2_API4_KEY`** no servidor — depois clicar **Atualizar candidatos** em `/sinais` e confirmar fila das três plataformas + avisos parciais honestos. `LIVE_TRADING_ENABLED=false`.
 
 ---

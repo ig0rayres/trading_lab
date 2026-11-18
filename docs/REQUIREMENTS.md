@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29 · Revisado em: 2026-11-18 (v0.7, função Sinais — objetivo, fluxo e critérios ao vivo ISS-024)
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-18 (v0.7.2, Sinais — fila de pré-aprovação com elegíveis de todas as plataformas, ISS-024/N55)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -256,14 +256,15 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - **Objetivo da função (tela Sinais):** permitir ao operador **pesquisar e pré-aprovar cópia de terceiros** com auditoria — ver candidatos elegíveis, decidir Aprovar/Rejeitar, acompanhar o que entrou em operação e o inventário — **sem** tratar aprovação, refresh ou HTTP 200 como fill. LIVE permanece desligado.
 
 **Fluxo principal (navegação mental):**
-1. **Candidatos / pré-aprovação** — fila de provedores (Collective2, Prodígio, TradingView) com métricas de pesquisa rotuladas; botão **Atualizar candidatos** dispara no servidor a aplicação dos critérios de seleção nas fontes (não só reler arquivo estático).
+1. **Candidatos / pré-aprovação** — fila de provedores (Collective2, Prodígio, TradingView) com métricas de pesquisa rotuladas; botão **Atualizar candidatos** dispara no servidor a aplicação dos critérios de seleção nas fontes (não só reler arquivo estático). Depois do clique, a fila lista **todos os elegíveis das três plataformas** (Feature 4 / Prodígio 15d já definidos; TradingView = origens já ingeridas). Falha de uma fonte não apaga as outras.
 2. **Decisão** — Aprovar ou Rejeitar grava no livro-razão (`signal_provider_approvals`); rejeição vence semente JSON/env; aprovação **não** envia ordem.
 3. **Em operação** — sinais/ordens ligados a origem e destino (fila, barrado, ordem), com motivo de rejeição e gate quando barrado.
 4. **Inventário** — resultado por sinal **só** com fill confirmado; valores brutos se custo incompleto (`gross_unverified_costs`).
 5. **Critérios visíveis** — Feature 4 / Prodígio 15d (janela 15 dias, ≥5 operações em ≥3 dias, paper inicial R$ 20, fases; C2 lista nomeada; sem promoção automática) permanecem legíveis no painel; **sem fórmula nova**.
 
 **Fluxo de exceção:**
-- Fonte Collective2 indisponível ou sem chave → fail-closed, mensagem honesta; não inventar candidatos.
+- Fonte Collective2 indisponível ou sem chave → fail-closed, mensagem honesta; não inventar candidatos; **não** ocultar elegíveis de Prodígio nem de TradingView; preservar pesquisa anterior dessa fonte.
+- Prodígio sem arquivos brutos / ranking vazio → aviso nomeia o que falta (arquivos brutos dos provedores); não inventar score; não apagar Collective2 nem TradingView.
 - TradingView sem API de busca → escopo mínimo: candidatos/origens já ingeridos (webhook) + critérios Feature 4; não inventar endpoint TV.
 - Ledger sem migration `003` → pré-aprovação indisponível (503 / aviso); não fingir gravação.
 - Atualizar candidatos **nunca** aprova, rejeita ou submete ordem.
@@ -277,6 +278,9 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - [x] **Atualizar candidatos** aplica critérios Feature 4 / Prodígio 15d **nas fontes** Collective2 (server-side) e TradingView (escopo mínimo honesto) via `POST /api/signals/candidates/refresh` (`mode: live_criteria`; N54 / ISS-024; `tests/test_panel_ops.py` `N54LiveCriteriaRefreshHttpTests.test_n54_post_refresh_live_criteria_orders_sent_zero`, `test_n54_post_refresh_without_c2_key_partial_preserves_queue`).
 - [x] Job/refresh POST tem cooldown/fail-closed; chave Collective2 só no servidor; painel não chama HTTP C2 do browser (N54; `N54LiveCriteriaRefreshHttpTests.test_n54_post_refresh_cooldown_ref_refresh_cooldown`, `test_n54_post_refresh_without_c2_key_partial_preserves_queue`; `N53PanelShellRefreshTests.test_n53_atualizar_candidatos_visible_on_sinais` — POST no JS, sem host C2).
 - [x] Inventário e operação permanecem distintos da fila de pré-aprovação na navegação (decisão → operação → inventário) (`tests/test_panel_ops.py` `N53PanelShellRefreshTests.test_n53_atualizar_candidatos_visible_on_sinais`, `PanelSinaisN52Tests.test_n52_html_section_hierarchy_decision_first`).
+- [x] Depois de **Atualizar candidatos**, a fila de pré-aprovação mostra **todos os candidatos elegíveis** de Collective2, Prodígio e TradingView (Feature 4 / Prodígio 15d já definidos; TradingView = origens já ingeridas), não só uma origem TradingView com métricas indisponíveis (N55 / ISS-024; `tests/test_panel_ops.py` `N55MultiPlatformLiveCriteriaTests.test_n55_refresh_queue_includes_collective2_prodigy_tradingview`).
+- [x] Falha fail-closed de uma fonte (chave Collective2 ausente, Prodígio sem arquivos brutos, TradingView sem origens) emite aviso e **não** apaga linhas elegíveis das outras plataformas nem a pesquisa anterior (N55 / ISS-024; `N55MultiPlatformLiveCriteriaTests.test_n55_missing_c2_key_issues_keep_other_platforms_and_prior_research`, `test_n55_tradingview_refresh_failure_records_issue_without_wiping_queue`).
+- [x] Prodígio raw/rank vazio: o aviso descreve os arquivos brutos necessários; **sem** inventar score e **sem** inventar API de busca TradingView (N55 / ISS-024; `N55MultiPlatformLiveCriteriaTests.test_n55_empty_prodigy_calculate_does_not_overwrite_prior_rank_json`, `test_n55_partial_warning_rendered_on_sinais_from_bundle`).
 
 ### Feature 10: Performance
 
@@ -437,6 +441,7 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
 | 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |
 | 2026-11-16 | 0.4 | Feature 11 critérios 2–4 `[x]` após N28.2–4 (`tests/test_n28_supervised_adjustment.py`); closeout papel N33 — sem bump de versão de contrato | Sprint N33 docs |
+| 2026-11-18 | 0.7.2 | Feature 9: aceite N55 `[ ]` — fila com elegíveis de Collective2+Prodígio+TradingView; falha parcial não oculta outras fontes; Prodígio vazio documenta arquivos brutos (ISS-024 follow-up; N54 #73 em main) | N55 PLAN |
 | 2026-11-18 | 0.7.1 | Feature 9: aceite N54 marcado `[x]` com nodeids `N54LiveCriteriaRefreshHttpTests` / `N53PanelShellRefreshTests` (frente EXECUTE; sem fechar ISS-024) | N54.4 docs |
 | 2026-11-18 | 0.7 | Feature 9: objetivo/fluxo Sinais (candidatos→decisão→operação→inventário); aceite ISS-024 critérios ao vivo; Feature 4 + §5/§7 alinhados (refresh ≠ fill; TV escopo mínimo; C2 server-side) | Analista (Rock campanha Sinais) |
 | 2026-11-17 | 0.6 | Feature 4: pré-aprovação no painel + `signal_provider_approvals`; JSON/env C2 = semente; métricas rank reutilizadas; aprovação ≠ fill | Sprint N51 ISS-021 |

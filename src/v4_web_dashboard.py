@@ -954,38 +954,17 @@ def _intelligence_dir(root: Path) -> Path:
     return path
 
 
-def _provider_research_doc(rank: dict) -> dict:
-    rows = []
-    for row in rank.get('top_10_research') or []:
-        if not isinstance(row, dict):
-            continue
-        pid = row.get('provider_id')
-        if pid is None:
-            continue
-        rows.append({
-            'provider_id': str(pid),
-            'name': row.get('name') or str(pid),
-            'win_rate_pct': row.get('win_rate_pct'),
-            'reported_pnl_sum': row.get('reported_pnl_sum'),
-        })
-    return {
-        'mode': 'PROVIDER_RESEARCH_RANKING_ONLY',
-        'as_of': rank.get('as_of'),
-        'top_10_research': rows,
-        'copy_approved': [],
-        'orders_sent': 0,
-        'execution_authorized': False,
-    }
+def _prodigy_rank_has_eligible_rows(rank: dict) -> bool:
+    top = rank.get('top_10_research')
+    if isinstance(top, list) and top:
+        return True
+    providers = rank.get('providers')
+    return isinstance(providers, list) and bool(providers)
 
 
 def _persist_prodigy_rank(root: Path, rank: dict) -> None:
     intel = _intelligence_dir(root)
     (intel / 'prodigy-top10-latest.json').write_text(json.dumps(rank, indent=2), encoding='utf-8')
-    research = _provider_research_doc(rank)
-    (intel / 'provider-research-top10-latest.json').write_text(
-        json.dumps(research, indent=2),
-        encoding='utf-8',
-    )
 
 
 def _ledger_conn_factory(conn_factory):
@@ -997,10 +976,16 @@ def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) 
     raw_dir.mkdir(parents=True, exist_ok=True)
     try:
         rank = prodigy_rank.calculate(raw_dir)
-        _persist_prodigy_rank(root, rank)
-        sources_ok.append('prodigy')
     except (OSError, ValueError, TypeError, KeyError) as exc:
         issues.append(f'prodigy_rank_failed:{type(exc).__name__}')
+        return
+    if not _prodigy_rank_has_eligible_rows(rank):
+        issues.append(
+            'prodigy_raw_missing:reports/providers/raw/{sid}_closed_trades.json',
+        )
+        return
+    _persist_prodigy_rank(root, rank)
+    sources_ok.append('prodigy')
 
 
 def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[str]) -> None:
@@ -1008,9 +993,9 @@ def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[st
     if not key:
         issues.append('C2_API4_KEY_missing')
         return
-    ids = _merged_c2_strategy_ids(root)
     raw_dir = root / 'reports' / 'providers' / 'raw'
     try:
+        ids = _merged_c2_strategy_ids(root)
         _invoke_c2_history_collect(ids, key, raw_dir)
         snap_dir = root / 'reports' / 'providers' / 'signals'
         if ids:
@@ -1020,11 +1005,17 @@ def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[st
         issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
 
 
-def _live_refresh_tradingview(root: Path, conn_factory, sources_ok: list[str]) -> None:
+def _live_refresh_tradingview(
+    root: Path,
+    conn_factory,
+    issues: list[str],
+    sources_ok: list[str],
+) -> None:
     factory = _ledger_conn_factory(conn_factory)
     try:
         bundle = _panel_ops.build_panel_bundle(root, factory)
-    except (OSError, ValueError, TypeError, KeyError):
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
         return
     signals = bundle.get('signals') if isinstance(bundle, dict) else []
     if not isinstance(signals, list):
@@ -1043,9 +1034,15 @@ def _live_criteria_job(
     if 'prodigy' in sources:
         _live_refresh_prodigy(root, issues, sources_ok)
     if 'collective2' in sources:
-        _live_refresh_collective2(root, issues, sources_ok)
+        try:
+            _live_refresh_collective2(root, issues, sources_ok)
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
     if 'tradingview' in sources:
-        _live_refresh_tradingview(root, conn_factory, sources_ok)
+        try:
+            _live_refresh_tradingview(root, conn_factory, issues, sources_ok)
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
     return issues, sources_ok, sources
 
 
@@ -1085,11 +1082,27 @@ def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, bod
                 {'reject_code': 'PANEL_OPS_UNAVAILABLE', 'mode': 'live_criteria'},
             )
             return
+        refreshed_at = datetime.now(timezone.utc).isoformat()
         status = 'partial' if issues else 'ok'
+        refresh_record = {
+            'mode': 'live_criteria',
+            'status': status,
+            'refreshed_at': refreshed_at,
+            'sources_attempted': sources_attempted,
+            'sources_ok': sources_ok,
+            'issues': issues,
+            'orders_sent': 0,
+            'execution_authorized': False,
+        }
+        _panel_ops.persist_candidates_refresh(root, refresh_record)
+        try:
+            bundle = _panel_ops.build_panel_bundle(root, factory)
+        except (OSError, ValueError, TypeError, KeyError):
+            pass
         payload = {
             'status': status,
             'mode': 'live_criteria',
-            'refreshed_at': datetime.now(timezone.utc).isoformat(),
+            'refreshed_at': refreshed_at,
             'sources_attempted': sources_attempted,
             'sources_ok': sources_ok,
             'issues': issues,

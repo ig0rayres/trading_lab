@@ -78,7 +78,8 @@
 | N51 | N | Fila de pré-aprovação no painel com métricas de pesquisa; aprovar não envia ordem; LIVE false | planejada | 6 | observability, ledger | ISS-021 pré-aprovação + métricas | *(abaixo)* |
 | N52 | N | Cockpit Sinais: decisão no topo, todos os números de pesquisa, visual do desenho; LIVE false | planejada | 4 | observability | ISS-022 redesign UX Sinais | *(abaixo)* |
 | N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | concluida | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
-| N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | planejada | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo | *(abaixo)* |
+| N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | concluida | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo · PR #73 | *(abaixo)* |
+| N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | planejada | 5 | observability | ISS-024 follow-up fila multiplataforma | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -143,6 +144,8 @@
 | N51 | senior+qa | Pré-aprovação no painel + métricas reutilizadas; sem fill inventado |
 | N52 | senior+qa | Cockpit Sinais: métricas completas + hierarquia + tokens visuais; sem fill inventado |
 | N53 | senior+qa | Plataforma visual v2 + refresh honesto GET; job refresh = N54; sem fill inventado |
+| N54 | senior+qa | Job critérios ao vivo ISS-024; POST live_criteria; LIVE false |
+| N55 | senior+qa | Fila pré-aprovação multiplataforma após refresh; ISS-024 follow-up |
 
 ---
 
@@ -5474,6 +5477,277 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 refresh POST + GET mode), `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. ISS-023 stays open until operator rebuild.
+
+---
+
+## Sprint N55 — Mostrar todos os elegíveis das três plataformas na fila
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-18 · fonte ISS-024 follow-up · N54 #73 em `main`  
+> titulo_humano: A fila de candidatos mostra as três plataformas, sem apagar quem já passou  
+> resumo_humano: Depois de atualizar candidatos, a pré-aprovação lista Collective2, Prodígio e TradingView que já passam nos critérios definidos. Se uma fonte falhar, o aviso aparece e as outras linhas permanecem. Atualizar não aprova nem envia ordem. LIVE false.  
+> Gate: fila com elegíveis das plataformas que rodaram; aviso parcial honesto; pesquisa anterior preservada; pytest com as três plataformas; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N55.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N54 concluída (#73) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N54
+
+### Em uma frase
+
+Depois de atualizar candidatos, a fila de pré-aprovação lista todos os elegíveis de Collective2, Prodígio e TradingView — e se uma fonte falhar, as outras não desaparecem.
+
+### O que muda para você
+
+- Clicar em Atualizar candidatos passa a trazer os elegíveis das três plataformas, não só uma origem TradingView sem métricas
+- Sem chave Collective2 ou sem arquivos brutos do Prodígio, o aviso diz o que faltou; a fila das outras fontes permanece
+- Prodígio vazio não inventa nota: o texto explica que faltam os arquivos brutos dos provedores
+- Aprovar continua separado de atualizar; dinheiro real permanece desligado
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Fila com as três plataformas | Logado em Sinais, depois de atualizar, vê Collective2, Prodígio e TradingView quando cada fonte tem dados que passam nos critérios já definidos |
+| 2 | Falha de uma fonte não apaga as outras | Sem credencial Collective2 o aviso aparece e as linhas de Prodígio/TradingView continuam; o contrário também vale |
+| 3 | Prodígio vazio é honesto | Sem arquivos brutos, a mensagem pede esses arquivos — não aparece nota inventada |
+| 4 | Aviso sobrevive ao recarregar a tela | Depois do clique, o recarregamento ainda mostra o aviso parcial e a fila restante |
+| 5 | Prova automática | A suíte monta as três plataformas com dados de teste e falha se uma fonte sumir porque a outra quebrou |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N55.0 Inventariar reuso da fila multiplataforma | `docs/.briefs/N55-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N55.1 Garantir que o trabalho ao vivo e a fila mostrem elegíveis de todas as plataformas | `src/v4_web_dashboard.py, src/panel_ops_data.py` | N55.0 |
+| [x] | M | N55.2 Mostrar aviso honesto quando uma fonte falha e as outras seguem | `src/panel_ops_html.py` | N55.1 |
+| [x] | M | N55.3 Provar a fila com as três plataformas quando houver dados de teste | `tests/test_panel_ops.py` | N55.2 |
+| [x] | P | N55.4 Atualizar o chamado, o aceite e o mapa da fila completa | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/REQUIREMENTS.md` | N55.3 |
+
+### Quality Brief (Sprint N55)
+
+**Validação:** preventiva (plan-only). Parent Fable / plan-verifier ainda não carimbou.
+
+**Alvo:** reusar o POST N54 `mode: live_criteria`; montar a fila de pré-aprovação com elegíveis Collective2 + Prodígio + TradingView; fail-closed por fonte sem apagar as outras.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh` and GET `/api/signals/reload` (`disk_reread`); no parallel job package.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS=15`, `MIN_TRADES=5`, ≥3 days, `PRODIGY_CANDIDATE_RESEARCH`); do not invent scores or a TradingView search API.
+Maintain: Collective2 HTTP and `C2_API4_KEY` stay server-side; `signal_provider_approvals` unchanged by refresh; empty calculate must not wipe prior research JSON.
+Avoid: stealing N45–N47; calling C2 from browser JS; mutating approvals on refresh; `process_after_gate_b`; printing API keys; inventing a Collective2 marketplace search; claiming EasyPanel rebuild without operator.
+
+### Technical Advisory
+
+- [ABORDAGEM] Estender o job N54 e `build_preapproval_queue` — a rota POST já existe; o defeito é persistir ranking vazio e montar a fila como se só TradingView existisse.
+- [RISCO] Gravar `provider-research` a partir do ranking Prodígio relabela IDs Prodígio como Collective2 e, se o cálculo vier vazio, apaga a pesquisa anterior.
+- [OPORTUNIDADE] O mockup já tem S3 (fila anterior intacta); o 200 `partial` precisa de aviso visível depois do recarregamento, não de 503 total.
+
+> EXPIRES at end of Sprint N55. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Inventar busca TradingView, listagem marketplace Collective2 ou fórmula nova
+- Mutar livro de pré-aprovação no refresh
+- Ordem / fill / LIVE true
+- SSH no EasyPanel; tabela nova de cooldown
+- N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N55.0 — Inventariar reuso da fila multiplataforma
+
+**Entrega:** Inventário dizendo o que o trabalho ao vivo já faz, o que a fila já une, e o que falta no servidor quando Collective2 ou Prodígio vêm vazios.
+**Como conferir:** O inventário cita o envio N54, o ranking de 15 dias, a montagem da fila, proíbe busca TradingView e listagem marketplace Collective2, e lista os arquivos brutos que o Prodígio precisa.
+**Por quê:** Sem isso o EXECUTE inventa endpoint ou apaga pesquisa antiga para “completar” a tabela.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N55-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `serve_signals_candidates_refresh`, `_live_criteria_job`, `prodigy_rank.calculate`, `build_preapproval_queue`, `_persist_prodigy_rank`, F-018. Document EasyPanel needs: server `C2_API4_KEY`, `reports/providers/raw/{sid}_closed_trades.json`, named C2 IDs — never print secrets.
+
+### Task N55.1 — Garantir que o trabalho ao vivo e a fila mostrem elegíveis de todas as plataformas
+
+**Entrega:** O mesmo trabalho ao vivo no servidor passa a montar a fila com os elegíveis de Collective2, Prodígio e TradingView; se uma fonte não rodar, as outras continuam e a pesquisa antiga dessa fonte não some.
+**Como conferir:** Com dados de teste das três fontes, a fila tem as três plataformas; sem chave Collective2 o aviso existe e Prodígio/TradingView permanecem; sem arquivos brutos do Prodígio o aviso pede esses arquivos e não inventa nota.
+**Por quê:** O operador ainda vê só uma origem TradingView sem métricas depois do clique, apesar do job N54 já existir.
+
+**Detalhe técnico**
+
+- **Estado atual:** N54 POST orquestra Prodígio/`calculate`, Collective2/`fetch` e TV origens; `calculate` vazio persiste JSON vazio; `provider-research` é dump do ranking Prodígio lido como Collective2; F-018 silencia erro TV; fila = C2 research rows + allowlist + prodigy rows + TV origins.
+- **Estado desejado:** união independente por plataforma; elegível Prodígio = `PRODIGY_CANDIDATE_RESEARCH` já no código; Collective2 a partir de lista nomeada + pesquisa C2 real (não relabelar dump Prodígio); TV = origens ingeridas (métricas podem permanecer indisponível); persistir ranking só quando houver resultado útil; `issues` por fonte; preservar JSON anterior.
+- **Arquivo(s):** `src/v4_web_dashboard.py`, `src/panel_ops_data.py`
+- **Fonte(s):** ISS-024 nota operador 2026-11-18, Feature 9 v0.7.2, F-018, ADR-012
+- **Risco:** MEDIUM — JSON de pesquisa compartilhado com o painel
+- **Task size:** M (job + montagem da fila)
+
+**executor_prompt**:
+
+```yaml
+id: N55.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N55.0"]
+files:
+  - src/v4_web_dashboard.py
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "serve_signals_candidates_refresh" src/v4_web_dashboard.py && rg "_live_criteria_job" src/v4_web_dashboard.py'
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: 'rg "def build_preapproval_queue" src/panel_ops_data.py && rg "prodigy" src/panel_ops_data.py && rg "collective2" src/panel_ops_data.py && rg "tradingview" src/panel_ops_data.py'
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "prodigy_rank" src/v4_web_dashboard.py && rg "PRODIGY_CANDIDATE_RESEARCH" src/prodigy_rank.py'
+  - component: src/c2_history_collect.py
+    reuse_as: call
+    convergence_check: 'rg "c2_history_collect" src/v4_web_dashboard.py'
+guardrail_contract:
+  - class: secrets
+    id: n55-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t"
+    pass_condition: no live keys hardcoded; C2 key only via env lookup
+  - class: subagent-safety
+    id: n55-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n55-1-no-tv-search
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'tradingview.com' not in t.lower() or 'webhook' in t.lower()"
+    pass_condition: no invented TradingView search host in the job
+```
+
+### Quality Brief (Sprint N55)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; reuse N54 POST; no TV search; no C2 marketplace search; no approval mutation.
+
+Melhoria: adapt N54 live-criteria job + preapproval queue so all eligible C2+Prodigy+TV rows appear; fail-closed per source.
+Contexto: operator still sees one TradingView origin with metrics unavailable after Atualizar candidatos. Empty `calculate` persists empty JSON and wipes prior research; provider-research dump is then loaded as Collective2; TV errors are silent (F-018).
+Objetivo: keep `POST /api/signals/candidates/refresh` (`mode: live_criteria`, `orders_sent=0`). Do **not** add a parallel package. Empty Prodígio raw → `issues` naming required raw `{sid}_closed_trades.json`; **do not persist** empty rank over previous JSON. Missing `C2_API4_KEY` or empty C2 IDs → `issues`; continue Prodígio+TV. `_live_refresh_tradingview` must append `issues` on failure (fix F-018). `build_preapproval_queue` returns union of: Collective2 named/seed + C2 research that is not merely a Prodígio dump; Prodígio rows with existing status `PRODIGY_CANDIDATE_RESEARCH`; TradingView ingested origins (metrics may stay missing). Never upsert `signal_provider_approvals`. Never `process_after_gate_b`. Never invent scores.
+Critério de pronto: with fixtures for all three platforms, queue contains collective2 + prodigy + tradingview; without C2 key, prodigy+TV remain and prior C2 JSON remains; empty raw does not wipe prior prodigy JSON; TV helper records issues instead of bare `return`.
+Cenários de teste (mínimo no implementer self-check; N55.3 owns pytest):
+  1. Caso normal: fixtures C2 + Prodígio elegível + origem TV → fila com as três plataformas
+  2. Edge: sem C2_API4_KEY → issues + Prodígio/TV intactos + pesquisa C2 anterior preservada
+  3. Edge: raw Prodígio vazio → issue de arquivos brutos; sem score inventado; C2/TV intactos
+  4. Regressão: GET reload ainda `disk_reread`; POST ainda `live_criteria` e `orders_sent=0`
+
+### Task N55.2 — Mostrar aviso honesto quando uma fonte falha e as outras seguem
+
+**Entrega:** Depois de atualizar, a tela mostra um aviso quando uma fonte falhou e mantém visível a tabela das outras; o aviso não some só porque a página recarregou.
+**Como conferir:** Sem chave Collective2, após o clique e o recarregamento, o aviso descreve a falta da credencial e as linhas de Prodígio/TradingView ainda estão na tabela.
+**Por quê:** Hoje o recarregamento descarta o JSON de problemas e o operador só vê a fila curta, como se as outras plataformas não existissem.
+
+**Detalhe técnico**
+
+- UI: `docs/design/mockups/sinais.md` S2 success + S3 keep table; 200 `partial` is **not** S3b 503 total. Warning banner + remaining rows. `aria-live="polite"`.
+- Persist last refresh `issues` / `sources_ok` into the bundle the GET `/sinais` already reads (reuse research JSON volume — no new SQL). Reload script may keep POST then reload, but the banner must come from the bundle.
+- Do **not** fetch Collective2 from JS. Do **not** change Aprovar/Rejeitar.
+- **Arquivo(s):** `src/panel_ops_html.py`
+
+**executor_prompt**:
+
+```yaml
+id: N55.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N55.1"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "reload-candidates" src/panel_ops_html.py && rg "/api/signals/candidates/refresh" src/panel_ops_html.py'
+  - component: docs/design/mockups/sinais.md
+    reuse_as: copy_pattern
+    convergence_check: 'rg "A fila anterior" src/panel_ops_html.py || rg "partial" src/panel_ops_html.py || rg "issues" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n55-2-no-c2-in-browser
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'collective2.com' not in t.lower(); assert 'api4-general' not in t"
+    pass_condition: HTML/JS never calls C2 hosts or embeds the key
+  - class: subagent-safety
+    id: n55-2-cta-post
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert '/api/signals/candidates/refresh' in t; assert 'Atualizar candidatos' in t"
+    pass_condition: same CTA still wired to live-criteria POST
+```
+
+### Quality Brief (Sprint N55)
+
+See sprint Quality Brief. Preserve N52 hierarchy and N54 POST CTA; refresh ≠ approve.
+
+Melhoria: honest partial banner after Atualizar candidatos that survives reload; keep remaining queue rows.
+Contexto: script reloads the page 500ms after POST; `issues` never reach GET `/sinais`.
+Objetivo: when `status=partial`, operator sees Portuguese warning naming the failed source (missing C2 key, missing Prodígio raw files) and the table of other platforms. Empty queue copy only when **no** platform contributed rows. S3 keep-table. No `prodigy_rank` import in HTML. No C2 host in JS.
+Critério de pronto: `/sinais` HTML can render partial warning from bundle; POST path unchanged; no collective2.com.
+Cenários:
+  1. Caso normal: três plataformas na tabela, sem aviso de falha
+  2. Edge: partial C2 → aviso + Prodígio/TV visíveis após reload
+  3. Regressão: Aprovar/Rejeitar inalterado; hierarquia pré-aprovação → operação → auditoria
+
+### Task N55.3 — Provar a fila com as três plataformas quando houver dados de teste
+
+**Entrega:** Testes comprovam a fila com Collective2, Prodígio e TradingView juntos, a preservação quando uma fonte falha, e a recusa de nota inventada quando o Prodígio não tem arquivos brutos.
+**Como conferir:** Rodar a suíte do painel e ver falha se a fila tiver só TradingView apesar dos fixtures, se a pesquisa anterior sumir sem chave, ou se o caminho de ordem for chamado.
+**Por quê:** Sem essa prova o painel no ar volta a parecer “só uma origem” e ninguém percebe no CI.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — HTTP in-process + fixtures
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N55.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N55.2"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "live_criteria" tests/test_panel_ops.py && rg "preapproval" tests/test_panel_ops.py'
+  - component: tests/test_prodigy_rank.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "PRODIGY_CANDIDATE_RESEARCH" tests/test_panel_ops.py || rg "prodigy" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n55-3-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'C2_API4_KEY' not in t or 'environ' in t.lower() or 'patch' in t"
+    pass_condition: tests do not require a real Collective2 key
+```
+
+### Quality Brief (Sprint N55)
+
+See sprint Quality Brief.
+
+Melhoria: pytest proving multi-platform preapproval queue after live-criteria POST.
+Objetivo: nodeids covering (1) fixtures C2+Prodígio+TV → queue has all three platforms; (2) missing C2 key → partial issues, prodigy+TV remain, prior C2 research preserved; (3) empty prodigy raw → issue names raw providers, no invented score, other platforms remain; (4) HTML partial warning; (5) N54 regressions: 401/429/`orders_sent=0`/`disk_reread`; (6) no collective2.com in HTML; (7) `process_after_gate_b` absent.
+Do not teach production about `tests/` paths (no HARNESS_BUG).
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: três plataformas na fila com fixtures
+  2. Edge: sem chave C2 → issues + outras plataformas
+  3. Edge: raw Prodígio vazio → issue de arquivos brutos
+  4. Edge: TV-only signals → TV rows + métricas indisponível honestas; C2/Prodígio só se fixtures existirem
+  5. Regressão: N54 cooldown 429; GET disk_reread; Aprovar inalterado
+
+### Task N55.4 — Atualizar o chamado, o aceite e o mapa da fila completa
+
+**Entrega:** Mapa e aceite da função Sinais descrevem a fila das três plataformas e o aviso parcial; o chamado ISS-024 aponta esta sprint e permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; Feature 9 com os itens da fila completa marcados só se os testes existirem.
+**Por quê:** Separar o job N54 já em main do que o operador ainda não vê na mesa.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 fila das três plataformas + aviso parcial), `docs/DASHBOARD-OPERATIONS.md` if the Sinais row exists, `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N55 checkboxes only with cited nodeids, `docs/FINDINGS.md` F-018 if fixed. LIVE false. N45–N47 not started. Document EasyPanel raw/key checklist without printing secrets.
 
 ---
 

@@ -34,6 +34,7 @@ PROVENANCE_UNKNOWN_ORIGIN = 'origem desconhecida'
 PROVENANCE_UNKNOWN_SIGNAL = 'sem vínculo com sinal'
 INVENTORY_EMPTY_PT = 'Nenhum sinal neste inventário.'
 PRODIGY_POOL_EMPTY_PT = 'Nenhum candidato de pesquisa no pool.'
+_CANDIDATES_REFRESH_FILENAME = 'candidates-refresh-latest.json'
 
 
 def _panel_json_value(value: Any) -> Any:
@@ -973,6 +974,8 @@ def upsert_signal_provider_approval(
     pid = str(provider_id or '').strip()
     if plat not in _PREAPPROVAL_PLATFORMS or not pid:
         raise ValueError('INVALID_BODY')
+    if plat == 'collective2' and not _C2_NAMED_ID_RE.match(pid):
+        raise ValueError('INVALID_BODY')
     if action not in ('approve', 'reject'):
         raise ValueError('INVALID_BODY')
     status = 'approved' if action == 'approve' else 'rejected'
@@ -1044,7 +1047,28 @@ def resolve_c2_paper_copy_approved_ids(
             continue
         if row is None:
             approved.add(pid)
-    return sorted(approved, key=int)
+    return sorted(
+        approved,
+        key=lambda x: (not str(x).isdigit(), int(x) if str(x).isdigit() else 0, str(x)),
+    )
+
+
+def persist_candidates_refresh(root: Path, record: dict[str, Any]) -> None:
+    intel = Path(root) / 'intelligence'
+    intel.mkdir(parents=True, exist_ok=True)
+    path = intel / _CANDIDATES_REFRESH_FILENAME
+    path.write_text(json.dumps(record, indent=2), encoding='utf-8')
+
+
+def load_candidates_refresh(root: Path) -> dict[str, Any] | None:
+    path = Path(root) / 'intelligence' / _CANDIDATES_REFRESH_FILENAME
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError, TypeError):
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def _load_c2_research_rows(root: Path) -> list[dict[str, Any]]:
@@ -1063,6 +1087,8 @@ def _load_c2_research_rows(root: Path) -> list[dict[str, Any]]:
         except (OSError, ValueError, TypeError):
             continue
         if not isinstance(payload, dict):
+            continue
+        if payload.get('mode') == 'PRODIGY_RANK_RESEARCH_ONLY':
             continue
         for row in payload.get('top_10_research') or []:
             if isinstance(row, dict):
@@ -1158,8 +1184,12 @@ def build_preapproval_queue(
 
     for row in _load_prodigy_research_rows(root):
         pid = row.get('provider') or row.get('provider_id')
-        if pid is not None:
-            add('prodigy', str(pid), row)
+        if pid is None:
+            continue
+        status = str(row.get('status') or '').strip()
+        if status and status != 'PRODIGY_CANDIDATE_RESEARCH':
+            continue
+        add('prodigy', str(pid), row)
 
     sigs = signals if signals is not None else []
     for origin in _unique_tradingview_origins(sigs):
@@ -1411,7 +1441,9 @@ def build_panel_copy(
     c2_operating = _collective2_operating_rows(open_orders, order_history)
     adoption = _build_copy_adoption(strategy_catalog)
     adoption['collective2_closed'] = not bool(approved_ids)
-    return {
+    preapproval = build_preapproval_queue(root, conn_factory, signals=signals)
+    refresh_meta = load_candidates_refresh(root)
+    copy_block: dict[str, Any] = {
         'operating': operating,
         'history': history,
         'performance': _copy_performance_slice(perf),
@@ -1422,8 +1454,11 @@ def build_panel_copy(
         'inventory': _build_copy_inventory(operating, history),
         'adoption': adoption,
         'prodigy_pool': _build_prodigy_pool(root),
-        'preapproval': build_preapproval_queue(root, conn_factory, signals=signals),
+        'preapproval': preapproval,
     }
+    if refresh_meta:
+        copy_block['candidates_refresh'] = refresh_meta
+    return copy_block
 
 
 def build_panel_bundle(root: Path, conn_factory: Callable[..., Any] | None = None) -> dict[str, Any]:

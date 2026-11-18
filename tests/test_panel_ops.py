@@ -1820,6 +1820,41 @@ class PanelSinaisN51Tests(unittest.TestCase):
             ids = resolve_c2_paper_copy_approved_ids(root, conn)
             self.assertNotIn('100', ids)
 
+    def test_cq001_collective2_non_numeric_approve_invalid_body(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            store = {'signal_provider_approvals': {}}
+            conn = _approvals_memory_connect(store)
+            with self.assertRaises(ValueError) as err:
+                upsert_signal_provider_approval(conn, 'collective2', 'bad-id', 'approve')
+            self.assertEqual(str(err.exception), 'INVALID_BODY')
+            bundle = build_panel_bundle(root, conn)
+            self.assertIsInstance(bundle, dict)
+            self.assertIn('copy', bundle)
+
+    def test_cq001_resolve_c2_sort_tolerates_non_digit_ledger_ids(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            store = {
+                'signal_provider_approvals': {
+                    ('collective2', '2'): {
+                        'platform': 'collective2',
+                        'provider_id': '2',
+                        'status': 'approved',
+                        'source': 'panel',
+                    },
+                    ('collective2', 'legacy-name'): {
+                        'platform': 'collective2',
+                        'provider_id': 'legacy-name',
+                        'status': 'approved',
+                        'source': 'panel',
+                    },
+                },
+            }
+            conn = _approvals_memory_connect(store)
+            ids = resolve_c2_paper_copy_approved_ids(root, conn)
+            self.assertEqual(ids, ['2', 'legacy-name'])
+
     def test_n51_seed_without_ledger_still_eligible(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
@@ -2433,6 +2468,373 @@ class N54LiveCriteriaRefreshHttpTests(unittest.TestCase):
                 server.shutdown()
                 server.server_close()
                 thread.join(3)
+
+
+_N55_EMPTY_RANK = {
+    'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
+    'execution_authorized': False,
+    'orders_sent': 0,
+    'top_10_research': [],
+    'providers': [],
+    'score_warning': 'Research rank only; does not authorize orders.',
+}
+
+
+def _n55_write_tradingview_ingest_fixture(root: Path) -> None:
+    _write_webhook_journal(
+        root,
+        [
+            {
+                'payload': {
+                    'provider': 'tradingview',
+                    'symbol': 'SPY',
+                    'market': 'US_EQUITY',
+                },
+                'result': {'status': 'rejected', 'reject_code': 'NO_TRADE'},
+                'received_at': '2026-11-16T11:00:00+00:00',
+            },
+        ],
+    )
+
+
+def _n55_write_all_platform_fixtures(root: Path) -> None:
+    _write_c2_research_fixture(root, provider_id='44', win_rate=56.0)
+    _write_c2_allowlist_fixture(root, ['44'])
+    _n54_write_prodigy_raw_trades(root)
+    _n55_write_tradingview_ingest_fixture(root)
+
+
+def _n55_preapproval_queue(payload: dict) -> list[dict]:
+    return (payload.get('copy') or {}).get('preapproval', {}).get('queue') or []
+
+
+def _n55_platforms_in_queue(queue: list[dict]) -> set[str]:
+    return {str(row.get('platform')) for row in queue if isinstance(row, dict) and row.get('platform')}
+
+
+def _n55_bundle_refresh_meta(copy: dict) -> dict:
+    """N55.2 contract: persisted partial refresh survives GET /api/signals."""
+    block = copy.get('candidates_refresh')
+    if isinstance(block, dict) and block.get('issues') is not None:
+        return block
+    pre = copy.get('preapproval') or {}
+    if pre.get('refresh_issues') is not None:
+        return {
+            'issues': pre.get('refresh_issues') or [],
+            'status': pre.get('refresh_status'),
+            'sources_ok': pre.get('refresh_sources_ok') or [],
+        }
+    raise AssertionError('expected copy.candidates_refresh (or preapproval.refresh_issues) on GET bundle')
+
+
+def _n55_live_criteria_patch_stack(*, rank_return=_N54_FAKE_RANK, c2_key='test-c2-secret'):
+    patches = [
+        patch('v4_web_dashboard.prodigy_rank.calculate', return_value=rank_return),
+        patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+        patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+        patch.dict(
+            os.environ,
+            {'C2_API4_KEY': c2_key, 'LIVE_TRADING_ENABLED': 'false'},
+            clear=False,
+        ),
+    ]
+    return patches
+
+
+def _n55_write_prodigy_rank_prior(root: Path, *, score: float = 0.71) -> tuple[dict, Path]:
+    intel = root / 'intelligence'
+    intel.mkdir(parents=True, exist_ok=True)
+    prior = {
+        'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
+        'execution_authorized': False,
+        'orders_sent': 0,
+        'top_10_research': [
+            {
+                'provider_id': '9',
+                'status': 'PRODIGY_CANDIDATE_RESEARCH',
+                'prodigy_score': score,
+            },
+        ],
+    }
+    path = intel / 'prodigy-top10-latest.json'
+    path.write_text(json.dumps(prior), encoding='utf-8')
+    return prior, path
+
+
+class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
+    """N55.3 — multi-platform preapproval queue + fail-closed per source."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(root, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def _post_refresh(self, base: str) -> dict:
+        req = _post_candidates_refresh(
+            base + '/api/signals/candidates/refresh',
+            {},
+            session='panel-secret',
+        )
+        with urlopen(req, timeout=5) as resp:
+            return json.load(resp)
+
+    def test_n55_refresh_queue_includes_collective2_prodigy_tradingview(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _n55_write_all_platform_fixtures(root)
+            _, server, thread, base = self._server(root)
+            patches = _n55_live_criteria_patch_stack()
+            try:
+                for p in patches:
+                    p.start()
+                payload = self._post_refresh(base)
+                queue = _n55_preapproval_queue(payload)
+                platforms = _n55_platforms_in_queue(queue)
+                self.assertEqual(
+                    platforms,
+                    {'collective2', 'prodigy', 'tradingview'},
+                    msg='preapproval queue must union all eligible platforms after live refresh',
+                )
+                c2_rows = [r for r in queue if r.get('platform') == 'collective2']
+                prodigy_rows = [r for r in queue if r.get('platform') == 'prodigy']
+                self.assertTrue(c2_rows)
+                self.assertEqual(str(c2_rows[0].get('provider_id')), '44')
+                self.assertTrue(prodigy_rows)
+                self.assertEqual(prodigy_rows[0].get('provider_id'), '9')
+                research_path = root / 'intelligence' / 'provider-research-top10-latest.json'
+                c2_research = json.loads(research_path.read_text(encoding='utf-8'))
+                top = (c2_research.get('top_10_research') or [{}])[0]
+                self.assertEqual(str(top.get('provider_id')), '44')
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n55_missing_c2_key_issues_keep_other_platforms_and_prior_research(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=58.0)
+            _n55_write_tradingview_ingest_fixture(root)
+            _n55_write_prodigy_rank_prior(root)
+            c2_path = root / 'intelligence' / 'provider-research-top10-latest.json'
+            prior_c2_text = c2_path.read_text(encoding='utf-8')
+            _, server, thread, base = self._server(root)
+            env = {k: v for k, v in os.environ.items() if k != 'C2_API4_KEY'}
+            env['LIVE_TRADING_ENABLED'] = 'false'
+            patches = [
+                patch('v4_web_dashboard.prodigy_rank.calculate', return_value=_N54_FAKE_RANK),
+                patch.dict(os.environ, env, clear=True),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                payload = self._post_refresh(base)
+                self.assertEqual(payload.get('status'), 'partial')
+                issues = payload.get('issues') or []
+                self.assertIn('C2_API4_KEY_missing', issues)
+                platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
+                self.assertIn('prodigy', platforms)
+                self.assertIn('tradingview', platforms)
+                self.assertEqual(c2_path.read_text(encoding='utf-8'), prior_c2_text)
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n55_empty_prodigy_calculate_does_not_overwrite_prior_rank_json(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=57.0)
+            _write_c2_allowlist_fixture(root, ['44'])
+            _n55_write_tradingview_ingest_fixture(root)
+            prior, prodigy_path = _n55_write_prodigy_rank_prior(root, score=0.63)
+            prior_text = prodigy_path.read_text(encoding='utf-8')
+            _, server, thread, base = self._server(root)
+            patches = _n55_live_criteria_patch_stack(rank_return=_N55_EMPTY_RANK)
+            try:
+                for p in patches:
+                    p.start()
+                payload = self._post_refresh(base)
+                self.assertEqual(payload.get('status'), 'partial')
+                issues = payload.get('issues') or []
+                self.assertTrue(issues)
+                self.assertTrue(
+                    any('closed_trades' in issue.lower() or 'raw' in issue.lower() for issue in issues),
+                    msg='issues must name missing Prodígio raw provider files',
+                )
+                self.assertEqual(json.loads(prodigy_path.read_text(encoding='utf-8')), prior)
+                self.assertEqual(prodigy_path.read_text(encoding='utf-8'), prior_text)
+                platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
+                self.assertIn('collective2', platforms)
+                self.assertIn('tradingview', platforms)
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n55_tradingview_refresh_failure_records_issue_without_wiping_queue(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _n55_write_all_platform_fixtures(root)
+            _, server, thread, base = self._server(root)
+
+            def _tv_fail(root, conn_factory, sources_ok):
+                del root, conn_factory, sources_ok
+                raise OSError('tradingview_refresh_failed')
+
+            patches = _n55_live_criteria_patch_stack()
+            patches.append(patch('v4_web_dashboard._live_refresh_tradingview', side_effect=_tv_fail))
+            try:
+                for p in patches:
+                    p.start()
+                try:
+                    payload = self._post_refresh(base)
+                except Exception as exc:
+                    self.fail(
+                        'refresh must return 200 partial with issues when TradingView fails '
+                        '(F-018), not drop the connection: %s' % exc,
+                    )
+                issues = payload.get('issues') or []
+                self.assertEqual(payload.get('status'), 'partial')
+                self.assertTrue(
+                    any('tradingview' in issue.lower() for issue in issues),
+                    msg='F-018: TradingView failures must surface in issues',
+                )
+                platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
+                self.assertIn('collective2', platforms)
+                self.assertIn('prodigy', platforms)
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_cq002_collective2_non_numeric_strategy_id_partial_refresh(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='bad-c2-id', win_rate=58.0)
+            _n55_write_tradingview_ingest_fixture(root)
+            _n55_write_prodigy_rank_prior(root)
+            _, server, thread, base = self._server(root)
+            patches = _n55_live_criteria_patch_stack()
+            try:
+                for p in patches:
+                    p.start()
+                try:
+                    payload = self._post_refresh(base)
+                except Exception as exc:
+                    self.fail(
+                        'refresh must stay fail-closed on bad C2 strategy id, not crash: %s' % exc,
+                    )
+                issues = payload.get('issues') or []
+                self.assertEqual(payload.get('status'), 'partial')
+                self.assertTrue(
+                    any('collective2' in issue.lower() for issue in issues),
+                    msg='bad C2 id must surface collective2_refresh_failed issue',
+                )
+                platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
+                self.assertIn('prodigy', platforms)
+                self.assertIn('tradingview', platforms)
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n55_partial_issues_persist_on_get_api_signals_after_refresh(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=59.0)
+            _n55_write_prodigy_rank_prior(root)
+            _n55_write_tradingview_ingest_fixture(root)
+            _, server, thread, base = self._server(root)
+            env = {k: v for k, v in os.environ.items() if k != 'C2_API4_KEY'}
+            env['LIVE_TRADING_ENABLED'] = 'false'
+            patches = [
+                patch('v4_web_dashboard.prodigy_rank.calculate', return_value=_N54_FAKE_RANK),
+                patch.dict(os.environ, env, clear=True),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                self._post_refresh(base)
+                with urlopen(_get(base + '/api/signals', session='panel-secret'), timeout=3) as resp:
+                    after = json.load(resp)
+                meta = _n55_bundle_refresh_meta(after.get('copy') or {})
+                persisted = meta.get('issues') or []
+                self.assertIn('C2_API4_KEY_missing', persisted)
+                self.assertIn(meta.get('status'), ('partial', 'ok', None))
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n55_partial_warning_rendered_on_sinais_from_bundle(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=59.0)
+            _n55_write_prodigy_rank_prior(root)
+            _n55_write_tradingview_ingest_fixture(root)
+            _, server, thread, base = self._server(root)
+            env = {k: v for k, v in os.environ.items() if k != 'C2_API4_KEY'}
+            env['LIVE_TRADING_ENABLED'] = 'false'
+            patches = [
+                patch('v4_web_dashboard.prodigy_rank.calculate', return_value=_N54_FAKE_RANK),
+                patch.dict(os.environ, env, clear=True),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                self._post_refresh(base)
+                with urlopen(_get(base + '/sinais', session='panel-secret'), timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('C2_API4_KEY_missing', body)
+                self.assertNotIn('test-c2-secret', body)
+                self.assertNotIn('collective2.com', body.lower())
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n55_live_refresh_never_calls_process_after_gate_b(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _n55_write_all_platform_fixtures(root)
+            _, server, thread, base = self._server(root)
+            gate_mock = MagicMock(side_effect=AssertionError('process_after_gate_b'))
+            patches = _n55_live_criteria_patch_stack()
+            patches.append(patch('paper_gateway_queue.process_after_gate_b', gate_mock))
+            try:
+                for p in patches:
+                    p.start()
+                payload = self._post_refresh(base)
+                gate_mock.assert_not_called()
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized', True))
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

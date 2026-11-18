@@ -862,6 +862,47 @@ def serve_panel_json(handler, root: Path, path: str):
     send_json_response(handler, 200, payload)
 
 
+def serve_signals_reload(handler, root: Path, conn_factory=None):
+    """Honest refresh (N53): re-read build_panel_bundle from disk only.
+
+    N54 will add POST/job + cooldown; no ranking job in this GET path.
+    """
+    try:
+        factory = conn_factory if os.environ.get('LEDGER_DATABASE_URL', '').strip() else None
+        bundle = _panel_ops.build_panel_bundle(root, factory)
+    except Exception:
+        send_json_response(
+            handler,
+            503,
+            {
+                'status': 'error',
+                'reload': False,
+                'message': 'Não foi possível reler o bundle do painel.',
+            },
+        )
+        return
+    if bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+        send_json_response(
+            handler,
+            503,
+            {
+                'status': 'error',
+                'reload': False,
+                'message': 'Painel indisponível para releitura.',
+            },
+        )
+        return
+    payload = {
+        'status': 'ok',
+        'reload': True,
+        'message': 'Candidatos relidos a partir do disco (sem cálculo de ranking).',
+        'refreshed_at': datetime.now(timezone.utc).isoformat(),
+        'signals': bundle.get('signals') or [],
+        'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+    }
+    send_json_response(handler, 200, payload)
+
+
 def serve_public_get(handler, root, token, path):
     if token is not None and not bearer_authorized(handler.headers, token):
         handler.send_response(401)
@@ -902,6 +943,12 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             path = urlsplit(self.path).path
             if path == '/login':
                 serve_login_page(self)
+                return
+            if path == '/api/signals/reload':
+                if operator_session and not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                serve_signals_reload(self, root, db_connect)
                 return
             if path in (
                 '/api/signals',

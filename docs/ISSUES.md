@@ -646,8 +646,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio / design |
-| Sprint | N53 (UI + GET refresh) · N54 (job POST) planejado em seguida; não roubar N45–N47) |
-| Status | aberto |
+| Sprint | **N53** (UI PanelShell v2 + `GET /api/signals/reload`) em `front/n27-alpaca-loop` · **N54** (job POST) seguinte |
+| Status | aberto até merge `main` + rebuild operador |
 | Impacto | Operador precisa **atualizar sugestões de sinais no painel** (hoje só lê JSON estático; sem botão). Visual do menu operacional continua inadequado após N52 — exige **nova estrutura visual** de toda a plataforma (Central, Sinais, Ordens, Histórico, Estratégias, Prodígio, Performance, Análise Google), não só métricas na fila. |
 
 **Diretrizes do operador (2026-11-18):**

@@ -9,7 +9,8 @@ Pacote visual **FULL** que **substitui** o retrofit N52 (`ISS-022`). Objetivo: c
 | Issue | **ISS-023** — `docs/ISSUES.md` |
 | Issue relacionada (parcial) | ISS-022 / N52 |
 | Fonte de verdade de dados | `docs/OPERATOR-PANEL-MAP.md` |
-| Próximo passo PMO | **`/pmo plan N53`** (UI shell + tokens + rotas) |
+| Implementação | **N53** — `src/panel_ops_html.py` (PanelShell v2) + `GET /api/signals/reload` |
+| Próximo passo | **N54** — job POST refresh + cooldown (não antecipado em N53) |
 
 ## Documentos
 
@@ -35,7 +36,7 @@ Pacote visual **FULL** que **substitui** o retrofit N52 (`ISS-022`). Objetivo: c
 - **Refresh** candidatos ≠ envio de ordem; sem chave C2 no browser; fail-closed.
 - Métricas: só campos recuperados; ausente = **indisponível** (nunca zero fabricado).
 - **WCAG 2.1 AA** mínimo.
-- **Zero** alteração em `src/` nesta entrega de design.
+- N53 implementou tokens v2 e shell em `src/panel_ops_html.py` (esta pasta permanece referência de design).
 
 ## Histórico
 
@@ -44,5 +45,5 @@ Pacote visual **FULL** que **substitui** o retrofit N52 (`ISS-022`). Objetivo: c
 ## Handoff
 
 1. Revisão operador nos wireframes.
-2. **`/pmo plan N53`** — implementação visual + estrutura HTML compartilhada.
-3. **`/pmo plan N54`** (ou tarefas N53.x) — API/job refresh + testes, se separado no plano.
+2. **N53** — shell + rotas + botão refresh GET (branch `front/n27-alpaca-loop`).
+3. **`/pmo plan N54`** — job POST refresh + testes de cooldown.

@@ -70,6 +70,28 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/signals/reload:
+    get:
+      tags: [observability]
+      summary: Reler bundle de sinais do disco (refresh honesto N53)
+      description: >
+        Somente leitura. Chama build_panel_bundle de novo. Nao calcula ranking,
+        nao aprova provedor, nao envia ordem. Job POST = sprint N54.
+      operationId: reloadPanelSignals
+      security:
+        - operatorSession: []
+      responses:
+        '200':
+          description: Bundle relido; corpo inclui copy e signals como em GET /api/signals.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServerError'
   /api/triggers:
     get:
       tags: [observability]

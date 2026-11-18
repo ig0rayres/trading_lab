@@ -254,65 +254,56 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -c \"print(\\\"ok\\\")\"",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py -q --tb=no",
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [],
+      "dirty_production_paths": [
+        ".beesy/stamp-gate-logs/",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
       "missing_backends": [],
-      "last_validated_sha": "5d28d14d57af834cc817075cc5a5d5240b4b3ca1",
-      "stamped_at": "2026-11-18T18:40:58Z",
+      "last_validated_sha": "d91ebd8a7950fa57aafdfbb1e60a29f4f8200316",
+      "stamped_at": "2026-11-18T19:29:32Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "acc19a06c648ab62ea16e3cb72c3338acb2cd27061fd420e462c9e7771fd91b9",
-      "patch_id": "2456ea177ae0ab7b225b54e4536ceba01eb757fc",
+      "content_hash": "2eb185ab9e29befcddf96e0c60e24120a00fc81dce2f894808260cccedc02f0a",
+      "patch_id": "cddc6a392998a5f18eb280220fe4273642240874",
       "patch_id_version": 2
     },
     "validation_gate_qa": {
-      "sprint": "N54-cleared",
-      "validation_round": 2,
-      "findings_found": 5,
+      "result": "COM_RESSALVAS",
+      "sprint": "N55",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS_WITH_NOTES",
       "findings_registered": [
-        "F-014",
-        "F-015",
-        "F-016",
-        "F-017",
-        "F-018"
+        "CQ-003",
+        "CQ-004"
       ],
-      "files_modified_outside_findings": 0,
+      "recorded_at": "2026-11-18T19:28:45Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N55 multi-platform queue green (97 panel_ops). CQ-001/002/005 fixed. CQ-003/CQ-004 deferred in FINDINGS. ISS-024 stays open until merge+ops.",
+      "round": 1,
+      "full_suite_ran": true,
+      "first_pass": false,
+      "senior_status": "PASS_WITH_NOTES",
       "findings_disposition": [
         {
-          "id": "F-014",
-          "status": "fixed"
-        },
-        {
-          "id": "F-015",
-          "status": "fixed"
-        },
-        {
-          "id": "F-016",
-          "status": "fixed"
-        },
-        {
-          "id": "F-017",
-          "status": "fixed"
-        },
-        {
-          "id": "F-018",
+          "id": "CQ-003",
           "status": "escalated",
-          "reason": "LOW TV silent fail — deferred"
+          "reason": "TV origin filter deferred — latent until non-TV signal_events"
+        },
+        {
+          "id": "CQ-004",
+          "status": "escalated",
+          "reason": "refresh lock/cooldown redesign deferred"
         }
-      ],
-      "senior_review_status": "PASS_WITH_NOTES",
-      "result": "COM_RESSALVAS",
-      "contract_source": "roadmap",
-      "produced_by": "/qa validar",
-      "notes": "Round 2 after F-014–F-017 fixes; F-018 LOW deferred. pytest N54/N53 12 passed.",
-      "recorded_at": "2026-11-18T18:40:02Z"
+      ]
     },
-    "sprint_delivery": null,
-    "sprint_delivery_sprint": null
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N55"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

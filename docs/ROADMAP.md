@@ -77,7 +77,7 @@
 | N50 | N | Lista nomeada Collective2; Sinais em operação vs auditoria vs Prodígio; Provedor visível; LIVE false | planejada | 6 | observability | ISS-020 C2 + reorganizar Sinais | *(abaixo)* |
 | N51 | N | Fila de pré-aprovação no painel com métricas de pesquisa; aprovar não envia ordem; LIVE false | planejada | 6 | observability, ledger | ISS-021 pré-aprovação + métricas | *(abaixo)* |
 | N52 | N | Cockpit Sinais: decisão no topo, todos os números de pesquisa, visual do desenho; LIVE false | planejada | 4 | observability | ISS-022 redesign UX Sinais | *(abaixo)* |
-| N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | planejada | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
+| N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | concluida | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -4981,7 +4981,7 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `do
 
 ## Sprint N53 — Aplicar o visual novo em todo o menu e mostrar o botão de atualizar candidatos
 > Categoria: N  
-> Status: planejada  
+> Status: concluida *(PR [#71](https://github.com/ig0rayres/trading_lab/pull/71) merge `bb103558` 2026-11-18; validation_gate APROVADA; pytest `test_panel_ops.py` verde; **ISS-023 aberto** — job POST refresh = **N54**; rebuild EasyPanel operador)*  
 > Gerado via: `/pmo plan` 2026-11-18 · fonte ISS-023 · Design DONE `docs/design/`  
 > titulo_humano: Painel operacional com visual novo em todas as rotas e botão de atualizar candidatos  
 > resumo_humano: Após o login, todas as telas do menu seguem o desenho v2 com o mesmo casco. Em Sinais, o botão de atualizar candidatos recarrega só os dados de pesquisa já no servidor. Job pesado fica para N54. LIVE false. Finalizado só após merge no ramo principal.  
@@ -5018,20 +5018,26 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N53.0 Inventariar reuso visual e contrato de refresh honesto | `/git` | — |
-| [ ] | M | N53.1 Aplicar tokens v2 e o casco PanelShell compartilhado | `/dev` | N53.0 |
-| [ ] | M | N53.2 Alinhar o HTML de todas as rotas do menu aos mockups | `/dev` | N53.1 |
-| [ ] | M | N53.3 Expor o botão de atualizar e o endpoint GET de releitura | `/dev` | N53.2 |
-| [ ] | P | N53.4 Provar shell, refresh e ausência de envio de ordem | `/qa testes` | N53.3 |
-| [ ] | P | N53.5 Atualizar mapa, chamado e nota da sprint N54 | docs | N53.4 |
+| [x] | P | N53.0 Inventariar reuso visual e contrato de refresh honesto | `/git` | — |
+| [x] | M | N53.1 Aplicar tokens v2 e o casco PanelShell compartilhado | `/dev` | N53.0 |
+| [x] | M | N53.2 Alinhar o HTML de todas as rotas do menu aos mockups | `/dev` | N53.1 |
+| [x] | M | N53.3 Expor o botão de atualizar e o endpoint GET de releitura | `/dev` | N53.2 |
+| [x] | P | N53.4 Provar shell, refresh e ausência de envio de ordem | `/qa testes` | N53.3 |
+| [x] | P | N53.5 Atualizar mapa, chamado e nota da sprint N54 | docs | N53.4 |
 
 ### Quality Brief (Sprint N53)
+
+**Validação:** checkpoint `validation_gate` **APROVADA**; QA **APROVADA**; `tests/test_panel_ops.py` verde (81 casos na sessão de closeout); merge **#71** → `main` @ `bb10355865011ea19ddfbe5a8d651c159888702a`.
+
+**Entregue:** PanelShell v2 (tokens DESIGN §2, topbar Paper, sidebar) em login e em todas as rotas do menu; botão **Atualizar candidatos** + `GET /api/signals/reload` (sessão obrigatória) relendo `build_panel_bundle` — sem `prodigy_rank.calculate`, sem POST de job.
+
+**Adiado (N54):** refresh pesado (POST/job allowlisted, cooldown R4, critérios TV+C2 server-side — ver **ISS-024**).
 
 Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
 Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not call `prodigy_rank.calculate` or Collective2 HTTP from the panel (N54 job).
 Maintain: N52 Sinais hierarchy and recovered metrics; missing = indisponível; N38 brake-strip colors on Central.
 Maintain: `build_panel_bundle` semantics; N53 refresh = re-read disk/bundle only.
-Avoid: stealing N45–N47; POST refresh job in N53; inventing scores; closing ISS-023 before merge; printing API keys.
+Avoid: stealing N45–N47; POST refresh job in N53; inventing scores; claiming EasyPanel rebuild without operator; printing API keys.
 
 ### Fora de escopo
 

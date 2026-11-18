@@ -34,7 +34,17 @@
 
 **Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
 
-Tokens DESIGN.md v2 em `_PANEL_CSS`; PanelShell (topbar Paper, sidebar escura) em login + todas as rotas do menu; botão **Atualizar candidatos** em Sinais; `GET /api/signals/reload` relê `build_panel_bundle` — sem `prodigy_rank.calculate`, sem job POST (N54). `LIVE_TRADING_ENABLED=false`. «Finalizado» só após merge `main` + rebuild operador.
+**Entregue (N53.1–N53.3):** tokens DESIGN.md v2 em `_PANEL_CSS`; PanelShell (topbar Paper, sidebar escura) em login + Central, Ordens, Histórico, Sinais, Estratégias, Prodígio, Performance, Análise Google; botão **Atualizar candidatos** na pré-aprovação; `GET /api/signals/reload` relê `build_panel_bundle` no disco — sem `prodigy_rank.calculate`, sem chave C2 no browser.
+
+**Entregue (N53.4):** `tests/test_panel_ops.py` verde (81 OK no closeout); hierarquia N52 Sinais preservada; reload não autenticado → 401.
+
+**Entregue (N53.5 docs):** mapa, `DASHBOARD-OPERATIONS`, `api-spec.yaml`, `docs/design/README.md`; **ISS-023** anotado — **permanece aberto** (job POST + critérios ao vivo = **N54** / **ISS-024**).
+
+**Adiado:** POST/job refresh, cooldown R4, aplicação de critérios TradingView + Collective2 server-side (**N54**).
+
+**Honestidade:** refresh GET **não** aprova, **não** envia ordem, **não** inventa score nem fill; métricas de pesquisa continuam do bundle em disco; **rebuild EasyPanel operador** — agente não declarou deploy no ar; **ISS-007** / **ISS-016** / **ISS-017** / **ISS-019–022** não fechados sem evidência operador; N45–N47 intactos; `LIVE_TRADING_ENABLED=false`.
+
+**Closeout:** feat em `main` via PR **#71** (`bb103558`, 2026-11-18); `validation_gate` + QA **APROVADA**; `sprint-finalize` mecânico aplicado pelo orquestrador.
 
 ---
 

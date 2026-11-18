@@ -1,83 +1,200 @@
-# Design System & Information Architecture (Retrofit N52)
+# Design System — Painel Operacional Trading Lab
 
-> Issue: ISS-022
-> Escopo: Redesign UX Sinais e Planejamento Visual da Plataforma Operacional
+> Issue: **ISS-023** (substitui pacote N52 / ISS-022)  
+> Modo: **RETROFIT** · Escopo: plataforma inteira (`panel_ops_html`)  
+> Engine: Beesy nativo (tokens + wireframes) · Dark mode: **não** (light-only até decisão explícita)  
+> `LIVE_TRADING_ENABLED=false` · Aprovar ≠ fill · Refresh ≠ ordem
 
-## 1. Tokens Visuais Extraídos & Evoluídos (Lab Ops Aesthetic)
+## 1. Identidade visual
 
-**Princípio:** Clareza > Decoração. Foco em contraste e hierarquia para tomada de decisão (WCAG AA). 
-Evitados clichês "purple-AI" ou "cream-terracotta".
+**Estilo:** operacional / laboratório (ops lab) — denso onde há tabela, arejado onde há decisão.  
+**Tom:** confiança auditável; pesquisa sempre rotulada; ação destrutiva isolada.  
+**Público:** operador único em sessão diária; leitura prolongada de tabelas e números de pesquisa.
 
-### Cores (Variáveis CSS)
-| Propósito | Token Proposto | Valor (Light) | Uso |
-|-----------|----------------|---------------|-----|
-| Fundo principal | `--bg-canvas` | `#F8FAFC` (Slate 50) | Fundo da tela do painel |
-| Fundo cartão | `--bg-card` | `#FFFFFF` | Áreas de conteúdo, tabelas |
-| Texto primário | `--text-primary` | `#0F172A` (Slate 900) | Títulos, dados principais |
-| Texto secundário| `--text-muted` | `#64748B` (Slate 500) | Rótulos de tabela, notas explicativas |
-| Borda estrutural| `--border-subtle` | `#E2E8F0` (Slate 200) | Linhas de tabela, divisórias |
-| Ação primária | `--action-primary` | `#0369A1` (Sky 700) | Botão Aprovar, ações principais |
-| Ação perigo/recusar | `--action-danger` | `#B91C1C` (Red 700) | Botão Rejeitar, Kill switch |
-| Badge/Status Neutro | `--status-research`| `#F1F5F9` (Slate 100) / Text: `#475569` | Rótulos 'research_only', 'pending' |
-| Badge/Status Ativo | `--status-active` | `#ECFDF5` (Emerald 50) / Text: `#065F46` | 'Em operação', 'Aprovado' |
-| Aviso/Warning | `--status-warning`| `#FFFBEB` (Amber 50) / Text: `#92400E` | Faixas de aviso, Freio amarelo |
+**Anti-padrões:** gradientes “AI purple”, cards flutuantes sem hierarquia, métricas sem rótulo `pesquisa`, zeros para campo ausente.
 
-### Tipografia
-- **Font-Family:** Sistema (San Francisco, Inter, Roboto). Legibilidade tabular para números.
-- **Sizes:** 
-  - `--text-xs`: 12px (Metadados, IDs técnicos)
-  - `--text-sm`: 14px (Corpo padrão, tabelas)
-  - `--text-base`: 16px (Títulos de cartão)
-  - `--text-lg`: 18px (Títulos de página)
-- **Weights:** 400 (Corpo), 500 (Rótulos de coluna), 600 (Títulos de página/ações)
+### Referências (conceituais, não URLs inventadas)
 
-### Espaçamentos e Estrutura
-- **Gap/Padding Tabela:** 12px (vertical) x 16px (horizontal). Maior "breathing room" que a versão atual.
-- **Raio de Borda (Border Radius):** 4px (`--radius-sm`) para inputs/badges, 8px (`--radius-md`) para cartões.
+| Referência | O que reutilizar |
+|-----------|------------------|
+| Grafana / ops consoles | sidebar escura, conteúdo claro, badges de saúde |
+| Stripe Dashboard (tabelas) | alinhamento tabular, cabeçalhos fixos, empty states curtos |
+| WCAG 2.1 AA | contraste 4,5:1 corpo; 3:1 UI; foco visível em todo controle |
 
 ---
 
-## 2. Planejamento de Arquitetura de Informação (Painel de Operações)
+## 2. Design tokens (v2 — pós-N52)
 
-O painel deve refletir o `docs/OPERATOR-PANEL-MAP.md` e a hierarquia mental do operador de trading:
+Substituem tokens N52 no bloco `_PANEL_CSS` (implementação futura). Sem hardcode de hex no HTML por linha — só variáveis.
 
-### Menu Lateral (Navegação Global)
-*   **Central:** Visão geral de saúde, paradas de emergência (kill switch), e links rápidos.
-*   **Ordens:** Fila em tempo real (pendentes/abertas) → *Execução atual*.
-*   **Histórico:** Ledger de fills confirmados → *Passado imutável*.
-*   **Sinais:** Cockpit de decisão (Cópia de terceiros) e Inventário. → *O que está direcionando a conta*.
-*   **Estratégias:** Catálogo nativo e fases (Research/Shadow/Paper).
-*   **Prodígio:** Descoberta e ranking de candidatos.
-*   **Performance:** P&L agregado paper-only.
-*   **Análise Google:** Dicas e previsões (research rotulado, sem ordem).
+### 2.1 Cores (light)
 
-### Hierarquia da Tela Sinais (Decisão vs Operação)
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `--color-canvas` | `#F1F5F9` | Fundo área principal |
+| `--color-surface` | `#FFFFFF` | Cards, tabelas |
+| `--color-sidebar` | `#0F172A` | Nav lateral |
+| `--color-sidebar-muted` | `#94A3B8` | Itens inativos no menu |
+| `--color-sidebar-active` | `#E2E8F0` | Texto item ativo |
+| `--color-sidebar-active-bg` | `#1E293B` | Fundo item ativo |
+| `--color-foreground` | `#0F172A` | Títulos, células |
+| `--color-muted` | `#64748B` | Subtítulos, hints |
+| `--color-border` | `#CBD5E1` | Bordas tabela/card |
+| `--color-ring` | `#0284C7` | Focus ring (3px) |
+| `--color-primary` | `#0369A1` | CTA primário (aprovar, entrar) |
+| `--color-primary-fg` | `#FFFFFF` | Texto em primário |
+| `--color-destructive` | `#B91C1C` | Rejeitar, freio |
+| `--color-destructive-fg` | `#FFFFFF` | Texto em destrutivo |
+| `--color-success-bg` | `#ECFDF5` | Semáforo OK / badge paper |
+| `--color-success-fg` | `#065F46` | |
+| `--color-warning-bg` | `#FFFBEB` | Aviso research / fila |
+| `--color-warning-fg` | `#92400E` | |
+| `--color-danger-bg` | `#FEF2F2` | Erro refresh / bloqueio |
+| `--color-danger-fg` | `#991B1B` | |
+| `--color-research-bg` | `#F8FAFC` | Faixa “somente pesquisa” |
+| `--color-research-border` | `#94A3B8` | Borda tracejada research |
 
-A tela `/sinais` deixa de ser uma salada de auditoria e passa a focar na **Tomada de Decisão** primeiro, e **Monitoramento** depois.
+**Contraste verificado (AA):** `--color-primary` em `--color-primary-fg`; `--color-foreground` em `--color-surface`; links `--color-primary` em fundo claro.
 
-**Nova Estrutura (Top-Down):**
+### 2.2 Tipografia
 
-1.  **Fila de Pré-Aprovação (O foco principal da ação)**
-    *   *Propósito:* Onde o operador decide o que entra (Gate).
-    *   *Conteúdo:* Tabela de candidatos pendentes de qualquer origem (C2, Prodígio).
-    *   *Dados Vitais Visíveis:* Assertividade, Fator de Lucro, Retorno Líquido, Drawdown.
-    *   *Ação:* Aprovar (Primary) / Rejeitar (Danger).
+| Propriedade | Valor |
+|-------------|-------|
+| UI | `Inter, system-ui, sans-serif` |
+| IDs / hashes / JSON | `ui-monospace, SFMono-Regular, Menlo, monospace` |
+| Base | `16px` (`--text-base`) |
+| Escala | `--text-xs` 12px · `--text-sm` 14px · `--text-lg` 18px · `--text-xl` 20px |
+| Peso | 400 corpo · 500 rótulos coluna · 600 título página · 700 freio apenas |
 
-2.  **Em Operação / Assinados (Inventário)**
-    *   *Propósito:* O que está atualmente rodando e tem permissão para postar ordens (paper/live).
-    *   *Conteúdo:* Lista de sinais com vínculo direto (Origem + ID) e status da cópia.
-    *   *Dados:* Total de fills, P&L bruto.
+`font-variant-numeric: tabular-nums` em colunas numéricas (Performance, métricas pesquisa).
 
-3.  **Filas de Origem & Auditoria (Pesquisa/Baixa Frequência)**
-    *   *Propósito:* Transparência e auditoria de blocos rejeitados ou apenas em research.
-    *   *Conteúdo:* C2 (Lista nomeada fechada), Prodígio (Candidatos em pool), Auditoria de Ingresso bruta.
+### 2.3 Espaçamento e radius
+
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `--space-1` | 4px | Gap ícone-texto |
+| `--space-2` | 8px | Padding badge |
+| `--space-3` | 12px | Célula tabela compacta |
+| `--space-4` | 16px | Padding card |
+| `--space-6` | 24px | Entre seções na página |
+| `--radius-sm` | 4px | Input, badge |
+| `--radius-md` | 8px | Card, botão |
+| `--radius-lg` | 12px | Modal login |
+
+### 2.4 Elevação
+
+| Token | Uso |
+|-------|-----|
+| `--shadow-sm` | `0 1px 2px rgb(15 23 42 / 0.06)` | Card leve |
+| `--shadow-md` | `0 4px 12px rgb(15 23 42 / 0.08)` | Dropdown / toast |
 
 ---
 
-## 3. Plano de Implementação (N52)
+## 3. Componentes (HTML nativo no painel)
 
-A sprint N52 focará na reescrita de `src/panel_ops_html.py` para aplicar este design system sem alterar a lógica de backend ou rotas (`panel_ops_data.py`).
+| Componente | Variantes | Regras |
+|------------|-----------|--------|
+| `PanelShell` | sidebar + topbar contexto | Ver `mockups/panel-shell.md` |
+| `PageHeader` | título + subtítulo + slot ações | Uma `h1` por rota |
+| `ResearchBanner` | fixo opcional | Texto mapa: *não autoriza ordem* / *não é fill* |
+| `DataTable` | zebra off; header sticky | Empty = string real do mapa |
+| `MetricCluster` | pré-aprovação | Só chaves recuperadas; ausente = **indisponível** |
+| `Badge` | fase estratégia, status ordem, research | Nunca “0” inventado |
+| `Button` | primary · outline · destructive · ghost | Refresh = **secondary/outline**, não primário |
+| `EmptyState` | ícone opcional + copy do mapa | Sem ilustração pesada |
+| `Toast` / `InlineAlert` | success · error · info | Refresh feedback |
+| `KillSwitch` | isolated destructive | Só Central |
 
-1.  **Refatorar CSS base:** Mover estilos inline caóticos para bloco `<style>` usando os tokens definidos acima.
-2.  **Redesign `/sinais` (ISS-022):** Implementar o mockup `docs/design/mockups/sinais.md`. Substituir a tabela genérica de "Pré-aprovação" por cards/tabelas com métricas formatadas (`shrunk_win_rate_pct`, `profit_factor_reported`, etc).
-3.  **Melhorar Feedback Visual:** Empty states humanizados (ex: "Nenhum provedor pendente de análise na fila" em vez de tabelas vazias feias).
+---
+
+## 4. Arquitetura de informação (alinhada a `OPERATOR-PANEL-MAP.md`)
+
+### 4.1 Ordem mental do operador
+
+```
+Controle → Execução agora → Passado → Decisão cópia → Catálogo → Pesquisa → P&L paper
+```
+
+### 4.2 Menu lateral (após login)
+
+Ordem fixa no `_nav` (rótulos PT face ao operador):
+
+| # | Rótulo | Rota | Papel |
+|---|--------|------|-------|
+| 1 | Central | `/` | Freio, semáforo, atalhos |
+| 2 | Ordens | `/ordens` | Paper aberto **agora** |
+| 3 | Histórico | `/historico` | Fills confirmados |
+| 4 | Sinais | `/sinais` | Cockpit cópia + pré-aprovação + refresh |
+| 5 | Estratégias | `/estrategias` | Catálogo fases (somente leitura) |
+| 6 | Prodígio | `/prodigy` | Rank research |
+| 7 | Performance | `/performance` | Grosso paper, custos não verificados |
+| 8 | Análise Google | `/analise-google` | TimesFM research |
+
+**Fora do menu (mapa):** Tá Barato, Melhoria contínua — Command Panel v1 apenas; não desenhar no shell v2.
+
+### 4.3 Hierarquia global de página
+
+1. **Topbar contextual** — selo ambiente: `Paper · Live desligado`; hora última renderização do bundle (se exposta).
+2. **PageHeader** — título + subtítulo honesto do mapa.
+3. **ResearchBanner** (quando a rota exige).
+4. **Conteúdo primário** — tabela/card de decisão ou execução.
+5. **Conteúdo secundário** — auditoria, critérios, rodapé legal (“fila ≠ fill”).
+
+### 4.4 Rota `/sinais` (decisão → operação → auditoria)
+
+1. **Pré-aprovação** — fila `copy.preapproval.queue[]` + **Atualizar candidatos** (ISS-023).
+2. **Em operação / assinados** — subtítulo mapa: *Cópia de terceiros… Não é fill.*
+3. **Inventário** — `copy.inventory`.
+4. **Origens** — Collective2 · pool Prodígio (pesquisa).
+5. **Critérios de adoção** — `copy.adoption.criteria_pt`.
+6. **Auditoria de ingresso** — por último; *Não é fill.*
+
+Métricas pré-aprovação: `win_rate_pct`, `shrunk_win_rate_pct`, `profit_factor_reported`, `reported_pnl_sum`, `net_return_pct`, `max_drawdown_pct`, `prodigy_score`/`score`, `status` — rótulo **(pesquisa)**; ausente = **indisponível**.
+
+### 4.5 Refresh de candidatos (comportamento de produto — sem ordem)
+
+| Regra | Detalhe |
+|-------|---------|
+| O que faz | Dispara re-leitura/atualização server-side de JSON de pesquisa (ex. `prodigy-top10-latest`, provider-research) **sem** chamar Alpaca/C2 no browser |
+| O que não faz | Não aprova; não envia ordem; não promove fase; não inventa score |
+| Fail-closed | 503/erro → mensagem PT + fila anterior intacta |
+| UX | Botão outline no cabeçalho da seção pré-aprovação; estados em `mockups/sinais.md` |
+
+---
+
+## 5. Acessibilidade (WCAG 2.1 AA)
+
+- Foco visível: `outline: 3px solid var(--color-ring)` em links e botões.
+- Alvo mínimo 44×44px em Aprovar / Rejeitar / Atualizar candidatos / Entrar.
+- Tabelas: `<th scope="col">`; métricas não só por cor (rótulo + valor).
+- `aria-live="polite"` na região de feedback do refresh.
+- Semáforo: ícone + texto (não só cor).
+- Contraste sidebar: texto ativo `#E2E8F0` em `#1E293B`.
+
+---
+
+## 6. Mapa rota → mockup
+
+| Rota | Mockup |
+|------|--------|
+| Shell | `mockups/panel-shell.md` |
+| `/login` | `mockups/login.md` |
+| `/` | `mockups/central.md` |
+| `/sinais` | `mockups/sinais.md` |
+| `/ordens` | `mockups/ordens.md` |
+| `/historico` | `mockups/historico.md` |
+| `/estrategias` | `mockups/estrategias.md` |
+| `/prodigy` | `mockups/prodigy.md` |
+| `/performance` | `mockups/performance.md` |
+| `/analise-google` | `mockups/analise-google.md` |
+
+---
+
+## 7. Plano de implementação (pós-design)
+
+1. **N53 (sugerido):** `_PANEL_CSS` tokens v2 + `PanelShell` + todas as rotas HTML (sem mudar significado de `panel_ops_data`).
+2. **N54 (sugerido):** endpoint + job refresh candidatos + testes; wire do botão em `/sinais`.
+3. Paridade: strings vazias e rótulos **idênticos** ao `OPERATOR-PANEL-MAP.md`.
+4. Regressão: `tests/test_panel_ops.py` (layout/snippets), sem assert de P&L inventado.
+
+**Não editar nesta fase:** `src/` (design only).

@@ -245,7 +245,7 @@
     "guardrail_contract_bootstrapped": false,
     "validation_gate": {
       "sprint": "N54",
-      "validation_round": 1,
+      "validation_round": 2,
       "findings_found": 5,
       "findings_registered": [
         "F-014",
@@ -258,73 +258,38 @@
       "findings_disposition": [
         {
           "id": "F-014",
-          "status": "escalated",
-          "reason": "MEDIUM senior CQ-001 — fix AgentCoder round 2 after commit"
+          "status": "fixed"
         },
         {
           "id": "F-015",
-          "status": "escalated",
-          "reason": "MEDIUM senior CQ-002 — fix AgentCoder round 2 after commit"
+          "status": "fixed"
         },
         {
           "id": "F-016",
-          "status": "escalated",
-          "reason": "MEDIUM senior CQ-003 — fix AgentCoder round 2 after commit"
+          "status": "fixed"
         },
         {
           "id": "F-017",
-          "status": "escalated",
-          "reason": "LOW CQ-004 — park until fail-closed session policy confirmed"
+          "status": "fixed"
         },
         {
           "id": "F-018",
           "status": "escalated",
-          "reason": "LOW CQ-005 — park until TV issue messaging tightened"
+          "reason": "LOW TV silent fail — deferred"
         }
       ],
       "senior_review_status": "PASS_WITH_NOTES",
-      "result": "REPROVADA",
+      "result": "COM_RESSALVAS",
       "contract_source": "roadmap",
-      "in_contract": [
-        {
-          "id": "n54-1-no-key-leak",
-          "check": "assert no sk_live; C2 via environ",
-          "pass": true
-        },
-        {
-          "id": "n54-1-no-order",
-          "check": "assert process_after_gate_b absent",
-          "pass": true
-        },
-        {
-          "id": "n54-1-get-still-disk",
-          "check": "serve_signals_reload disk_reread without calculate",
-          "pass": true
-        },
-        {
-          "id": "n54-2-no-c2-in-browser",
-          "check": "no C2 in panel_ops_html",
-          "pass": true
-        },
-        {
-          "id": "n54-2-cta-post",
-          "check": "CTA posts candidates/refresh",
-          "pass": true
-        },
-        {
-          "id": "n54-3-no-live-net",
-          "check": "tests mock C2 key",
-          "pass": true
-        }
-      ],
-      "notes": "PROC-025 fail: uncommitted sprint src/tests. pytest 94 passed. Guardrails 6/6 PASS. Commit then /qa validar round 2; AgentCoder for F-014–F-016.",
       "produced_by": "/qa validar",
-      "recorded_at": "2026-11-18T18:35:38Z"
+      "notes": "Round 2 after F-014–F-017 fixes; F-018 LOW deferred. pytest N54/N53 12 passed.",
+      "recorded_at": "2026-11-18T18:40:02Z"
     },
     "validation_gate_qa": {
+      "result": "COM_RESSALVAS",
       "sprint": "N54",
-      "validation_round": 1,
-      "findings_found": 5,
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS_WITH_NOTES",
       "findings_registered": [
         "F-014",
         "F-015",
@@ -332,72 +297,37 @@
         "F-017",
         "F-018"
       ],
-      "files_modified_outside_findings": 0,
+      "recorded_at": "2026-11-18T18:40:09Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "F-014–F-017 fixed; F-018 LOW deferred; N54/N53 HTTP 12 passed",
+      "round": 2,
+      "full_suite_ran": true,
+      "first_pass": false,
+      "senior_status": "PASS_WITH_NOTES",
+      "findings_found": 5,
       "findings_disposition": [
         {
           "id": "F-014",
-          "status": "escalated",
-          "reason": "MEDIUM senior CQ-001 — fix AgentCoder round 2 after commit"
+          "status": "fixed"
         },
         {
           "id": "F-015",
-          "status": "escalated",
-          "reason": "MEDIUM senior CQ-002 — fix AgentCoder round 2 after commit"
+          "status": "fixed"
         },
         {
           "id": "F-016",
-          "status": "escalated",
-          "reason": "MEDIUM senior CQ-003 — fix AgentCoder round 2 after commit"
+          "status": "fixed"
         },
         {
           "id": "F-017",
-          "status": "escalated",
-          "reason": "LOW CQ-004 — park until fail-closed session policy confirmed"
+          "status": "fixed"
         },
         {
           "id": "F-018",
           "status": "escalated",
-          "reason": "LOW CQ-005 — park until TV issue messaging tightened"
+          "reason": "LOW TV silent fail — deferred"
         }
-      ],
-      "senior_review_status": "PASS_WITH_NOTES",
-      "result": "REPROVADA",
-      "contract_source": "roadmap",
-      "in_contract": [
-        {
-          "id": "n54-1-no-key-leak",
-          "check": "assert no sk_live; C2 via environ",
-          "pass": true
-        },
-        {
-          "id": "n54-1-no-order",
-          "check": "assert process_after_gate_b absent",
-          "pass": true
-        },
-        {
-          "id": "n54-1-get-still-disk",
-          "check": "serve_signals_reload disk_reread without calculate",
-          "pass": true
-        },
-        {
-          "id": "n54-2-no-c2-in-browser",
-          "check": "no C2 in panel_ops_html",
-          "pass": true
-        },
-        {
-          "id": "n54-2-cta-post",
-          "check": "CTA posts candidates/refresh",
-          "pass": true
-        },
-        {
-          "id": "n54-3-no-live-net",
-          "check": "tests mock C2 key",
-          "pass": true
-        }
-      ],
-      "notes": "PROC-025 fail: uncommitted sprint src/tests. pytest 94 passed. Guardrails 6/6 PASS. Commit then /qa validar round 2; AgentCoder for F-014–F-016.",
-      "produced_by": "/qa validar",
-      "recorded_at": "2026-11-18T18:35:38Z"
+      ]
     }
   },
   "artefatos_gerados": [

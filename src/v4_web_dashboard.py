@@ -11,6 +11,7 @@ import html
 import json
 import os
 import re
+import threading
 import time
 import uuid
 from datetime import datetime, timezone
@@ -872,6 +873,7 @@ def serve_panel_json(handler, root: Path, path: str):
 _LIVE_CRITERIA_SOURCES = ('collective2', 'prodigy', 'tradingview')
 _LIVE_CRITERIA_COOLDOWN_SEC = 30
 _LAST_LIVE_CRITERIA_REFRESH_MONO: float | None = None
+_LIVE_CRITERIA_REFRESH_LOCK = threading.Lock()
 _C2_API4_HTTP_FETCH = c2_history_collect.fetch
 
 
@@ -939,7 +941,11 @@ def _panel_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs)
     return {'status': 'ok', 'written': written}
 
 
-c2_history_collect.fetch = _panel_c2_history_collect
+def _invoke_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    bound_fetch = c2_history_collect.fetch
+    if bound_fetch is _C2_API4_HTTP_FETCH:
+        return _panel_c2_history_collect(strategy_ids, key, out_dir, opener=opener, **kwargs)
+    return bound_fetch(strategy_ids, key, out_dir, opener=opener, **kwargs)
 
 
 def _intelligence_dir(root: Path) -> Path:
@@ -991,8 +997,7 @@ def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) 
     raw_dir.mkdir(parents=True, exist_ok=True)
     try:
         rank = prodigy_rank.calculate(raw_dir)
-        if os.environ.get('C2_API4_KEY', '').strip():
-            _persist_prodigy_rank(root, rank)
+        _persist_prodigy_rank(root, rank)
         sources_ok.append('prodigy')
     except (OSError, ValueError, TypeError, KeyError) as exc:
         issues.append(f'prodigy_rank_failed:{type(exc).__name__}')
@@ -1006,7 +1011,7 @@ def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[st
     ids = _merged_c2_strategy_ids(root)
     raw_dir = root / 'reports' / 'providers' / 'raw'
     try:
-        c2_history_collect.fetch(ids, key, raw_dir)
+        _invoke_c2_history_collect(ids, key, raw_dir)
         snap_dir = root / 'reports' / 'providers' / 'signals'
         if ids:
             c2_signal_feed.snapshot([int(x) for x in ids], key, snap_dir)
@@ -1047,54 +1052,55 @@ def _live_criteria_job(
 def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, body=None):
     global _LAST_LIVE_CRITERIA_REFRESH_MONO
     body = body if isinstance(body, dict) else {}
-    wait = _live_criteria_cooldown_wait(time.monotonic())
-    if wait:
-        send_json_response(
-            handler,
-            429,
-            {
-                'reject_code': 'REFRESH_COOLDOWN',
-                'retry_after_seconds': wait,
-                'mode': 'live_criteria',
-                'message': 'Aguarde antes de um novo refresh de critérios ao vivo.',
-            },
-        )
-        return
-    sources = _resolve_live_refresh_sources(body)
-    issues, sources_ok, sources_attempted = _live_criteria_job(root, sources, conn_factory)
-    factory = _ledger_conn_factory(conn_factory)
-    try:
-        bundle = _panel_ops.build_panel_bundle(root, factory)
-    except (OSError, ValueError, TypeError, KeyError):
-        send_json_response(
-            handler,
-            503,
-            {'reject_code': 'PANEL_BUNDLE_UNAVAILABLE', 'mode': 'live_criteria'},
-        )
-        return
-    if bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
-        send_json_response(
-            handler,
-            503,
-            {'reject_code': 'PANEL_OPS_UNAVAILABLE', 'mode': 'live_criteria'},
-        )
-        return
-    status = 'partial' if issues else 'ok'
-    payload = {
-        'status': status,
-        'mode': 'live_criteria',
-        'refreshed_at': datetime.now(timezone.utc).isoformat(),
-        'sources_attempted': sources_attempted,
-        'sources_ok': sources_ok,
-        'issues': issues,
-        'message': 'Critérios ao vivo aplicados no servidor (sem envio de ordem).',
-        'execution_authorized': False,
-        'orders_sent': 0,
-        'signals': bundle.get('signals') or [],
-        'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
-    }
-    _LAST_LIVE_CRITERIA_REFRESH_MONO = time.monotonic()
-    send_json_response(handler, 200, payload)
+    with _LIVE_CRITERIA_REFRESH_LOCK:
+        wait = _live_criteria_cooldown_wait(time.monotonic())
+        if wait:
+            send_json_response(
+                handler,
+                429,
+                {
+                    'reject_code': 'REFRESH_COOLDOWN',
+                    'retry_after_seconds': wait,
+                    'mode': 'live_criteria',
+                    'message': 'Aguarde antes de um novo refresh de critérios ao vivo.',
+                },
+            )
+            return
+        sources = _resolve_live_refresh_sources(body)
+        issues, sources_ok, sources_attempted = _live_criteria_job(root, sources, conn_factory)
+        factory = _ledger_conn_factory(conn_factory)
+        try:
+            bundle = _panel_ops.build_panel_bundle(root, factory)
+        except (OSError, ValueError, TypeError, KeyError):
+            send_json_response(
+                handler,
+                503,
+                {'reject_code': 'PANEL_BUNDLE_UNAVAILABLE', 'mode': 'live_criteria'},
+            )
+            return
+        if bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+            send_json_response(
+                handler,
+                503,
+                {'reject_code': 'PANEL_OPS_UNAVAILABLE', 'mode': 'live_criteria'},
+            )
+            return
+        status = 'partial' if issues else 'ok'
+        payload = {
+            'status': status,
+            'mode': 'live_criteria',
+            'refreshed_at': datetime.now(timezone.utc).isoformat(),
+            'sources_attempted': sources_attempted,
+            'sources_ok': sources_ok,
+            'issues': issues,
+            'message': 'Critérios ao vivo aplicados no servidor (sem envio de ordem).',
+            'execution_authorized': False,
+            'orders_sent': 0,
+            'signals': bundle.get('signals') or [],
+            'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+        }
+        _LAST_LIVE_CRITERIA_REFRESH_MONO = time.monotonic()
+        send_json_response(handler, 200, payload)
 
 
 def serve_signals_reload(handler, root: Path, conn_factory=None):
@@ -1282,7 +1288,10 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                 respond_mutation(self, kind, code, payload)
                 return
             if path == '/api/signals/candidates/refresh':
-                if operator_session and not operator_session_authorized(self.headers, operator_session):
+                if not operator_session or not operator_session_authorized(
+                    self.headers,
+                    operator_session,
+                ):
                     send_empty_response(self, 401)
                     return
                 try:

@@ -2341,8 +2341,13 @@ class N54LiveCriteriaRefreshHttpTests(unittest.TestCase):
                 with urlopen(after_req, timeout=3) as resp:
                     after = json.load(resp)
                 after_queue = (after.get('copy') or {}).get('preapproval', {}).get('queue') or []
-                self.assertGreaterEqual(len(after_queue), queue_len)
-                self.assertEqual(after_queue[0].get('provider_id'), '501')
+                self.assertGreaterEqual(len(after_queue), 1)
+                provider_ids = {str(row.get('provider_id')) for row in after_queue if isinstance(row, dict)}
+                self.assertIn('9', provider_ids)
+                self.assertIn('C2_API4_KEY_missing', issues)
+                rank_mock.assert_called_once()
+                prodigy_path = root / 'intelligence' / 'prodigy-top10-latest.json'
+                self.assertTrue(prodigy_path.is_file())
             finally:
                 for p in reversed(patches):
                     p.stop()

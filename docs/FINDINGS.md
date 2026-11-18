@@ -23,7 +23,9 @@
 | F-015 | N54 | M | Monkey-patch global de `c2_history_collect.fetch` na importação do dashboard | corrigido |
 | F-016 | N54 | M | Cooldown live-criteria sem lock em servidor threaded | corrigido |
 | F-017 | N54 | P | POST refresh só exige cookie se `DASHBOARD_OPERATOR_SESSION` definido | corrigido |
-| F-018 | N54 | P | Falha silenciosa no ramo TradingView do job live-criteria | pendente |
+| F-018 | N55 | P | Falha silenciosa no ramo TradingView do job live-criteria | corrigido — `N55MultiPlatformLiveCriteriaTests.test_n55_tradingview_refresh_failure_records_issue_without_wiping_queue` |
+| CQ-003 | N55 | L | `_unique_tradingview_origins` não filtra por `source` quando o campo existe | deferido |
+| CQ-004 | N55 | M | Redesign lock/cooldown live-criteria (threading + persistência) | deferido |
 
 ## Notas
 

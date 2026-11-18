@@ -148,6 +148,7 @@ border:1px solid var(--action-danger)}
 .inline-alert--loading{background:var(--color-research-bg);color:var(--color-muted)}
 .inline-alert--ok{background:var(--color-success-bg);color:var(--color-success-fg)}
 .inline-alert--err{background:var(--color-danger-bg);color:var(--color-danger-fg)}
+.inline-alert--warn{background:var(--color-warning-bg);color:var(--color-warning-fg)}
 .metrics-block{display:flex;flex-direction:column;gap:4px;font-size:var(--text-sm)}
 .metrics-block .metric{display:block;color:var(--text-primary)}
 .empty-state{padding:16px;border-radius:var(--radius-md);background:var(--status-research-bg);
@@ -809,6 +810,39 @@ def _preapproval_metrics_block_html(metrics: dict[str, Any] | None) -> str:
     return f'<div class="metrics-block">{"".join(spans)}</div>'
 
 
+def _candidates_refresh_warning_html(copy: dict[str, Any]) -> str:
+    block = copy if isinstance(copy, dict) else {}
+    refresh = block.get('candidates_refresh')
+    issues: list[str] = []
+    status: str | None = None
+    if isinstance(refresh, dict):
+        raw_issues = refresh.get('issues')
+        if isinstance(raw_issues, list):
+            issues = [str(item) for item in raw_issues if str(item).strip()]
+        status_val = refresh.get('status')
+        status = str(status_val) if status_val is not None else None
+    if not issues:
+        pre = block.get('preapproval') or {}
+        if isinstance(pre, dict):
+            raw_issues = pre.get('refresh_issues')
+            if isinstance(raw_issues, list):
+                issues = [str(item) for item in raw_issues if str(item).strip()]
+            status_val = pre.get('refresh_status')
+            status = str(status_val) if status_val is not None else status
+    if not issues:
+        return ''
+    if status and status not in ('partial', 'ok'):
+        return ''
+    items = ''.join(f'<li><code>{esc(issue)}</code></li>' for issue in issues)
+    return (
+        '<div class="inline-alert inline-alert--warn partial-refresh-banner" '
+        'role="status" aria-live="polite">'
+        '<p><strong>Atualização parcial.</strong> Algumas fontes falharam; '
+        'a fila abaixo mantém as plataformas que responderam.</p>'
+        f'<ul class="partial-issues-list">{items}</ul></div>'
+    )
+
+
 def _preapproval_status_badge(status: Any) -> str:
     raw = str(status or 'pending').lower()
     if raw == 'approved':
@@ -820,8 +854,13 @@ def _preapproval_status_badge(status: Any) -> str:
     return f'<span class="{css}">{esc(status or "pending")}</span>'
 
 
-def _signals_preapproval_section_html(preapproval: dict[str, Any]) -> str:
+def _signals_preapproval_section_html(
+    preapproval: dict[str, Any],
+    *,
+    copy: dict[str, Any] | None = None,
+) -> str:
     block = preapproval if isinstance(preapproval, dict) else {}
+    partial_banner = _candidates_refresh_warning_html(copy or {})
     queue = block.get('queue') or []
     if not queue:
         body = f'<div class="empty-state">{esc(_N51_PREAPPROVAL_EMPTY)}</div>'
@@ -866,6 +905,7 @@ def _signals_preapproval_section_html(preapproval: dict[str, Any]) -> str:
     )
     return (
         f'<h2>{esc(_N51_PREAPPROVAL_SECTION)}</h2>'
+        f'{partial_banner}'
         f'{refresh_controls}'
         f'{body}'
     )
@@ -891,7 +931,10 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     copy = bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {}
     signals = bundle.get('signals') or []
     operating_body = _signals_operating_section_html(copy)
-    preapproval_body = _signals_preapproval_section_html(copy.get('preapproval') or {})
+    preapproval_body = _signals_preapproval_section_html(
+        copy.get('preapproval') or {},
+        copy=copy,
+    )
     inventory_body = _signals_inventory_html(copy.get('inventory') or {})
     c2_body = _signals_collective2_section_html(copy.get('collective2') or {})
     pool_body = _signals_prodigy_pool_html(copy.get('prodigy_pool') or {})

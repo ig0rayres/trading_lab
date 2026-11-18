@@ -4,6 +4,7 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
+| N55 | v4_web_dashboard, panel_ops_data, panel_ops_html, tests, docs | Fila multiplataforma; partial persist; F-018; ISS-024 EXECUTE | 33–41 |
 | N54 | v4_web_dashboard, panel_ops_html, tests, docs | POST live_criteria; GET disk_reread; ISS-024; EXECUTE frente | 33–41 |
 | N53 | panel_ops_html, v4_web_dashboard, docs | PanelShell v2 todas rotas; Atualizar candidatos + GET reload; ISS-023; N54=POST job | 42–50 |
 | N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 42–50 |
@@ -28,6 +29,18 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N55 — Fila multiplataforma após critérios ao vivo (ISS-024)
+
+**Frente:** `sinais-live-criteria`, branch `front/sinais-live-criteria`. **Estado:** EXECUTE — código e testes na frente; merge pendente.
+
+**Entregue (N55.0–N55.3):** `docs/.briefs/N55-GIT-FIRST-REUSE.md`; job N54 estendido — Prodígio não grava em `provider-research`; rank vazio não sobrescreve JSON; C2 sem chave emite `C2_API4_KEY_missing`; TV falha → `issues` (F-018); persistência `candidates-refresh-latest.json` → `copy.candidates_refresh`; banner parcial em `/sinais`; suíte `N55MultiPlatformLiveCriteriaTests` (7/7) + `test_panel_ops.py` 94 passed.
+
+**Entregue (N55.4 docs):** mapa §2, ISS-024 nota EXECUTE, Feature 9 aceite N55 com nodeids, FINDINGS F-018 corrigido, ROADMAP N55.0–N55.4 marcados — **ISS-024 aberto** até merge + rebuild operador.
+
+**Honestidade:** LIVE false; `orders_sent=0`; sem Gate B; sem chave C2 no HTML/JS.
 
 ---
 

@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 18–26 |
+| N53 | panel_ops_html, v4_web_dashboard, docs | PanelShell v2 todas rotas; Atualizar candidatos + GET reload; ISS-023; N54=POST job | 32–40 |
+| N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 42–50 |
 | N51 | panel_ops, ledger_migrate, docs | Pré-aprovação painel; migration 003; métricas pesquisa; ISS-021 aberto | 18–26 |
 | N50 | panel_ops, docs | C2 lista nomeada; Sinais reordenado; provider_id Prodígio; ISS-020 aberto | 18–24 |
 | N49 | panel_ops, docs | Proveniência ordem↔sinal; inventário fill-only; critérios Feature 4/9/10; pool Prodígio pesquisa; ISS-019 aberto | 26–34 |
@@ -26,6 +27,14 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N53 — Plataforma visual ISS-023 + refresh honesto
+
+**Frente:** `n27-alpaca-loop`, branch `front/n27-alpaca-loop`.
+
+Tokens DESIGN.md v2 em `_PANEL_CSS`; PanelShell (topbar Paper, sidebar escura) em login + todas as rotas do menu; botão **Atualizar candidatos** em Sinais; `GET /api/signals/reload` relê `build_panel_bundle` — sem `prodigy_rank.calculate`, sem job POST (N54). `LIVE_TRADING_ENABLED=false`. «Finalizado» só após merge `main` + rebuild operador.
 
 ---
 

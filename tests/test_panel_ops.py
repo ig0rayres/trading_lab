@@ -2045,6 +2045,7 @@ class PanelSinaisN52Tests(unittest.TestCase):
                 with urlopen(req, timeout=3) as resp:
                     sinais = resp.read().decode('utf-8')
                 self.assertIn('--bg-canvas', sinais)
+                self.assertIn('--color-canvas', sinais)
                 self.assertIn('metrics-block', sinais)
                 self.assertNotIn('process_after_gate_b', sinais)
                 self.assertNotIn('method="post"', sinais.lower())
@@ -2053,8 +2054,117 @@ class PanelSinaisN52Tests(unittest.TestCase):
                     central = resp.read().decode('utf-8')
                 self.assertIn('brake-strip--active', central)
                 self.assertIn('--bg-canvas', central)
+                self.assertIn('panel-topbar', central)
             finally:
                 self._shutdown(server, thread)
+
+
+class N53PanelShellRefreshTests(unittest.TestCase):
+    """ISS-023: PanelShell v2 + honest GET /api/signals/reload."""
+
+    def _server(self, root=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(root, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n53_panel_shell_tokens_across_menu_routes(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, server, thread, base = self._server(d)
+            try:
+                for path in ('/', '/ordens', '/historico', '/sinais', '/estrategias', '/prodigy', '/performance', '/analise-google'):
+                    with self.subTest(path=path):
+                        req = _get(base + path, session='panel-secret')
+                        with urlopen(req, timeout=3) as resp:
+                            body = resp.read().decode('utf-8')
+                        self.assertIn('panel-shell', body)
+                        self.assertIn('panel-topbar', body)
+                        self.assertIn('Paper · Live desligado', body)
+                        self.assertIn('--color-sidebar', body)
+                        self.assertIn('nav-link', body)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n53_login_uses_design_v2_card(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, server, thread, base = self._server(d)
+            try:
+                req = _get(base + '/login')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('login-card', body)
+                self.assertIn('Paper · Live desligado', body)
+                self.assertIn('--color-canvas', body)
+                self.assertNotIn('<header class="panel-topbar"', body)
+                self.assertNotIn('panel-shell', body.split('</style>', 1)[-1])
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n53_atualizar_candidatos_visible_on_sinais(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            _, server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('Atualizar candidatos', body)
+                self.assertIn('id="reload-candidates"', body)
+                self.assertIn('btn-outline', body)
+                self.assertIn('/api/signals/reload', body)
+                self.assertLess(
+                    body.index(N51_PREAPPROVAL_SECTION),
+                    body.index(N50_OPERATING_SECTION),
+                )
+                self.assertLess(
+                    body.index(N50_OPERATING_SECTION),
+                    body.index(N48_SECTION_AUDIT),
+                )
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n53_reload_requires_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, server, thread, base = self._server(d)
+            try:
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(base + '/api/signals/reload', timeout=3)
+                self.assertEqual(err.exception.code, 401)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n53_reload_rereads_bundle_json(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            _, server, thread, base = self._server(root)
+            try:
+                req = _get(base + '/api/signals/reload', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                self.assertEqual(payload.get('status'), 'ok')
+                self.assertTrue(payload.get('reload'))
+                self.assertIn('copy', payload)
+                self.assertIn('signals', payload)
+                self.assertIn('message', payload)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n53_no_prodigy_rank_calculate_in_panel_modules(self):
+        html_src = (Path(__file__).resolve().parents[1] / 'src' / 'panel_ops_html.py').read_text(encoding='utf-8')
+        dash_src = (Path(__file__).resolve().parents[1] / 'src' / 'v4_web_dashboard.py').read_text(encoding='utf-8')
+        self.assertNotIn('prodigy_rank.calculate', html_src)
+        reload_block = dash_src.split('def serve_signals_reload', 1)[-1].split('def serve_public_get', 1)[0]
+        self.assertNotIn('prodigy_rank', reload_block)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

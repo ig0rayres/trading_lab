@@ -7,7 +7,8 @@
 
 | Superfície | URL | Uso |
 |------------|-----|-----|
-| **Painel HTML** | `GET /` | Visão do operador: saúde, catálogo, Prodígio, melhoria contínua, limitações |
+| **Painel HTML (operador)** | `GET /login` → menu (`/`, `/sinais`, …) | **N53** PanelShell v2: topbar Paper, sidebar escura; Sinais com **Atualizar candidatos** (`GET /api/signals/reload`, só releitura de disco) |
+| **Painel HTML (legado)** | `GET /` sem sessão operador | Command Panel v1 (`render_page`) — bearer/token |
 | **API JSON** | `GET /api/status` | Integrações, scripts, monitoramento (`command_panel`, kill switch, shadow vs paper) |
 | **Liveness** | `GET /healthz` | Probe (mesmas regras de auth que as outras rotas) |
 

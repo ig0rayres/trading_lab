@@ -1,27 +1,49 @@
-# Design Retrofit (N52) - Painel Operacional
+# Design — Plataforma operacional (ISS-023)
 
-Este diretório contém o planejamento visual e de arquitetura de informação para a refatoração da interface do operador, resolvendo os problemas apontados na issue **ISS-022**.
+Pacote visual **FULL** que **substitui** o retrofit N52 (`ISS-022`). Objetivo: corrigir o visual “sofrível” pós-N52 e definir o **Refresh de candidatos** antes de qualquer código em `src/`.
 
-## Documentos Produzidos
+## Rastreio
 
-1. **[DESIGN.md](DESIGN.md):** Define os tokens visuais (cores, tipografia, espaçamentos) e a arquitetura de informação top-down para o painel, com foco em usabilidade para operações de trading (clareza > decoração).
-2. **[mockups/sinais.md](mockups/sinais.md):** Wireframe detalhado para a reestruturação da rota `/sinais`, transformando-a de uma "salada de tabelas" em um verdadeiro cockpit de decisão (Fila de Pré-Aprovação → Inventário → Auditoria).
-3. **[mockups/panel-overview.md](mockups/panel-overview.md):** Visão geral da arquitetura de informação para todas as rotas do painel, alinhada com o mapa operacional atual.
+| Item | Valor |
+|------|-------|
+| Issue | **ISS-023** — `docs/ISSUES.md` |
+| Issue relacionada (parcial) | ISS-022 / N52 |
+| Fonte de verdade de dados | `docs/OPERATOR-PANEL-MAP.md` |
+| Implementação | **N53** — `src/panel_ops_html.py` (PanelShell v2) + `GET /api/signals/reload` |
+| Próximo passo | **N54** — job POST refresh + cooldown (não antecipado em N53) |
 
-## Contexto e Restrições
+## Documentos
 
-- **Issue Relacionada:** ISS-022 (`docs/ISSUES.md`).
-- **Restrições Aplicadas:**
-  - Nenhuma alteração no código Python (`src/`) foi feita nesta etapa de planejamento.
-  - O design foca na reutilização dos dados já fornecidos pela API/backend (sem invenção de P&L ou métricas compostas inexistentes).
-  - A interface reforça o estado `LIVE_TRADING_ENABLED=false` (foco em paper trading e research).
-  - O conceito de "Aprovar" um provedor não foi confundido com "Gerar um Fill" (aprovação apenas autoriza o roteamento paper).
+| Arquivo | Conteúdo |
+|---------|----------|
+| [DESIGN.md](DESIGN.md) | Tokens v2, componentes, IA global, refresh (produto), WCAG, split N53/N54 |
+| [mockups/panel-shell.md](mockups/panel-shell.md) | Shell lateral, topbar, responsivo |
+| [mockups/login.md](mockups/login.md) | Entrada operador |
+| [mockups/central.md](mockups/central.md) | Freio, semáforo, mercados |
+| [mockups/sinais.md](mockups/sinais.md) | Cockpit + **estados do botão Atualizar candidatos** |
+| [mockups/ordens.md](mockups/ordens.md) | Ordens paper abertas |
+| [mockups/historico.md](mockups/historico.md) | Fills confirmados |
+| [mockups/estrategias.md](mockups/estrategias.md) | Catálogo fases |
+| [mockups/prodigy.md](mockups/prodigy.md) | Ranking research |
+| [mockups/performance.md](mockups/performance.md) | P&L bruto paper |
+| [mockups/analise-google.md](mockups/analise-google.md) | TimesFM research |
 
-## Próximos Passos (Implementação N52)
+## Restrições (operador)
 
-O planejamento visual está concluído. O próximo passo é executar o comando `/pmo plan` ou delegar a implementação da sprint N52 para aplicar estas mudanças no arquivo `src/panel_ops_html.py`.
+- UI em **português**; código/commits em inglês.
+- **`LIVE_TRADING_ENABLED=false`** visível no shell.
+- **Aprovar** provedor ≠ **fill** na corretora.
+- **Refresh** candidatos ≠ envio de ordem; sem chave C2 no browser; fail-closed.
+- Métricas: só campos recuperados; ausente = **indisponível** (nunca zero fabricado).
+- **WCAG 2.1 AA** mínimo.
+- N53 implementou tokens v2 e shell em `src/panel_ops_html.py` (esta pasta permanece referência de design).
 
-A implementação deve focar em:
-1. Extrair os estilos inline para um bloco `<style>` unificado usando os tokens de `DESIGN.md`.
-2. Reestruturar o HTML de `render_signals_page` para seguir o layout de `mockups/sinais.md`.
-3. Adicionar empty states humanizados e badges de status visuais.
+## Histórico
+
+- `mockups/panel-overview.md` (N52) — **obsoleto**; use `panel-shell.md`.
+
+## Handoff
+
+1. Revisão operador nos wireframes.
+2. **N53** — shell + rotas + botão refresh GET (branch `front/n27-alpaca-loop`).
+3. **`/pmo plan N54`** — job POST refresh + testes de cooldown.

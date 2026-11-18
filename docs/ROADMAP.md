@@ -77,6 +77,7 @@
 | N50 | N | Lista nomeada Collective2; Sinais em operação vs auditoria vs Prodígio; Provedor visível; LIVE false | planejada | 6 | observability | ISS-020 C2 + reorganizar Sinais | *(abaixo)* |
 | N51 | N | Fila de pré-aprovação no painel com métricas de pesquisa; aprovar não envia ordem; LIVE false | planejada | 6 | observability, ledger | ISS-021 pré-aprovação + métricas | *(abaixo)* |
 | N52 | N | Cockpit Sinais: decisão no topo, todos os números de pesquisa, visual do desenho; LIVE false | planejada | 4 | observability | ISS-022 redesign UX Sinais | *(abaixo)* |
+| N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | planejada | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -140,6 +141,7 @@
 | N50 | senior+qa | Collective2 lista nomeada + reorganizar Sinais + Provedor visível; sem fill inventado |
 | N51 | senior+qa | Pré-aprovação no painel + métricas reutilizadas; sem fill inventado |
 | N52 | senior+qa | Cockpit Sinais: métricas completas + hierarquia + tokens visuais; sem fill inventado |
+| N53 | senior+qa | Plataforma visual v2 + refresh honesto GET; job refresh = N54; sem fill inventado |
 
 ---
 
@@ -4974,6 +4976,218 @@ P task. File: `tests/test_panel_ops.py` (extend; 1 file). Reuse PanelOpsHttpTest
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md` (ISS-022 keep **aberto** until EXECUTE evidence + operator confirm **and** merge to main; ISS-021 keep **aberto** unless operator already closed; ISS-020/019/017/007 keep open). Update area 2 Sinais: decision-first order; full recovered-metrics table; empty-state strings; tokens note (shared CSS vars, other pages not redesigned). DASHBOARD-OPERATIONS «Ver sinais» mentions the cockpit. Do not close ISS-010 / ISS-011 / ISS-007 / ISS-009 / ISS-017 / ISS-019 / ISS-020 / ISS-021. Do not claim EasyPanel rebuild. Do not mark the sprint finalizado before merge to main. Do not mark N45–N47 started. LIVE false.
+
+---
+
+## Sprint N53 — Aplicar o visual novo em todo o menu e mostrar o botão de atualizar candidatos
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-18 · fonte ISS-023 · Design DONE `docs/design/`  
+> titulo_humano: Painel operacional com visual novo em todas as rotas e botão de atualizar candidatos  
+> resumo_humano: Após o login, todas as telas do menu seguem o desenho v2 com o mesmo casco. Em Sinais, o botão de atualizar candidatos recarrega só os dados de pesquisa já no servidor. Job pesado fica para N54. LIVE false. Finalizado só após merge no ramo principal.  
+> Gate: rotas do menu com PanelShell v2; Sinais com refresh GET honesto; refresh ≠ aprovar ≠ ordem; pytest painel verde; mapa + nota N54; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N53.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N52 planejada/entregue · design ISS-023 · Release: ISS-023 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N52  
+> N54: POST/job refresh (fora deste bloco)
+
+### Em uma frase
+
+Todo o menu do painel ganha o visual novo do desenho aprovado, e em Sinais você passa a ter o botão de atualizar candidatos que só recarrega os dados de pesquisa já no servidor — sem aprovar nem enviar ordem; o trabalho pesado de job fica para a sprint seguinte.
+
+### O que muda para você
+
+- Central, Ordens, Histórico, Sinais, Estratégias, Prodígio, Performance, Análise Google e login seguem o mesmo casco visual: menu escuro, selo Paper com dinheiro real desligado, tipografia e cores do desenho v2
+- A hierarquia da tela Sinais do cockpit anterior permanece; o visual e os componentes passam a bater com o mockup novo
+- O botão «Atualizar candidatos» aparece na pré-aprovação; ao clicar, o servidor relê os arquivos de pesquisa e a tela atualiza — sem inventar números novos
+- Atualizar não é aprovar nem ordem; aprovar continua separado; dinheiro real continua desligado
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Casco visual único em todas as rotas do menu | Depois do login, navegue pelo menu: sidebar escura, topbar com selo Paper, páginas legíveis e alinhadas aos mockups |
+| 2 | Login e Central com o novo desenho | Tela de entrada e Central mantêm o freio de emergência visível e compreensível |
+| 3 | Sinais com botão de atualizar | Na pré-aprovação, o botão outline «Atualizar candidatos» existe; após clicar, vê feedback e dados relidos ou mensagem de erro sem sumir a fila |
+| 4 | Demais rotas no novo layout | Ordens, Histórico, Estratégias, Prodígio, Performance e Análise Google abrem sem voltar ao visual antigo |
+| 5 | Prova automática e mapa | A suíte de testes do painel passa; o mapa descreve o visual v2 e o que N54 ainda fará no refresh |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N53.0 Inventariar reuso visual e contrato de refresh honesto | `/git` | — |
+| [ ] | M | N53.1 Aplicar tokens v2 e o casco PanelShell compartilhado | `/dev` | N53.0 |
+| [ ] | M | N53.2 Alinhar o HTML de todas as rotas do menu aos mockups | `/dev` | N53.1 |
+| [ ] | M | N53.3 Expor o botão de atualizar e o endpoint GET de releitura | `/dev` | N53.2 |
+| [ ] | P | N53.4 Provar shell, refresh e ausência de envio de ordem | `/qa testes` | N53.3 |
+| [ ] | P | N53.5 Atualizar mapa, chamado e nota da sprint N54 | docs | N53.4 |
+
+### Quality Brief (Sprint N53)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`; do not call `prodigy_rank.calculate` or Collective2 HTTP from the panel (N54 job).
+Maintain: N52 Sinais hierarchy and recovered metrics; missing = indisponível; N38 brake-strip colors on Central.
+Maintain: `build_panel_bundle` semantics; N53 refresh = re-read disk/bundle only.
+Avoid: stealing N45–N47; POST refresh job in N53; inventing scores; closing ISS-023 before merge; printing API keys.
+
+### Fora de escopo
+
+- POST job refresh, cooldown R4 obrigatório, `prodigy_rank.calculate` (**N54**)
+- Inventar métricas ou preencher ausente com zero
+- Alterar semântica de `panel_ops_data` salvo bug provado
+- N45–N47, LIVE true, ordem pelo painel
+- Marcar «finalizado» antes do merge em `main`
+
+### Task N53.0 — Inventariar reuso visual e contrato de refresh honesto
+
+**Entrega:** Inventário dizendo o que já existe no HTML, o que o desenho v2 exige, e como o refresh em N53 difere do job em N54.
+**Como conferir:** O inventário cita o casco atual, os mockups por rota, a montagem do bundle, e proíbe score inventado e chave no browser.
+**Por quê:** Sem isso o EXECUTE mistura job N54 com re-skin ou chama ranking no painel.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N53-GIT-FIRST-REUSE.md`. Re-check vendor pin; no bump. Cite: `_PANEL_CSS`, `_nav`, `render_*_page`, `build_panel_bundle`, `mockups/panel-shell.md`, `mockups/sinais.md` R0–R6.
+
+### Task N53.1 — Aplicar tokens v2 e o casco PanelShell compartilhado
+
+**Entrega:** Variáveis de cor e tipografia v2 no CSS compartilhado e um casco único com menu lateral e faixa superior de contexto reutilizado por todas as rotas autenticadas.
+**Como conferir:** Abra qualquer tela do menu logado: sidebar escura, selo de ambiente Paper visível, foco e botões coerentes com o desenho; a Central ainda mostra o freio com as cores de antes.
+**Por quê:** O operador pediu plataforma inteira, não só retoques em Sinais.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_PANEL_CSS` usa tokens N52 parciais; layout `flex` simples; sem topbar formal.
+- **Estado desejado:** Tokens `docs/design/DESIGN.md` §2 em `_PANEL_CSS`; helpers `PanelShell` / `PageHeader` per `mockups/panel-shell.md`; login com `mockups/login.md`; preserve `brake-strip--active` hex.
+- **Arquivo(s):** `src/panel_ops_html.py`
+
+**executor_prompt**:
+
+```yaml
+id: N53.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N53.0"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "_PANEL_CSS" src/panel_ops_html.py && rg "def _nav" src/panel_ops_html.py'
+  - component: docs/design/DESIGN.md
+    reuse_as: copy_pattern
+    convergence_check: 'rg -- "--color-canvas" src/panel_ops_html.py && rg -- "--color-sidebar" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n53-1-no-secrets
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'sk_live' not in t.lower()"
+    pass_condition: no broker keys in HTML module
+  - class: subagent-safety
+    id: n53-1-brake-preserved
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; h=Path('src/panel_ops_html.py').read_text(); assert 'brake-strip--active' in h; assert 'process_after_gate_b' not in h"
+    pass_condition: N38 brake preserved; no order submit
+```
+
+### Task N53.2 — Alinhar o HTML de todas as rotas do menu aos mockups
+
+**Entrega:** Cada rota do menu usa o casco novo e a estrutura de página do mockup correspondente, mantendo os mesmos textos honestos e dados de antes.
+**Como conferir:** Percorra Central, Ordens, Histórico, Sinais, Estratégias, Prodígio, Performance e Análise Google: cabeçalhos, tabelas e avisos de pesquisa batem com o mapa; Sinais mantém pré-aprovação antes de operação e auditoria por último.
+**Por quê:** ISS-023 é redesign da plataforma, não só CSS solto.
+
+**Detalhe técnico**
+
+Refactor `render_central_page`, `render_orders_page`, `render_history_page`, `render_signals_page`, `render_strategies_page`, `render_prodigy_page`, `render_performance_page`, `render_analise_google_page` to use shell helpers from N53.1 and layout notes in `docs/design/mockups/*.md`. Do **not** change `panel_ops_data` loaders. Do **not** add order controls.
+
+**executor_prompt**:
+
+```yaml
+id: N53.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N53.1"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def render_signals_page" src/panel_ops_html.py && rg "Pré-aprovação" src/panel_ops_html.py'
+  - component: docs/OPERATOR-PANEL-MAP.md
+    reuse_as: call
+    convergence_check: 'rg "indisponível" src/panel_ops_html.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n53-2-sinais-order
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; h=Path('src/panel_ops_html.py').read_text(); i=h.find('def render_signals_page'); fn=h[i:i+3500]; pre=fn.find('preapproval'); op=fn.find('operating'); au=fn.find('audit'); assert 0<=pre<op<au"
+    pass_condition: Sinais hierarchy preserved
+```
+
+### Task N53.3 — Expor o botão de atualizar e o endpoint GET de releitura
+
+**Entrega:** Botão «Atualizar candidatos» visível na pré-aprovação com feedback de carregamento e sucesso ou erro, ligado a um endpoint autenticado que só relê o bundle a partir do disco.
+**Como conferir:** Logado em Sinais, clique no botão: vê estado Atualizando e depois mensagem de sucesso ou erro sem a fila sumir; a rede mostra GET autenticado, não POST de ordem nem chamada a ranking no browser.
+**Por quê:** Era a peça que faltava no ar (#70) sem antecipar o job pesado de N54.
+
+**Detalhe técnico**
+
+- UI: `mockups/sinais.md` R0–R3, hint permanente, `aria-live` feedback, button outline.
+- API: add authenticated `GET /api/signals/reload` (or documented alias) in `v4_web_dashboard.py` calling `build_panel_bundle` again; JSON response or reload signal; **no** `prodigy_rank.calculate`; document **N54** for POST/job in handler comment.
+- Client: small fetch script in `panel_ops_html.py` beside existing provider approval script; `credentials: same-origin`.
+- **Files:** `src/panel_ops_html.py`, `src/v4_web_dashboard.py`
+
+**executor_prompt**:
+
+```yaml
+id: N53.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N53.2"]
+files:
+  - src/panel_ops_html.py
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: rg "def build_panel_bundle" src/panel_ops_data.py
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: rg "/api/signals" src/v4_web_dashboard.py
+guardrail_contract:
+  - class: subagent-safety
+    id: n53-3-no-rank-in-panel
+    target: src
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_html.py').read_text(); assert 'prodigy_rank.calculate' not in t; assert 'Atualizar candidatos' in t"
+    pass_condition: refresh UI present; no rank calculate in panel path
+  - class: subagent-safety
+    id: n53-3-get-reload
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'reload' in t or 're-read' in t.lower() or 'signals/reload' in t"
+    pass_condition: reload route wired
+```
+
+### Task N53.4 — Provar shell, refresh e ausência de envio de ordem
+
+**Entrega:** Testes cobrem casco compartilhado, presença do botão, GET autenticado, hierarquia Sinais e regressão das rotas anteriores.
+**Como conferir:** Rodar a suíte do painel e ver falha se faltar botão, se refresh não exigir sessão, ou se Sinais perder a ordem decisão→operação→auditoria.
+**Por quê:** Mudança transversal no HTML exige rede de segurança antes do merge.
+
+**Detalhe técnico**
+
+P task. File: `tests/test_panel_ops.py`. Add nodeids: token/shell snippets on multiple routes; `Atualizar candidatos`; unauthenticated reload 401; no `process_after_gate_b`; Sinais order; brake-strip Central; regression N48–N52 strings.
+
+### Task N53.5 — Atualizar mapa, chamado e nota da sprint N54
+
+**Entrega:** Mapa descreve visual v2 e refresh GET; ISS-023 aponta N53; design README anota N54 para job POST.
+**Como conferir:** Ler mapa área 2 e ISS-023: sprint N53; README design lista N54 como próximo passo de refresh.
+**Por quê:** Separar claramente o que já está no ar do job que ainda virá.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md`, `docs/design/README.md`, `docs/api-spec.yaml` (reload GET). ISS-023 **aberto** até merge + operador. Do not close ISS-022/021/… without evidence. LIVE false. N45–N47 not started.
 
 ---
 

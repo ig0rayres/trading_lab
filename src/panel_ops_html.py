@@ -80,26 +80,74 @@ _STRATEGY_PHASE_LABELS = {
 
 _PANEL_CSS = '''
 :root{
---bg-canvas:#F8FAFC;--bg-card:#FFFFFF;--text-primary:#0F172A;--text-muted:#64748B;
---border-subtle:#E2E8F0;--action-primary:#0369A1;--action-danger:#B91C1C;
---status-research-bg:#F1F5F9;--status-research-text:#475569;
---status-active-bg:#ECFDF5;--status-active-text:#065F46;
---status-warning-bg:#FFFBEB;--status-warning-text:#92400E;
---radius-sm:4px;--radius-md:8px;
---text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:18px;
+--color-canvas:#F1F5F9;--color-surface:#FFFFFF;--color-sidebar:#0F172A;
+--color-sidebar-muted:#94A3B8;--color-sidebar-active:#E2E8F0;--color-sidebar-active-bg:#1E293B;
+--color-foreground:#0F172A;--color-muted:#64748B;--color-border:#CBD5E1;--color-ring:#0284C7;
+--color-primary:#0369A1;--color-primary-fg:#FFFFFF;--color-destructive:#B91C1C;
+--color-success-bg:#ECFDF5;--color-success-fg:#065F46;
+--color-warning-bg:#FFFBEB;--color-warning-fg:#92400E;
+--color-danger-bg:#FEF2F2;--color-danger-fg:#991B1B;
+--color-research-bg:#F8FAFC;--color-research-border:#94A3B8;
+--radius-sm:4px;--radius-md:8px;--radius-lg:12px;
+--text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:18px;--text-xl:20px;
+--space-4:16px;--space-6:24px;
+--bg-canvas:var(--color-canvas);--bg-card:var(--color-surface);--text-primary:var(--color-foreground);
+--text-muted:var(--color-muted);--border-subtle:var(--color-border);
+--action-primary:var(--color-primary);--action-danger:var(--color-destructive);
+--status-research-bg:var(--color-research-bg);--status-research-text:var(--color-muted);
+--status-active-bg:var(--color-success-bg);--status-active-text:var(--color-success-fg);
+--status-warning-bg:var(--color-warning-bg);--status-warning-text:var(--color-warning-fg);
 }
-body{font:var(--text-base) "IBM Plex Sans",system-ui,sans-serif;margin:0;
-background:var(--bg-canvas);color:var(--text-primary)}
-.layout{display:flex;min-height:100vh}.side{width:240px;background:#1a2332;color:#e8eef6;padding:20px}
-.side a{color:#e8eef6;text-decoration:none;display:block;padding:10px 0}.main{flex:1;padding:24px}
+body{font:var(--text-base) Inter,system-ui,sans-serif;margin:0;
+background:var(--color-canvas);color:var(--color-foreground)}
+.panel-shell{min-height:100vh;display:flex;flex-direction:column}
+.panel-topbar{height:48px;display:flex;align-items:center;justify-content:space-between;
+padding:0 var(--space-4);background:var(--color-surface);border-bottom:1px solid var(--color-border)}
+.env-badge{font-size:var(--text-sm);font-weight:600}.env-dot{color:var(--color-success-fg)}
+.layout{display:flex;flex:1;min-height:0}
+.side{width:240px;background:var(--color-sidebar);color:var(--color-sidebar-active);
+padding:var(--space-4);display:flex;flex-direction:column;gap:2px}
+.side-brand{margin-bottom:var(--space-4);font-weight:700}
+.badge-ops{font-size:var(--text-xs);background:var(--color-sidebar-active-bg);
+padding:2px 6px;border-radius:var(--radius-sm);margin-left:6px;font-weight:500}
+.nav-link{color:var(--color-sidebar-muted);text-decoration:none;display:block;
+padding:10px 12px;border-radius:var(--radius-md);border-left:3px solid transparent}
+.nav-link:focus-visible{outline:3px solid var(--color-ring);outline-offset:2px}
+.nav-link--active{color:var(--color-sidebar-active);background:var(--color-sidebar-active-bg);
+border-left-color:var(--color-primary)}
+.side-version{margin-top:auto;font-size:var(--text-xs);color:var(--color-sidebar-muted)}
+.main{flex:1;padding:var(--space-6);background:var(--color-canvas)}
+.page-header{margin-bottom:var(--space-6)}
+.page-header__row{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
+.page-header h1{margin:0 0 4px;font-size:var(--text-xl);font-weight:600}
+.research-banner{padding:12px var(--space-4);margin-bottom:var(--space-4);
+background:var(--color-research-bg);border:1px dashed var(--color-research-border);
+border-radius:var(--radius-md);font-size:var(--text-sm)}
+.section-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:var(--space-4)}
+.login-card{max-width:420px;width:100%;padding:var(--space-6);background:var(--color-surface);
+border:1px solid var(--color-border);border-radius:var(--radius-lg)}
+.login-badge{display:inline-block;padding:4px 10px;border-radius:var(--radius-sm);
+background:var(--color-success-bg);color:var(--color-success-fg);font-size:var(--text-xs);font-weight:600;margin:8px 0}
+.login-card label{display:block;margin:12px 0;font-size:var(--text-sm)}
+.login-card input{width:100%;padding:10px;margin-top:4px;border:1px solid var(--color-border);
+border-radius:var(--radius-md);font:inherit}
+.login-footer{margin-top:var(--space-4);font-size:var(--text-sm);color:var(--color-muted)}
 .card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);
-padding:16px;margin:8px 0}
+padding:var(--space-4);margin:8px 0}
 .muted{color:var(--text-muted)}
 .btn{display:inline-block;padding:10px 16px;border-radius:var(--radius-md);border:none;cursor:pointer;
-font-weight:600;font-size:var(--text-sm)}
-.btn-primary{background:var(--action-primary);color:#fff}
+font-weight:600;font-size:var(--text-sm);min-height:44px;text-decoration:none;text-align:center}
+.btn-primary{background:var(--action-primary);color:var(--color-primary-fg)}
 .btn-danger-outline{background:transparent;color:var(--action-danger);
 border:1px solid var(--action-danger)}
+.btn-outline{background:transparent;color:var(--color-primary);border:1px solid var(--color-primary)}
+.btn-ghost{background:transparent;color:var(--color-muted);border:1px solid var(--color-border)}
+.btn-ghost:hover{color:var(--color-foreground)}
+.inline-alert{padding:10px 12px;border-radius:var(--radius-md);margin:8px 0;font-size:var(--text-sm)}
+.inline-alert--loading{background:var(--color-research-bg);color:var(--color-muted)}
+.inline-alert--ok{background:var(--color-success-bg);color:var(--color-success-fg)}
+.inline-alert--err{background:var(--color-danger-bg);color:var(--color-danger-fg)}
 .metrics-block{display:flex;flex-direction:column;gap:4px;font-size:var(--text-sm)}
 .metrics-block .metric{display:block;color:var(--text-primary)}
 .empty-state{padding:16px;border-radius:var(--radius-md);background:var(--status-research-bg);
@@ -110,7 +158,7 @@ font-size:var(--text-xs);font-weight:500}
 .badge-status--approved{background:var(--status-active-bg);color:var(--status-active-text)}
 .badge-status--rejected{background:var(--status-warning-bg);color:var(--status-warning-text)}
 table{width:100%;border-collapse:collapse}td,th{border:1px solid var(--border-subtle);padding:12px 16px;
-text-align:left;font-size:var(--text-sm)}
+text-align:left;font-size:var(--text-sm);font-variant-numeric:tabular-nums}
 .warn{background:var(--status-warning-bg);border:1px solid #e6c48a;padding:12px;border-radius:var(--radius-md);
 color:var(--status-warning-text)}
 .brake-strip{padding:12px 16px;border-radius:8px;margin:8px 0;display:flex;flex-wrap:wrap;
@@ -120,12 +168,12 @@ align-items:center;gap:12px;justify-content:space-between;transition:background 
 .brake-strip__body{flex:1;min-width:200px}
 .brake-strip__title{font-size:22px;font-weight:700;margin:0}
 .brake-strip__help{font-size:14px;margin:4px 0 0}
-.brake-strip__cta{padding:10px 16px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+.brake-strip__cta{padding:10px 16px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600;min-height:44px}
 .brake-strip--active .brake-strip__cta{background:#FFF7F5;color:#7A1218;border:none}
 .brake-strip--released .brake-strip__cta{background:transparent;color:#FFF7F5;border:2px solid #E6B6B6}
 .brake-strip__cta:focus-visible{outline:3px solid #F0C14B;outline-offset:3px}
 @media (prefers-reduced-motion:reduce){.brake-strip{transition:none}}
-.mono{font-family:"IBM Plex Mono",monospace}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 '''
 
 
@@ -136,29 +184,78 @@ def esc(value: Any) -> str:
 def render_login_page(*, error: str | None = None) -> str:
     err = f'<p role="alert" class="warn">Informe a senha do protótipo.</p>' if error else ''
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Entrar — Trading Lab</title>
-<style>{_PANEL_CSS}</style></head><body><main class="main" style="max-width:420px;margin:40px auto">
-<h1>Trading Lab</h1><p class="muted">Central de controle. Conta demo.</p>{err}
-<form method="post" action="/api/login"><label>E-mail<input name="email" type="email" placeholder="operador@demo"></label>
-<label>Senha<input name="password" type="password" required></label>
-<button class="btn btn-primary" type="submit">Entrar</button></form></main></body></html>'''
+<style>{_PANEL_CSS}</style></head><body><div class="login-wrap">
+<main class="login-card"><h1>Trading Lab — Painel operador</h1>
+<span class="login-badge">Paper · Live desligado</span>
+<p class="muted">Protótipo: informe qualquer senha não vazia.</p>{err}
+<form method="post" action="/api/login"><label>E-mail<input name="email" type="email"
+placeholder="operador@demo" autocomplete="username"></label>
+<label>Senha<input name="password" type="password" required autocomplete="current-password"></label>
+<button class="btn btn-primary" type="submit" style="width:100%">Entrar</button></form>
+<p class="login-footer">Pesquisa não autoriza ordem no painel.</p></main></div></body></html>'''
+
+
+def _topbar_html() -> str:
+    return (
+        '<header class="panel-topbar" role="banner">'
+        '<span class="env-badge"><span class="env-dot" aria-hidden="true">●</span> '
+        'Paper · Live desligado</span>'
+        '<a class="btn btn-ghost" href="/login">Sair</a>'
+        '</header>'
+    )
+
+
+def _page_header(title: str, subtitle: str, actions: str = '') -> str:
+    actions_html = f'<div class="page-header__actions">{actions}</div>' if actions else ''
+    return (
+        f'<header class="page-header"><div class="page-header__row">'
+        f'<div><h1>{esc(title)}</h1><p class="muted">{esc(subtitle)}</p></div>'
+        f'{actions_html}</div></header>'
+    )
+
+
+def _wrap_panel_page(
+    *,
+    title: str,
+    active: str,
+    page_title: str,
+    subtitle: str,
+    body: str,
+    research_banner: str = '',
+    scripts: str = '',
+) -> str:
+    header = _page_header(page_title, subtitle)
+    banner = research_banner
+    script_tag = f'<script>{scripts}</script>' if scripts else ''
+    return (
+        f'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+        f'<title>{esc(title)}</title><style>{_PANEL_CSS}</style></head><body>'
+        f'<div class="panel-shell">{_topbar_html()}'
+        f'<div class="layout">{_nav(active)}<main class="main">{header}{banner}{body}</main></div>'
+        f'</div><!-- PanelShell v2 ISS-023 -->{script_tag}</body></html>'
+    )
 
 
 def _nav(active: str) -> str:
     links = (
         ('central', '/', 'Central'),
-        ('sinais', '/sinais', 'Sinais'),
-        ('estrategias', '/estrategias', 'Estratégias'),
-        ('analise_google', '/analise-google', 'Análise Google'),
         ('ordens', '/ordens', 'Ordens'),
         ('historico', '/historico', 'Histórico'),
+        ('sinais', '/sinais', 'Sinais'),
+        ('estrategias', '/estrategias', 'Estratégias'),
         ('prodigy', '/prodigy', 'Prodígio'),
         ('performance', '/performance', 'Performance'),
+        ('analise_google', '/analise-google', 'Análise Google'),
     )
-    parts = ['<nav class="side"><strong>Trading Lab</strong>']
+    parts = [
+        '<nav class="side panel-sidebar" aria-label="Menu principal">',
+        '<div class="side-brand">Trading Lab<span class="badge-ops">Ops</span></div>',
+    ]
     for key, href, label in links:
-        prefix = '→ ' if key == active else ''
-        parts.append(f'<a href="{href}">{prefix}{esc(label)}</a>')
-    parts.append('</nav>')
+        cls = 'nav-link nav-link--active' if key == active else 'nav-link'
+        aria = ' aria-current="page"' if key == active else ''
+        parts.append(f'<a class="{cls}" href="{href}"{aria}>{esc(label)}</a>')
+    parts.append('<span class="side-version">ISS-023</span></nav>')
     return ''.join(parts)
 
 
@@ -202,6 +299,44 @@ document.querySelectorAll('[data-provider-action]').forEach(btn=>{
   btn.onclick=()=>setProviderApproval(
     btn.dataset.platform,btn.dataset.providerId,btn.dataset.providerAction);
 });
+'''
+
+_CANDIDATES_RELOAD_HINT = (
+    'Recarrega JSON de pesquisa no servidor — não aprova nem envia ordem.'
+)
+
+_CANDIDATES_RELOAD_SCRIPT = '''
+(async function(){
+  const btn=document.getElementById('reload-candidates');
+  const box=document.getElementById('reload-feedback');
+  if(!btn||!box)return;
+  btn.onclick=async()=>{
+    btn.disabled=true;
+    btn.setAttribute('aria-busy','true');
+    box.hidden=false;
+    box.className='inline-alert inline-alert--loading';
+    box.textContent='Atualizando candidatos…';
+    try{
+      const res=await fetch('/api/signals/reload',{method:'GET',credentials:'same-origin'});
+      if(res.status===401){location.href='/login';return;}
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok){
+        box.className='inline-alert inline-alert--err';
+        box.textContent=data.message||'Não foi possível recarregar os candidatos.';
+        return;
+      }
+      box.className='inline-alert inline-alert--ok';
+      box.textContent=data.message||'Candidatos atualizados a partir do disco.';
+      setTimeout(()=>location.reload(),500);
+    }catch(_e){
+      box.className='inline-alert inline-alert--err';
+      box.textContent='Erro de rede ao atualizar candidatos.';
+    }finally{
+      btn.disabled=false;
+      btn.removeAttribute('aria-busy');
+    }
+  };
+})();
 '''
 
 
@@ -250,16 +385,22 @@ def render_central_page(data: dict[str, Any], triggers: dict[str, Any] | None) -
         f'<td>{esc(s.get("destination"))}</td><td>{esc(s.get("reject_reason") or "—")}</td></tr>'
         for s in recent
     ) or '<tr><td colspan="4">Sem sinais recentes</td></tr>'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Central</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("central")}<main class="main">
-<h1>Central</h1><p class="muted">Conta demo · Live desligado (sem botão)</p>
-{brake}
-{_platform_health_block(data.get("platform_health"))}
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">{cards}</div>
-<h2>Mercados</h2><table><tbody>{market_rows}</tbody></table>
-<h2>Sinais recentes</h2><table><tbody>{sig_rows}</tbody></table>
-<p><a href="/sinais">Ver todos os sinais</a></p></main></div>
-<script>{_KILL_PATCH_SCRIPT}</script></body></html>'''
+    body = (
+        f'{brake}'
+        f'{_platform_health_block(data.get("platform_health"))}'
+        f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">{cards}</div>'
+        f'<h2>Mercados</h2><table><tbody>{market_rows}</tbody></table>'
+        f'<h2>Sinais recentes</h2><table><tbody>{sig_rows}</tbody></table>'
+        f'<p><a href="/sinais">Ver todos os sinais</a></p>'
+    )
+    return _wrap_panel_page(
+        title='Central',
+        active='central',
+        page_title='Central',
+        subtitle='Conta demo · Live desligado (sem botão)',
+        body=body,
+        scripts=_KILL_PATCH_SCRIPT,
+    )
 
 
 def render_orders_page(bundle: dict[str, Any]) -> str:
@@ -271,11 +412,18 @@ def render_orders_page(bundle: dict[str, Any]) -> str:
         f'<td>{esc(o.get("strategy_key") or "—")}</td></tr>'
         for o in bundle.get('open_orders') or []
     ) or '<tr><td colspan="7">Nenhuma ordem aberta no paper.</td></tr>'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ordens</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("ordens")}<main class="main">
-<h1>Ordens abertas</h1><p class="muted">Somente leitura — paper demo. Live desligado.</p>
-<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Status</th><th>Corretora</th><th>Qtd rest.</th><th>Estratégia</th></tr></thead>
-<tbody>{rows}</tbody></table></main></div></body></html>'''
+    body = (
+        '<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Status</th>'
+        '<th>Corretora</th><th>Qtd rest.</th><th>Estratégia</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table>'
+    )
+    return _wrap_panel_page(
+        title='Ordens',
+        active='ordens',
+        page_title='Ordens abertas',
+        subtitle='Somente leitura — paper demo. Live desligado.',
+        body=body,
+    )
 
 
 def render_history_page(bundle: dict[str, Any]) -> str:
@@ -287,11 +435,17 @@ def render_history_page(bundle: dict[str, Any]) -> str:
         f'<td>{label}</td><td>{esc(h.get("strategy_key") or "—")}</td></tr>'
         for h in bundle.get('order_history') or []
     ) or '<tr><td colspan="6">Nenhum fill confirmado no histórico.</td></tr>'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Histórico</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("historico")}<main class="main">
-<h1>Histórico de fills</h1><p class="muted">Apenas fills confirmados — fila e HTTP 200 não entram.</p>
-<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Resultado</th><th>Rótulo</th><th>Estratégia</th></tr></thead>
-<tbody>{rows}</tbody></table></main></div></body></html>'''
+    body = (
+        '<table><thead><tr><th>ID cliente</th><th>Ativo</th><th>Lado</th><th>Resultado</th>'
+        f'<th>Rótulo</th><th>Estratégia</th></tr></thead><tbody>{rows}</tbody></table>'
+    )
+    return _wrap_panel_page(
+        title='Histórico',
+        active='historico',
+        page_title='Histórico de fills',
+        subtitle='Apenas fills confirmados — fila e HTTP 200 não entram.',
+        body=body,
+    )
 
 
 def _strategy_phase_label(phase: Any) -> str:
@@ -329,11 +483,17 @@ def _analise_google_body(block: dict[str, Any]) -> str:
 def render_analise_google_page(bundle: dict[str, Any]) -> str:
     block = bundle.get('timesfm') if isinstance(bundle.get('timesfm'), dict) else {}
     body = _analise_google_body(block)
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Análise Google</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("analise_google")}<main class="main">
-<h1>Análise Google</h1><p class="muted">{esc(_N43_SUBTITLE)}</p>
-{body}
-<p class="muted">{esc(_N43_FOOTER)}</p></main></div></body></html>'''
+    page_body = f'{body}<p class="muted">{esc(_N43_FOOTER)}</p>'
+    return _wrap_panel_page(
+        title='Análise Google',
+        active='analise_google',
+        page_title='Análise Google',
+        subtitle=_N43_SUBTITLE,
+        research_banner=(
+            f'<aside class="research-banner">{esc(_N43_SUBTITLE)}</aside>'
+        ),
+        body=page_body,
+    )
 
 
 def render_strategies_page(bundle: dict[str, Any]) -> str:
@@ -351,12 +511,17 @@ def render_strategies_page(bundle: dict[str, Any]) -> str:
             for s in strategies
         )
     disclaimer = 'Promoção de fase: somente operador (fora deste menu).'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Estratégias</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("estrategias")}<main class="main">
-<h1>Estratégias</h1><p class="muted">Catálogo de fases — somente leitura. Live desligado.</p>
-<table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead>
-<tbody>{rows}</tbody></table>
-<p class="muted">{esc(disclaimer)}</p></main></div></body></html>'''
+    page_body = (
+        '<table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table><p class="muted">{esc(disclaimer)}</p>'
+    )
+    return _wrap_panel_page(
+        title='Estratégias',
+        active='estrategias',
+        page_title='Estratégias',
+        subtitle='Catálogo de fases — somente leitura. Live desligado.',
+        body=page_body,
+    )
 
 
 def _order_signal_cell(row: dict[str, Any]) -> str:
@@ -670,11 +835,19 @@ def _signals_preapproval_section_html(preapproval: dict[str, Any]) -> str:
             '<th>Métricas vitais (pesquisa)</th><th>Status</th><th>Ações</th>'
             f'</tr></thead><tbody>{"".join(rows)}</tbody></table>'
         )
+    refresh_controls = (
+        '<div class="section-header">'
+        f'<p class="muted" style="margin:0">{esc(_N51_PREAPPROVAL_SUBTITLE)}</p>'
+        '<button type="button" class="btn btn-outline" id="reload-candidates">'
+        '<span aria-hidden="true">↻</span> Atualizar candidatos</button>'
+        '</div>'
+        f'<p class="muted panel-hint">{esc(_CANDIDATES_RELOAD_HINT)}</p>'
+        '<div id="reload-feedback" class="inline-alert" aria-live="polite" role="status" hidden></div>'
+    )
     return (
         f'<h2>{esc(_N51_PREAPPROVAL_SECTION)}</h2>'
-        f'<p class="muted">{esc(_N51_PREAPPROVAL_SUBTITLE)}</p>'
+        f'{refresh_controls}'
         f'{body}'
-        f'<script>{_PROVIDER_APPROVAL_SCRIPT}</script>'
     )
 
 
@@ -705,18 +878,30 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     adoption_body = _signals_adoption_html(copy.get('adoption') or {})
     audit_body = _signals_audit_section_html(signals)
     footer = f'<p class="muted">{esc(_N48_FOOTER)}</p>'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Sinais</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("sinais")}<main class="main">
-<h1>Sinais</h1>
-<p class="muted">Cockpit de decisão — cópia de terceiros (pesquisa). Live desligado.</p>
-{preapproval_body}
-{operating_body}
-{inventory_body}
-{c2_body}
-{pool_body}
-{adoption_body}
-{audit_body}
-{footer}</main></div></body></html>'''
+    body = (
+        f'{preapproval_body}'
+        f'{operating_body}'
+        f'{inventory_body}'
+        f'{c2_body}'
+        f'{pool_body}'
+        f'{adoption_body}'
+        f'{audit_body}'
+        f'{footer}'
+    )
+    research = (
+        '<aside class="research-banner">'
+        'Cópia de terceiros — pesquisa. Aprovar não é fill. Live desligado.</aside>'
+    )
+    scripts = _PROVIDER_APPROVAL_SCRIPT + _CANDIDATES_RELOAD_SCRIPT
+    return _wrap_panel_page(
+        title='Sinais',
+        active='sinais',
+        page_title='Sinais',
+        subtitle='Cockpit de decisão — cópia de terceiros (pesquisa). Live desligado.',
+        research_banner=research,
+        body=body,
+        scripts=scripts,
+    )
 
 
 def render_prodigy_page(bundle: dict[str, Any], opportunities: dict[str, Any]) -> str:
@@ -734,12 +919,22 @@ def render_prodigy_page(bundle: dict[str, Any], opportunities: dict[str, Any]) -
         f'<td>{esc(c.get("signal_id"))}</td></tr>'
         for c in copied
     ) or '<tr><td colspan="3">Nenhuma cópia registrada</td></tr>'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Prodígio</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("prodigy")}<main class="main">
-<h1>Prodígio</h1><p class="warn">Ranking e cópias são pesquisa — não autorizam ordem.</p>
-<p class="muted">{disclaimer}</p>
-<h2>Ranking (rótulo <code>research_tip</code>)</h2><table><tbody>{rank_rows}</tbody></table>
-<h2>Sinais copiados</h2><table><tbody>{copy_rows}</tbody></table></main></div></body></html>'''
+    body = (
+        f'<p class="warn">Ranking e cópias são pesquisa — não autorizam ordem.</p>'
+        f'<p class="muted">{disclaimer}</p>'
+        f'<h2>Ranking (rótulo <code>research_tip</code>)</h2><table><tbody>{rank_rows}</tbody></table>'
+        f'<h2>Sinais copiados</h2><table><tbody>{copy_rows}</tbody></table>'
+    )
+    return _wrap_panel_page(
+        title='Prodígio',
+        active='prodigy',
+        page_title='Prodígio',
+        subtitle='Ranking e cópias — somente pesquisa.',
+        research_banner=(
+            '<aside class="research-banner">Prodígio — pesquisa; não autoriza ordem.</aside>'
+        ),
+        body=body,
+    )
 
 
 def render_performance_page(perf: dict[str, Any]) -> str:
@@ -750,9 +945,16 @@ def render_performance_page(perf: dict[str, Any]) -> str:
         f'<td>{label}</td></tr>'
         for s in perf.get('strategies') or []
     ) or '<tr><td colspan="3">Sem fills confirmados</td></tr>'
-    return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Performance</title>
-<style>{_PANEL_CSS}</style></head><body><div class="layout">{_nav("performance")}<main class="main">
-<h1>Performance</h1><p class="warn">Valores rotulados <b>{label}</b> — ordens sem fill não entram.</p>
-<p>Total: <span class="mono">{esc(total)}</span> ({label})</p>
-<table><thead><tr><th>Estratégia</th><th>Resultado</th><th>Rótulo</th></tr></thead><tbody>{strat_rows}</tbody></table>
-</main></div></body></html>'''
+    body = (
+        f'<p class="warn">Valores rotulados <b>{label}</b> — ordens sem fill não entram.</p>'
+        f'<p>Total: <span class="mono">{esc(total)}</span> ({label})</p>'
+        '<table><thead><tr><th>Estratégia</th><th>Resultado</th><th>Rótulo</th></tr></thead>'
+        f'<tbody>{strat_rows}</tbody></table>'
+    )
+    return _wrap_panel_page(
+        title='Performance',
+        active='performance',
+        page_title='Performance',
+        subtitle='Somente fills confirmados. Live desligado.',
+        body=body,
+    )

@@ -26,6 +26,7 @@
 | ISS-020 | aberto | N50 | Habilitar Collective2 + reorganizar tela Sinais; Prodígio provider None |
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
+| ISS-023 | aberto | (design) | Botão refresh candidatos + redesign visual completo do painel |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -635,5 +636,31 @@
 **Nota planejamento (2026-11-17):** Design DONE (`docs/design/DESIGN.md`, `mockups/sinais.md`, `mockups/panel-overview.md`). Sprint **N52** planejada (`docs/.briefs/N52.brief.md`). EXECUTE ainda não rodou. Entrega «finalizado» só após merge no ramo principal.
 
 **Nota N52 EXECUTE (2026-11-17):** `panel_ops_html` cockpit + métricas completas na pré-aprovação; testes painel 75 OK. **Chamado aberto** até merge `main` + rebuild EasyPanel + confirmação visual. «Finalizado» só pós-merge.
+
+**Nota operador (2026-11-18):** #70 no ar; visual ainda **sofrível**; falta botão de refresh de candidatos. Escopo ampliado → **ISS-023** (especialista design + refresh). ISS-022 permanece aberto (N52 parcial).
+
+---
+
+## ISS-023 — Botão refresh de candidatos + redesign visual completo do painel
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio / design |
+| Sprint | **N53** (UI PanelShell v2 + `GET /api/signals/reload`) em `front/n27-alpaca-loop` · **N54** (job POST) seguinte |
+| Status | aberto até merge `main` + rebuild operador |
+| Impacto | Operador precisa **atualizar sugestões de sinais no painel** (hoje só lê JSON estático; sem botão). Visual do menu operacional continua inadequado após N52 — exige **nova estrutura visual** de toda a plataforma (Central, Sinais, Ordens, Histórico, Estratégias, Prodígio, Performance, Análise Google), não só métricas na fila. |
+
+**Diretrizes do operador (2026-11-18):**
+1. **Botão** na área de candidatos/pré-aprovação para refrescar sugestões (ação explícita no painel; sem depender de editar disco/cron invisível).
+2. **Especialista design** redesenha toda a plataforma — nova estrutura visual (IA + tokens + mockups por rota).
+3. LIVE false; refresh **não** autoriza ordem; painel não inventa score; se refresh dispara job, fail-closed e sem chave C2 no browser.
+
+**Fase pré-código:** `/designer planejar` (plataforma inteira) → atualizar `docs/design/`. Depois `/pmo plan` N53+ (UI + refresh).
+
+**Não fecha:** ISS-007, ISS-016, ISS-017, ISS-019–022. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-18; ISS-022/N52; OPERATOR-PANEL-MAP; `prodigy_rank` / provider-research JSON.
+
+**Nota autopilot:** registro ISS-023; design obrigatório antes de N.
 
 ---

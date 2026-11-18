@@ -1,6 +1,6 @@
 # Mapa operador — onde está cada coisa no painel
 
-> Sprint **N43** (2026-11-17) · somente leitura · `LIVE_TRADING_ENABLED=false` · mapa base **N40** / **ISS-016**  
+> Sprint **N53** (2026-11-18) visual v2 + refresh GET · **N43** mapa base · `LIVE_TRADING_ENABLED=false`  
 > Épico histórico do painel único: **ISS-007** (permanece aberto). Orientação: **ISS-016** (mapa existe; chamado de orientação continua registrado).  
 > Não confundir semáforo no ar, fila ou HTTP 200 com **fill** na corretora.
 
@@ -33,7 +33,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | Campo | Detalhe |
 |-------|---------|
 | **Onde clicar** | Menu lateral → **Central**, ou `GET /` após login. |
-| **Superfície** | **Menu do dia a dia** (`render_central_page`). No Command Panel v1 há semáforo e cartões de contagem, mas **sem** a faixa de freio da Central. |
+| **Superfície** | **Menu do dia a dia** (`render_central_page`) com **PanelShell v2** (sidebar escura, topbar `Paper · Live desligado`, tokens `docs/design/DESIGN.md`). No Command Panel v1 há semáforo e cartões de contagem, mas **sem** a faixa de freio da Central. |
 | **Fonte de dados** | `build_panel_bundle` / `panel_ops_data` + bloco de saúde (`platform_health`); âncoras e flags via APIs de painel. |
 | **Com dado** | Faixa do freio (Ativar/Liberar conforme estado), tabela de mercados/âncoras, bloco de saúde da plataforma, trecho de sinais recentes na página. |
 | **Vazio (texto real no código)** | Semáforo: `Aguardando primeira checagem automática (v4-ops)` · Sinais na Central: `Sem sinais recentes` |
@@ -45,8 +45,8 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 | Campo | Detalhe |
 |-------|---------|
-| **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. |
-| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48–N52**); cockpit (**N52** / ISS-022): **Pré-aprovação** (métricas de pesquisa completas) → **Em operação / assinados** → inventário → **Collective2** → pool Prodígio → critérios → **auditoria** por último. Desenho: `docs/design/mockups/sinais.md`. **Não** é página separada no Command Panel v1. |
+| **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. Refresh honesto (**N53** / ISS-023): botão **Atualizar candidatos** + `GET /api/signals/reload` (sessão obrigatória) — só relê `build_panel_bundle` no disco; **não** aprova, **não** envia ordem, **não** calcula ranking (**job POST = N54**). |
+| **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48–N53**); cockpit (**N52** / ISS-022) + shell visual (**N53** / ISS-023): **Pré-aprovação** (métricas de pesquisa completas + botão refresh) → **Em operação / assinados** → inventário → **Collective2** → pool Prodígio → critérios → **auditoria** por último. Desenho: `docs/design/mockups/sinais.md`. **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
 
 ### Pré-aprovação de provedores (**N51** / ISS-021)

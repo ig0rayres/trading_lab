@@ -1,76 +1,99 @@
-# Wireframe: Sinais (Cockpit de Decisão)
+# Mockup: Sinais (cockpit cópia de terceiros)
 
-> **Rota:** `/sinais`
-> **Objetivo:** Facilitar a tomada de decisão (aprovar/rejeitar) expondo métricas vitais, e separar claramente o que está operando do que é apenas auditoria.
+**Rota:** `/sinais`  
+**API:** `GET /api/signals` · `POST /api/signals/providers`  
+**Autenticação:** sessão operador
 
-## Layout Estrutural
+## Layout
 
 ```text
-+-----------------------------------------------------------------------------------+
-| [ Menu Lateral ] |  Sinais (Cópia de Terceiros)                                   |
-| - Central        |  Gerencie assinaturas e provedores externos.                   |
-| - Ordens         |                                                                |
-| - Histórico      |  +----------------------------------------------------------+  |
-| - SINAIS (Ativo) |  | [1] Pré-Aprovação de Provedores (Fila de Decisão)        |  |
-| - Estratégias    |  |----------------------------------------------------------|  |
-| - Prodígio       |  | Candidatos aguardando sua análise. Aprovar libera paper. |  |
-| - Performance    |  |                                                          |  |
-| - Análise Google |  | Plataforma | Nome (ID) | Métricas Vitais | Ações       |  |
-|                  |  |------------|-----------|-----------------|-------------|  |
-|                  |  | collective2| Easy Value| Assert: 65.4%   | [Aprovar]   |  |
-|                  |  |            | (132169)  | PF: 1.82        | [Rejeitar]  |  |
-|                  |  |            |           | DD: -12.4%      |             |  |
-|                  |  |            |           | Score: N/D      |             |  |
-|                  |  |------------|-----------|-----------------|-------------|  |
-|                  |  | prodigy    | ETF Timer | Assert: 100.0%  | [Aprovar]   |  |
-|                  |  |            | (304153)  | PF: N/D         | [Rejeitar]  |  |
-|                  |  |            |           | Ret: 5812.72    |             |  |
-|                  |  |            |           | Score: 95.2     |             |  |
-|                  |  +----------------------------------------------------------+  |
-|                  |                                                                |
-|                  |  +----------------------------------------------------------+  |
-|                  |  | [2] Em Operação / Assinados (Inventário)                 |  |
-|                  |  |----------------------------------------------------------|  |
-|                  |  | Sinais autorizados postando ordens paper.                |  |
-|                  |  |                                                          |  |
-|                  |  | Origem     | ID do Sinal      | Fills | Resultado Bruto|  |
-|                  |  |------------|------------------|-------|----------------|  |
-|                  |  | tradingview| 2c3051ec-6e93... | 0     | -              |  |
-|                  |  +----------------------------------------------------------+  |
-|                  |                                                                |
-|                  |  +----------------------------------------------------------+  |
-|                  |  | [3] Origens e Auditoria (Research / Fechados)            |  |
-|                  |  |----------------------------------------------------------|  |
-|                  |  | > Collective2 (Cópia fechada - Nenhum provedor ativo)    |  |
-|                  |  | > Pool Prodígio (Research-only)                          |  |
-|                  |  | > Critérios de Adoção (Feature 4/9)                      |  |
-|                  |  | > Auditoria de Ingresso (Sinais crus recebidos)          |  |
-|                  |  +----------------------------------------------------------+  |
-+-----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------+
+| h1 Sinais                                                                   |
+| Cópia de terceiros (TradingView / provedores). Decisão antes da fila.     |
+|                                                      [ Atualizar candidatos ]|
++-----------------------------------------------------------------------------+
+| [1] PRÉ-APROVAÇÃO DE PROVEDORES                              badge: decisão |
+| Sub: Candidatos na fila. Aprovar libera roteamento paper — não é fill.      |
+| Status refresh: (ver tabela de estados abaixo)                               |
+| +-------------------------------------------------------------------------+ |
+| | Plataforma | Nome (ID) | Métricas (pesquisa) | Status | Ações          | |
+| |------------|-----------|---------------------|--------|----------------| |
+| | collective2| Easy Val. | Assert: 65,4% (pesq)| pending| Aprovar Rejeitar| |
+| |            | (132169)  | PF: 1,82 …          |        |                | |
+| +-------------------------------------------------------------------------+ |
+|                                                                               |
+| [2] EM OPERAÇÃO / ASSINADOS                                                |
+| Banner: Cópia de terceiros … **Não é fill.**                                 |
+| Tabela origem · sinal · fills · bruto (gross_unverified_costs)               |
+|                                                                               |
+| [3] INVENTÁRIO · [4] COLLECTIVE2 · [5] POOL PRODÍGIO (research)              |
+| [6] CRITÉRIOS ADOÇÃO (Feature 4/9/10)                                        |
+| [7] AUDITORIA DE INGRESSO (última) — Não é fill.                             |
++-----------------------------------------------------------------------------+
 ```
 
-## Componentes Chave
+## Botão «Atualizar candidatos» (ISS-023)
 
-### 1. Bloco "Métricas Vitais" (Pré-Aprovação)
-Em vez de espalhar métricas em 10 colunas que quebram o layout, agrupamos os dados vitais em um bloco de texto estruturado na coluna `Métricas Vitais`:
+**Posição:** `PageHeader` à direita, alinhado ao título da página **ou** cabeçalho da seção [1] pré-aprovação (preferência: **cabeçalho da seção [1]** para contexto claro).
 
-```html
-<div class="metrics-block">
-  <span class="metric"><strong>Assertividade:</strong> 65.4%</span>
-  <span class="metric"><strong>Fator Lucro:</strong> 1.82</span>
-  <span class="metric"><strong>Drawdown Max:</strong> -12.4%</span>
-  <span class="metric"><strong>Score:</strong> 85.0</span>
-</div>
+**Rótulo:** `Atualizar candidatos`  
+**Tooltip / hint permanente (texto menor abaixo do botão):**  
+`Recarrega JSON de pesquisa no servidor. Não aprova nem envia ordem.`
+
+**Variante visual:** `Button` outline (`--color-border`); **não** usar cor primária (reservada a Aprovar).
+
+### Estados do CTA
+
+| ID | Estado | Aparência | Comportamento | Copy UI |
+|----|--------|-----------|---------------|---------|
+| R0 | **idle** | Outline, ícone ↻ | Clicável | `Atualizar candidatos` |
+| R1 | **loading** | Outline disabled + spinner | `aria-busy=true`; ignora cliques | `Atualizando…` |
+| R2 | **success** | Volta idle + toast success (3s) | Re-render tabela pré-aprovação com bundle novo | Toast: `Candidatos atualizados às HH:MM.` + `aria-live` |
+| R3 | **error** | Idle + toast/InlineAlert danger | **Fail-closed:** fila anterior permanece | `Não foi possível atualizar. Tente de novo ou use o runbook.` |
+| R4 | **cooldown** | Outline disabled | Opcional implementação: 30s entre cliques | `Aguarde antes de atualizar de novo.` |
+| R5 | **sem sessão** | Oculto ou disabled | 401 se API chamada | N/A — redirect login |
+| R6 | **job indisponível** | Outline + aviso inline | 503 migration/ledger | `Atualização indisponível: serviço de pesquisa ou migration ausente.` |
+
+**Distinções obrigatórias (copy próxima ao botão em R0/R2):**
+
+- Refresh **≠** Aprovar  
+- Refresh **≠** ordem / fill  
+- Dados ainda rotulados **(pesquisa)** após refresh  
+
+**Implementação futura (nota para N53/N54):** `POST` ou `GET` dedicado server-side que reexecuta leitura de arquivos / job allowlisted — **sem** expor chaves C2/Alpaca no browser; não chamar `prodigy_rank.calculate` do painel (mapa).
+
+## Seção [1] — Métricas vitais
+
+Agrupamento em `MetricCluster` (não 10 colunas):
+
+```text
+Assertividade (pesquisa): 65,4%  |  Encolhida: indisponível
+Fator de lucro (pesquisa): 1,82  |  Retorno líq.: indisponível
+Drawdown máx. (pesquisa): -12,4% |  Score: indisponível
 ```
-*(Nota: Valores ausentes devem mostrar "N/D" ou "-" para não poluir visualmente com a palavra "indisponível" repetida).*
 
-### 2. Ações (Aprovar / Rejeitar)
-- Botão `Aprovar`: Azul escuro (`--action-primary`).
-- Botão `Rejeitar`: Vermelho sutil ou outlined (`--action-danger`), para evitar clique acidental.
-- Status 'pending' vira um badge visual discreto.
+Ausente no JSON → **indisponível** (nunca `0` ou `N/D` silencioso sem rótulo pesquisa).
 
-### 3. Empty States Humanizados
-- **Fila de Pré-Aprovação Vazia:**
-  `<div class="empty-state">Nenhum provedor aguardando análise no momento. Novos candidatos aparecerão aqui.</div>`
-- **Inventário Vazio:**
-  `<div class="empty-state">Nenhuma cópia de terceiro em operação. Aprove um provedor acima para iniciar.</div>`
+## Ações por linha
+
+| Botão | Estilo | Nota |
+|-------|--------|------|
+| Aprovar | primary | Confirmação opcional leve (não modal bloqueante) |
+| Rejeitar | outline destructive | Espaçamento ≥8px do Aprovar |
+
+## Empty states (strings do mapa)
+
+| Seção | Texto |
+|-------|-------|
+| Pré-aprovação vazia | Orientação: fila vazia honesta + hint “use Atualizar candidatos após novo JSON/runbook” **sem** prometer score |
+| Em operação | `Nenhuma cópia de terceiro em operação.` |
+| Inventário | `Nenhum sinal neste inventário.` |
+| Pool Prodígio | `Nenhum candidato de pesquisa no pool.` + badge `Pesquisa — não autoriza ordem` |
+| C2 | `Collective2: cópia paper fechada — nenhum provedor na lista nomeada.` |
+| Auditoria | `Nenhum sinal neste destino.` |
+
+## Ações do usuário
+
+1. **Atualizar candidatos** → servidor recarrega fontes research → tabela [1] atualiza → toast R2 ou erro R3.  
+2. **Aprovar** → `POST` providers approve → linha sai da fila / badge aprovado — **não** implica fill.  
+3. **Rejeitar** → excluded mesmo na semente JSON/env (mapa).

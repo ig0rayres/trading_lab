@@ -1,7 +1,7 @@
 # Arquitetura — Trading Lab
 
 > Gerado em: 2026-10-29
-> Revisado em: 2026-11-03 (v0.3, laço em B3, cripto e forex; gatilhos no painel)
+> Revisado em: 2026-11-18 (v0.4, §13 Sinais ISS-024; v0.3 laço B3/cripto/forex; gatilhos no painel)
 > Fase: 3 — Arquitetura de Solucao
 > Status: Aprovada
 > Baseado em: docs/REQUIREMENTS.md v0.2 e docs/design/DESIGN.md
@@ -638,10 +638,153 @@ Ajuste automático de parâmetro (Feature 11) espera fill real. A tabela de muda
 
 ---
 
+## 13. Sinais — candidatos → decisão → inventário (ISS-024)
+
+> Revisado em: 2026-11-18 · Campanha `sinais-live-criteria` · `docs/REQUIREMENTS.md` v0.7 Feature 9 + Feature 4 · `docs/design/DESIGN.md` §4.4–4.5  
+> `LIVE_TRADING_ENABLED` permanece false. Aprovar ≠ fill. Refresh ≠ ordem. Chave Collective2 só no servidor.
+
+### 13.1 Visão do fluxo operador
+
+```text
+Candidatos (pré-aprovação) → Decisão (Aprovar/Rejeitar) → Operação/assinados → Inventário de sinais
+Critérios de adoção + Auditoria de ingresso: referência transversal (não são “passo após fill”)
+```
+
+**Distinção de listas (obrigatória):** fila de **provedores** candidatos; **provedor aprovado** no livro-razão (libera cópia paper — ≠ fill); **inventário** de **sinais** com P&L só após fill confirmado; pool Prodígio = pesquisa, não promove sozinho.
+
+### 13.2 Componentes
+
+| Componente | Módulo / rota | Papel |
+|------------|---------------|-------|
+| Painel HTML `/sinais` | `panel_ops_html.render_signals_page` + PanelShell v2 | Cinco marcos (pré-aprovação, operação, inventário, critérios, auditoria); CTA **Atualizar candidatos**; Aprovar/Rejeitar no browser |
+| HTTP dashboard | `v4_web_dashboard.make_handler` | JSON e mutações autenticadas por cookie `trading_lab_session`; sem POST de ordem |
+| Bundle de leitura | `panel_ops_data.build_panel_bundle` | Une `signals[]`, `copy.*`, ordens, performance, catálogo; única fonte para GET painel |
+| Livro pré-aprovação (003) | Postgres `signal_provider_approvals` + `ledger_migrate` 003 | Estados `pending` / `approved` / `rejected`; decisão do painel vence semente C2 JSON/env |
+| Refresh disco (N53) | `serve_signals_reload` → `build_panel_bundle` | Releitura honesta; **não** chama `prodigy_rank.calculate` nem HTTP C2 |
+| Job critérios ao vivo (N54) | `POST /api/signals/candidates/refresh` (contrato; impl. N54) | Server-side: C2 via `c2_signal_feed` / pollers CLI; Prodígio via `prodigy_rank.calculate` reutilizado; TV = origens já ingeridas — **sem** API de busca TV |
+| Feed C2 server-side | `c2_signal_feed` | Somente processo/job com `C2_API4_KEY`; grava JSON em `reports/`; browser **nunca** importa |
+| Rank Prodígio (reuse) | `prodigy_rank` (`WINDOW_DAYS=15`, `MIN_TRADES=5`, regras já no código) | Pesquisa only; saída `provider-research-top10-latest.json`; não inventar fórmula nova |
+| Ingest TV | `tradingview_webhook` + fila em disco + `load_panel_signals` | Candidatos TV na fila = `provider` únicos já vistos no bundle — escopo mínimo honesto |
+
+Persistência: **não** criar tabela nova para refresh/cooldown na N54 — reusar `signal_provider_approvals` para decisões; artefatos de pesquisa em JSON no volume `REPORTS_DIR` (como hoje).
+
+### 13.3 Sequências
+
+#### Leitura inicial e decisão
+
+```mermaid
+sequenceDiagram
+  participant Op as Operador (browser)
+  participant Dash as v4_web_dashboard
+  participant Data as panel_ops_data
+  participant DB as signal_provider_approvals
+
+  Op->>Dash: GET /sinais (cookie)
+  Dash->>Data: build_panel_bundle
+  Data->>DB: fetch approvals (se DSN)
+  Data-->>Dash: signals + copy.preapproval.queue
+  Dash-->>Op: HTML
+
+  Op->>Dash: GET /api/signals
+  Dash-->>Op: JSON signals + copy
+
+  Op->>Dash: POST /api/signals/providers
+  Dash->>DB: upsert approve|reject
+  Dash-->>Op: 200 execution_authorized false
+```
+
+#### Atualizar candidatos — modo disco (N53, entregue)
+
+```mermaid
+sequenceDiagram
+  participant Op as Operador
+  participant Dash as v4_web_dashboard
+  participant Data as panel_ops_data
+
+  Op->>Dash: GET /api/signals/reload
+  Dash->>Data: build_panel_bundle (re-read disco/ledger)
+  Note over Dash,Data: mode disk_reread; sem C2 HTTP; sem prodigy_rank.calculate
+  Dash-->>Op: JSON bundle + mode disk_reread
+  Op->>Dash: GET /api/signals (opcional)
+  Dash-->>Op: fila pré-aprovação atualizada na UI
+```
+
+#### Atualizar candidatos — critérios ao vivo (N54, alvo)
+
+```mermaid
+sequenceDiagram
+  participant Op as Operador
+  participant Dash as v4_web_dashboard
+  participant Job as refresh job (server)
+  participant C2 as c2_signal_feed / C2 API
+  participant Prod as prodigy_rank.calculate
+  participant Disk as reports JSON
+  participant Data as panel_ops_data
+
+  Op->>Dash: POST /api/signals/candidates/refresh
+  alt cooldown / sem sessão / sem ledger
+    Dash-->>Op: 401 | 429 | 503 fail-closed
+  else permitido
+    Dash->>Job: dispara job allowlisted
+    Job->>C2: fetch read-only (se chave)
+    Job->>Prod: recalcula rank 15d (se dados)
+    Job->>Disk: regrava provider-research / snapshots
+    Job->>Data: build_panel_bundle
+    Dash-->>Op: 200 mode live_criteria + copy
+  end
+  Note over Op,Disk: Não aprova; não POST ordem; LIVE false
+```
+
+### 13.4 Modos de falha (fail-closed)
+
+| Condição | Comportamento | HTTP típico |
+|----------|---------------|-------------|
+| Sem cookie de operador | Bloqueia leitura API e mutação | 401 |
+| `LEDGER_DATABASE_URL` ausente | POST providers falha; bundle sem decisão persistida | 503 `LEDGER_UNAVAILABLE` |
+| Tabela 003 não aplicada | Mesmo que ledger indisponível para aprovação | 503 |
+| Bundle indisponível no reload | Fila anterior na UI; alerta | 503 |
+| Job N54 em cooldown | Não dispara segundo job | 429 `REFRESH_COOLDOWN` |
+| Sem `C2_API4_KEY` no job N54 | Não inventa candidatos C2; grava erro honesto; não apaga fila | 200 parcial ou 502 `UPSTREAM_C2_UNAVAILABLE` (impl. escolhe; contrato permite ambos com `issues[]`) |
+| Falha `prodigy_rank` / disco corrompido | Mantém JSON anterior; `issues` no corpo | 502 / 503 conforme severidade |
+| Erro interno | Sem vazar segredo | 500 |
+
+Regra transversal: **nenhum** caminho de refresh altera `signal_provider_approvals` nem chama `process_after_gate_b` / `paper_gateway`.
+
+### 13.5 Fora deste corte
+
+- HTTP Collective2 a partir do **browser** ou exposição de `C2_API4_KEY` no HTML/JS.
+- Trading “live” ou botão que ligue `LIVE_TRADING_ENABLED`.
+- Sprints **N45–N47** (escopo reservado no mapa; não misturar com ISS-024).
+- API inventada de “busca TradingView” para descobrir provedores.
+- Nova fórmula de score / limiar que não exista em `prodigy_rank` ou Feature 4.
+- Promover fase de estratégia ou enviar ordem como efeito colateral de refresh ou aprovação.
+
+### 13.6 ADRs (campanha Sinais)
+
+#### ADR-011: Dois modos de “Atualizar candidatos” (N53 disco vs N54 job)
+
+- **Status**: Proposta 2026-11-18 (aceita para contrato e sprint N54)
+- **Contexto**: O operador precisa saber se o servidor só relê artefatos (`build_panel_bundle`) ou reaplica critérios nas fontes (ISS-024).
+- **Decisão**: Um CTA na UI; **GET** `/api/signals/reload` = `mode: disk_reread` (N53). **POST** `/api/signals/candidates/refresh` = `mode: live_criteria` (N54) com cooldown e auth.
+- **Alternativas**: Unificar num POST só — descartada porque apagaria o refresh leve já homologado em N53.
+- **Consequências**: Campo `mode` obrigatório nas respostas de refresh; copy PT distinta na UI (DESIGN §4.5).
+
+#### ADR-012: TradingView no refresh — escopo mínimo
+
+- **Status**: Proposta 2026-11-18
+- **Contexto**: Não há API de descoberta TV no produto; Feature 9 já audita ingresso via webhook.
+- **Decisão**: Candidatos TV no job N54 = união de origens/`provider` já presentes em `signals[]` / journal ingerido + critérios Feature 4 textuais na UI; **não** inventar endpoint de busca.
+- **Consequências**: Job pode ser no-op honesto para TV até haver mais ingest; fila mostra origens conhecidas com métricas indisponíveis quando aplicável.
+
+Contrato HTTP detalhado: `docs/api-spec.yaml` e nota `docs/sistema/sinais-http-contract.md`.
+
+---
+
 ## Historico de Revisoes
 
 | Data | Versao | Alteracao | Autor |
 |------|--------|-----------|-------|
+| 2026-11-18 | 0.4 | §13 Sinais ISS-024: componentes, sequências, fail-closed, ADR-011/012 | Arquiteto (campanha sinais-live-criteria) |
 | 2026-10-29 | 0.1 | Arquitetura aprovada: Python, dois processos, risk-first | Arquiteto de Solucoes (IA) |
 | 2026-11-03 | 0.2 | Operação demo: gatilhos no painel, ciclo da ordem, worker no v4-ops | Arquiteto de Solucoes (IA) com o operador |
 | 2026-11-03 | 0.3 | ADR-008 revogada. Mercados do laço: B3, cripto e forex, cada um com conta demo que devolva fill | Arquiteto de Solucoes (IA) com o operador |

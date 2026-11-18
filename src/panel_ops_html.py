@@ -302,7 +302,8 @@ document.querySelectorAll('[data-provider-action]').forEach(btn=>{
 '''
 
 _CANDIDATES_RELOAD_HINT = (
-    'Recarrega JSON de pesquisa no servidor — não aprova nem envia ordem.'
+    'Aplica critérios Feature 4 / Prodígio 15d no servidor '
+    '(C2 server-side; TV = origens já ingeridas). Não aprova nem envia ordem.'
 )
 
 _CANDIDATES_RELOAD_SCRIPT = '''
@@ -310,6 +311,15 @@ _CANDIDATES_RELOAD_SCRIPT = '''
   const btn=document.getElementById('reload-candidates');
   const box=document.getElementById('reload-feedback');
   if(!btn||!box)return;
+  const failClosed='Não foi possível atualizar. A fila anterior foi mantida.';
+  const fmtClock=(iso)=>{
+    if(!iso)return'';
+    try{
+      const d=new Date(iso);
+      if(Number.isNaN(d.getTime()))return'';
+      return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    }catch(_e){return'';}
+  };
   btn.onclick=async()=>{
     btn.disabled=true;
     btn.setAttribute('aria-busy','true');
@@ -317,20 +327,30 @@ _CANDIDATES_RELOAD_SCRIPT = '''
     box.className='inline-alert inline-alert--loading';
     box.textContent='Atualizando candidatos…';
     try{
-      const res=await fetch('/api/signals/reload',{method:'GET',credentials:'same-origin'});
+      const res=await fetch('/api/signals/candidates/refresh',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        credentials:'same-origin',body:JSON.stringify({})});
       if(res.status===401){location.href='/login';return;}
       const data=await res.json().catch(()=>({}));
-      if(!res.ok){
+      if(res.status===429){
         box.className='inline-alert inline-alert--err';
-        box.textContent=data.message||'Não foi possível recarregar os candidatos.';
+        box.textContent='Aguarde antes de atualizar de novo.';
         return;
       }
+      if(!res.ok){
+        box.className='inline-alert inline-alert--err';
+        box.textContent=data.message||failClosed;
+        return;
+      }
+      const clock=fmtClock(data.refreshed_at);
       box.className='inline-alert inline-alert--ok';
-      box.textContent=data.message||'Candidatos atualizados a partir do disco.';
+      box.textContent=clock
+        ?'Candidatos atualizados às '+clock+'.'
+        :(data.message||'Critérios ao vivo aplicados no servidor.');
       setTimeout(()=>location.reload(),500);
     }catch(_e){
       box.className='inline-alert inline-alert--err';
-      box.textContent='Erro de rede ao atualizar candidatos.';
+      box.textContent=failClosed;
     }finally{
       btn.disabled=false;
       btn.removeAttribute('aria-busy');

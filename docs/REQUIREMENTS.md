@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29 · Revisado em: 2026-11-17 (v0.6, pré-aprovação no painel ISS-021 + Sinais N51)
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-18 (v0.7, função Sinais — objetivo, fluxo e critérios ao vivo ISS-024)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -133,7 +133,7 @@ Limites numéricos de paper (BRL 5000 / 50 / 3 posições): **`src/gate_b_risk.p
 - News First: notícia é hipótese, com timestamp, veículo, tickers, categoria, frescor e confiança. Não é compra ou venda pelo tom do texto. Permanece **research** (N30.4); sem ordem paper automática — ciclo/Gate A apenas.
 - Momentum: força, rompimento e continuidade com barra fechada. Limiares numéricos finais não estão decididos até saírem do código.
 - Tá Barato Demais: nome interno de desconto/distorção, por mercado (EUA, B3, cripto), com parâmetros próprios. Não é “caiu, compra”. Fórmula, percentis e gatilhos não foram recuperados.
-- Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. **Pré-aprovação no painel autenticado** é o caminho do dia a dia para Collective2, Prodígio e TradingView (e fontes futuras no mesmo formato): aprovar/rejeitar persiste no livro-razão (`signal_provider_approvals`); aprovação **não** envia ordem. `config/c2_paper_copy_allowlist.json` e `C2_PAPER_COPY_APPROVED_IDS` são **semente/reserva** quando não houver linha no livro-razão; rejeição no painel vence a semente. Métricas de pesquisa (`win_rate_pct`, `reported_pnl_sum`, etc.) aparecem na fila com rótulo pesquisa; campo ausente = indisponível (sem fórmula nova). Relato H10 permanece histórico; elegível no ranking **não** é aprovação de cópia.
+- Signal copy: normalizar sinal de terceiro. Mérito econômico é um filtro depois da autenticidade. **Pré-aprovação no painel autenticado** é o caminho do dia a dia para Collective2, Prodígio e TradingView (e fontes futuras no mesmo formato): aprovar/rejeitar persiste no livro-razão (`signal_provider_approvals`); aprovação **não** envia ordem. `config/c2_paper_copy_allowlist.json` e `C2_PAPER_COPY_APPROVED_IDS` são **semente/reserva** quando não houver linha no livro-razão; rejeição no painel vence a semente. Métricas de pesquisa (`win_rate_pct`, `reported_pnl_sum`, etc.) aparecem na fila com rótulo pesquisa; campo ausente = indisponível (sem fórmula nova). Relato H10 permanece histórico; elegível no ranking **não** é aprovação de cópia. **Atualizar candidatos** (ISS-024): o servidor aplica os critérios de seleção **nas fontes** (Collective2 server-side; TradingView = escopo mínimo honesto a partir de ingest/origens já vistas — sem inventar API de busca TV); releitura só de JSON em disco **não** satisfaz o aceite. Job/refresh ≠ ordem; chave Collective2 só no servidor.
 - Prodigy 15 dias: candidatos fortes e recentes, janela móvel de 15 dias, mínimo de 5 operações em pelo menos 3 dias, retorno líquido positivo, drawdown e consistência. Fórmula de pontuação ainda pendente. Risco paper inicial R$ 20. Fase default **research**; rank→ingest (N30) não promove fase sozinho.
 - ORB e mean reversion: shadow/research; **NEVER_PAPER** no catálogo (N30.4). ORB 1R e 2R reportados com média R e profit factor negativos. Sem edge intraday validado.
 
@@ -253,11 +253,30 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 
 - **Persona**: Operador do laboratório
 - **Prioridade**: Must-have
+- **Objetivo da função (tela Sinais):** permitir ao operador **pesquisar e pré-aprovar cópia de terceiros** com auditoria — ver candidatos elegíveis, decidir Aprovar/Rejeitar, acompanhar o que entrou em operação e o inventário — **sem** tratar aprovação, refresh ou HTTP 200 como fill. LIVE permanece desligado.
+
+**Fluxo principal (navegação mental):**
+1. **Candidatos / pré-aprovação** — fila de provedores (Collective2, Prodígio, TradingView) com métricas de pesquisa rotuladas; botão **Atualizar candidatos** dispara no servidor a aplicação dos critérios de seleção nas fontes (não só reler arquivo estático).
+2. **Decisão** — Aprovar ou Rejeitar grava no livro-razão (`signal_provider_approvals`); rejeição vence semente JSON/env; aprovação **não** envia ordem.
+3. **Em operação** — sinais/ordens ligados a origem e destino (fila, barrado, ordem), com motivo de rejeição e gate quando barrado.
+4. **Inventário** — resultado por sinal **só** com fill confirmado; valores brutos se custo incompleto (`gross_unverified_costs`).
+5. **Critérios visíveis** — Feature 4 / Prodígio 15d (janela 15 dias, ≥5 operações em ≥3 dias, paper inicial R$ 20, fases; C2 lista nomeada; sem promoção automática) permanecem legíveis no painel; **sem fórmula nova**.
+
+**Fluxo de exceção:**
+- Fonte Collective2 indisponível ou sem chave → fail-closed, mensagem honesta; não inventar candidatos.
+- TradingView sem API de busca → escopo mínimo: candidatos/origens já ingeridos (webhook) + critérios Feature 4; não inventar endpoint TV.
+- Ledger sem migration `003` → pré-aprovação indisponível (503 / aviso); não fingir gravação.
+- Atualizar candidatos **nunca** aprova, rejeita ou submete ordem.
 
 **Critérios de aceite:**
 - [x] Lista de sinais recebidos com origem, destino (ordem, barrado, fila) e motivo da rejeição (`tests/test_panel_ops.py` `PanelOpsDataTests.test_load_panel_signals_exposes_origin_destination_and_reject_reason`; `PanelOpsHttpTests.test_api_signals_json_origin_destination_reject_reason`).
 - [x] Ranking Prodígio dos provedores e quais sinais ele copiou (`tests/test_panel_ops.py` `PanelOpsDataTests.test_snapshot_panel_ops_prodigy_ranking_and_copied_signals`; `test_build_panel_bundle_prodigy_copied_signals_structure`).
 - [x] Sinal barrado mostra qual gate e qual âncora barrou (`tests/test_panel_ops.py` `PanelOpsDataTests.test_blocked_context_exposes_gate_and_anchor`).
+- [x] Pré-aprovação Aprovar/Rejeitar no painel autenticado persiste no livro-razão; aprovação ≠ fill (N51; `signal_provider_approvals`).
+- [x] Botão Atualizar candidatos + `GET /api/signals/reload` releitura honesta do bundle em disco com `mode: disk_reread` (N53/N54; `tests/test_panel_ops.py` `N54LiveCriteriaRefreshHttpTests.test_n54_get_reload_disk_reread_skips_prodigy_calculate`, `N53PanelShellRefreshTests.test_n53_reload_rereads_bundle_json`); não aprova nem envia ordem.
+- [x] **Atualizar candidatos** aplica critérios Feature 4 / Prodígio 15d **nas fontes** Collective2 (server-side) e TradingView (escopo mínimo honesto) via `POST /api/signals/candidates/refresh` (`mode: live_criteria`; N54 / ISS-024; `tests/test_panel_ops.py` `N54LiveCriteriaRefreshHttpTests.test_n54_post_refresh_live_criteria_orders_sent_zero`, `test_n54_post_refresh_without_c2_key_partial_preserves_queue`).
+- [x] Job/refresh POST tem cooldown/fail-closed; chave Collective2 só no servidor; painel não chama HTTP C2 do browser (N54; `N54LiveCriteriaRefreshHttpTests.test_n54_post_refresh_cooldown_ref_refresh_cooldown`, `test_n54_post_refresh_without_c2_key_partial_preserves_queue`; `N53PanelShellRefreshTests.test_n53_atualizar_candidatos_visible_on_sinais` — POST no JS, sem host C2).
+- [x] Inventário e operação permanecem distintos da fila de pré-aprovação na navegação (decisão → operação → inventário) (`tests/test_panel_ops.py` `N53PanelShellRefreshTests.test_n53_atualizar_candidatos_visible_on_sinais`, `PanelSinaisN52Tests.test_n52_html_section_hierarchy_decision_first`).
 
 ### Feature 10: Performance
 
@@ -295,8 +314,8 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 | Alpaca Paper | API de corretora paper (cripto + ação US já ligada) | Bidirecional | Chave paper, fora do repositório | Sem chave, não há submit. Nunca usar chave live. B3 e forex **não** usam este host. |
 | Clear Smart Trader (simulado) | API de corretora demo B3 | Bidirecional | API_KEY / SECRET / RSA no portal Clear, fora do repositório | Sem credencial simulada, mercado B3 fica barrado com motivo. Nunca apontar URL real com token simulado. |
 | OANDA fxTrade Practice | API de corretora demo forex | Bidirecional | Personal access token practice, fora do repositório | Sem conta Practice, mercado forex fica barrado com motivo. Nunca usar host fxTrade live. |
-| TradingView | Webhook | Entrada | Segredo do webhook | Pedido sem segredo válido é rejeitado no Gate A. |
-| Collective2 | Pesquisa e cópia paper por lista nomeada | Entrada (poller/CLI fora do painel) | Chave fora do repositório; painel **não** lê chave nem chama HTTP | Lista nomeada padrão vazia; operador nomeia IDs para liberar cópia paper. Instantâneo de ordens ativas no disco não é ticket. |
+| TradingView | Webhook (ingest); candidatos no painel via escopo mínimo honesto | Entrada | Segredo do webhook | Pedido sem segredo válido é rejeitado no Gate A. Sem API de busca TV no lab — refresh não inventa ranking TV. |
+| Collective2 | Pesquisa e cópia paper por lista nomeada; refresh de candidatos **server-side** (ISS-024) | Entrada (poller/CLI/job; painel só dispara job autenticado) | Chave fora do repositório; browser **não** lê chave nem chama HTTP C2 | Lista nomeada padrão vazia; operador nomeia IDs / aprova no painel. Instantâneo de ordens ativas no disco não é ticket. Sem chave → fail-closed no refresh. |
 | News | Feed de notícias | Entrada | Conforme a fonte, sem gravar segredo | Ausência de notícia não autoriza ordem. |
 | day-trader-skill | Biblioteca de reuso | Entrada de código | Não se aplica | Sem o checkout pinado em `vendor/`, não afirmar paridade. Não reescrever entry, exit, budget, risk e scanner. |
 | EasyPanel (`trading-lab` e `trading-lab-webhook`) | Deploy já existente | Operação | Fora deste repo | Não substituir esses dois serviços com este snapshot. App novo, se existir, é separado e sem volume compartilhado. |
@@ -327,6 +346,8 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - Tratar ORB como edge validado ou como estratégia principal de paper.
 - Copiar provedor Collective2 cujo ID numérico **não** esteja na lista nomeada aprovada pelo operador.
 - Tratar ranking `eligible`, candidatos de pesquisa ou os dez observados em H10 como aprovados automaticamente para paper-copy.
+- Tratar **Atualizar candidatos**, releitura de disco ou job de refresh como fill ou como aprovação de provedor.
+- Inventar API/busca TradingView ou fórmula de score que não esteja no código recuperado / Feature 4.
 - Sintetizar ticket Gate A / envio paper a partir de instantâneo de ordens ativas Collective2.
 - Assinar em lote os dez candidatos históricos de H10 sem nomeação explícita na lista.
 - Inventar percentil, RSI, volume ou score de “Tá Barato Demais”, momentum ou Prodigy que não esteja no código recuperado.
@@ -416,5 +437,7 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
 | 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |
 | 2026-11-16 | 0.4 | Feature 11 critérios 2–4 `[x]` após N28.2–4 (`tests/test_n28_supervised_adjustment.py`); closeout papel N33 — sem bump de versão de contrato | Sprint N33 docs |
+| 2026-11-18 | 0.7.1 | Feature 9: aceite N54 marcado `[x]` com nodeids `N54LiveCriteriaRefreshHttpTests` / `N53PanelShellRefreshTests` (frente EXECUTE; sem fechar ISS-024) | N54.4 docs |
+| 2026-11-18 | 0.7 | Feature 9: objetivo/fluxo Sinais (candidatos→decisão→operação→inventário); aceite ISS-024 critérios ao vivo; Feature 4 + §5/§7 alinhados (refresh ≠ fill; TV escopo mínimo; C2 server-side) | Analista (Rock campanha Sinais) |
 | 2026-11-17 | 0.6 | Feature 4: pré-aprovação no painel + `signal_provider_approvals`; JSON/env C2 = semente; métricas rank reutilizadas; aprovação ≠ fill | Sprint N51 ISS-021 |
 | 2026-11-17 | 0.5 | Feature 4 Collective2: lista nomeada (padrão vazia); §5 painel sem API C2; §7 proíbe copy fora da lista e ticket a partir de snapshot; H10 permanece histórico | Sprint N50 ISS-020 |

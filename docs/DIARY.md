@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N53 | panel_ops_html, v4_web_dashboard, docs | PanelShell v2 todas rotas; Atualizar candidatos + GET reload; ISS-023; N54=POST job | 32–40 |
+| N54 | v4_web_dashboard, panel_ops_html, tests, docs | POST live_criteria; GET disk_reread; ISS-024; EXECUTE frente | 33–41 |
+| N53 | panel_ops_html, v4_web_dashboard, docs | PanelShell v2 todas rotas; Atualizar candidatos + GET reload; ISS-023; N54=POST job | 42–50 |
 | N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 42–50 |
 | N51 | panel_ops, ledger_migrate, docs | Pré-aprovação painel; migration 003; métricas pesquisa; ISS-021 aberto | 18–26 |
 | N50 | panel_ops, docs | C2 lista nomeada; Sinais reordenado; provider_id Prodígio; ISS-020 aberto | 18–24 |
@@ -27,6 +28,18 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N54 — Critérios ao vivo em Sinais (ISS-024)
+
+**Frente:** `sinais-live-criteria`, branch `front/sinais-live-criteria`. **Estado:** implementação em **EXECUTE** (código + testes na frente; merge pendente).
+
+**Entregue na frente (N54.0–N54.3):** inventário Git First confirmado; `POST /api/signals/candidates/refresh` (`mode: live_criteria`, cooldown, fail-closed sem chave C2); CTA **Atualizar candidatos** no POST com hint Feature 4 / Prodígio 15d; `GET /api/signals/reload` declara `mode: disk_reread`; suíte `N54LiveCriteriaRefreshHttpTests` em `tests/test_panel_ops.py`.
+
+**Entregue (N54.4 docs):** mapa operador §2, notas ISS-024/023, aceite Feature 9 com nodeids pytest, ROADMAP N54.0–N54.4 marcados na frente, este diário — sprint **ainda em EXECUTE** até merge e homologação operador.
+
+**Honestidade:** atualizar **≠** aprovar **≠** fill; `orders_sent=0`; chave C2 só no servidor; LIVE false; **ISS-024** e **ISS-023** **permanecem abertos** até merge, CI e homologação operador — agente **não** declarou rebuild EasyPanel nem painel no ar.
 
 ---
 

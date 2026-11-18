@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from http.server import ThreadingHTTPServer
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
@@ -2120,7 +2120,12 @@ class N53PanelShellRefreshTests(unittest.TestCase):
                 self.assertIn('Atualizar candidatos', body)
                 self.assertIn('id="reload-candidates"', body)
                 self.assertIn('btn-outline', body)
-                self.assertIn('/api/signals/reload', body)
+                self.assertIn('/api/signals/candidates/refresh', body)
+                self.assertIn('Prodígio 15d', body)
+                self.assertIn('Rejeitar', body)
+                self.assertNotIn('collective2.com', body.lower())
+                self.assertNotIn('api4-general', body.lower())
+                self.assertIn('aria-live="polite"', body)
                 self.assertLess(
                     body.index(N51_PREAPPROVAL_SECTION),
                     body.index(N50_OPERATING_SECTION),
@@ -2165,6 +2170,264 @@ class N53PanelShellRefreshTests(unittest.TestCase):
         self.assertNotIn('prodigy_rank.calculate', html_src)
         reload_block = dash_src.split('def serve_signals_reload', 1)[-1].split('def serve_public_get', 1)[0]
         self.assertNotIn('prodigy_rank', reload_block)
+
+
+def _post_candidates_refresh(url, body=None, *, session=None):
+    headers = {}
+    if session:
+        headers['Cookie'] = 'trading_lab_session=' + session
+    data = None
+    if body is not None:
+        headers['Content-Type'] = 'application/json'
+        data = json.dumps(body).encode('utf-8')
+    return Request(url, data=data, headers=headers, method='POST')
+
+
+_N54_FAKE_RANK = {
+    'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
+    'execution_authorized': False,
+    'orders_sent': 0,
+    'top_10_research': [
+        {'provider_id': '9', 'status': 'PRODIGY_CANDIDATE_RESEARCH', 'prodigy_score': 0.55},
+    ],
+    'providers': [],
+    'score_warning': 'Research rank only; does not authorize orders.',
+}
+
+
+def _n54_mock_c2_fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+    del strategy_ids, key, kwargs
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    sid = '44'
+    payload = {
+        'strategy_id': sid,
+        'dataset': 'closed_trades',
+        'raw': {'ResponseStatus': {'ErrorCode': '200'}, 'Results': []},
+    }
+    (out / f'{sid}_closed_trades.json').write_text(json.dumps(payload), encoding='utf-8')
+    return {'status': 'ok', 'written': [f'{sid}_closed_trades.json'], 'opener_used': opener is not None}
+
+
+def _n54_mock_c2_snapshot(strategy_ids, key, out_dir, opener=None, **kwargs):
+    del strategy_ids, key, out_dir, kwargs
+    return {
+        'mode': 'C2_ACTIVE_ORDERS_READ_ONLY',
+        'orders_sent': 0,
+        'execution_authorized': False,
+        'new_or_changed_count': 0,
+        'opener_used': opener is not None,
+    }
+
+
+def _n54_write_prodigy_raw_trades(root: Path) -> None:
+    raw = root / 'reports' / 'providers' / 'raw'
+    raw.mkdir(parents=True, exist_ok=True)
+    trades = [
+        {'CloseDate': '2026-11-10T12:00:00+00:00', 'ProfitLoss': 120.0},
+        {'CloseDate': '2026-11-11T12:00:00+00:00', 'ProfitLoss': -30.0},
+        {'CloseDate': '2026-11-12T12:00:00+00:00', 'ProfitLoss': 80.0},
+        {'CloseDate': '2026-11-13T12:00:00+00:00', 'ProfitLoss': 40.0},
+        {'CloseDate': '2026-11-14T12:00:00+00:00', 'ProfitLoss': 25.0},
+    ]
+    payload = {
+        'strategy_id': '9',
+        'dataset': 'closed_trades',
+        'raw': {'ResponseStatus': {'ErrorCode': '200'}, 'Results': trades},
+    }
+    (raw / '9_closed_trades.json').write_text(json.dumps(payload), encoding='utf-8')
+
+
+class N54LiveCriteriaRefreshHttpTests(unittest.TestCase):
+    """N54.1 — POST /api/signals/candidates/refresh + GET reload mode contract."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+
+    def tearDown(self):
+        self._ledger_env.stop()
+
+    def _server(self, root=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(root, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n54_post_candidates_refresh_requires_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, server, thread, base = self._server(d)
+            try:
+                req = _post_candidates_refresh(base + '/api/signals/candidates/refresh')
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(req, timeout=3)
+                self.assertEqual(err.exception.code, 401)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n54_post_refresh_live_criteria_orders_sent_zero(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            _n54_write_prodigy_raw_trades(root)
+            _, server, thread, base = self._server(root)
+            patches = [
+                patch('v4_web_dashboard.prodigy_rank.calculate', return_value=_N54_FAKE_RANK),
+                patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+                patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+                patch.dict(os.environ, {'C2_API4_KEY': 'test-c2-secret'}, clear=False),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                req = _post_candidates_refresh(
+                    base + '/api/signals/candidates/refresh',
+                    {},
+                    session='panel-secret',
+                )
+                with urlopen(req, timeout=5) as resp:
+                    payload = json.load(resp)
+                self.assertEqual(resp.status, 200)
+                self.assertEqual(payload.get('mode'), 'live_criteria')
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized', True))
+                self.assertIn(payload.get('status'), ('ok', 'partial'))
+                self.assertIn('copy', payload)
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n54_post_refresh_without_c2_key_partial_preserves_queue(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root, provider_id='501', win_rate=58.0)
+            _, server, thread, base = self._server(root)
+            rank_mock = MagicMock(return_value=_N54_FAKE_RANK)
+            env = {k: v for k, v in os.environ.items() if k != 'C2_API4_KEY'}
+            patches = [
+                patch('v4_web_dashboard.prodigy_rank.calculate', rank_mock),
+                patch.dict(os.environ, env, clear=True),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                before_req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(before_req, timeout=3) as resp:
+                    before = json.load(resp)
+                queue_len = len((before.get('copy') or {}).get('preapproval', {}).get('queue') or [])
+                self.assertGreater(queue_len, 0)
+                req = _post_candidates_refresh(
+                    base + '/api/signals/candidates/refresh',
+                    {},
+                    session='panel-secret',
+                )
+                with urlopen(req, timeout=5) as resp:
+                    payload = json.load(resp)
+                self.assertEqual(payload.get('mode'), 'live_criteria')
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertEqual(payload.get('status'), 'partial')
+                issues = payload.get('issues') or []
+                self.assertTrue(issues)
+                after_req = _get(base + '/api/signals', session='panel-secret')
+                with urlopen(after_req, timeout=3) as resp:
+                    after = json.load(resp)
+                after_queue = (after.get('copy') or {}).get('preapproval', {}).get('queue') or []
+                self.assertGreaterEqual(len(after_queue), queue_len)
+                self.assertEqual(after_queue[0].get('provider_id'), '501')
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n54_post_refresh_cooldown_ref_refresh_cooldown(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            _, server, thread, base = self._server(root)
+            patches = [
+                patch('v4_web_dashboard.prodigy_rank.calculate', return_value=_N54_FAKE_RANK),
+                patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+                patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+                patch.dict(os.environ, {'C2_API4_KEY': 'test-c2-secret'}, clear=False),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                url = base + '/api/signals/candidates/refresh'
+                first = _post_candidates_refresh(url, {}, session='panel-secret')
+                with urlopen(first, timeout=5) as resp:
+                    self.assertEqual(resp.status, 200)
+                second = _post_candidates_refresh(url, {}, session='panel-secret')
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(second, timeout=5)
+                self.assertEqual(err.exception.code, 429)
+                body = json.loads(err.exception.read().decode('utf-8'))
+                self.assertEqual(body.get('reject_code'), 'REFRESH_COOLDOWN')
+                self.assertEqual(body.get('mode'), 'live_criteria')
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n54_get_reload_disk_reread_skips_prodigy_calculate(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_research_fixture(root)
+            _, server, thread, base = self._server(root)
+            try:
+                calculate_mock = MagicMock(
+                    side_effect=AssertionError('prodigy_rank.calculate on GET reload'),
+                )
+                with patch('prodigy_rank.calculate', calculate_mock):
+                    req = _get(base + '/api/signals/reload', session='panel-secret')
+                    with urlopen(req, timeout=3) as resp:
+                        payload = json.load(resp)
+                calculate_mock.assert_not_called()
+                self.assertEqual(payload.get('mode'), 'disk_reread')
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized', True))
+                self.assertEqual(payload.get('status'), 'ok')
+                self.assertTrue(payload.get('reload'))
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n54_regression_providers_post_unchanged_after_refresh_route(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            store = {'signal_provider_approvals': {}}
+            handler = make_handler(
+                root,
+                operator_session='panel-secret',
+                connect_factory=_approvals_memory_connect(store),
+            )
+            server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base = 'http://127.0.0.1:' + str(server.server_port)
+            try:
+                req = _post(
+                    base + '/api/signals/providers',
+                    {'platform': 'collective2', 'provider_id': '88', 'action': 'approve'},
+                    session='panel-secret',
+                )
+                with urlopen(req, timeout=3) as resp:
+                    payload = json.load(resp)
+                self.assertEqual(payload.get('status'), 'approved')
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized'))
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(3)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

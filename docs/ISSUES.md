@@ -26,7 +26,8 @@
 | ISS-020 | aberto | N50 | Habilitar Collective2 + reorganizar tela Sinais; Prodígio provider None |
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
-| ISS-023 | aberto | (design) | Botão refresh candidatos + redesign visual completo do painel |
+| ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
+| ISS-024 | aberto | (planejar) | Critérios de candidatos ao vivo (TV + Collective2); refresh ≠ ler disco |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -647,7 +648,7 @@
 |-------|--------|
 | Categoria | feature-com-dominio / design |
 | Sprint | **N53** (UI PanelShell v2 + `GET /api/signals/reload`) em `front/n27-alpaca-loop` · **N54** (job POST) seguinte |
-| Status | aberto até merge `main` + rebuild operador |
+| Status | aberto — N53 (UI + `GET /api/signals/reload`) merge **#71** em `main` @ `bb103558` (2026-11-18); **N54** (job POST refresh) e rebuild EasyPanel ainda pendentes |
 | Impacto | Operador precisa **atualizar sugestões de sinais no painel** (hoje só lê JSON estático; sem botão). Visual do menu operacional continua inadequado após N52 — exige **nova estrutura visual** de toda a plataforma (Central, Sinais, Ordens, Histórico, Estratégias, Prodígio, Performance, Análise Google), não só métricas na fila. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -662,5 +663,31 @@
 **Fontes:** operador 2026-11-18; ISS-022/N52; OPERATOR-PANEL-MAP; `prodigy_rank` / provider-research JSON.
 
 **Nota autopilot:** registro ISS-023; design obrigatório antes de N.
+
+**Nota operador (2026-11-18):** `ledger-migrate apply` no EasyPanel devolveu só `001_ledger` — imagem **sem** código N51/N53 (sem 003). Rebuild necessário para aprovar. Critérios ao vivo TV+C2 (não JSON estático) → **ISS-024**.
+
+**Nota closeout N53 (2026-11-18):** PanelShell v2 em todas as rotas do menu e botão **Atualizar candidatos** com releitura honesta via `GET /api/signals/reload` entregues em `main` (PR **#71**). Chamado **permanece aberto** até job POST (**N54**), homologação operador e rebuild no ar.
+
+---
+
+## ISS-024 — Critérios de candidatos ao vivo (TradingView + Collective2)
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-com-dominio |
+| Sprint | (planejar — N54+; não roubar N45–N47) |
+| Status | aberto |
+| Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **aplicar critérios de seleção** nas plataformas (TradingView e Collective2) e trazer candidatos elegíveis; não basta reler `prodigy-top10` / `provider-research` estáticos. |
+
+**Diretrizes do operador (2026-11-18):**
+1. Aprovar entrada de sinais no painel exige ledger **003** no ar (rebuild + migrate com código atual).
+2. Refresh/candidatos = critérios aplicados **direto nas plataformas** (TV + C2), não “nada que ficar lendo disco” como fonte da verdade.
+3. Reusar critérios Feature 4 / Prodígio 15d já definidos; sem fórmula inventada; LIVE false; refresh ≠ ordem; chave C2 só server-side.
+
+**Não fecha:** ISS-007, ISS-017, ISS-019–023. Não arranca N45–N47.
+
+**Fontes:** operador 2026-11-18; ISS-023 N53 GET reload; REQUIREMENTS Feature 4; `prodigy_rank` / `c2_signal_feed`.
+
+**Nota autopilot:** registro ISS-024.
 
 ---

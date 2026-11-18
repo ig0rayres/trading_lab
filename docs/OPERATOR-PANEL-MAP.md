@@ -1,6 +1,6 @@
 # Mapa operador — onde está cada coisa no painel
 
-> Sprint **N53** (2026-11-18) visual v2 + refresh GET · **N43** mapa base · `LIVE_TRADING_ENABLED=false`  
+> Sprint **N53** em `main` (PR **#71**, 2026-11-18) — visual v2 + refresh GET honesto; job POST = **N54** · **N43** mapa base · `LIVE_TRADING_ENABLED=false`  
 > Épico histórico do painel único: **ISS-007** (permanece aberto). Orientação: **ISS-016** (mapa existe; chamado de orientação continua registrado).  
 > Não confundir semáforo no ar, fila ou HTTP 200 com **fill** na corretora.
 

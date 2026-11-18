@@ -1,13 +1,15 @@
 openapi: 3.0.3
 info:
   title: Trading Lab HTTP boundary
-  version: 0.2.0
+  version: 0.3.0
   description: >
-    Gerado pelo analista-sistema na Fase 5. Revisado em 2026-11-03.
+    Gerado pelo analista-sistema na Fase 5. Revisado em 2026-11-18 (Sinais ISS-024).
     Criar ordem nao e um endpoint. paper_orders nasce dentro do paper-gateway
     depois dos dois gates.
-    A escrita HTTP desta revisao so altera gatilho: control_flags, market_controls
-    e a fase em strategy_states. Nomes de campo iguais aos do DBML.
+    Escrita de gatilho: control_flags, market_controls, strategy_states.
+    Painel Sinais: leitura de bundle, reload em disco (N53), job de candidatos (N54 contrato),
+    pre-aprovacao de provedores — nenhum envia ordem.
+    Nomes de campo iguais aos do DBML onde houver tabela.
 servers:
   - url: http://127.0.0.1
     description: Processo local. Sem porta publica neste corte.
@@ -16,6 +18,10 @@ tags:
     description: Autenticidade do sinal. Nao envia ordem.
   - name: observability
     description: Leitura do ciclo e escrita de gatilho. Nao envia ordem.
+  - name: panel-sinais
+    description: >
+      Rota /sinais — candidatos, pre-aprovacao, inventario. Refresh nao aprova nem envia ordem.
+      Chave Collective2 somente no servidor (job N54). LIVE false.
 paths:
   /webhooks/tradingview:
     post:
@@ -70,27 +76,149 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/signals:
+    get:
+      tags: [panel-sinais]
+      summary: Ler bundle Sinais (auditoria + copy)
+      description: >
+        Sessao obrigatoria. Monta build_panel_bundle: signals[] (Feature 9 ingresso)
+        e copy (pre-aprovacao, operacao, inventario, criterios, collective2, pool Prodigy).
+        Nao envia ordem. Aprovar provedor e POST /api/signals/providers.
+      operationId: getPanelSignals
+      security:
+        - operatorSession: []
+      responses:
+        '200':
+          description: Bundle somente leitura.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanelSignalsPayload'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          description: Bundle indisponivel (PANEL_OPS_UNAVAILABLE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
   /api/signals/reload:
     get:
-      tags: [observability]
+      tags: [panel-sinais]
       summary: Reler bundle de sinais do disco (refresh honesto N53)
       description: >
-        Somente leitura. Chama build_panel_bundle de novo. Nao calcula ranking,
-        nao aprova provedor, nao envia ordem. Job POST = sprint N54.
+        mode=disk_reread. Chama build_panel_bundle de novo. Nao chama prodigy_rank.calculate,
+        nao consulta Collective2, nao aprova provedor, nao envia ordem.
+        Para critérios ao vivo use POST /api/signals/candidates/refresh (N54).
       operationId: reloadPanelSignals
       security:
         - operatorSession: []
       responses:
         '200':
-          description: Bundle relido; corpo inclui copy e signals como em GET /api/signals.
+          description: Bundle relido a partir de disco/ledger existente.
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: '#/components/schemas/PanelSignalsReloadResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '503':
+          description: Falha ao reler bundle; fila anterior na UI deve permanecer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanelSignalsReloadError'
+  /api/signals/candidates/refresh:
+    post:
+      tags: [panel-sinais]
+      summary: Job critérios ao vivo — atualizar candidatos (N54 / ISS-024)
+      description: >
+        mode=live_criteria. Sessao obrigatoria. Dispara job server-side allowlisted:
+        reaplica critérios Feature 4 e janela Prodigy 15d (prodigy_rank.calculate reutilizado),
+        consulta Collective2 apenas no processo (C2_API4_KEY no ambiente — nunca no browser),
+        TradingView = origens ja ingeridas (sem API de busca inventada).
+        Regrava JSON de pesquisa em REPORTS_DIR e re-monta bundle.
+        Nao altera signal_provider_approvals. Nao aprova nem rejeita. Nao envia ordem.
+        LIVE_TRADING_ENABLED permanece false.
+        Implementacao prevista sprint N54; contrato fixado nesta revisao.
+      operationId: refreshSignalCandidatesLive
+      security:
+        - operatorSession: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidatesRefreshRequest'
+      responses:
+        '200':
+          description: Job concluido; bundle atualizado com fontes consultadas no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanelSignalsLiveRefreshResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          description: Cooldown R4 — aguardar antes de novo job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidatesRefreshCooldown'
+        '502':
+          description: Falha upstream (ex. Collective2 ou rank) sem apagar bundle anterior.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidatesRefreshUpstreamError'
+        '503':
+          description: Ledger ou volume indisponivel; job nao executado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/signals/providers:
+    post:
+      tags: [panel-sinais]
+      summary: Pre-aprovar ou rejeitar provedor candidato
+      description: >
+        Grava em signal_provider_approvals (migration 003). action approve|reject.
+        Aprovar libera roteamento paper na lista C2 nomeada — nao e fill e nao envia ordem.
+        Rejeicao no painel vence semente JSON/env para o mesmo provider_id.
+        Requer LEDGER_DATABASE_URL e tabela aplicada.
+      operationId: postSignalProviderDecision
+      security:
+        - operatorSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignalProviderDecisionRequest'
+      responses:
+        '200':
+          description: Decisao gravada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignalProviderDecisionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: platform, provider_id ou action invalidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '503':
+          description: Ledger indisponivel ou tabela 003 ausente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '500':
           $ref: '#/components/responses/ServerError'
   /api/triggers:
     get:
@@ -506,3 +634,245 @@ components:
         phase:
           type: string
           enum: [research, shadow, paper_limited, paper_validated]
+    SignalsRefreshMode:
+      type: string
+      description: Distinge releitura em disco (N53) de job com criterios ao vivo (N54).
+      enum: [disk_reread, live_criteria]
+    PanelSignalIngressRow:
+      type: object
+      description: Linha de auditoria Feature 9 — ingresso, nao fill.
+      additionalProperties: true
+      properties:
+        origin:
+          type: string
+        destination:
+          type: string
+        reject_reason:
+          type: string
+          nullable: true
+        market:
+          type: string
+          nullable: true
+    PreapprovalQueueItem:
+      type: object
+      description: Provedor candidato na fila; metrics_label pesquisa.
+      required: [platform, provider_id, status]
+      properties:
+        platform:
+          type: string
+          enum: [collective2, prodigy, tradingview]
+        provider_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        source:
+          type: string
+        metrics:
+          type: object
+          additionalProperties: true
+        metrics_label:
+          type: string
+    PanelCopyBlock:
+      type: object
+      description: Vista copy de terceiros no painel Sinais.
+      properties:
+        preapproval:
+          type: object
+          properties:
+            queue:
+              type: array
+              items:
+                $ref: '#/components/schemas/PreapprovalQueueItem'
+            metrics_label:
+              type: string
+        operating:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        history:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        inventory:
+          type: object
+          additionalProperties: true
+        adoption:
+          type: object
+          additionalProperties: true
+        collective2:
+          type: object
+          additionalProperties: true
+        prodigy_pool:
+          type: object
+          additionalProperties: true
+        research_copies:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      additionalProperties: true
+    PanelSignalsPayload:
+      type: object
+      required: [signals, copy]
+      properties:
+        signals:
+          type: array
+          items:
+            $ref: '#/components/schemas/PanelSignalIngressRow'
+        copy:
+          $ref: '#/components/schemas/PanelCopyBlock'
+    PanelSignalsReloadResponse:
+      allOf:
+        - $ref: '#/components/schemas/PanelSignalsPayload'
+        - type: object
+          required: [status, reload, mode]
+          properties:
+            status:
+              type: string
+              enum: [ok]
+            reload:
+              type: boolean
+              enum: [true]
+            mode:
+              $ref: '#/components/schemas/SignalsRefreshMode'
+              enum: [disk_reread]
+            message:
+              type: string
+            refreshed_at:
+              type: string
+              format: date-time
+            execution_authorized:
+              type: boolean
+              enum: [false]
+            orders_sent:
+              type: integer
+              enum: [0]
+    PanelSignalsReloadError:
+      type: object
+      required: [status, reload]
+      properties:
+        status:
+          type: string
+          enum: [error]
+        reload:
+          type: boolean
+          enum: [false]
+        message:
+          type: string
+    PanelSignalsLiveRefreshResponse:
+      allOf:
+        - $ref: '#/components/schemas/PanelSignalsPayload'
+        - type: object
+          required: [status, mode, execution_authorized, orders_sent]
+          properties:
+            status:
+              type: string
+              enum: [ok, partial]
+            mode:
+              $ref: '#/components/schemas/SignalsRefreshMode'
+              enum: [live_criteria]
+            refreshed_at:
+              type: string
+              format: date-time
+            sources_attempted:
+              type: array
+              items:
+                type: string
+                enum: [collective2, prodigy, tradingview]
+            sources_ok:
+              type: array
+              items:
+                type: string
+            issues:
+              type: array
+              items:
+                type: string
+            message:
+              type: string
+            execution_authorized:
+              type: boolean
+              enum: [false]
+            orders_sent:
+              type: integer
+              enum: [0]
+    CandidatesRefreshRequest:
+      type: object
+      description: Corpo opcional; vazio dispara todas as fontes permitidas pelo job.
+      properties:
+        sources:
+          type: array
+          items:
+            type: string
+            enum: [collective2, prodigy, tradingview]
+        dry_run:
+          type: boolean
+          default: false
+          description: Se true, valida pre-condicoes sem regravar (somente se implementado em N54).
+    CandidatesRefreshCooldown:
+      type: object
+      required: [reject_code]
+      properties:
+        reject_code:
+          type: string
+          enum: [REFRESH_COOLDOWN]
+        retry_after_seconds:
+          type: integer
+          minimum: 1
+        mode:
+          $ref: '#/components/schemas/SignalsRefreshMode'
+          enum: [live_criteria]
+        message:
+          type: string
+    CandidatesRefreshUpstreamError:
+      type: object
+      required: [reject_code, mode]
+      properties:
+        reject_code:
+          type: string
+          enum: [UPSTREAM_C2_UNAVAILABLE, UPSTREAM_RANK_FAILED]
+        mode:
+          $ref: '#/components/schemas/SignalsRefreshMode'
+          enum: [live_criteria]
+        issues:
+          type: array
+          items:
+            type: string
+        bundle_preserved:
+          type: boolean
+          enum: [true]
+    SignalProviderDecisionRequest:
+      type: object
+      required: [platform, provider_id, action]
+      properties:
+        platform:
+          type: string
+          enum: [collective2, prodigy, tradingview]
+        provider_id:
+          type: string
+          minLength: 1
+        action:
+          type: string
+          enum: [approve, reject]
+    SignalProviderDecisionResponse:
+      type: object
+      required: [platform, provider_id, status, execution_authorized, orders_sent]
+      properties:
+        platform:
+          type: string
+        provider_id:
+          type: string
+        status:
+          type: string
+          enum: [approved, rejected]
+        source:
+          type: string
+          enum: [panel]
+        execution_authorized:
+          type: boolean
+          enum: [false]
+        orders_sent:
+          type: integer
+          enum: [0]

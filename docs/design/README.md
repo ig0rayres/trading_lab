@@ -7,6 +7,7 @@ Pacote visual **FULL** que **substitui** o retrofit N52 (`ISS-022`). Objetivo: c
 | Item | Valor |
 |------|-------|
 | Issue | **ISS-023** — `docs/ISSUES.md` |
+| Issue relacionada | **ISS-024** — critérios ao vivo C2+TV (design IA Sinais v0.7) |
 | Issue relacionada (parcial) | ISS-022 / N52 |
 | Fonte de verdade de dados | `docs/OPERATOR-PANEL-MAP.md` |
 | Implementação | **N53** — `src/panel_ops_html.py` (PanelShell v2) + `GET /api/signals/reload` |
@@ -20,7 +21,7 @@ Pacote visual **FULL** que **substitui** o retrofit N52 (`ISS-022`). Objetivo: c
 | [mockups/panel-shell.md](mockups/panel-shell.md) | Shell lateral, topbar, responsivo |
 | [mockups/login.md](mockups/login.md) | Entrada operador |
 | [mockups/central.md](mockups/central.md) | Freio, semáforo, mercados |
-| [mockups/sinais.md](mockups/sinais.md) | Cockpit + **estados do botão Atualizar candidatos** |
+| [mockups/sinais.md](mockups/sinais.md) | IA 5 marcos + refresh disco vs job + distinção inventário/provedor |
 | [mockups/ordens.md](mockups/ordens.md) | Ordens paper abertas |
 | [mockups/historico.md](mockups/historico.md) | Fills confirmados |
 | [mockups/estrategias.md](mockups/estrategias.md) | Catálogo fases |

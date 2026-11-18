@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | (planejar) | Critérios de candidatos ao vivo (TV + Collective2); refresh ≠ ler disco |
+| ISS-024 | aberto | N54 | Critérios de candidatos ao vivo (TV + Collective2); refresh ≠ ler disco |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -648,7 +648,7 @@
 |-------|--------|
 | Categoria | feature-com-dominio / design |
 | Sprint | **N53** (UI PanelShell v2 + `GET /api/signals/reload`) em `front/n27-alpaca-loop` · **N54** (job POST) seguinte |
-| Status | aberto — N53 (UI + `GET /api/signals/reload`) merge **#71** em `main` @ `bb103558` (2026-11-18); **N54** (job POST refresh) e rebuild EasyPanel ainda pendentes |
+| Status | aberto — N53 (UI + `GET /api/signals/reload`) merge **#71** em `main` @ `bb103558` (2026-11-18); **N54** job POST (`live_criteria`) **implementado no código** na frente `front/sinais-live-criteria` (2026-11-18) — chamado **permanece aberto** até merge em `main`, rebuild EasyPanel e homologação operador no ar |
 | Impacto | Operador precisa **atualizar sugestões de sinais no painel** (hoje só lê JSON estático; sem botão). Visual do menu operacional continua inadequado após N52 — exige **nova estrutura visual** de toda a plataforma (Central, Sinais, Ordens, Histórico, Estratégias, Prodígio, Performance, Análise Google), não só métricas na fila. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -668,6 +668,8 @@
 
 **Nota closeout N53 (2026-11-18):** PanelShell v2 em todas as rotas do menu e botão **Atualizar candidatos** com releitura honesta via `GET /api/signals/reload` entregues em `main` (PR **#71**). Chamado **permanece aberto** até job POST (**N54**), homologação operador e rebuild no ar.
 
+**Nota N54 EXECUTE (2026-11-18):** `POST /api/signals/candidates/refresh`, CTA em `/sinais` e `GET /api/signals/reload` com `mode: disk_reread` entregues **no código da frente** `sinais-live-criteria` (pytest `N54LiveCriteriaRefreshHttpTests`). **ISS-023 continua aberto** — merge + painel no ar + confirmação operador ainda pendentes.
+
 ---
 
 ## ISS-024 — Critérios de candidatos ao vivo (TradingView + Collective2)
@@ -675,8 +677,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | (planejar — N54+; não roubar N45–N47) |
-| Status | aberto |
+| Sprint | **N54** (`front/sinais-live-criteria`; não rouba N45–N47) |
+| Status | aberto — N54 **implementado na frente** `front/sinais-live-criteria` (EXECUTE 2026-11-18); N53 GET reload já em `main` (#71); **permanece aberto** até merge, pytest no CI da PR, rebuild EasyPanel e critérios ao vivo no ar |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **aplicar critérios de seleção** nas plataformas (TradingView e Collective2) e trazer candidatos elegíveis; não basta reler `prodigy-top10` / `provider-research` estáticos. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -689,5 +691,9 @@
 **Fontes:** operador 2026-11-18; ISS-023 N53 GET reload; REQUIREMENTS Feature 4; `prodigy_rank` / `c2_signal_feed`.
 
 **Nota autopilot:** registro ISS-024.
+
+**Nota planejamento N54 (2026-11-18):** bloco `## Sprint N54` em `docs/ROADMAP.md`; brief `docs/.briefs/N54.brief.md`. Chamado permanece **aberto** até job POST + testes + merge + rebuild operador.
+
+**Nota N54 EXECUTE (2026-11-18):** job POST critérios ao vivo, botão Sinais e contrato dual GET/POST codificados na frente `sinais-live-criteria`; `tests/test_panel_ops.py` cobre sessão, cooldown, `live_criteria` vs `disk_reread`, `orders_sent=0`. **Não** fecha o chamado sem merge operador nem confirmação no deploy.
 
 ---

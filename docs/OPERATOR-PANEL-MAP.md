@@ -1,6 +1,6 @@
 # Mapa operador — onde está cada coisa no painel
 
-> Sprint **N53** em `main` (PR **#71**, 2026-11-18) — visual v2 + refresh GET honesto; job POST = **N54** · **N43** mapa base · `LIVE_TRADING_ENABLED=false`  
+> Sprint **N53** em `main` (PR **#71**, 2026-11-18) — visual v2 · **N54** na frente `sinais-live-criteria`: botão **Atualizar candidatos** → `POST /api/signals/candidates/refresh` (`mode: live_criteria`); releitura em disco = `GET /api/signals/reload` (`mode: disk_reread`) · **N43** mapa base · `LIVE_TRADING_ENABLED=false`  
 > Épico histórico do painel único: **ISS-007** (permanece aberto). Orientação: **ISS-016** (mapa existe; chamado de orientação continua registrado).  
 > Não confundir semáforo no ar, fila ou HTTP 200 com **fill** na corretora.
 
@@ -45,7 +45,7 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 
 | Campo | Detalhe |
 |-------|---------|
-| **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. Refresh honesto (**N53** / ISS-023): botão **Atualizar candidatos** + `GET /api/signals/reload` (sessão obrigatória) — só relê `build_panel_bundle` no disco; **não** aprova, **não** envia ordem, **não** calcula ranking (**job POST = N54**). |
+| **Onde clicar** | Menu → **Sinais**, ou `GET /sinais`. API: `GET /api/signals` — mantém `signals[]` (Feature 9) e acrescenta objeto `copy`. **Atualizar candidatos** (**N54** / ISS-024, frente em EXECUTE): botão dispara **`POST /api/signals/candidates/refresh`** (sessão obrigatória) — aplica critérios Feature 4 / Prodígio 15d **no servidor** (Prodígio `calculate`, Collective2 só processo com chave no ambiente; TradingView = origens já ingeridas); resposta `mode: live_criteria`, `orders_sent: 0`, `execution_authorized: false`; cooldown 429 `REFRESH_COOLDOWN`; sem chave C2 → `partial` + fila anterior mantida. **Releitura em disco** (N53, mantida): **`GET /api/signals/reload`** — só relê `build_panel_bundle`; JSON `mode: disk_reread`; **sem** `prodigy_rank.calculate`. Atualizar **≠** Aprovar/Rejeitar **≠** fill. Live desligado. |
 | **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48–N53**); cockpit (**N52** / ISS-022) + shell visual (**N53** / ISS-023): **Pré-aprovação** (métricas de pesquisa completas + botão refresh) → **Em operação / assinados** → inventário → **Collective2** → pool Prodígio → critérios → **auditoria** por último. Desenho: `docs/design/mockups/sinais.md`. **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
 

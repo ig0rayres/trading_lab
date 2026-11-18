@@ -140,25 +140,71 @@ Ordem fixa no `_nav` (rótulos PT face ao operador):
 4. **Conteúdo primário** — tabela/card de decisão ou execução.
 5. **Conteúdo secundário** — auditoria, critérios, rodapé legal (“fila ≠ fill”).
 
-### 4.4 Rota `/sinais` (decisão → operação → auditoria)
+### 4.4 Rota `/sinais` — IA v0.7 (ISS-024)
 
-1. **Pré-aprovação** — fila `copy.preapproval.queue[]` + **Atualizar candidatos** (ISS-023).
-2. **Em operação / assinados** — subtítulo mapa: *Cópia de terceiros… Não é fill.*
-3. **Inventário** — `copy.inventory`.
-4. **Origens** — Collective2 · pool Prodígio (pesquisa).
-5. **Critérios de adoção** — `copy.adoption.criteria_pt`.
-6. **Auditoria de ingresso** — por último; *Não é fill.*
+**Objetivo da página:** pesquisar e pré-aprovar cópia de terceiros; acompanhar operação e inventário; critérios e auditoria sempre visíveis. Fluxo mental do operador (Feature 9):
+
+```text
+Candidatos → Decisão (Aprovar/Rejeitar) → Operação → Inventário
+Critérios e Auditoria: referência transversal (não são “passo 5” depois de fill)
+```
+
+#### Cinco marcos na página (ordem de scroll — `h2` + `id` estável)
+
+| # | Marco (`h2`) | `id` sugerido | Papel | Fonte API |
+|---|--------------|---------------|-------|-----------|
+| 1 | **Pré-aprovação** | `sinais-preaprovacao` | Fila de **provedores** candidatos; decisão Aprovar/Rejeitar; CTA refresh | `copy.preapproval.queue[]` |
+| 2 | **Em operação / assinados** | `sinais-operacao` | Cópia paper **agora** (ordens abertas + família `signal_copy`); subtítulo *Não é fill.* | `copy.operating`, histórico família |
+| 3 | **Inventário** | `sinais-inventario` | **Sinais** rastreados com performance **só após fill**; distinto de “provedor aprovado” | `copy.inventory` |
+| 4 | **Critérios de adoção** | `sinais-criterios` | Texto Feature 4 / 9 / 10 (`copy.adoption.criteria_pt`); somente leitura | `copy.adoption` |
+| 5 | **Auditoria de ingresso** | `sinais-auditoria` | Trilha origem/destino/motivo; **última** seção; *Não é fill.* | `signals[]` (Feature 9) |
+
+**Sub-regiões dentro de Operação (não são marcos `h2` separados — evita menu longo):**
+
+- **Collective2** — bloco `h3` sob Operação ou logo após Inventário (mapa atual): lista nomeada, `approved_ids`, cópia fechada quando vazio.
+- **Candidatos Prodígio (pesquisa)** — bloco `h3` com faixa `ResearchBanner` + badge `Pesquisa — não autoriza ordem`; não confundir com fila de pré-aprovação.
+
+#### Distinção obrigatória (confusão operador)
+
+| Conceito | O que é | Onde aparece | Badge / copy |
+|----------|---------|--------------|--------------|
+| **Linha na fila de pré-aprovação** | Provedor **candidato** (C2 / Prodígio / TV) aguardando decisão | Seção 1 | `Decisão pendente` · métricas **(pesquisa)** |
+| **Provedor aprovado** | Decisão gravada no livro-razão; libera roteamento paper — **≠ fill** | C2 / overlay operação | `Aprovado para paper` (verde suave, token paper) |
+| **Linha no inventário** | **Sinal** (`signal_id` / evento) com proveniência ligada; P&L só com fill | Seção 3 | `Inventário · fill confirmado` ou vazio honesto |
+| **Pool Prodígio** | Ranking **research_tip**; não promove sozinho | Sub de Operação | `Pesquisa` tracejado |
+| **Auditoria** | Evento de **ingresso** (webhook/journal) | Seção 5 | Destino: fila / ordem / barrado |
+
+Callout compacto acima do inventário (sempre visível quando há dado em ≥2 seções):
+
+> **Provedor aprovado** decide quem pode copiar; **inventário** lista sinais com resultado paper — são listas diferentes.
 
 Métricas pré-aprovação: `win_rate_pct`, `shrunk_win_rate_pct`, `profit_factor_reported`, `reported_pnl_sum`, `net_return_pct`, `max_drawdown_pct`, `prodigy_score`/`score`, `status` — rótulo **(pesquisa)**; ausente = **indisponível**.
 
-### 4.5 Refresh de candidatos (comportamento de produto — sem ordem)
+**PageHeader `/sinais`:** título + subtítulo mapa; topbar shell (N53): selo **`Paper · Live desligado`** (`--color-success-bg` / `--color-success-fg`); sem roxo, sem gradiente “AI”.
+
+**Aprovar / Rejeitar:** coluna **Ações** à direita na tabela pré-aprovação; alvo tátil ≥44×44px; Rejeitar com `--color-destructive` outline, separado ≥8px do Aprovar (primário).
+
+### 4.5 Atualizar candidatos — dois modos honestos (N53 × N54 / ISS-024)
+
+Um único CTA **`Atualizar candidatos`** no cabeçalho da seção **Pré-aprovação** (não primário). O operador precisa entender **o que o servidor fez** — não misturar “job ao vivo” com “só reler disco”.
+
+| Modo | Quando (implementação) | Endpoint (servidor) | O que comunicar na UI |
+|------|------------------------|---------------------|------------------------|
+| **Releitura disco** | **N53** (entregue) | `GET /api/signals/reload` | Status: `Fonte: bundle em disco · critérios ao vivo não executados` |
+| **Critérios ao vivo** | **N54+** (ISS-024) | `POST` job allowlisted (cooldown) | Status: `Fonte: critérios Feature 4 / Prodígio 15d aplicados no servidor (C2 server-side; TV escopo mínimo)` |
+
+Regras de produto (ambos os modos):
 
 | Regra | Detalhe |
 |-------|---------|
-| O que faz | Dispara re-leitura/atualização server-side de JSON de pesquisa (ex. `prodigy-top10-latest`, provider-research) **sem** chamar Alpaca/C2 no browser |
-| O que não faz | Não aprova; não envia ordem; não promove fase; não inventa score |
-| Fail-closed | 503/erro → mensagem PT + fila anterior intacta |
-| UX | Botão outline no cabeçalho da seção pré-aprovação; estados em `mockups/sinais.md` |
+| O que faz (alvo N54) | Servidor aplica critérios nas fontes C2 (sem browser) e TV (origens já ingeridas — **sem** API de busca TV inventada); regrava JSON de pesquisa; re-monta bundle |
+| O que faz hoje (N53) | Só `build_panel_bundle` / releitura em disco — **não** substitui ISS-024; UI não pode insinuar “plataforma consultada” |
+| O que não faz | Não aprova; não rejeita; não envia ordem; não promove fase; não inventa score |
+| Fail-closed | 503 / erro job / sem chave C2 → `InlineAlert` danger + fila anterior intacta + modo `fail-closed` |
+| Browser | **Nunca** chama HTTP Collective2; chave só server-side |
+| Pós-sucesso | Toast + carimbo `Atualizado às HH:MM · <fonte>` na linha de status do refresh (`aria-live="polite"`) |
+
+Estados UX canônicos: **idle · running · success · fail-closed** — detalhe visual em `mockups/sinais.md`.
 
 ---
 
@@ -193,7 +239,7 @@ Métricas pré-aprovação: `win_rate_pct`, `shrunk_win_rate_pct`, `profit_facto
 ## 7. Plano de implementação (pós-design)
 
 1. **N53 (sugerido):** `_PANEL_CSS` tokens v2 + `PanelShell` + todas as rotas HTML (sem mudar significado de `panel_ops_data`).
-2. **N54 (sugerido):** endpoint + job refresh candidatos + testes; wire do botão em `/sinais`.
+2. **N54 (sugerido):** job POST critérios ao vivo (ISS-024) + cooldown; mesmo CTA em `/sinais` com copy `critérios-ao-vivo`.
 3. Paridade: strings vazias e rótulos **idênticos** ao `OPERATOR-PANEL-MAP.md`.
 4. Regressão: `tests/test_panel_ops.py` (layout/snippets), sem assert de P&L inventado.
 

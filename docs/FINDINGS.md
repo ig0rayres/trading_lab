@@ -19,6 +19,11 @@
 | F-011 | D5 | M | Reconcile→ledger + dashboard + homologação doc (fill real = operador) | fechado |
 | F-012 | N6 | M | Gate N6: diff não commitado; pytest/docker smoke/CI não reexecutados nesta rodada | fechado |
 | F-013 | N9 | P | Worker `persist_risk_decision` não liga `signal_events` quando `signal_id` na fila está hasheado (journal `QUEUED` sem `paper_orders` / `risk_decisions`) | fechado |
+| F-014 | N54 | M | Prodígio `calculate` sem persistir JSON quando `C2_API4_KEY` ausente (`v4_web_dashboard._live_refresh_prodigy`) | corrigido |
+| F-015 | N54 | M | Monkey-patch global de `c2_history_collect.fetch` na importação do dashboard | corrigido |
+| F-016 | N54 | M | Cooldown live-criteria sem lock em servidor threaded | corrigido |
+| F-017 | N54 | P | POST refresh só exige cookie se `DASHBOARD_OPERATOR_SESSION` definido | corrigido |
+| F-018 | N54 | P | Falha silenciosa no ramo TradingView do job live-criteria | pendente |
 
 ## Notas
 

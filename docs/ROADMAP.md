@@ -78,6 +78,7 @@
 | N51 | N | Fila de pré-aprovação no painel com métricas de pesquisa; aprovar não envia ordem; LIVE false | planejada | 6 | observability, ledger | ISS-021 pré-aprovação + métricas | *(abaixo)* |
 | N52 | N | Cockpit Sinais: decisão no topo, todos os números de pesquisa, visual do desenho; LIVE false | planejada | 4 | observability | ISS-022 redesign UX Sinais | *(abaixo)* |
 | N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | concluida | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
+| N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | planejada | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -5194,6 +5195,285 @@ P task. File: `tests/test_panel_ops.py`. Add nodeids: token/shell snippets on mu
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md`, `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md`, `docs/DIARY.md`, `docs/design/README.md`, `docs/api-spec.yaml` (reload GET). ISS-023 **aberto** até merge + operador. Do not close ISS-022/021/… without evidence. LIVE false. N45–N47 not started.
+
+---
+
+## Sprint N54 — Aplicar critérios ao vivo ao atualizar candidatos
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-18 · fonte ISS-024 · fases analista/designer/arquiteto/contratos DONE  
+> titulo_humano: Atualizar candidatos aplica critérios ao vivo no servidor, sem ordem  
+> resumo_humano: Em Sinais, o botão de atualizar candidatos passa a aplicar no servidor os critérios já definidos. Collective2 só no servidor; TradingView só origens já recebidas. Atualizar não aprova nem envia ordem. LIVE false. Finalizado só após merge no ramo principal.  
+> Gate: POST autenticado de critérios ao vivo; GET reload declara releitura em disco; cooldown 429; sem chave C2 a fila permanece; pytest verde; mapa com dois modos; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N54.brief.md`  
+> bom_ref: BOM-3  
+> Depende de: N53 concluída (#71) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N53
+
+### Em uma frase
+
+Em Sinais, o botão de atualizar candidatos passa a aplicar no servidor os critérios de seleção já definidos — consulta Collective2 só no servidor, usa origens TradingView já recebidas, e não aprova nem envia ordem.
+
+### O que muda para você
+
+- Clicar em Atualizar candidatos dispara o trabalho pesado no servidor; deixa de ser só reler arquivo gravado
+- Sem chave Collective2 no servidor, a fila anterior permanece e o aviso diz o que faltou — sem inventar candidato
+- TradingView não ganha busca inventada: entram só origens já ingeridas
+- Atualizar continua separado de Aprovar; dinheiro real permanece desligado
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Critérios ao vivo no servidor | Logado em Sinais, clique em Atualizar candidatos: a mensagem fala em critérios aplicados no servidor, não só em arquivo relido |
+| 2 | Falha honesta sem chave ou com espera | Sem credencial no servidor vê aviso e a fila antiga; clique imediato de novo pede para aguardar |
+| 3 | Releitura em disco ainda existe e se declara | O caminho antigo de só reler arquivo continua autenticado e avisa que critérios ao vivo não rodaram |
+| 4 | Tela e mapa alinhados | O texto permanente do botão e o mapa da área Sinais descrevem o modo ao vivo; Aprovar segue separado |
+| 5 | Prova automática | A suíte do painel passa cobrindo sessão, espera entre cliques, ausência de ordem e chave fora do browser |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N54.0 Inventariar reuso do job de candidatos ao vivo | `docs/.briefs/N54-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N54.1 Implementar o trabalho de critérios ao vivo e o envio autenticado | `src/v4_web_dashboard.py` | N54.0 |
+| [x] | M | N54.2 Ligar o botão da tela ao trabalho ao vivo | `src/panel_ops_html.py` | N54.1 |
+| [x] | M | N54.3 Provar modos, espera entre cliques e ausência de ordem | `tests/test_panel_ops.py` | N54.2 |
+| [x] | P | N54.4 Atualizar o mapa, o chamado e o aceite da função | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/REQUIREMENTS.md` | N54.3 |
+
+### Quality Brief (Sprint N54)
+
+**Validação:** preventiva (plan-only). Parent Fable / plan-verifier ainda não carimbou.
+
+**Alvo:** `POST /api/signals/candidates/refresh` (`mode: live_criteria`) reusa `prodigy_rank.calculate`, `c2_history_collect.fetch` e `c2_signal_feed.snapshot`; GET reload declara `mode: disk_reread`; CTA Sinais aponta ao POST; cooldown sem DDL.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N53 GET `/api/signals/reload` stays disk-only (no `prodigy_rank.calculate` in that handler); N52 Sinais hierarchy; missing metrics = indisponível.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS=15`, `MIN_TRADES=5`); do not invent scores or a TradingView search API.
+Maintain: Collective2 HTTP and `C2_API4_KEY` stay server-side; `signal_provider_approvals` unchanged by refresh; no new cooldown table.
+Avoid: stealing N45–N47; calling C2 from browser JS; mutating approvals on refresh; `process_after_gate_b`; printing API keys; claiming EasyPanel rebuild without operator.
+
+### Technical Advisory
+
+- [ABORDAGEM] Helpers de job no mesmo `v4_web_dashboard` do GET reload — evita pacote paralelo e mantém C2 fora do HTML.
+- [RISCO] GET N53 ainda não emite `mode`; testes N53 não asserem o campo — N54.1 deve completar o contrato sem quebrar releitura.
+- [OPORTUNIDADE] `tests/test_c2_signal_feed.py` já usa `opener` injetável; o job deve aceitar opener/env de teste e não bater rede real no CI.
+
+> EXPIRES at end of Sprint N54. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Inventar busca TradingView ou fórmula nova
+- Mutar livro de pré-aprovação no refresh
+- Ordem / fill / LIVE true
+- Tabela nova de cooldown; `dry_run` OpenAPI
+- N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N54.0 — Inventariar reuso do job de candidatos ao vivo
+
+**Entrega:** Inventário dizendo o que já calcula ranking, o que já fala com Collective2, e o que a tela não pode fazer no browser.
+**Como conferir:** O inventário cita ranking 15 dias, coletores Collective2, montagem da fila, e proíbe busca TradingView inventada e chave no browser.
+**Por quê:** Sem isso o EXECUTE recalcula no painel ou inventa endpoint.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N54-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `prodigy_rank.calculate`, `c2_history_collect.fetch`, `c2_signal_feed.snapshot`, `build_preapproval_queue`, `_unique_tradingview_origins`, `serve_signals_reload`.
+
+### Task N54.1 — Implementar o trabalho de critérios ao vivo e o envio autenticado
+
+**Entrega:** Um envio autenticado no servidor aplica os critérios já definidos, consulta Collective2 só no processo, recalcula o ranking de pesquisa, e devolve a fila atualizada sem aprovar ninguém.
+**Como conferir:** Com sessão, o envio novo responde modo critérios ao vivo e zero ordens; sem sessão recusa; um segundo envio imediato pede espera; o caminho antigo de só reler arquivo declara modo releitura em disco.
+**Por quê:** O operador recusou tratar arquivo estático como verdade das plataformas.
+
+**Detalhe técnico**
+
+- **Estado atual:** só `GET /api/signals/reload` chama `build_panel_bundle`; JSON sem `mode`; `do_POST` não conhece `/api/signals/candidates/refresh`.
+- **Estado desejado:** orquestrador + POST 200/partial/401/429/502 conforme `docs/api-spec.yaml` v0.3.0 e `docs/ARCHITECTURE.md` §13.4; GET reload com `mode: disk_reread`.
+- **Arquivo(s):** `src/v4_web_dashboard.py`
+- **Fonte(s):** ISS-024, Feature 9, ADR-011/012
+- **Risco:** MEDIUM — HTTP externo + JSON de pesquisa compartilhado com o painel
+- **Task size:** M (endpoint + orquestração C2/rank no dashboard)
+
+**executor_prompt**:
+
+```yaml
+id: N54.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N54.0"]
+files:
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "prodigy_rank" src/v4_web_dashboard.py'
+  - component: src/c2_history_collect.py
+    reuse_as: call
+    convergence_check: 'rg "c2_history_collect" src/v4_web_dashboard.py'
+  - component: src/c2_signal_feed.py
+    reuse_as: call
+    convergence_check: 'rg "c2_signal_feed" src/v4_web_dashboard.py'
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: 'rg "build_panel_bundle" src/v4_web_dashboard.py'
+guardrail_contract:
+  - class: secrets
+    id: n54-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t"
+    pass_condition: no live keys hardcoded; C2 key only via env lookup
+  - class: subagent-safety
+    id: n54-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n54-1-get-still-disk
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; b=Path('src/v4_web_dashboard.py').read_text().split('def serve_signals_reload',1)[-1].split('def serve_public_get',1)[0]; assert 'prodigy_rank.calculate' not in b; assert 'disk_reread' in b"
+    pass_condition: GET reload remains disk_reread without calculate
+```
+
+### Quality Brief (Sprint N54)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; reuse calculate/fetch/snapshot; no TV search API; no approval mutation; C2 key env-only.
+
+Melhoria: implement live-criteria refresh job + authenticated POST.
+Contexto: N53 GET only rereads disk; ISS-024 / Feature 9 require applying Feature 4 / Prodigy 15d on sources.
+Objetivo: `POST /api/signals/candidates/refresh` with session cookie; cooldown 30s in-process (no new table); empty body = all sources `[collective2, prodigy, tradingview]`. Helpers stay in `src/v4_web_dashboard.py` — do **not** add a parallel module.
+C2: if `C2_API4_KEY` set, `c2_history_collect.fetch` for numeric IDs from `load_c2_paper_copy_approved_ids` plus IDs already in research JSON; write adapter-shaped `{sid}_{kind}.json`; `c2_signal_feed.snapshot` for active orders (not tickets). Missing key → `issues` + `status: partial` or documented 502; **do not wipe** previous JSON/queue.
+Prodigy: `prodigy_rank.calculate` on raw dir; write `intelligence/prodigy-top10-latest.json` and `intelligence/provider-research-top10-latest.json` (paths already loaded by `panel_ops_data`).
+TV: `_unique_tradingview_origins` on current signals; no HTTP.
+Then `build_panel_bundle`. Never upsert `signal_provider_approvals`. Never `process_after_gate_b`.
+GET `serve_signals_reload`: add `mode: disk_reread`, `execution_authorized: false`, `orders_sent: 0`. Keep `prodigy_rank.calculate` **out** of that function (place POST helpers before it or after `serve_public_get` so the N53 slice stays disk-only).
+POST JSON: OpenAPI `PanelSignalsLiveRefreshResponse` / cooldown / upstream error schemas.
+`dry_run` out of scope.
+Critério de pronto: unauthenticated POST 401; sequential POST 429 `REFRESH_COOLDOWN`; success payload `mode=live_criteria` and `orders_sent=0`; GET reload `mode=disk_reread` and handler still without `prodigy_rank.calculate`.
+Cenários de teste (mínimo no implementer self-check; N54.3 owns pytest):
+  1. Caso normal: POST com sessão + opener fake + raw trades → 200 live_criteria
+  2. Edge: sem C2_API4_KEY → partial/issues, fila anterior intacta
+  3. Edge: segundo POST <30s → 429
+  4. Regressão: GET reload não chama calculate; providers POST inalterado
+
+### Task N54.2 — Ligar o botão da tela ao trabalho ao vivo
+
+**Entrega:** O mesmo botão de atualizar candidatos dispara o trabalho ao vivo, mostra espera/sucesso/erro/aguarde, e o texto permanente deixa de insinuar que só relê arquivo.
+**Como conferir:** Em Sinais, o hint fala em critérios no servidor; ao clicar vê Atualizando e depois sucesso ou erro sem a fila sumir; a rede mostra o envio autenticado do trabalho ao vivo, não chamada Collective2 no browser.
+**Por quê:** Um único controle na tela precisa contar a verdade do que o servidor fez.
+
+**Detalhe técnico**
+
+- UI: `docs/design/mockups/sinais.md` S0–S5; hint permanente do modo critérios ao vivo; linha de status `Última atualização` + fonte; `aria-live="polite"`.
+- Client: change `_CANDIDATES_RELOAD_SCRIPT` to `POST /api/signals/candidates/refresh` with `credentials: same-origin`; handle 401→login, 429→S4 using `retry_after_seconds` if present, 502/503→S3 keep table.
+- Do **not** fetch Collective2 from JS. Do **not** change Aprovar/Rejeitar.
+- **Arquivo(s):** `src/panel_ops_html.py`
+
+**executor_prompt**:
+
+```yaml
+id: N54.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N54.1"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "reload-candidates" src/panel_ops_html.py && rg "/api/signals/candidates/refresh" src/panel_ops_html.py'
+  - component: docs/design/mockups/sinais.md
+    reuse_as: copy_pattern
+    convergence_check: 'rg "Aplica critérios Feature 4" src/panel_ops_html.py || rg "Prodígio 15d" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n54-2-no-c2-in-browser
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'collective2.com' not in t.lower(); assert 'api4-general' not in t"
+    pass_condition: HTML/JS never calls C2 hosts or embeds the key
+  - class: subagent-safety
+    id: n54-2-cta-post
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert '/api/signals/candidates/refresh' in t; assert 'Atualizar candidatos' in t"
+    pass_condition: same CTA wired to live-criteria POST
+```
+
+### Quality Brief (Sprint N54)
+
+See sprint Quality Brief. Preserve N52 hierarchy and N53 shell; refresh ≠ approve.
+
+Melhoria: wire existing `#reload-candidates` to POST live-criteria; honest copy.
+Contexto: script still GET-reloads disk and hint says JSON only.
+Objetivo: hint from mockup live-criteria row; S1 running; S2 success with clock; S3 fail-closed keeps queue HTML; S4 cooldown; S5 401→`/login`.
+Keep GET reload available (not used by the button). No `prodigy_rank` import in HTML module.
+Critério de pronto: `/sinais` HTML contains POST path, live-criteria hint, aria-live; no collective2.com in JS.
+Cenários:
+  1. Caso normal: click → POST same-origin
+  2. Edge: 429 copy «Aguarde antes de atualizar de novo.»
+  3. Regressão: Aprovar/Rejeitar script unchanged; hierarchy pré-aprovação → operação → auditoria
+
+### Task N54.3 — Provar modos, espera entre cliques e ausência de ordem
+
+**Entrega:** Testes cobrem o envio ao vivo, a releitura em disco declarada, a espera entre cliques, a fila preservada sem chave, e a prova de que nada disso envia ordem.
+**Como conferir:** Rodar a suíte do painel e do job e ver falha se faltar modo no JSON, se o botão ainda só reler arquivo, se Collective2 aparecer no HTML, ou se o caminho de ordem for chamado.
+**Por quê:** Integração com fonte externa e tela compartilhada exige rede de segurança antes do merge.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — HTTP in-process + mocks
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N54.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N54.2"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_c2_signal_feed.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "candidates/refresh" tests/test_panel_ops.py'
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "live_criteria" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n54-3-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'C2_API4_KEY' not in t or 'environ' in t.lower() or 'patch' in t"
+    pass_condition: tests do not require a real Collective2 key
+```
+
+### Quality Brief (Sprint N54)
+
+See sprint Quality Brief.
+
+Melhoria: pytest for POST live-criteria, GET mode, UI wiring, fail-closed.
+Objetivo: nodeids covering 401 POST, 429 cooldown, 200/partial without key, GET `mode=disk_reread`, HTML has POST path and no C2 host, `process_after_gate_b` absent from job, N53 reload tests still pass, Sinais section order preserved.
+Do not teach production about `tests/` paths (no HARNESS_BUG).
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: POST sessão + fake opener → live_criteria, orders_sent 0
+  2. Edge: sem chave → issues, bundle_preserved / fila
+  3. Edge: cooldown 429 REFRESH_COOLDOWN
+  4. Edge: TV-only sources → no C2 HTTP
+  5. Regressão: GET reload disk_reread; N53 button still named Atualizar candidatos
+  6. Regressão: HTML sem collective2.com; approve path unchanged
+
+### Task N54.4 — Atualizar o mapa, o chamado e o aceite da função
+
+**Entrega:** Mapa e aceite da função Sinais descrevem o trabalho ao vivo; o chamado ISS-024 aponta esta sprint e permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; Feature 9 com o item de critérios ao vivo marcado só se os testes existirem.
+**Por quê:** Separar o que N53 já pôs no ar do que esta sprint entrega.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 refresh POST + GET mode), `docs/DASHBOARD-OPERATIONS.md`, `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. ISS-023 stays open until operator rebuild.
 
 ---
 

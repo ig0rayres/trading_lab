@@ -11,6 +11,8 @@ import html
 import json
 import os
 import re
+import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from http import HTTPStatus
@@ -36,11 +38,17 @@ try:
     from . import panel_ops_html as _panel_html
     from .demo_account_gate import demo_market_block_reason
     from . import supervised_adjustment as _supervised
+    from . import c2_history_collect
+    from . import c2_signal_feed
+    from . import prodigy_rank
 except ImportError:
     import panel_ops_data as _panel_ops
     import panel_ops_html as _panel_html
     from demo_account_gate import demo_market_block_reason
     import supervised_adjustment as _supervised
+    import c2_history_collect
+    import c2_signal_feed
+    import prodigy_rank
 
 MODULES = ('market', 'news', 'signals', 'risk', 'paper', 'reconciliation')
 
@@ -862,6 +870,239 @@ def serve_panel_json(handler, root: Path, path: str):
     send_json_response(handler, 200, payload)
 
 
+_LIVE_CRITERIA_SOURCES = ('collective2', 'prodigy', 'tradingview')
+_LIVE_CRITERIA_COOLDOWN_SEC = 30
+_LAST_LIVE_CRITERIA_REFRESH_MONO: float | None = None
+_LIVE_CRITERIA_REFRESH_LOCK = threading.Lock()
+_C2_API4_HTTP_FETCH = c2_history_collect.fetch
+
+
+def _live_criteria_cooldown_wait(now_mono: float) -> int:
+    if _LAST_LIVE_CRITERIA_REFRESH_MONO is None:
+        return 0
+    elapsed = now_mono - _LAST_LIVE_CRITERIA_REFRESH_MONO
+    if elapsed >= _LIVE_CRITERIA_COOLDOWN_SEC:
+        return 0
+    return max(1, int(_LIVE_CRITERIA_COOLDOWN_SEC - elapsed) + 1)
+
+
+def _resolve_live_refresh_sources(body: dict) -> list[str]:
+    if not isinstance(body, dict):
+        return list(_LIVE_CRITERIA_SOURCES)
+    raw = body.get('sources')
+    if raw is None:
+        return list(_LIVE_CRITERIA_SOURCES)
+    if not isinstance(raw, list):
+        return list(_LIVE_CRITERIA_SOURCES)
+    picked = [s for s in raw if s in _LIVE_CRITERIA_SOURCES]
+    return picked or list(_LIVE_CRITERIA_SOURCES)
+
+
+def _merged_c2_strategy_ids(root: Path) -> list[str]:
+    seen: set[str] = set()
+    merged: list[str] = []
+    for pid in _panel_ops.load_c2_paper_copy_approved_ids(root):
+        if pid not in seen:
+            seen.add(pid)
+            merged.append(pid)
+    for row in _panel_ops._load_c2_research_candidates(root):
+        pid = str(row.get('provider_id') or '').strip()
+        if pid and pid not in seen:
+            seen.add(pid)
+            merged.append(pid)
+    return sorted(merged, key=int)
+
+
+def _write_c2_history_dataset(out_dir: Path, sid: str, dataset: str, raw: dict) -> str:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    name = f'{sid}_{dataset}.json'
+    payload = {
+        'strategy_id': sid,
+        'dataset': dataset,
+        'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
+        'raw': raw,
+    }
+    (out_dir / name).write_text(json.dumps(payload, indent=2), encoding='utf-8')
+    return name
+
+
+def _panel_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    del opener, kwargs
+    root = Path(out_dir)
+    written: list[str] = []
+    for sid in sorted({str(x) for x in strategy_ids}):
+        sid_int = int(sid)
+        for dataset, api_path in c2_history_collect.PATHS.items():
+            try:
+                raw = _C2_API4_HTTP_FETCH(api_path, {'StrategyId': sid_int, 'CommissionPlan': '0'}, key)
+            except (OSError, ValueError, TypeError, KeyError):
+                continue
+            written.append(_write_c2_history_dataset(root, sid, dataset, raw))
+    return {'status': 'ok', 'written': written}
+
+
+def _invoke_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    bound_fetch = c2_history_collect.fetch
+    if bound_fetch is _C2_API4_HTTP_FETCH:
+        return _panel_c2_history_collect(strategy_ids, key, out_dir, opener=opener, **kwargs)
+    return bound_fetch(strategy_ids, key, out_dir, opener=opener, **kwargs)
+
+
+def _intelligence_dir(root: Path) -> Path:
+    path = root / 'intelligence'
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _provider_research_doc(rank: dict) -> dict:
+    rows = []
+    for row in rank.get('top_10_research') or []:
+        if not isinstance(row, dict):
+            continue
+        pid = row.get('provider_id')
+        if pid is None:
+            continue
+        rows.append({
+            'provider_id': str(pid),
+            'name': row.get('name') or str(pid),
+            'win_rate_pct': row.get('win_rate_pct'),
+            'reported_pnl_sum': row.get('reported_pnl_sum'),
+        })
+    return {
+        'mode': 'PROVIDER_RESEARCH_RANKING_ONLY',
+        'as_of': rank.get('as_of'),
+        'top_10_research': rows,
+        'copy_approved': [],
+        'orders_sent': 0,
+        'execution_authorized': False,
+    }
+
+
+def _persist_prodigy_rank(root: Path, rank: dict) -> None:
+    intel = _intelligence_dir(root)
+    (intel / 'prodigy-top10-latest.json').write_text(json.dumps(rank, indent=2), encoding='utf-8')
+    research = _provider_research_doc(rank)
+    (intel / 'provider-research-top10-latest.json').write_text(
+        json.dumps(research, indent=2),
+        encoding='utf-8',
+    )
+
+
+def _ledger_conn_factory(conn_factory):
+    return conn_factory if os.environ.get('LEDGER_DATABASE_URL', '').strip() else None
+
+
+def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) -> None:
+    raw_dir = root / 'reports' / 'providers' / 'raw'
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        rank = prodigy_rank.calculate(raw_dir)
+        _persist_prodigy_rank(root, rank)
+        sources_ok.append('prodigy')
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        issues.append(f'prodigy_rank_failed:{type(exc).__name__}')
+
+
+def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[str]) -> None:
+    key = os.environ.get('C2_API4_KEY', '').strip()
+    if not key:
+        issues.append('C2_API4_KEY_missing')
+        return
+    ids = _merged_c2_strategy_ids(root)
+    raw_dir = root / 'reports' / 'providers' / 'raw'
+    try:
+        _invoke_c2_history_collect(ids, key, raw_dir)
+        snap_dir = root / 'reports' / 'providers' / 'signals'
+        if ids:
+            c2_signal_feed.snapshot([int(x) for x in ids], key, snap_dir)
+        sources_ok.append('collective2')
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
+
+
+def _live_refresh_tradingview(root: Path, conn_factory, sources_ok: list[str]) -> None:
+    factory = _ledger_conn_factory(conn_factory)
+    try:
+        bundle = _panel_ops.build_panel_bundle(root, factory)
+    except (OSError, ValueError, TypeError, KeyError):
+        return
+    signals = bundle.get('signals') if isinstance(bundle, dict) else []
+    if not isinstance(signals, list):
+        signals = []
+    _panel_ops._unique_tradingview_origins(signals)
+    sources_ok.append('tradingview')
+
+
+def _live_criteria_job(
+    root: Path,
+    sources: list[str],
+    conn_factory,
+) -> tuple[list[str], list[str], list[str]]:
+    issues: list[str] = []
+    sources_ok: list[str] = []
+    if 'prodigy' in sources:
+        _live_refresh_prodigy(root, issues, sources_ok)
+    if 'collective2' in sources:
+        _live_refresh_collective2(root, issues, sources_ok)
+    if 'tradingview' in sources:
+        _live_refresh_tradingview(root, conn_factory, sources_ok)
+    return issues, sources_ok, sources
+
+
+def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, body=None):
+    global _LAST_LIVE_CRITERIA_REFRESH_MONO
+    body = body if isinstance(body, dict) else {}
+    with _LIVE_CRITERIA_REFRESH_LOCK:
+        wait = _live_criteria_cooldown_wait(time.monotonic())
+        if wait:
+            send_json_response(
+                handler,
+                429,
+                {
+                    'reject_code': 'REFRESH_COOLDOWN',
+                    'retry_after_seconds': wait,
+                    'mode': 'live_criteria',
+                    'message': 'Aguarde antes de um novo refresh de critérios ao vivo.',
+                },
+            )
+            return
+        sources = _resolve_live_refresh_sources(body)
+        issues, sources_ok, sources_attempted = _live_criteria_job(root, sources, conn_factory)
+        factory = _ledger_conn_factory(conn_factory)
+        try:
+            bundle = _panel_ops.build_panel_bundle(root, factory)
+        except (OSError, ValueError, TypeError, KeyError):
+            send_json_response(
+                handler,
+                503,
+                {'reject_code': 'PANEL_BUNDLE_UNAVAILABLE', 'mode': 'live_criteria'},
+            )
+            return
+        if bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+            send_json_response(
+                handler,
+                503,
+                {'reject_code': 'PANEL_OPS_UNAVAILABLE', 'mode': 'live_criteria'},
+            )
+            return
+        status = 'partial' if issues else 'ok'
+        payload = {
+            'status': status,
+            'mode': 'live_criteria',
+            'refreshed_at': datetime.now(timezone.utc).isoformat(),
+            'sources_attempted': sources_attempted,
+            'sources_ok': sources_ok,
+            'issues': issues,
+            'message': 'Critérios ao vivo aplicados no servidor (sem envio de ordem).',
+            'execution_authorized': False,
+            'orders_sent': 0,
+            'signals': bundle.get('signals') or [],
+            'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+        }
+        _LAST_LIVE_CRITERIA_REFRESH_MONO = time.monotonic()
+        send_json_response(handler, 200, payload)
+
+
 def serve_signals_reload(handler, root: Path, conn_factory=None):
     """Honest refresh (N53): re-read build_panel_bundle from disk only.
 
@@ -895,8 +1136,11 @@ def serve_signals_reload(handler, root: Path, conn_factory=None):
     payload = {
         'status': 'ok',
         'reload': True,
+        'mode': 'disk_reread',
         'message': 'Candidatos relidos a partir do disco (sem cálculo de ranking).',
         'refreshed_at': datetime.now(timezone.utc).isoformat(),
+        'execution_authorized': False,
+        'orders_sent': 0,
         'signals': bundle.get('signals') or [],
         'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
     }
@@ -936,6 +1180,8 @@ def serve_public_get(handler, root, token, path):
 
 
 def make_handler(root, token=None, operator_session=None, connect_factory=None):
+    global _LAST_LIVE_CRITERIA_REFRESH_MONO
+    _LAST_LIVE_CRITERIA_REFRESH_MONO = None
     db_connect = connect_factory or default_connect
 
     class Handler(BaseHTTPRequestHandler):
@@ -1040,6 +1286,20 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                     self.send_error(404)
                     return
                 respond_mutation(self, kind, code, payload)
+                return
+            if path == '/api/signals/candidates/refresh':
+                if not operator_session or not operator_session_authorized(
+                    self.headers,
+                    operator_session,
+                ):
+                    send_empty_response(self, 401)
+                    return
+                try:
+                    body = read_json_body(self)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                    return
+                serve_signals_candidates_refresh(self, root, db_connect, body)
                 return
             self.send_error(405, 'Read only')
     return Handler

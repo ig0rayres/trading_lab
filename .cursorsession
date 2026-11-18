@@ -225,18 +225,18 @@
     "current_task": null,
     "last_completed_task": "N52.3",
     "validation_gate_ref": ".beesy/sprints/N48.json",
-    "sprint_delivery": null,
-    "sprint_delivery_sprint": null,
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N53",
     "plan_only": true,
     "validation_gate_qa": {
-      "result": null,
+      "result": "APROVADA",
       "sprint": "N53",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-17T20:17:39Z",
+      "recorded_at": "2026-11-18T12:48:21Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N52; 75 OK",
+      "notes": "N53 PanelShell; 81 OK",
       "full_suite_ran": true,
       "first_pass": true,
       "senior_status": "PASS"
@@ -254,13 +254,13 @@
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "d4b75adde323775f22cf9dd5baa73de565536d81",
-      "stamped_at": "2026-11-17T20:24:57Z",
+      "last_validated_sha": "888c78cbce14eb144c07bcffdfeb74dcb31a72ea",
+      "stamped_at": "2026-11-18T12:49:26Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "2e50a31bfc2f19724dfd9547763384964d5d5731a16be34b69579b78c7d82378",
-      "patch_id": "637d30437abd7686869d49eeb4e5e8613ad3a9df",
+      "content_hash": "c3abfdf28810652f90d54d02a953c8be9547abdd2be450b4ae9dffec3d9e27ce",
+      "patch_id": "2feb035ab637359cce96da1baf674ac7077d7766",
       "patch_id_version": 2
     }
   },

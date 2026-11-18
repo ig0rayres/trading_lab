@@ -244,6 +244,31 @@
     "guardrail_contract_source": "roadmap",
     "guardrail_contract_bootstrapped": false,
     "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "0241092ee0757f8aaf6ddc16810585dbfa3282fe",
+      "stamped_at": "2026-11-18T18:40:47Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "acc19a06c648ab62ea16e3cb72c3338acb2cd27061fd420e462c9e7771fd91b9",
+      "patch_id": "2456ea177ae0ab7b225b54e4536ceba01eb757fc",
+      "patch_id_version": 2
+    },
+    "validation_gate_qa": {
       "sprint": "N54",
       "validation_round": 2,
       "findings_found": 5,
@@ -285,50 +310,8 @@
       "notes": "Round 2 after F-014–F-017 fixes; F-018 LOW deferred. pytest N54/N53 12 passed.",
       "recorded_at": "2026-11-18T18:40:02Z"
     },
-    "validation_gate_qa": {
-      "result": "COM_RESSALVAS",
-      "sprint": "N54",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS_WITH_NOTES",
-      "findings_registered": [
-        "F-014",
-        "F-015",
-        "F-016",
-        "F-017",
-        "F-018"
-      ],
-      "recorded_at": "2026-11-18T18:40:09Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "F-014–F-017 fixed; F-018 LOW deferred; N54/N53 HTTP 12 passed",
-      "round": 2,
-      "full_suite_ran": true,
-      "first_pass": false,
-      "senior_status": "PASS_WITH_NOTES",
-      "findings_found": 5,
-      "findings_disposition": [
-        {
-          "id": "F-014",
-          "status": "fixed"
-        },
-        {
-          "id": "F-015",
-          "status": "fixed"
-        },
-        {
-          "id": "F-016",
-          "status": "fixed"
-        },
-        {
-          "id": "F-017",
-          "status": "fixed"
-        },
-        {
-          "id": "F-018",
-          "status": "escalated",
-          "reason": "LOW TV silent fail — deferred"
-        }
-      ]
-    }
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N54"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

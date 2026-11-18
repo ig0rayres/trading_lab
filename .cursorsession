@@ -259,16 +259,17 @@
         }
       ],
       "dirty_production_paths": [
+        ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "07abbfafc8cd17eee2f4623bfd55648207f352a6",
-      "stamped_at": "2026-11-18T19:33:12Z",
+      "last_validated_sha": "21c734f55a89c1428e6e1eda152056d73a2972e0",
+      "stamped_at": "2026-11-18T20:44:06Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "2eb185ab9e29befcddf96e0c60e24120a00fc81dce2f894808260cccedc02f0a",
-      "patch_id": "cddc6a392998a5f18eb280220fe4273642240874",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "806ff41a282e161bd4107764d66c798487b6c226",
       "patch_id_version": 2
     },
     "validation_gate_qa": {
@@ -280,10 +281,10 @@
         "CQ-003",
         "CQ-004"
       ],
-      "recorded_at": "2026-11-18T19:28:45Z",
+      "recorded_at": "2026-11-18T20:43:42Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N55 multi-platform queue green (97 panel_ops). CQ-001/002/005 fixed. CQ-003/CQ-004 deferred in FINDINGS. ISS-024 stays open until merge+ops.",
-      "round": 1,
+      "notes": "N55 closeout docs after #74 merge; ISS-024 open until EasyPanel homologation",
+      "round": 2,
       "full_suite_ran": true,
       "first_pass": false,
       "senior_status": "PASS_WITH_NOTES",
@@ -291,12 +292,12 @@
         {
           "id": "CQ-003",
           "status": "escalated",
-          "reason": "TV origin filter deferred — latent until non-TV signal_events"
+          "reason": "deferred"
         },
         {
           "id": "CQ-004",
           "status": "escalated",
-          "reason": "refresh lock/cooldown redesign deferred"
+          "reason": "deferred"
         }
       ]
     },

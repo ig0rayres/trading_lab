@@ -79,7 +79,7 @@
 | N52 | N | Cockpit Sinais: decisão no topo, todos os números de pesquisa, visual do desenho; LIVE false | planejada | 4 | observability | ISS-022 redesign UX Sinais | *(abaixo)* |
 | N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | concluida | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
 | N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | concluida | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo · PR #73 | *(abaixo)* |
-| N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | planejada | 5 | observability | ISS-024 follow-up fila multiplataforma | *(abaixo)* |
+| N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | concluida | 5 | observability | ISS-024 follow-up fila multiplataforma · PR #74 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -5482,7 +5482,7 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 refresh POST + GET mode), `docs
 
 ## Sprint N55 — Mostrar todos os elegíveis das três plataformas na fila
 > Categoria: N  
-> Status: planejada  
+> Status: concluida *(PR [#74](https://github.com/ig0rayres/trading_lab/pull/74) merge `d8870c281a5b87e1e22871632a50e23868ba0c7b` 2026-11-18; CI test + docker-smoke + docker-build SUCCESS; suíte `N55MultiPlatformLiveCriteriaTests` (7/7); `tests/test_panel_ops.py` verde; **ISS-024 aberto** — rebuild EasyPanel + homologação operador; `LIVE_TRADING_ENABLED=false`)*
 > Gerado via: `/pmo plan` 2026-11-18 · fonte ISS-024 follow-up · N54 #73 em `main`  
 > titulo_humano: A fila de candidatos mostra as três plataformas, sem apagar quem já passou  
 > resumo_humano: Depois de atualizar candidatos, a pré-aprovação lista Collective2, Prodígio e TradingView que já passam nos critérios definidos. Se uma fonte falhar, o aviso aparece e as outras linhas permanecem. Atualizar não aprova nem envia ordem. LIVE false.  
@@ -5526,9 +5526,9 @@ Tabela para o agente; o operador lê as tarefas abaixo.
 
 ### Quality Brief (Sprint N55)
 
-**Validação:** preventiva (plan-only). Parent Fable / plan-verifier ainda não carimbou.
+**Validação:** merge **#74** → `main` @ `d8870c281a5b87e1e22871632a50e23868ba0c7b` (2026-11-18); CI **test**, **docker-smoke** e **docker-build** SUCCESS; `tests/test_panel_ops.py` — `N55MultiPlatformLiveCriteriaTests` 7/7; CQ-001/002/005 corrigidos na frente; CQ-003/CQ-004 deferidos em `docs/FINDINGS.md`.
 
-**Alvo:** reusar o POST N54 `mode: live_criteria`; montar a fila de pré-aprovação com elegíveis Collective2 + Prodígio + TradingView; fail-closed por fonte sem apagar as outras.
+**Alvo:** POST N54 `mode: live_criteria` estendido; fila de pré-aprovação com elegíveis Collective2 + Prodígio + TradingView; fail-closed por fonte sem apagar as outras; `partial` persiste em `copy.candidates_refresh`.
 
 Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
 Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.

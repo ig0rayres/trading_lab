@@ -1117,6 +1117,25 @@ def _load_prodigy_research_rows(root: Path) -> list[dict[str, Any]]:
     return out
 
 
+def _providers_raw_dir(root: Path) -> Path:
+    return Path(root) / 'providers' / 'raw'
+
+
+def discover_c2_strategy_ids_from_raw(root: Path) -> list[str]:
+    raw_dir = _providers_raw_dir(root)
+    if not raw_dir.is_dir():
+        return []
+    seen: set[str] = set()
+    ids: list[str] = []
+    for path in raw_dir.glob('*_closed_trades.json'):
+        prefix = path.name.split('_', 1)[0]
+        if not prefix.isdigit() or prefix in seen:
+            continue
+        seen.add(prefix)
+        ids.append(prefix)
+    return sorted(ids, key=int)
+
+
 def _unique_tradingview_origins(signals: list[dict[str, Any]]) -> list[str]:
     seen: set[str] = set()
     origins: list[str] = []
@@ -1181,6 +1200,9 @@ def build_preapproval_queue(
 
     for pid in load_c2_paper_copy_approved_ids(root):
         add('collective2', pid, metrics_by_c2.get(pid), seed=True)
+
+    for pid in discover_c2_strategy_ids_from_raw(root):
+        add('collective2', pid, metrics_by_c2.get(pid))
 
     for row in _load_prodigy_research_rows(root):
         pid = row.get('provider') or row.get('provider_id')
@@ -1281,6 +1303,8 @@ def _load_c2_research_candidates(root: Path) -> list[dict[str, Any]]:
         except (OSError, ValueError, TypeError):
             continue
         if not isinstance(payload, dict):
+            continue
+        if payload.get('mode') == 'PRODIGY_RANK_RESEARCH_ONLY':
             continue
         top = payload.get('top_10_research') or []
         for row in top:

@@ -905,6 +905,10 @@ def _merged_c2_strategy_ids(root: Path) -> list[str]:
         if pid not in seen:
             seen.add(pid)
             merged.append(pid)
+    for pid in _panel_ops.discover_c2_strategy_ids_from_raw(root):
+        if pid not in seen:
+            seen.add(pid)
+            merged.append(pid)
     for row in _panel_ops._load_c2_research_candidates(root):
         pid = str(row.get('provider_id') or '').strip()
         if pid and pid not in seen:
@@ -1003,10 +1007,12 @@ def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[st
     raw_dir = _providers_raw_dir(root)
     try:
         ids = _merged_c2_strategy_ids(root)
+        if not ids:
+            issues.append('collective2_discoverable_ids_missing')
+            return
         _invoke_c2_history_collect(ids, key, raw_dir)
         snap_dir = _providers_signals_dir(root)
-        if ids:
-            c2_signal_feed.snapshot([int(x) for x in ids], key, snap_dir)
+        c2_signal_feed.snapshot([int(x) for x in ids], key, snap_dir)
         sources_ok.append('collective2')
     except (OSError, ValueError, TypeError, KeyError) as exc:
         issues.append(f'collective2_refresh_failed:{type(exc).__name__}')

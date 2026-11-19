@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N56 (N55 #74/#75 em main) | Critérios ao vivo: join dos arquivos brutos no volume; homologação operador pendente |
+| ISS-024 | aberto | N57 (N56 #76 em main) | Critérios ao vivo: Collective2 na fila a partir dos arquivos brutos, sem allowlist para aparecer |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -677,8 +677,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | **N56** (`front/sinais-raw-path`; N55 merge **#74** + closeout **#75** em `main`; não rouba N45–N47) |
-| Status | aberto — N54 job POST (#73) e fila multiplataforma N55 (#74/#75) em `main`; **permanece aberto** até join canônico no volume + rebuild EasyPanel + homologação operador |
+| Sprint | **N57** (`front/sinais-raw-path`; N56 merge **#76** em `main`; não rouba N45–N47) |
+| Status | aberto — N54–N56 em `main` (#73/#74/#75/#76); **permanece aberto** até Collective2 aparecer na fila a partir dos arquivos brutos (sem allowlist como pré-requisito de visibilidade) + rebuild EasyPanel + homologação operador |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **aplicar critérios de seleção** nas plataformas e trazer **todos os candidatos elegíveis** (Collective2, Prodígio e TradingView); não basta reler `prodigy-top10` / `provider-research` estáticos nem mostrar só uma origem TradingView sem métricas. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -709,5 +709,13 @@
 **Nota planejamento N56 (2026-11-19):** follow-up ISS-024 / F-019; bloco `## Sprint N56` em `docs/ROADMAP.md`; brief `docs/.briefs/N56.brief.md`; Git First `docs/.briefs/N56-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até join canônico + testes + merge + rebuild operador.
 
 **Nota N56 EXECUTE (2026-11-19):** frente `sinais-raw-path` — job live-criteria usa `{root}/providers/raw` e `{root}/providers/signals` com `--root` default `/app/reports` (sem pasta `reports/reports/...`); F-019 **corrigido**; `tests/test_panel_ops.py` `N56ProdigyCanonicalRawPathTests` verde; suíte N54/N55 regressão verde na frente. Três provedores `UNSCORABLE` / `closed_trades_15d=0` **corretamente ausentes** da fila Prodígio até histórico fresco — não inventar limiar. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
+
+**Nota closeout N56 (2026-11-19):** PR **#76** MERGED → `main` @ `554625e0980a99df559c45a857910a1df806b03f`. Chamado **permanece aberto**.
+
+**Nota operador 2026-11-19 (follow-up N57):** allowlist env vazia; `config/c2_paper_copy_allowlist.json` vazio; **Atualizar candidatos** reporta `sources_ok` incluindo `collective2` **sem** linhas Collective2 na fila; raw canônico tem `132169961`, `148311109`, `30415311`. Lista nomeada / `C2_PAPER_COPY_APPROVED_IDS` / aprovação no livro-razão **permanece** o portão da **cópia paper** — **não** é pré-requisito para *aparecer* na fila. Não autoaprovar. Prodígio só Feature 4 / 15d. TradingView = origens ingeridas. LIVE false.
+
+**Nota planejamento N57 (2026-11-19):** follow-up ISS-024 / F-020; bloco `## Sprint N57` em `docs/ROADMAP.md`; brief `docs/.briefs/N57.brief.md`; Git First `docs/.briefs/N57-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até descoberta dos IDs brutos + testes + merge + rebuild operador.
+
+**Nota N57 EXECUTE (2026-11-19):** frente `sinais-raw-path` — IDs Collective2 descobertos em `{root}/providers/raw/*_closed_trades.json` entram na fila de pré-aprovação como pendentes (`source: discovered`) **sem** lista nomeada/env como pré-requisito de visibilidade; `config/c2_paper_copy_allowlist.json` / `C2_PAPER_COPY_APPROVED_IDS` / aprovação no livro-razão **permanecem** o portão da **cópia paper** (`approved_for_paper_copy` false com lista vazia); refresh **não** grava aprovação; arquivos brutos compartilhados com IDs C2 continuam `UNSCORABLE` / fora da fila Prodígio 15d. F-020 **corrigido**; `tests/test_panel_ops.py` `N57Collective2RawQueueDiscoveryTests` (3/3) verde na frente. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
 
 ---

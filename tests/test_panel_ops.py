@@ -2231,17 +2231,23 @@ _N54_FAKE_RANK = {
 
 
 def _n54_mock_c2_fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
-    del strategy_ids, key, kwargs
+    del key, kwargs
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    sid = '44'
-    payload = {
-        'strategy_id': sid,
-        'dataset': 'closed_trades',
-        'raw': {'ResponseStatus': {'ErrorCode': '200'}, 'Results': []},
-    }
-    (out / f'{sid}_closed_trades.json').write_text(json.dumps(payload), encoding='utf-8')
-    return {'status': 'ok', 'written': [f'{sid}_closed_trades.json'], 'opener_used': opener is not None}
+    ids = sorted({str(x) for x in (strategy_ids or [])})
+    if not ids:
+        ids = ['44']
+    written: list[str] = []
+    for sid in ids:
+        payload = {
+            'strategy_id': sid,
+            'dataset': 'closed_trades',
+            'raw': {'ResponseStatus': {'ErrorCode': '200'}, 'Results': []},
+        }
+        name = f'{sid}_closed_trades.json'
+        (out / name).write_text(json.dumps(payload), encoding='utf-8')
+        written.append(name)
+    return {'status': 'ok', 'written': written, 'opener_used': opener is not None}
 
 
 def _n54_mock_c2_snapshot(strategy_ids, key, out_dir, opener=None, **kwargs):
@@ -2913,9 +2919,13 @@ def _n56_assert_calculate_raw_dir(calculate_mock, root: Path) -> Path:
 
 
 def _n56_rank_from_calc_call(calculate_mock, calculate_fn):
-    """Patched v4_web_dashboard.prodigy_rank.calculate does not populate mock.return_value."""
+    """Use wrapped return_value when set — re-calling calculate reads raw after C2 refresh."""
     if not calculate_mock.call_args:
         raise AssertionError('prodigy_rank.calculate was not called')
+    if calculate_mock._mock_wraps is not None:
+        ranked = calculate_mock.return_value
+        if isinstance(ranked, dict):
+            return ranked
     args, kwargs = calculate_mock.call_args
     return calculate_fn(*args, **kwargs)
 
@@ -3106,6 +3116,185 @@ class N56ProdigyCanonicalRawPathTests(unittest.TestCase):
             finally:
                 for p in reversed(patches):
                     p.stop()
+                self._shutdown(server, thread)
+
+
+_N57_OPERATOR_C2_IDS = ('132169961', '148311109', '30415311')
+
+
+def _n57_env_without_c2_paper_copy_ids() -> dict:
+    env = {k: v for k, v in os.environ.items() if k != 'C2_PAPER_COPY_APPROVED_IDS'}
+    env['LIVE_TRADING_ENABLED'] = 'false'
+    return env
+
+
+def _n57_write_operator_c2_raw_canonical(root: Path) -> None:
+    raw = root / 'providers' / 'raw'
+    for sid in _N57_OPERATOR_C2_IDS:
+        _n56_write_closed_trades_file(raw, sid, [])
+
+
+def _n57_pending_collective2_rows(queue_items: list[dict]) -> list[dict]:
+    return [r for r in queue_items if r.get('platform') == 'collective2']
+
+
+def _n57_assert_collective2_pending_discovered(test_case, rows: list[dict]) -> None:
+    test_case.assertEqual(
+        len(rows),
+        len(_N57_OPERATOR_C2_IDS),
+        msg='canonical raw must surface each Collective2 strategy id as a queue row',
+    )
+    ids = {str(r.get('provider_id')) for r in rows}
+    test_case.assertEqual(ids, set(_N57_OPERATOR_C2_IDS))
+    for row in rows:
+        test_case.assertEqual(row.get('status'), 'pending')
+        test_case.assertEqual(row.get('source'), 'discovered')
+
+
+def _n57_post_live_refresh(base: str, prodigy_calculate):
+    patches = [
+        patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+        patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+        patch.dict(
+            os.environ,
+            {**_n57_env_without_c2_paper_copy_ids(), 'C2_API4_KEY': 'test-c2-secret'},
+            clear=True,
+        ),
+    ]
+    for p in patches:
+        p.start()
+    try:
+        with patch('v4_web_dashboard.prodigy_rank.calculate', wraps=prodigy_calculate) as calc_mock:
+            req = _post_candidates_refresh(
+                base + '/api/signals/candidates/refresh',
+                {},
+                session='panel-secret',
+            )
+            with urlopen(req, timeout=5) as resp:
+                payload = json.load(resp)
+            return payload, calc_mock
+    finally:
+        for p in reversed(patches):
+            p.stop()
+
+
+class N57Collective2RawQueueDiscoveryTests(unittest.TestCase):
+    """N57.2 — Collective2 pending rows from canonical raw without allowlist show-prerequisite."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+        from prodigy_rank import calculate as prodigy_calculate
+
+        self._prodigy_calculate = prodigy_calculate
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, *, connect_factory=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(
+            root,
+            operator_session=session,
+            connect_factory=connect_factory,
+        )
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n57_empty_allowlist_raw_files_pending_c2_after_disk_and_live_refresh(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _n57_write_operator_c2_raw_canonical(root)
+            disk_queue = build_preapproval_queue(root, None, signals=[])
+            _n57_assert_collective2_pending_discovered(
+                self,
+                _n57_pending_collective2_rows(disk_queue.get('queue') or []),
+            )
+
+            _, server, thread, base = self._server(root)
+            try:
+                payload, _ = _n57_post_live_refresh(base, self._prodigy_calculate)
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized', True))
+                _n57_assert_collective2_pending_discovered(
+                    self,
+                    _n57_pending_collective2_rows(_n55_preapproval_queue(payload)),
+                )
+                c2_copy = (payload.get('copy') or {}).get('collective2') or {}
+                self.assertEqual(c2_copy.get('approved_ids'), [])
+                self.assertFalse(c2_copy.get('approved_for_paper_copy'))
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n57_allowlist_still_gates_paper_copy_not_raw_visibility(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _n57_write_operator_c2_raw_canonical(root)
+            with patch.dict(os.environ, _n57_env_without_c2_paper_copy_ids(), clear=True):
+                resolved = resolve_c2_paper_copy_approved_ids(root, None)
+            self.assertEqual(resolved, [])
+            bundle = build_panel_bundle(root, conn_factory=None)
+            c2 = (bundle.get('copy') or {}).get('collective2') or {}
+            self.assertFalse(c2.get('approved_for_paper_copy'))
+            self.assertEqual(c2.get('approved_ids'), [])
+            queue = build_preapproval_queue(root, None, signals=[])
+            c2_rows = _n57_pending_collective2_rows(queue.get('queue') or [])
+            _n57_assert_collective2_pending_discovered(self, c2_rows)
+            for sid in _N57_OPERATOR_C2_IDS:
+                self.assertNotIn(sid, resolve_c2_paper_copy_approved_ids(root, None))
+
+    def test_n57_refresh_no_ledger_upsert_live_false_prodigy_research_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            for sid in _N57_OPERATOR_C2_IDS:
+                _n56_write_prodigy_raw_unscorable_canonical(root, sid)
+            _n56_write_prodigy_raw_eligible_canonical(root)
+            store = {'signal_provider_approvals': {}}
+            _, server, thread, base = self._server(
+                root,
+                connect_factory=_approvals_memory_connect(store),
+            )
+            try:
+                payload, calc_mock = _n57_post_live_refresh(base, self._prodigy_calculate)
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized', True))
+                self.assertEqual(store['signal_provider_approvals'], {})
+                prodigy_ids = {
+                    str(r.get('provider_id'))
+                    for r in _n55_preapproval_queue(payload)
+                    if r.get('platform') == 'prodigy'
+                }
+                self.assertIn('9', prodigy_ids)
+                for sid in _N57_OPERATOR_C2_IDS:
+                    self.assertNotIn(sid, prodigy_ids)
+                calc_mock.assert_called_once()
+                rank_path = root / 'intelligence' / 'prodigy-top10-latest.json'
+                self.assertTrue(rank_path.is_file())
+                rank = json.loads(rank_path.read_text(encoding='utf-8'))
+                for row in rank.get('providers') or []:
+                    pid = str(row.get('provider_id'))
+                    if pid in _N57_OPERATOR_C2_IDS:
+                        self.assertEqual(row.get('status'), 'UNSCORABLE')
+                    if pid == '9':
+                        self.assertEqual(row.get('status'), 'PRODIGY_CANDIDATE_RESEARCH')
+            finally:
                 self._shutdown(server, thread)
 
 

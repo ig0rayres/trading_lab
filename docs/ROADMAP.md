@@ -80,7 +80,8 @@
 | N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | concluida | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
 | N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | concluida | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo · PR #73 | *(abaixo)* |
 | N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | concluida | 5 | observability | ISS-024 follow-up fila multiplataforma · PR #74 | *(abaixo)* |
-| N56 | N | Job lê arquivos brutos no volume certo; fila Prodígio só elegíveis 15d; LIVE false | planejada | 4 | observability | ISS-024 / F-019 join duplicado · plan_only | *(abaixo)* |
+| N56 | N | Job lê arquivos brutos no volume certo; fila Prodígio só elegíveis 15d; LIVE false | concluida | 4 | observability | ISS-024 / F-019 join duplicado · PR #76 | *(abaixo)* |
+| N57 | N | Collective2 na fila a partir dos arquivos brutos, sem lista nomeada para aparecer; LIVE false | planejada | 4 | observability | ISS-024 / F-020 fila C2 sem allowlist · plan_only | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -148,6 +149,7 @@
 | N54 | senior+qa | Job critérios ao vivo ISS-024; POST live_criteria; LIVE false |
 | N55 | senior+qa | Fila pré-aprovação multiplataforma após refresh; ISS-024 follow-up |
 | N56 | senior+qa | Join dos arquivos brutos no volume de relatórios; fila só elegíveis; LIVE false |
+| N57 | senior+qa | Collective2 na fila a partir dos arquivos brutos sem allowlist para aparecer; LIVE false |
 
 ---
 
@@ -5965,6 +5967,237 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 canonical `{root}/providers/raw` under `--root /app/reports`; eligible-only Prodígio queue; C2 key; TV ingested origins), `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/FINDINGS.md` (F-019; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N56 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
+
+---
+
+## Sprint N57 — Mostrar Collective2 na fila a partir dos arquivos brutos, sem exigir lista de cópia
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-19 · fonte ISS-024 / F-020 · N56 #76 em `main`  
+> titulo_humano: Collective2 entra na fila sem exigir lista de cópia paper  
+> resumo_humano: Depois de atualizar candidatos, as estratégias Collective2 já presentes nos arquivos brutos aparecem na fila como pendentes, mesmo com a lista de cópia paper vazia. Essa lista continua o portão da cópia — não da visibilidade. LIVE false.  
+> Gate: allowlist vazia + arquivos brutos canônicos → fila Collective2 pendente; chave no servidor busca esses IDs; cópia paper fechada; pytest verde; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N57.brief.md`  
+> Git First: `docs/.briefs/N57-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N56 concluída (#76) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N56  
+> plan_only: true
+
+### Em uma frase
+
+Depois de atualizar candidatos, o Collective2 aparece na fila a partir dos arquivos brutos já no volume, sem precisar de lista nomeada só para ser visto.
+
+### O que muda para você
+
+- Três estratégias já presentes nos arquivos brutos passam a aparecer na fila como pendentes, mesmo com a lista de cópia paper vazia
+- Atualizar com a chave no servidor busca e atualiza esses identificadores; sem chave o aviso continua honesto e as linhas de disco não somem
+- A lista nomeada e a aprovação no painel continuam o portão da cópia paper — aparecer na fila não autoriza operação
+- Quem não passa na janela de 15 dias do Prodígio segue fora da fila do Prodígio; TradingView continua só origens já recebidas
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Collective2 visível sem lista nomeada | Com a lista de cópia vazia, atualizar candidatos lista as estratégias cujos arquivos brutos já estão no volume, como pendentes |
+| 2 | Atualização ao vivo desses identificadores | Com a chave no servidor, o trabalho busca exatamente esses identificadores e não inventa outros |
+| 3 | Cópia paper continua fechada | A seção de cópia paper permanece fechada enquanto a lista nomeada e o livro-razão não aprovarem; atualizar não aprova sozinho |
+| 4 | Prodígio e TradingView inalterados | As mesmas estratégias sem janela de 15 dias continuam fora do Prodígio; TradingView mostra só origens já ingeridas |
+| 5 | Prova automática | A suíte falha se a fila Collective2 exigir lista nomeada para aparecer, se autoaprovar, ou se inventar busca de marketplace |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N57.0 Inventariar de onde o Collective2 deve aparecer na fila | `docs/.briefs/N57-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N57.1 Mostrar candidatos Collective2 a partir dos arquivos brutos sem exigir lista de cópia | `src/v4_web_dashboard.py, src/panel_ops_data.py` | N57.0 |
+| [x] | M | N57.2 Provar que a fila lista Collective2 pendente sem lista nomeada e que a cópia paper continua fechada | `tests/test_panel_ops.py` | N57.1 |
+| [x] | P | N57.3 Registrar no mapa e no chamado que aparecer na fila não é autorizar cópia | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md` | N57.2 |
+
+### Quality Brief (Sprint N57)
+
+**Alvo:** após **Atualizar candidatos**, a fila lista Collective2 pendente a partir de `{root}/providers/raw/*_closed_trades.json` (e JSON de pesquisa C2 se existir) **sem** exigir allowlist/env; allowlist/ledger permanece o portão de cópia paper.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh`, N55 queue union, N56 `_providers_raw_dir`; argparse `--root` default `/app/reports` unchanged.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank`; `UNSCORABLE` with `closed_trades_15d=0` stays out of the Prodígio queue.
+Maintain: `config/c2_paper_copy_allowlist.json` / `C2_PAPER_COPY_APPROVED_IDS` / ledger approve as paper-copy gate; empty seed ⇒ `approved_for_paper_copy` false.
+Avoid: filling committed allowlist as a show-workaround; auto-approve; inventing scores; TradingView search; Collective2 marketplace search; `process_after_gate_b`; printing API keys; stealing N45–N47.
+
+### Technical Advisory
+
+- [ABORDAGEM] Reusar o glob numérico de `prodigy_rank.calculate` para descobrir IDs Collective2 no volume canônico; unir JSON de pesquisa C2; allowlist só como extra de fetch e como portão de cópia.
+- [RISCO] Os mesmos arquivos brutos alimentam Prodígio (filtro 15d) e Collective2 (candidato pendente) — não misturar os dois critérios.
+- [RISCO] `_live_refresh_collective2` hoje marca `sources_ok` mesmo com `ids=[]`; ops viu fonte ok e fila vazia.
+- [OPORTUNIDADE] Chave ausente: aviso honesto **e** linhas já no disco continuam visíveis.
+
+> EXPIRES at end of Sprint N57. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Preencher lista nomeada commitada ou env como atalho de visibilidade
+- Autoaprovar; mutar livro-razão no refresh
+- Inventar busca TradingView, listagem marketplace Collective2 ou fórmula nova
+- Soltar o filtro da fila Prodígio para quem não pontua
+- Ordem / fill / LIVE true
+- SSH no EasyPanel; N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N57.0 — Inventariar de onde o Collective2 deve aparecer na fila
+
+**Entrega:** Inventário dizendo que os arquivos brutos no volume já são fonte suficiente para o Collective2 aparecer como pendente, e que a lista nomeada só autoriza cópia paper.
+**Como conferir:** O inventário cita os três identificadores do volume, proíbe preencher a lista nomeada só para aparecer, e mantém o ranking de 15 dias sem inventar nota.
+**Por quê:** Sem isso o EXECUTE trata a lista vazia como defeito e a preenche, ou mistura Prodígio com Collective2.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N57-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `_merged_c2_strategy_ids` (allowlist + research only today), `build_preapproval_queue`, `_providers_raw_dir`, `prodigy_rank` glob, `load_c2_paper_copy_approved_ids`, operator IDs `132169961` / `148311109` / `30415311`. Document: allowlist = paper-copy gate; raw glob = queue visibility; TV ingested origins; LIVE false. Never print secrets. Never copy those IDs into committed allowlist.
+
+### Task N57.1 — Mostrar candidatos Collective2 a partir dos arquivos brutos sem exigir lista de cópia
+
+**Entrega:** Depois de atualizar, o Collective2 lista na fila as estratégias cujos arquivos brutos já estão no volume, como pendentes, mesmo com a lista de cópia vazia.
+**Como conferir:** Com a lista vazia e os três arquivos no volume, a fila mostra essas três linhas pendentes; a cópia paper continua fechada; atualizar não grava aprovação.
+**Por quê:** Hoje o trabalho só olha a lista nomeada e o JSON de pesquisa, então a fonte Collective2 pode “dar certo” e a fila ficar sem essas linhas.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_merged_c2_strategy_ids` unions `load_c2_paper_copy_approved_ids` + `_load_c2_research_candidates` only. `build_preapproval_queue` adds C2 from `_load_c2_research_rows` + allowlist seed. Empty allowlist + empty research JSON ⇒ zero C2 queue rows even when `{root}/providers/raw/{sid}_closed_trades.json` exists. `_live_refresh_collective2` still `sources_ok.append('collective2')` when `ids=[]`.
+- **Estado desejado:** discover numeric IDs from `_providers_raw_dir(root).glob('*_closed_trades.json')` (same prefix rule as `prodigy_rank.calculate`; do **not** change `WINDOW_DAYS`/`MIN_TRADES`). Union existing C2 research JSON (skip `PRODIGY_RANK_RESEARCH_ONLY`). `_merged_c2_strategy_ids` = discovery ∪ research ∪ allowlist (allowlist still fetched if named). `build_preapproval_queue` adds discovered IDs as `status: pending`, `source: discovered` without allowlist. Do **not** auto-approve. `resolve_c2_paper_copy_approved_ids` unchanged. Key present + ids → existing `_invoke_c2_history_collect`. Key present + no discoverable ids → honest issue (not silent `sources_ok`). Key missing → `C2_API4_KEY_missing`; disk-discovered rows still listed. Prodígio filter unchanged. TV unchanged.
+- **Arquivo(s):** `src/v4_web_dashboard.py`, `src/panel_ops_data.py`
+- **Fonte(s):** ISS-024 nota operador 2026-11-19, F-020, Feature 4 / N50 paper-copy gate, N56 canonical raw
+- **Risco:** MEDIUM — shared live-criteria job, queue, and paper-copy gate
+- **Task size:** M (2 files + discovery vs allowlist design)
+
+**executor_prompt**:
+
+```yaml
+id: N57.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N57.0"]
+files:
+  - src/v4_web_dashboard.py
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "_merged_c2_strategy_ids" src/v4_web_dashboard.py && rg "_live_refresh_collective2" src/v4_web_dashboard.py && rg "_providers_raw_dir" src/v4_web_dashboard.py'
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: 'rg "def build_preapproval_queue" src/panel_ops_data.py && rg "def load_c2_paper_copy_approved_ids" src/panel_ops_data.py'
+  - component: src/prodigy_rank.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "_closed_trades.json" src/v4_web_dashboard.py src/panel_ops_data.py && rg "WINDOW_DAYS = 15" src/prodigy_rank.py'
+  - component: src/c2_history_collect.py
+    reuse_as: call
+    convergence_check: 'rg "c2_history_collect" src/v4_web_dashboard.py'
+guardrail_contract:
+  - class: secrets
+    id: n57-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_data.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t"
+    pass_condition: no live keys hardcoded; C2 key only via env lookup
+  - class: subagent-safety
+    id: n57-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_data.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n57-1-no-auto-approve
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'upsert_signal_provider_approval' not in t"
+    pass_condition: live-criteria refresh does not write ledger approve
+  - class: subagent-safety
+    id: n57-1-keep-root-default
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert \"default='/app/reports'\" in t or 'default=\"/app/reports\"' in t"
+    pass_condition: argparse --root default remains /app/reports
+```
+
+### Quality Brief (Sprint N57)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; do not require allowlist to appear; do not invent Feature 4 thresholds.
+
+Melhoria: discover Collective2 strategy IDs from canonical `{root}/providers/raw/*_closed_trades.json` (and existing C2 research JSON) and list them as pending preapproval rows without an allowlist/env prerequisite.
+Contexto: after N56 #76, ops has empty allowlist/env, `sources_ok` includes collective2, queue has no C2 rows, raw has 132169961 / 148311109 / 30415311. `_merged_c2_strategy_ids` ignores the glob. Same files may be UNSCORABLE for Prodígio 15d — keep them out of the Prodígio queue.
+Objetivo: keep `POST /api/signals/candidates/refresh` (`mode: live_criteria`, `orders_sent=0`). Do **not** add a parallel package. Do **not** write those IDs into committed `config/c2_paper_copy_allowlist.json`. Helper ok: discover via `_providers_raw_dir` glob (copy_pattern of `prodigy_rank`). Allowlist remains paper-copy only. Never `process_after_gate_b`. Never invent scores. Never print `C2_API4_KEY`.
+Critério de pronto: empty allowlist + canonical raw IDs → C2 pending in `copy.preapproval.queue`; `approved_for_paper_copy` false; with key, fetch is invoked with those IDs; key+no IDs → honest issue not silent ok; Prodígio filter unchanged.
+Cenários de teste (mínimo no implementer self-check; N57.2 owns pytest):
+  1. Caso normal: três arquivos brutos + allowlist vazia → três C2 pendentes
+  2. Edge: chave presente + ids descobertos → fetch desses ids
+  3. Edge: chave presente + zero ids → aviso honesto, sem sources_ok falso
+  4. Regressão: `approved_for_paper_copy` false; N56 Prodígio 15d; `--root` default; `orders_sent=0`
+
+### Task N57.2 — Provar que a fila lista Collective2 pendente sem lista nomeada e que a cópia paper continua fechada
+
+**Entrega:** Testes comprovam que os arquivos brutos bastam para o Collective2 aparecer como pendente, que a cópia paper segue fechada, e que atualizar não aprova sozinho.
+**Como conferir:** A suíte falha se a fila exigir lista nomeada para mostrar Collective2, se marcar cópia paper aberta, se autoaprovar, ou se incluir no Prodígio quem não passa na janela de 15 dias.
+**Por quê:** Sem essa prova o painel no ar volta a esconder as estratégias já no volume, ou alguém preenche a lista nomeada como atalho.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — HTTP in-process + N55 fixtures currently plant allowlist as the C2 show path
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N57.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N57.1"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "N55MultiPlatformLiveCriteriaTests" tests/test_panel_ops.py && rg "N56ProdigyCanonicalRawPathTests" tests/test_panel_ops.py && rg "_n56_write_closed_trades_file" tests/test_panel_ops.py'
+  - component: tests/test_panel_ops.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "_n54_mock_c2_fetch" tests/test_panel_ops.py && rg "approved_for_paper_copy" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n57-2-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'api.collective2.com' not in t.lower()"
+    pass_condition: tests do not call live Collective2 hosts
+  - class: subagent-safety
+    id: n57-2-no-harness-bug
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_data.py').read_text(); assert 'tests/' not in t"
+    pass_condition: production does not special-case tests/ paths
+  - class: subagent-safety
+    id: n57-2-no-committed-allowlist-seed
+    target: config/c2_paper_copy_allowlist.json
+    check: python3 -c "import json; from pathlib import Path; d=json.loads(Path('config/c2_paper_copy_allowlist.json').read_text()); assert d.get('approved_ids')==[]"
+    pass_condition: committed allowlist stays empty; tests must not write operator IDs into repo config
+```
+
+### Quality Brief (Sprint N57)
+
+See sprint Quality Brief.
+
+Melhoria: pytest proving canonical raw C2 IDs appear as pending queue rows with empty allowlist/env, paper-copy stays closed, refresh does not approve.
+Objetivo: nodeids covering (1) empty allowlist JSON + empty `C2_PAPER_COPY_APPROVED_IDS` + raw files for 132169961, 148311109, 30415311 → those three Collective2 pending rows; (2) with `C2_API4_KEY`, mocked fetch/history is invoked with those IDs (extend `_n54_mock_c2_fetch` if it ignores `strategy_ids`); (3) `copy.collective2.approved_for_paper_copy` is false; (4) POST refresh does not upsert ledger approve; (5) same files `UNSCORABLE`/`closed_trades_15d=0` stay out of Prodígio queue; (6) missing key still lists disk IDs + `C2_API4_KEY_missing`; (7) key + zero discoverable IDs → honest issue, not silent sources_ok; (8) N54/N55/N56 regressions: `orders_sent=0`, TV ingested origins only, `--root` default; (9) `process_after_gate_b` absent. Do not teach production about `tests/` paths (no HARNESS_BUG). Do not commit operator IDs into `config/c2_paper_copy_allowlist.json`.
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: três raw + allowlist vazia → C2 pendente na fila
+  2. Edge: chave + ids → mock fetch recebe esses ids
+  3. Edge: chave + zero ids → aviso honesto
+  4. Edge: sem chave → aviso de chave; linhas de disco visíveis
+  5. Regressão: N50 paper-copy closed; N55 union with allowlist fixture still works; N56 Prodígio 15d; cooldown 429; Aprovar inalterado
+
+### Task N57.3 — Registrar no mapa e no chamado que aparecer na fila não é autorizar cópia
+
+**Entrega:** Mapa e chamado descrevem que o Collective2 aparece a partir dos arquivos brutos e que a lista nomeada só autoriza cópia paper; o chamado permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; lista vazia não esconde candidatos; Feature 9 marcada só se os testes existirem.
+**Por quê:** O texto atual ainda sugere que identificadores Collective2 só existem depois da lista nomeada.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 C2 queue from canonical raw without allowlist show-prerequisite; paper-copy gate unchanged; Prodígio 15d; TV ingested origins), `docs/DASHBOARD-OPERATIONS.md` (replace “IDs Collective2 só após allowlist/env” — visibility vs paper-copy), `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/FINDINGS.md` (F-020; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N57 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets. Never copy operator IDs into committed allowlist.
 
 ---
 

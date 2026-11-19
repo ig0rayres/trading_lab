@@ -124,41 +124,42 @@
   "contexto_rapido": "N56 plan_only join bruto ISS-024/F-019; N55 #74/#75 em main; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N56.0",
-      "file": "docs/.briefs/N56-GIT-FIRST-REUSE.md",
+      "id": "N57.0",
+      "file": "docs/.briefs/N57-GIT-FIRST-REUSE.md",
       "files": [
-        "docs/.briefs/N56-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N57-GIT-FIRST-REUSE.md"
       ],
       "depends_on": [],
       "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N56.1",
-      "file": "src/v4_web_dashboard.py",
+      "id": "N57.1",
+      "file": "src/v4_web_dashboard.py, src/panel_ops_data.py",
       "files": [
-        "src/v4_web_dashboard.py"
+        "src/v4_web_dashboard.py",
+        "src/panel_ops_data.py"
       ],
       "depends_on": [
-        "N56.0"
+        "N57.0"
       ],
       "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N56.2",
+      "id": "N57.2",
       "file": "tests/test_panel_ops.py",
       "files": [
         "tests/test_panel_ops.py"
       ],
       "depends_on": [
-        "N56.1"
+        "N57.1"
       ],
       "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N56.3",
+      "id": "N57.3",
       "file": "docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md",
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
@@ -166,25 +167,25 @@
         "docs/FINDINGS.md"
       ],
       "depends_on": [
-        "N56.2"
+        "N57.2"
       ],
       "executor_prompt": "",
       "status": "pending"
     }
   ],
   "checkpoint": {
-    "sprint": "N56",
+    "sprint": "N57",
     "phase": "implementation",
     "branch": "front/sinais-raw-path",
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N56",
+      "sprint": "N57",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-19T17:21:32Z",
+      "recorded_at": "2026-11-19T18:23:12Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N56 canonical providers/raw path; 100 panel_ops passed; ISS-024 open until ops homologation",
+      "notes": "N57 C2 raw discovery; 103 panel_ops; ISS-024 open",
       "round": 1,
       "full_suite_ran": true,
       "first_pass": true,
@@ -203,17 +204,17 @@
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "68598af732c6391d1f90a72c9679956920743600",
-      "stamped_at": "2026-11-19T17:22:33Z",
+      "last_validated_sha": "92ffc76897a92318b6dec0d803e97075a6caade7",
+      "stamped_at": "2026-11-19T18:23:13Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "506b611a12f229b2777b8cde034ef53fd85a3a511a9239c95ed5d7d2087f6d23",
-      "patch_id": "aa70c2ed2b3f2f42d55bd81782ef5a602754b6c1",
+      "content_hash": "ad58abcd1459601cbc70fc32a43b5e88f0917f11c272ec415c42b2dd20680220",
+      "patch_id": "ba9d3ca130a2f568066aa16890ab17f5696b52af",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N56"
+    "sprint_delivery_sprint": "N57"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -299,8 +300,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N55",
-  "sprint_nome": "Sprint N56",
+  "previous_sprint": "N56",
+  "sprint_nome": "Sprint N57",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -517,6 +518,24 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual remains null; checkpoint.front_mode stays unplanned; preserve autopilot",
         "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T15:10:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N57; plan_only=true; sprint_atual remains N56 until parent activates",
+        "rationale": "Parent classified N57; ISS-024 series N54-N56; allowlist is paper-copy gate not queue visibility; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-19T15:10:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "discover C2 IDs from canonical raw glob; queue pending without allowlist; keep paper-copy gate; LIVE false; do not steal N45-N47",
+        "rationale": "Operator: empty allowlist/env; sources_ok collective2; raw 132169961/148311109/30415311; do not auto-approve"
+      },
+      {
+        "timestamp": "2026-11-19T15:10:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains N56; checkpoint.front_mode stays unplanned; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
       }
     ]
   },
@@ -524,9 +543,9 @@
   "rock_mandate": "full",
   "active_automation": null,
   "journal": [],
-  "sprint_tasks_sha256": "07eeb3049166ffd5d9060443170693df36b33214900be7121eaa4b14df36bf12",
+  "sprint_tasks_sha256": "8ecf0442cc2bd7f9b1b94961d2b6fa81fa6a8adac6bb0335ccfd5bac7fd8fb87",
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": "N56"
+  "sprint_atual": "N57"
 }

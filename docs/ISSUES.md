@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N55 (#74 em main) | Critérios ao vivo: código mergeado; homologação operador pendente |
+| ISS-024 | aberto | N56 (N55 #74/#75 em main) | Critérios ao vivo: join dos arquivos brutos no volume; homologação operador pendente |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -677,8 +677,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | **N55** (`front/sinais-live-criteria`; N54 merge **#73** em `main`; não rouba N45–N47) |
-| Status | aberto — N54 job POST (#73) e fila multiplataforma N55 (#74) em `main`; **permanece aberto** até rebuild EasyPanel + homologação operador (fila C2+Prodígio+TV no painel no ar) |
+| Sprint | **N56** (`front/sinais-raw-path`; N55 merge **#74** + closeout **#75** em `main`; não rouba N45–N47) |
+| Status | aberto — N54 job POST (#73) e fila multiplataforma N55 (#74/#75) em `main`; **permanece aberto** até join canônico no volume + rebuild EasyPanel + homologação operador |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **aplicar critérios de seleção** nas plataformas e trazer **todos os candidatos elegíveis** (Collective2, Prodígio e TradingView); não basta reler `prodigy-top10` / `provider-research` estáticos nem mostrar só uma origem TradingView sem métricas. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -702,6 +702,12 @@
 
 **Nota N55 EXECUTE (2026-11-18):** frente `sinais-live-criteria` — fila união Collective2+Prodígio+TradingView após refresh; `partial` persiste em `copy.candidates_refresh` (`intelligence/candidates-refresh-latest.json`); banner em `/sinais`; Prodígio vazio não sobrescreve JSON; `provider-research` C2 não recebe dump Prodígio; F-018 corrigido. Suíte `N55MultiPlatformLiveCriteriaTests` (7) verde; `tests/test_panel_ops.py` verde na frente.
 
-**Nota closeout N55 (2026-11-18):** PR **#74** MERGED → `main` @ `d8870c281a5b87e1e22871632a50e23868ba0c7b`; CI test + docker-smoke + docker-build SUCCESS; sprint N55 Status `concluida` no ROADMAP. Chamado **permanece aberto**: operador deve rebuild EasyPanel (`trading-lab` / `v4-ops`), conferir migration **003** no ledger, montar volume **`reports/providers/raw/`** para Prodígio e definir **`C2_API4_KEY`** no servidor — depois clicar **Atualizar candidatos** em `/sinais` e confirmar fila das três plataformas + avisos parciais honestos. `LIVE_TRADING_ENABLED=false`.
+**Nota closeout N55 (2026-11-18):** PR **#74** MERGED → `main` @ `d8870c281a5b87e1e22871632a50e23868ba0c7b`; closeout docs PR **#75** @ `25f52cea7b4d1398919339c115f3216795a575f9`; CI test + docker-smoke + docker-build SUCCESS; sprint N55 Status `concluida` no ROADMAP. Chamado **permanece aberto**.
+
+**Nota operador 2026-11-19 (follow-up N56):** no painel no ar, `--root` já é `/app/reports`. `_live_refresh_prodigy` / `_live_refresh_collective2` juntam `root/'reports'/'providers'/'raw'` → `/app/reports/reports/providers/raw` (vazio). Arquivos reais em `/app/reports/providers/raw`. Operador confirmou. **Sem workaround** — corrigir o join no código (não mudar `--root`). A fila mostra só **elegíveis** (Feature 4 / Prodígio 15d). Dados do operador: 3 provedores `UNSCORABLE` com `closed_trades_15d=0` → **corretamente ausentes** da fila Prodígio até histórico Collective2 fresco. Collective2 precisa de `C2_API4_KEY` no servidor. TradingView = origens já ingeridas. **Não inventar limiar.** `LIVE_TRADING_ENABLED=false`.
+
+**Nota planejamento N56 (2026-11-19):** follow-up ISS-024 / F-019; bloco `## Sprint N56` em `docs/ROADMAP.md`; brief `docs/.briefs/N56.brief.md`; Git First `docs/.briefs/N56-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até join canônico + testes + merge + rebuild operador.
+
+**Nota N56 EXECUTE (2026-11-19):** frente `sinais-raw-path` — job live-criteria usa `{root}/providers/raw` e `{root}/providers/signals` com `--root` default `/app/reports` (sem pasta `reports/reports/...`); F-019 **corrigido**; `tests/test_panel_ops.py` `N56ProdigyCanonicalRawPathTests` verde; suíte N54/N55 regressão verde na frente. Três provedores `UNSCORABLE` / `closed_trades_15d=0` **corretamente ausentes** da fila Prodígio até histórico fresco — não inventar limiar. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
 
 ---

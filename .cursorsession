@@ -18,10 +18,10 @@
   "strategic_context_captured_at": null,
   "fase_nome": "implementation",
   "sprint_pending_merge": null,
-  "sprint_pr": null,
+  "sprint_pr": 54,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-18T19:10:00Z",
+  "ultimo_update": "2026-11-17T09:58:00-03:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -78,11 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "N55.0 inventário Git First",
-    "N55.1 job+fila multiplataforma",
-    "N55.2 aviso parcial UI",
-    "N55.3 testes",
-    "N55.4 docs ISS-024/Feature 9"
+    "Parent Fable / plan-verifier N37 (não auto-PASS); EXECUTE só depois",
+    "Rock EXECUTE N37: N37.0 → N37.1 ∥ N37.2; zero M; faixa + um CTA; sem botão Live",
+    "LIVE_TRADING_ENABLED=false; sem HTTP real Clear/OANDA; não marcar N29.5"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -120,133 +118,78 @@
     "/pmo plan N34",
     "/pmo plan N35",
     "/pmo plan N36",
-    "/pmo plan N37"
+    "/pmo plan N37",
+    "/pmo plan N56"
   ],
-  "contexto_rapido": "N55 plan_only ISS-024 follow-up fila C2+Prodígio+TV; N54 #73 main; LIVE false.",
+  "contexto_rapido": "N56 plan_only join bruto ISS-024/F-019; N55 #74/#75 em main; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N55.0",
-      "file": "docs/.briefs/N55-GIT-FIRST-REUSE.md",
+      "id": "N56.0",
+      "file": "docs/.briefs/N56-GIT-FIRST-REUSE.md",
       "files": [
-        "docs/.briefs/N55-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N56-GIT-FIRST-REUSE.md"
       ],
       "depends_on": [],
-      "executor_prompt": "Execute N55.0 as documented in docs/ROADMAP.md Sprint N55. LIVE_TRADING_ENABLED=false. Worktree sinais-live-criteria only. Confirm vendor pin 3d0f4ef; no bump.",
+      "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N55.1",
+      "id": "N56.1",
       "file": "src/v4_web_dashboard.py",
       "files": [
-        "src/v4_web_dashboard.py",
-        "src/panel_ops_data.py"
+        "src/v4_web_dashboard.py"
       ],
       "depends_on": [
-        "N55.0"
+        "N56.0"
       ],
-      "executor_prompt": "id: N55.1\nsize: M\nbom_ref: BOM-3\ndepends_on: [\"N55.0\"]\nfiles:\n  - src/v4_web_dashboard.py\n  - src/panel_ops_data.py\nreuse_targets:\n  - component: src/v4_web_dashboard.py\n    reuse_as: extend\n    convergence_check: 'rg \"serve_signals_candidates_refresh\" src/v4_web_dashboard.py'\n  - component: src/panel_ops_data.py\n    reuse_as: extend\n    convergence_check: 'rg \"def build_preapproval_queue\" src/panel_ops_data.py'\n  - component: src/prodigy_rank.py\n    reuse_as: call\n    convergence_check: 'rg \"prodigy_rank\" src/v4_web_dashboard.py'\nguardrail_contract:\n  - class: secrets\n    id: n55-1-no-key-leak\n    target: src/v4_web_dashboard.py\n    check: python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t\"\n    pass_condition: no live keys hardcoded; C2 key only via env lookup\n  - class: subagent-safety\n    id: n55-1-no-order\n    target: src/v4_web_dashboard.py\n    check: python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t\"\n    pass_condition: dashboard still never submits via Gate B\n  - class: subagent-safety\n    id: n55-1-no-tv-search\n    target: src/v4_web_dashboard.py\n    check: python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t\"\n    pass_condition: no invented TradingView search API; job still never submits",
+      "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N55.2",
-      "file": "src/panel_ops_html.py",
-      "files": [
-        "src/panel_ops_html.py"
-      ],
-      "depends_on": [
-        "N55.1"
-      ],
-      "executor_prompt": "id: N55.2\nsize: M\nbom_ref: BOM-3\ndepends_on: [\"N55.1\"]\nfiles:\n  - src/panel_ops_html.py\nreuse_targets:\n  - component: src/panel_ops_html.py\n    reuse_as: extend\n    convergence_check: 'rg \"reload-candidates\" src/panel_ops_html.py && rg \"/api/signals/candidates/refresh\" src/panel_ops_html.py'\nguardrail_contract:\n  - class: secrets\n    id: n55-2-no-c2-in-browser\n    target: src/panel_ops_html.py\n    check: python3 -c \"from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'collective2.com' not in t.lower(); assert 'api4-general' not in t\"\n    pass_condition: HTML/JS never calls C2 hosts or embeds the key\n  - class: subagent-safety\n    id: n55-2-cta-post\n    target: src/panel_ops_html.py\n    check: python3 -c \"from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert '/api/signals/candidates/refresh' in t; assert 'Atualizar candidatos' in t\"\n    pass_condition: same CTA still wired to live-criteria POST",
-      "status": "pending"
-    },
-    {
-      "id": "N55.3",
+      "id": "N56.2",
       "file": "tests/test_panel_ops.py",
       "files": [
         "tests/test_panel_ops.py"
       ],
       "depends_on": [
-        "N55.2"
+        "N56.1"
       ],
-      "executor_prompt": "id: N55.3\nsize: M\nbom_ref: BOM-3\ndepends_on: [\"N55.2\"]\nfiles:\n  - tests/test_panel_ops.py\nreuse_targets:\n  - component: tests/test_panel_ops.py\n    reuse_as: extend\n    convergence_check: 'rg \"live_criteria\" tests/test_panel_ops.py && rg \"preapproval\" tests/test_panel_ops.py'\nguardrail_contract:\n  - class: subagent-safety\n    id: n55-3-no-live-net\n    target: tests/test_panel_ops.py\n    check: python3 -c \"from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'C2_API4_KEY' not in t or 'environ' in t.lower() or 'patch' in t\"\n    pass_condition: tests do not require a real Collective2 key",
+      "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N55.4",
-      "file": "docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/REQUIREMENTS.md",
+      "id": "N56.3",
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md",
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
         "docs/ISSUES.md",
-        "docs/REQUIREMENTS.md"
+        "docs/FINDINGS.md"
       ],
       "depends_on": [
-        "N55.3"
+        "N56.2"
       ],
-      "executor_prompt": "Execute N55.4 as documented in docs/ROADMAP.md Sprint N55. LIVE_TRADING_ENABLED=false. Worktree sinais-live-criteria only. Do not close ISS-024.",
+      "executor_prompt": "",
       "status": "pending"
     }
   ],
   "checkpoint": {
+    "sprint": "N56",
     "phase": "implementation",
-    "sprint": "N55",
-    "branch": "front/sinais-live-criteria",
-    "rock_intake_brief": "ISS-024 follow-up after N54 #73; all eligible C2+Prodigy+TV in preapproval queue; plan_only",
-    "current_task": null,
-    "plan_only": true,
-    "last_completed_task": null,
-    "guardrail_contract": [],
-    "guardrail_contract_source": "roadmap",
-    "drop_n54_auditing": [
-      {
-        "class": "secrets",
-        "id": "n54-1-no-key-leak-obsolete",
-        "target": "src/v4_web_dashboard.py",
-        "check": "python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t\"",
-        "pass_condition": "no live keys hardcoded; C2 key only via env lookup",
-        "convergence_check": "python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t\""
-      },
-      {
-        "class": "subagent-safety",
-        "id": "n54-1-no-order",
-        "target": "src/v4_web_dashboard.py",
-        "check": "python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t\"",
-        "pass_condition": "dashboard still never submits via Gate B",
-        "convergence_check": "python3 -c \"from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t\""
-      },
-      {
-        "class": "subagent-safety",
-        "id": "n54-1-get-still-disk",
-        "target": "src/v4_web_dashboard.py",
-        "check": "python3 -c \"from pathlib import Path; b=Path('src/v4_web_dashboard.py').read_text().split('def serve_signals_reload',1)[-1].split('def serve_public_get',1)[0]; assert 'prodigy_rank.calculate' not in b; assert 'disk_reread' in b\"",
-        "pass_condition": "GET reload remains disk_reread without calculate",
-        "convergence_check": "python3 -c \"from pathlib import Path; b=Path('src/v4_web_dashboard.py').read_text().split('def serve_signals_reload',1)[-1].split('def serve_public_get',1)[0]; assert 'prodigy_rank.calculate' not in b; assert 'disk_reread' in b\""
-      },
-      {
-        "class": "secrets",
-        "id": "n54-2-no-c2-in-browser",
-        "target": "src/panel_ops_html.py",
-        "check": "python3 -c \"from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'collective2.com' not in t.lower(); assert 'api4-general' not in t\"",
-        "pass_condition": "HTML/JS never calls C2 hosts or embeds the key",
-        "convergence_check": "python3 -c \"from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'collective2.com' not in t.lower(); assert 'api4-general' not in t\""
-      },
-      {
-        "class": "subagent-safety",
-        "id": "n54-2-cta-post",
-        "target": "src/panel_ops_html.py",
-        "check": "python3 -c \"from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert '/api/signals/candidates/refresh' in t; assert 'Atualizar candidatos' in t\"",
-        "pass_condition": "same CTA wired to live-criteria POST",
-        "convergence_check": "python3 -c \"from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert '/api/signals/candidates/refresh' in t; assert 'Atualizar candidatos' in t\""
-      },
-      {
-        "class": "subagent-safety",
-        "id": "n54-3-no-live-net",
-        "target": "tests/test_panel_ops.py",
-        "check": "python3 -c \"from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'C2_API4_KEY' not in t or 'environ' in t.lower() or 'patch' in t\"",
-        "pass_condition": "tests do not require a real Collective2 key",
-        "convergence_check": "python3 -c \"from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'C2_API4_KEY' not in t or 'environ' in t.lower() or 'patch' in t\""
-      }
-    ],
-    "guardrail_contract_bootstrapped": false,
+    "branch": "front/sinais-raw-path",
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N56",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-19T17:21:32Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N56 canonical providers/raw path; 100 panel_ops passed; ISS-024 open until ops homologation",
+      "round": 1,
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    },
     "validation_gate": {
       "produced_by": "validation-stamp.py",
       "result": "APROVADA",
@@ -258,51 +201,19 @@
           "exit_code": 0
         }
       ],
-      "dirty_production_paths": [
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
+      "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "21c734f55a89c1428e6e1eda152056d73a2972e0",
-      "stamped_at": "2026-11-18T20:44:06Z",
+      "last_validated_sha": "68598af732c6391d1f90a72c9679956920743600",
+      "stamped_at": "2026-11-19T17:22:33Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "806ff41a282e161bd4107764d66c798487b6c226",
+      "content_hash": "506b611a12f229b2777b8cde034ef53fd85a3a511a9239c95ed5d7d2087f6d23",
+      "patch_id": "aa70c2ed2b3f2f42d55bd81782ef5a602754b6c1",
       "patch_id_version": 2
     },
-    "validation_gate_qa": {
-      "result": "COM_RESSALVAS",
-      "sprint": "N55",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS_WITH_NOTES",
-      "findings_registered": [
-        "CQ-003",
-        "CQ-004"
-      ],
-      "recorded_at": "2026-11-18T20:43:42Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N55 closeout docs after #74 merge; ISS-024 open until EasyPanel homologation",
-      "round": 2,
-      "full_suite_ran": true,
-      "first_pass": false,
-      "senior_status": "PASS_WITH_NOTES",
-      "findings_disposition": [
-        {
-          "id": "CQ-003",
-          "status": "escalated",
-          "reason": "deferred"
-        },
-        {
-          "id": "CQ-004",
-          "status": "escalated",
-          "reason": "deferred"
-        }
-      ]
-    },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N55"
+    "sprint_delivery_sprint": "N56"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -323,13 +234,13 @@
     ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-melhorias",
-    "phase": "N55 planejada — fila multiplataforma ISS-024",
-    "intent": "Plan-only N55: adapt N54 POST/job so preapproval queue lists eligible C2+Prodigy+TV; partial fail-closed",
-    "changes_made": "docs/ROADMAP.md Sprint N55; docs/.briefs/N55.brief.md; docs/.briefs/N55-GIT-FIRST-REUSE.md; ISS-024 sprint field N55; Feature 9 N55 checkboxes",
-    "decisions": "sprint_id=N55; review=senior+qa; plan_only; no N45-N47; reuse N54 POST; no TV search; no C2 marketplace; no vendor bump; LIVE false",
-    "next_steps": "Parent Fable/plan-verifier then /pmo sprint N55 then Rock EXECUTE",
-    "updated_at": "2026-11-18T16:10:00-03:00"
+    "persona": "tech-lead",
+    "phase": "Rules de gatilho e mercado; sprint N18 segue registrada",
+    "intent": "Travar no agente o contrato de gatilho no painel e os mercados B3, cripto e forex.",
+    "changes_made": ".cursor/rules/30-triggers.mdc, .cursor/rules/40-markets.mdc, .cursor/skills/panel-triggers/SKILL.md.",
+    "decisions": "Rules antigas não foram reescritas. PATCH não cria ordem. Simulador local não é fill. Alpaca não recebe B3 nem forex.",
+    "next_steps": "Sprint do laço via /pmo plan. Migration 002 só nessa sprint. /devops planejar se for mexer em CI ou no processo.",
+    "updated_at": "2026-11-03T22:54:00-03:00"
   },
   "compact_marker": {
     "compacted_at": "2026-11-04T02:00:04Z",
@@ -338,16 +249,15 @@
   },
   "compact_count": 11,
   "front": {
-    "slug": "sinais-live-criteria",
+    "slug": "sinais-raw-path",
     "kind": "agent",
     "parent_root": "/home/igor/cursor/trading-lab",
-    "worktree": "/home/igor/cursor/trading-lab.fronts/sinais-live-criteria",
-    "branch": "front/sinais-live-criteria"
+    "worktree": "/home/igor/cursor/trading-lab.fronts/sinais-raw-path",
+    "branch": "front/sinais-raw-path"
   },
-  "sprint_branch": "front/sinais-live-criteria",
-  "sprint_categoria": "N",
+  "sprint_branch": "front/sinais-raw-path",
+  "sprint_categoria": "F",
   "plan_only": false,
-  "sprint_atual": "N55",
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",
@@ -389,8 +299,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N54",
-  "sprint_nome": "Sprint N55",
+  "previous_sprint": "N55",
+  "sprint_nome": "Sprint N56",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -591,34 +501,22 @@
         "rationale": "Deliverable list asked sprint_atual=N37; EXECUTE waits parent Fable/plan-verifier"
       },
       {
-        "timestamp": "2026-11-18T18:20:00-03:00",
+        "timestamp": "2026-11-19T14:10:00-03:00",
         "file": "pmo-plan",
-        "decision": "category=N; feature-com-dominio; skip Passo2 (analista/designer/arquiteto/contratos DONE); skip ISSUES preview (ISS-024 exists); sprint_id=N54",
-        "rationale": "Parent classified N / feature-com-dominio / N54; max existing N is 53; do not steal N45-N47; autopilot no AskQuestion"
+        "decision": "category=N; melhoria/path-join pós-N55; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N56; plan_only=true; sprint_atual remains null",
+        "rationale": "Parent classified N56; heuristic also matched bug; ISS-024 series is N54/N55; operator confirmed doubled reports/ join; autopilot no AskQuestion"
       },
       {
-        "timestamp": "2026-11-18T18:20:00-03:00",
+        "timestamp": "2026-11-19T14:10:00-03:00",
         "file": "docs/ROADMAP.md",
-        "decision": "N54 3M+2P: Git First, POST job+GET mode, UI wire, tests, docs; review=senior+qa; LIVE false",
-        "rationale": "ISS-024 Feature 9 live criteria; reuse prodigy_rank.calculate and C2 fetch; ADR-011 two modes"
+        "decision": "do not change --root default; fix join to providers/raw; keep Feature 4 constants; eligible-only queue; LIVE false; do not steal N45-N47",
+        "rationale": "Operator: no workaround; 3 UNSCORABLE closed_trades_15d=0 correctly absent; C2_API4_KEY server-side; TV ingested origins only"
       },
       {
-        "timestamp": "2026-11-18T18:20:00-03:00",
+        "timestamp": "2026-11-19T14:10:00-03:00",
         "file": ".cursorsession",
-        "decision": "plan_only=true; sprint_atual=N54; previous_sprint=N53; checkpoint.phase=planning",
-        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier then /pmo sprint"
-      },
-      {
-        "timestamp": "2026-11-18T16:10:00-03:00",
-        "file": "pmo-plan",
-        "decision": "category=N; feature-com-dominio / melhoria pós-N54; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N55",
-        "rationale": "Parent classified N / feature-com-dominio / N55; N54 #73 on main; do not steal N45-N47; autopilot no AskQuestion"
-      },
-      {
-        "timestamp": "2026-11-18T16:10:00-03:00",
-        "file": ".cursorsession",
-        "decision": "plan_only=true; sprint_atual=N55; previous_sprint=N54; checkpoint.phase=planning; clear N54 auditing",
-        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier then /pmo sprint"
+        "decision": "plan_only=true; sprint_atual remains null; checkpoint.front_mode stays unplanned; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
       }
     ]
   },
@@ -626,8 +524,9 @@
   "rock_mandate": "full",
   "active_automation": null,
   "journal": [],
-  "sprint_tasks_sha256": "856ab741383ec0ad086207c122272d3a1ce5ad208c3428c5ae3582a8c56f4504",
+  "sprint_tasks_sha256": "07eeb3049166ffd5d9060443170693df36b33214900be7121eaa4b14df36bf12",
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
-  ]
+  ],
+  "sprint_atual": "N56"
 }

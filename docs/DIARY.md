@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N55 | v4_web_dashboard, panel_ops_data, panel_ops_html, tests, docs | Fila multiplataforma; partial persist; F-018; closeout PR #74 | 35–46 |
+| N56 | v4_web_dashboard, tests, docs | Join canônico providers/raw; F-019; fila Prodígio só elegíveis | 35–45 |
+| N55 | v4_web_dashboard, panel_ops_data, panel_ops_html, tests, docs | Fila multiplataforma; partial persist; F-018; closeout PR #74 | 46–57 |
 | N54 | v4_web_dashboard, panel_ops_html, tests, docs | POST live_criteria; GET disk_reread; ISS-024; EXECUTE frente | 33–41 |
 | N53 | panel_ops_html, v4_web_dashboard, docs | PanelShell v2 todas rotas; Atualizar candidatos + GET reload; ISS-023; N54=POST job | 42–50 |
 | N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 42–50 |
@@ -29,6 +30,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N56 — Caminho canônico dos arquivos brutos (ISS-024 / F-019)
+
+**Frente:** `sinais-raw-path` · **Estado:** EXECUTE (código + pytest na frente); merge/rebuild operador pendente.
+
+**Entregue (N56.0–N56.3):** `docs/.briefs/N56-GIT-FIRST-REUSE.md`; `_providers_raw_dir` / `_providers_signals_dir` em `v4_web_dashboard.py`; job live-criteria deixa de usar `{root}/reports/providers/raw`; fixtures N54/N55 em `{root}/providers/raw`; suíte `N56ProdigyCanonicalRawPathTests` (3); `tests/test_panel_ops.py` 100 passed na frente; mapa §2, ISS-024 nota, F-019 corrigido, Feature 9 aceite N56.
+
+**Honestidade:** LIVE false; `orders_sent=0`; fila Prodígio só elegíveis 15d; três provedores `closed_trades_15d=0` fora da fila — critério, não bug; **ISS-024 permanece aberto** até painel no ar.
 
 ---
 

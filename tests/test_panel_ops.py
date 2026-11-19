@@ -3,7 +3,7 @@ import os
 import tempfile
 import threading
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -2256,6 +2256,25 @@ def _n54_mock_c2_snapshot(strategy_ids, key, out_dir, opener=None, **kwargs):
 
 
 def _n54_write_prodigy_raw_trades(root: Path) -> None:
+    raw = root / 'providers' / 'raw'
+    raw.mkdir(parents=True, exist_ok=True)
+    trades = [
+        {'CloseDate': '2026-11-10T12:00:00+00:00', 'ProfitLoss': 120.0},
+        {'CloseDate': '2026-11-11T12:00:00+00:00', 'ProfitLoss': -30.0},
+        {'CloseDate': '2026-11-12T12:00:00+00:00', 'ProfitLoss': 80.0},
+        {'CloseDate': '2026-11-13T12:00:00+00:00', 'ProfitLoss': 40.0},
+        {'CloseDate': '2026-11-14T12:00:00+00:00', 'ProfitLoss': 25.0},
+    ]
+    payload = {
+        'strategy_id': '9',
+        'dataset': 'closed_trades',
+        'raw': {'ResponseStatus': {'ErrorCode': '200'}, 'Results': trades},
+    }
+    (raw / '9_closed_trades.json').write_text(json.dumps(payload), encoding='utf-8')
+
+
+def _n56_write_prodigy_raw_trades_doubled_legacy(root: Path) -> None:
+    """Legacy doubled nest only — must not be read by live-criteria refresh."""
     raw = root / 'reports' / 'providers' / 'raw'
     raw.mkdir(parents=True, exist_ok=True)
     trades = [
@@ -2831,6 +2850,259 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
                 gate_mock.assert_not_called()
                 self.assertEqual(payload.get('orders_sent'), 0)
                 self.assertFalse(payload.get('execution_authorized', True))
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+
+def _n56_prodigy_now() -> datetime:
+    return datetime(2026, 11, 16, 12, 0, tzinfo=timezone.utc)
+
+
+def _n56_write_closed_trades_file(raw_dir: Path, strategy_id: str, trades: list[dict]) -> None:
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        'strategy_id': strategy_id,
+        'dataset': 'closed_trades',
+        'raw': {'ResponseStatus': {'ErrorCode': '200'}, 'Results': trades},
+    }
+    (raw_dir / f'{strategy_id}_closed_trades.json').write_text(json.dumps(payload), encoding='utf-8')
+
+
+def _n56_write_prodigy_raw_eligible_canonical(root: Path, *, strategy_id: str = '9') -> Path:
+    """Production layout: tmp root == REPORTS_DIR; raw under root/providers/raw."""
+    raw = root / 'providers' / 'raw'
+    trades = [
+        {'CloseDate': '2026-11-10T12:00:00+00:00', 'ProfitLoss': 120.0},
+        {'CloseDate': '2026-11-11T12:00:00+00:00', 'ProfitLoss': -30.0},
+        {'CloseDate': '2026-11-12T12:00:00+00:00', 'ProfitLoss': 80.0},
+        {'CloseDate': '2026-11-13T12:00:00+00:00', 'ProfitLoss': 40.0},
+        {'CloseDate': '2026-11-14T12:00:00+00:00', 'ProfitLoss': 25.0},
+    ]
+    _n56_write_closed_trades_file(raw, strategy_id, trades)
+    return raw
+
+
+def _n56_write_prodigy_raw_unscorable_canonical(root: Path, strategy_id: str) -> None:
+    """Characterizing: trades outside 15d window → UNSCORABLE, closed_trades_15d=0 (not queue-eligible)."""
+    raw = root / 'providers' / 'raw'
+    now = _n56_prodigy_now()
+    trades = [
+        {'CloseDate': (now - timedelta(days=190)).isoformat(), 'ProfitLoss': 100.0}
+        for _ in range(5)
+    ]
+    _n56_write_closed_trades_file(raw, strategy_id, trades)
+
+
+def _n56_assert_calculate_raw_dir(calculate_mock, root: Path) -> Path:
+    if not calculate_mock.call_args:
+        raise AssertionError('prodigy_rank.calculate was not called')
+    args, kwargs = calculate_mock.call_args
+    raw_dir = kwargs.get('raw_dir') if kwargs.get('raw_dir') is not None else args[0]
+    canonical = (root / 'providers' / 'raw').resolve()
+    resolved = Path(raw_dir).resolve()
+    if resolved != canonical:
+        doubled = (root / 'reports' / 'providers' / 'raw').resolve()
+        raise AssertionError(
+            'calculate must read {}/providers/raw (got {!r}; doubled nest was {!r})'.format(
+                root, resolved, doubled,
+            )
+        )
+    return canonical
+
+
+def _n56_rank_from_calc_call(calculate_mock, calculate_fn):
+    """Patched v4_web_dashboard.prodigy_rank.calculate does not populate mock.return_value."""
+    if not calculate_mock.call_args:
+        raise AssertionError('prodigy_rank.calculate was not called')
+    args, kwargs = calculate_mock.call_args
+    return calculate_fn(*args, **kwargs)
+
+
+class N56ProdigyCanonicalRawPathTests(unittest.TestCase):
+    """N56.2 — live refresh reads {root}/providers/raw under production --root layout."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+        from prodigy_rank import calculate as prodigy_calculate
+
+        self._prodigy_calculate = prodigy_calculate
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(root, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def _post_refresh(self, base: str) -> dict:
+        req = _post_candidates_refresh(
+            base + '/api/signals/candidates/refresh',
+            {},
+            session='panel-secret',
+        )
+        with urlopen(req, timeout=5) as resp:
+            return json.load(resp)
+
+    def test_n56_refresh_calculate_sees_canonical_raw_providers_gt_zero(self):
+        """Files only at root/providers/raw; empty root/reports/providers/raw must not block."""
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _n56_write_prodigy_raw_eligible_canonical(root)
+            doubled = root / 'reports' / 'providers' / 'raw'
+            doubled.mkdir(parents=True, exist_ok=True)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=56.0)
+            _, server, thread, base = self._server(root)
+            patches = [
+                patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+                patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+                patch.dict(
+                    os.environ,
+                    {'C2_API4_KEY': 'test-c2-secret', 'LIVE_TRADING_ENABLED': 'false'},
+                    clear=False,
+                ),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                with patch(
+                    'v4_web_dashboard.prodigy_rank.calculate',
+                    wraps=self._prodigy_calculate,
+                ) as calc_mock:
+                    payload = self._post_refresh(base)
+                    self.assertEqual(payload.get('orders_sent'), 0)
+                    _n56_assert_calculate_raw_dir(calc_mock, root)
+                    rank = _n56_rank_from_calc_call(calc_mock, self._prodigy_calculate)
+                    self.assertGreater(
+                        len(rank.get('providers') or []),
+                        0,
+                        msg='canonical closed_trades files must feed calculate (providers>0)',
+                    )
+                    issues = payload.get('issues') or []
+                    self.assertFalse(
+                        any('prodigy_raw_missing' in issue for issue in issues),
+                        msg='eligible raw on canonical path must not report prodigy_raw_missing',
+                    )
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n56_doubled_reports_raw_alone_does_not_feed_calculate(self):
+        """Only root/reports/providers/raw populated — canonical empty — must not count as success."""
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _n56_write_prodigy_raw_trades_doubled_legacy(root)
+            canonical = root / 'providers' / 'raw'
+            self.assertFalse(any(canonical.glob('*_closed_trades.json')))
+            _write_c2_research_fixture(root, provider_id='44', win_rate=56.0)
+            _, server, thread, base = self._server(root)
+            patches = [
+                patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+                patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+                patch.dict(
+                    os.environ,
+                    {'C2_API4_KEY': 'test-c2-secret', 'LIVE_TRADING_ENABLED': 'false'},
+                    clear=False,
+                ),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                captured_ranks: list[dict] = []
+
+                def _capture_prodigy_calculate(*args, **kwargs):
+                    rank = self._prodigy_calculate(*args, **kwargs)
+                    captured_ranks.append(rank)
+                    return rank
+
+                with patch(
+                    'v4_web_dashboard.prodigy_rank.calculate',
+                    side_effect=_capture_prodigy_calculate,
+                ) as calc_mock:
+                    payload = self._post_refresh(base)
+                    self.assertTrue(calc_mock.called)
+                    _n56_assert_calculate_raw_dir(calc_mock, root)
+                    self.assertEqual(len(captured_ranks), 1)
+                    providers = captured_ranks[0].get('providers') or []
+                    issues = payload.get('issues') or []
+                    self.assertEqual(
+                        len(providers),
+                        0,
+                        msg='canonical empty: doubled nest must not be the data source for calculate',
+                    )
+                    self.assertTrue(
+                        any('prodigy_raw_missing' in issue for issue in issues),
+                        msg='missing canonical raw files must surface prodigy_raw_missing',
+                    )
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+                self._shutdown(server, thread)
+
+    def test_n56_unscorable_zero_15d_absent_from_queue_without_raw_missing(self):
+        """UNSCORABLE + closed_trades_15d=0 on disk: no prodigy_raw_missing; not in preapproval queue."""
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            for sid in ('101', '102', '103'):
+                _n56_write_prodigy_raw_unscorable_canonical(root, sid)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=56.0)
+            _write_c2_allowlist_fixture(root, ['44'])
+            _n55_write_tradingview_ingest_fixture(root)
+            _, server, thread, base = self._server(root)
+            patches = [
+                patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=_n54_mock_c2_fetch),
+                patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+                patch.dict(
+                    os.environ,
+                    {'C2_API4_KEY': 'test-c2-secret', 'LIVE_TRADING_ENABLED': 'false'},
+                    clear=False,
+                ),
+            ]
+            try:
+                for p in patches:
+                    p.start()
+                with patch(
+                    'v4_web_dashboard.prodigy_rank.calculate',
+                    wraps=self._prodigy_calculate,
+                ) as calc_mock:
+                    payload = self._post_refresh(base)
+                    _n56_assert_calculate_raw_dir(calc_mock, root)
+                    issues = payload.get('issues') or []
+                    self.assertFalse(
+                        any('prodigy_raw_missing' in issue for issue in issues),
+                        msg='present but unscorable raw files are not missing-volume',
+                    )
+                    queue = _n55_preapproval_queue(payload)
+                    prodigy_rows = [r for r in queue if r.get('platform') == 'prodigy']
+                    self.assertEqual(
+                        prodigy_rows,
+                        [],
+                        msg='UNSCORABLE closed_trades_15d=0 correctly absent from Prodígio preapproval queue',
+                    )
+                    rank = _n56_rank_from_calc_call(calc_mock, self._prodigy_calculate)
+                    for row in rank.get('providers') or []:
+                        if str(row.get('provider_id')) in {'101', '102', '103'}:
+                            self.assertEqual(row.get('status'), 'UNSCORABLE')
+                            self.assertEqual(row.get('closed_trades_15d'), 0)
             finally:
                 for p in reversed(patches):
                     p.stop()

@@ -80,6 +80,7 @@
 | N53 | N | Painel visual v2 em todas as rotas + botão atualizar candidatos (GET releitura); LIVE false | concluida | 5 | observability | ISS-023 redesign plataforma + refresh UI | *(abaixo)* |
 | N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | concluida | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo · PR #73 | *(abaixo)* |
 | N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | concluida | 5 | observability | ISS-024 follow-up fila multiplataforma · PR #74 | *(abaixo)* |
+| N56 | N | Job lê arquivos brutos no volume certo; fila Prodígio só elegíveis 15d; LIVE false | planejada | 4 | observability | ISS-024 / F-019 join duplicado · plan_only | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -146,6 +147,7 @@
 | N53 | senior+qa | Plataforma visual v2 + refresh honesto GET; job refresh = N54; sem fill inventado |
 | N54 | senior+qa | Job critérios ao vivo ISS-024; POST live_criteria; LIVE false |
 | N55 | senior+qa | Fila pré-aprovação multiplataforma após refresh; ISS-024 follow-up |
+| N56 | senior+qa | Join dos arquivos brutos no volume de relatórios; fila só elegíveis; LIVE false |
 
 ---
 
@@ -5748,6 +5750,221 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 fila das três plataformas + aviso parcial), `docs/DASHBOARD-OPERATIONS.md` if the Sinais row exists, `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N55 checkboxes only with cited nodeids, `docs/FINDINGS.md` F-018 if fixed. LIVE false. N45–N47 not started. Document EasyPanel raw/key checklist without printing secrets.
+
+---
+
+## Sprint N56 — Ler os arquivos brutos no volume certo e manter a fila só com elegíveis
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-19 · fonte ISS-024 / F-019 · N55 #74+#75 em `main`  
+> titulo_humano: Atualizar candidatos lê os arquivos brutos no volume certo  
+> resumo_humano: O trabalho ao vivo passa a ler os arquivos brutos no volume de relatórios, não numa pasta duplicada vazia. Quem não passa na janela de 15 dias continua fora da fila. Collective2 precisa da chave no servidor; TradingView só origens já recebidas. LIVE false.  
+> Gate: job lê `{root}/providers/raw` quando `--root` é `/app/reports`; fila Prodígio só Feature 4 / 15d; `closed_trades_15d=0` ausente; pytest verde; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N56.brief.md`  
+> Git First: `docs/.briefs/N56-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N55 concluída (#74/#75) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N55  
+> plan_only: true
+
+### Em uma frase
+
+Atualizar candidatos passa a ler os arquivos brutos no volume certo; quem não passa na janela de 15 dias continua fora da fila.
+
+### O que muda para você
+
+- O painel deixa de procurar os arquivos numa pasta vazia duplicada dentro do volume de relatórios
+- Quem tem zero operações fechadas nos últimos 15 dias continua fora da fila do Prodígio — isso é o critério, não um defeito
+- Collective2 só roda com a chave no servidor; TradingView lista só origens já recebidas
+- Aprovar continua separado de atualizar; dinheiro real permanece desligado
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Leitura no volume certo | Depois de atualizar, o aviso de arquivos brutos some quando esses arquivos já estão no volume de relatórios |
+| 2 | Fila só com quem passa | A fila do Prodígio lista só quem já atende a janela de 15 dias e os critérios já definidos |
+| 3 | Sem histórico recente fica de fora | Três provedores sem operação fechada na janela continuam ausentes até haver histórico novo |
+| 4 | Collective2 e TradingView honestos | Sem chave no servidor o Collective2 avisa e não inventa linhas; TradingView mostra só origens já ingeridas |
+| 5 | Prova automática | A suíte falha se o trabalho voltar a procurar numa pasta duplicada vazia, ou se inventar nota para quem não pontua |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N56.0 Inventariar o caminho dos arquivos brutos no volume | `docs/.briefs/N56-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N56.1 Corrigir o caminho dos arquivos brutos no trabalho ao vivo | `src/v4_web_dashboard.py` | N56.0 |
+| [x] | M | N56.2 Provar que o volume certo alimenta a fila só com elegíveis | `tests/test_panel_ops.py` | N56.1 |
+| [x] | P | N56.3 Registrar o caminho certo e a fila só-elegível no chamado e no mapa | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md` | N56.2 |
+
+### Quality Brief (Sprint N56)
+
+**Alvo:** o job N54/N55 lê e grava arquivos brutos em `{root}/providers/raw` quando `--root` é `/app/reports`; a fila Prodígio permanece só elegíveis Feature 4 / 15d.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh` and N55 queue union; argparse `--root` default `/app/reports` unchanged.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS=15`, `MIN_TRADES=5`, ≥3 days, `PRODIGY_CANDIDATE_RESEARCH`); `UNSCORABLE` with `closed_trades_15d=0` stays out of the Prodígio queue.
+Avoid: changing `--root`/`DASHBOARD_ROOT` as a workaround; inventing scores; TradingView search; Collective2 marketplace search; `process_after_gate_b`; printing API keys; stealing N45–N47.
+
+### Technical Advisory
+
+- [ABORDAGEM] Juntar `providers/raw` sob o volume de relatórios já passado em `--root` — não mudar a bandeira.
+- [RISCO] Os testes atuais gravam na pasta duplicada e ficam verdes apesar do defeito; a suíte precisa mudar o fixture junto com o join.
+- [OPORTUNIDADE] Distinguir pasta canônica vazia (aviso de arquivos brutos) de provedores `UNSCORABLE` com zero operações na janela (ausência correta da fila).
+
+> EXPIRES at end of Sprint N56. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Mudar `--root` / `DASHBOARD_ROOT` / `REPORTS_DIR` como atalho
+- Inventar busca TradingView, listagem marketplace Collective2 ou fórmula nova
+- Soltar o filtro da fila para quem não pontua
+- Mutar livro de pré-aprovação no refresh
+- Ordem / fill / LIVE true
+- SSH no EasyPanel; N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N56.0 — Inventariar o caminho dos arquivos brutos no volume
+
+**Entrega:** Inventário dizendo que o volume de relatórios já é a raiz, onde o trabalho ao vivo junta a pasta errada, e que a fila só mostra quem passa nos critérios de 15 dias.
+**Como conferir:** O inventário proíbe mudar a bandeira da raiz, cita o ranking de 15 dias sem inventar nota, e registra que três provedores sem operação na janela ficam de fora.
+**Por quê:** Sem isso o EXECUTE muda a bandeira da raiz ou completa a fila com quem não pontua.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N56-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `--root` default `/app/reports`, `_live_refresh_prodigy`, `_live_refresh_collective2`, `prodigy_rank.calculate` `--raw-dir=/app/reports/providers/raw`, `build_preapproval_queue` Prodígio filter, `_n54_write_prodigy_raw_trades` doubled fixture. Document: C2 needs server `C2_API4_KEY`; TV = ingested origins; `UNSCORABLE` `closed_trades_15d=0` correctly absent. Never print secrets.
+
+### Task N56.1 — Corrigir o caminho dos arquivos brutos no trabalho ao vivo
+
+**Entrega:** O mesmo trabalho ao vivo no servidor lê e grava os arquivos brutos no volume de relatórios, não numa pasta duplicada vazia.
+**Como conferir:** Com os arquivos já no volume, atualizar candidatos deixa de tratar o Prodígio como pasta vazia; a bandeira da raiz permanece a mesma.
+**Por quê:** Hoje o trabalho junta de novo a pasta de relatórios em cima da raiz que já é esse volume, e olha para uma pasta vazia.
+
+**Detalhe técnico**
+
+- **Estado atual:** `--root` default `/app/reports`. `_live_refresh_prodigy` and `_live_refresh_collective2` set `raw_dir = root / 'reports' / 'providers' / 'raw'` → `/app/reports/reports/providers/raw` (empty; mkdir even creates it). Real files: `/app/reports/providers/raw`. `_intelligence_dir` already uses `root / 'intelligence'` (correct).
+- **Estado desejado:** canonical `raw_dir = root / 'providers' / 'raw'` and `snap_dir = root / 'providers' / 'signals'`. Do **not** change argparse `--root`. Do **not** mkdir the doubled path. Keep `prodigy_raw_missing` operator text as volume-relative `reports/providers/raw/{sid}_closed_trades.json` (the real path), not `reports/reports/...`. Empty canonical dir → missing issue and do not persist empty rank. Files present but all `UNSCORABLE` / `closed_trades_15d=0` → persist honest rank; **do not** treat as missing files; queue filter already drops them.
+- **Arquivo(s):** `src/v4_web_dashboard.py`
+- **Fonte(s):** ISS-024 nota operador 2026-11-19, F-019, Feature 4 / Prodígio 15d
+- **Risco:** MEDIUM — shared live-criteria job and research JSON
+- **Task size:** M (path join + mkdir side effect + C2 write path)
+
+**executor_prompt**:
+
+```yaml
+id: N56.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N56.0"]
+files:
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "_live_refresh_prodigy" src/v4_web_dashboard.py && rg "_live_refresh_collective2" src/v4_web_dashboard.py && rg -- "--root" src/v4_web_dashboard.py'
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "prodigy_rank.calculate" src/v4_web_dashboard.py && rg "WINDOW_DAYS = 15" src/prodigy_rank.py'
+  - component: src/c2_history_collect.py
+    reuse_as: call
+    convergence_check: 'rg "c2_history_collect" src/v4_web_dashboard.py'
+guardrail_contract:
+  - class: secrets
+    id: n56-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in t or 'environ' in t"
+    pass_condition: no live keys hardcoded; C2 key only via env lookup
+  - class: subagent-safety
+    id: n56-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n56-1-keep-root-default
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert \"default='/app/reports'\" in t or 'default=\"/app/reports\"' in t"
+    pass_condition: argparse --root default remains /app/reports
+```
+
+### Quality Brief (Sprint N56)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; do not change `--root`; do not invent Feature 4 thresholds.
+
+Melhoria: fix live-criteria raw/signals joins so `--root /app/reports` reads `/app/reports/providers/raw`, not `/app/reports/reports/providers/raw`.
+Contexto: operator confirmed real files at `/app/reports/providers/raw`; job mkdir/join still uses `root/'reports'/'providers'/'raw'`. Tests currently write to the doubled path and hide the bug.
+Objetivo: keep `POST /api/signals/candidates/refresh` (`mode: live_criteria`, `orders_sent=0`). Do **not** add a parallel package. Do **not** change `--root` default. Helper ok: `_providers_raw_dir(root) = root / 'providers' / 'raw'` used by both Prodígio and Collective2. `_prodigy_rank_has_eligible_rows` must **not** be tightened to `PRODIGY_CANDIDATE_RESEARCH` only — files with `UNSCORABLE`/`closed_trades_15d=0` are present data, not missing raw. Never `process_after_gate_b`. Never invent scores. Never print `C2_API4_KEY`.
+Critério de pronto: with `--root` still `/app/reports`, raw_dir resolves to `{root}/providers/raw`; doubled `{root}/reports/providers/raw` is not mkdir'd by the job; missing canonical files still emit `prodigy_raw_missing`; C2 snapshot dir `{root}/providers/signals`.
+Cenários de teste (mínimo no implementer self-check; N56.2 owns pytest):
+  1. Caso normal: arquivos em `{root}/providers/raw` → `calculate` sees them
+  2. Edge: pasta duplicada `{root}/reports/providers/raw` vazia não é a fonte
+  3. Edge: arquivos presentes com `closed_trades_15d=0` → não emitir missing; não inventar nota
+  4. Regressão: `--root` default `/app/reports`; POST ainda `live_criteria` e `orders_sent=0`
+
+### Task N56.2 — Provar que o volume certo alimenta a fila só com elegíveis
+
+**Entrega:** Testes comprovam que os arquivos no volume certo alimentam o ranking, que a pasta duplicada não é a fonte, e que quem não pontua na janela de 15 dias não entra na fila do Prodígio.
+**Como conferir:** A suíte falha se o trabalho só enxergar a pasta duplicada, se inventar nota, ou se incluir na fila quem está sem pontuação na janela.
+**Por quê:** Sem essa prova o painel no ar volta a parecer vazio mesmo com arquivos no volume, ou alguém “completa” a fila contra o critério.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — HTTP in-process + fixtures currently encode the doubled path
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N56.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N56.1"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "_n54_write_prodigy_raw_trades" tests/test_panel_ops.py && rg "live_criteria" tests/test_panel_ops.py'
+  - component: tests/test_prodigy_rank.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "PRODIGY_CANDIDATE_RESEARCH" tests/test_panel_ops.py || rg "UNSCORABLE" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n56-2-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'api.collective2.com' not in t.lower()"
+    pass_condition: tests do not call live Collective2 hosts
+  - class: subagent-safety
+    id: n56-2-no-harness-bug
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'tests/' not in t"
+    pass_condition: production does not special-case tests/ paths
+```
+
+### Quality Brief (Sprint N56)
+
+See sprint Quality Brief.
+
+Melhoria: pytest proving canonical `{root}/providers/raw` is the live-criteria input and the Prodígio queue stays eligible-only.
+Objetivo: nodeids covering (1) fixtures at `{root}/providers/raw` are read (`calculate` / no `prodigy_raw_missing` from empty doubled dir); (2) doubled `{root}/reports/providers/raw` is not the source; (3) three providers with `closed_trades_15d=0` / `UNSCORABLE` are absent from the Prodígio queue — no invented score; (4) missing canonical files still emit raw-missing; (5) N54/N55 regressions: `orders_sent=0`, missing C2 key issues, TV ingested origins only; (6) `process_after_gate_b` absent. Move `_n54_write_prodigy_raw_trades` (and any N55 helper that writes the same doubled path) to `{root}/providers/raw`. Do not teach production about `tests/` paths (no HARNESS_BUG).
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: arquivos canônicos elegíveis → Prodígio na fila
+  2. Edge: pasta duplicada vazia + arquivos canônicos → lê os canônicos
+  3. Edge: três provedores 15d=0 → ausentes da fila Prodígio; sem nota inventada
+  4. Edge: canônico vazio → `prodigy_raw_missing`; outras plataformas intactas
+  5. Regressão: N54 cooldown 429; GET disk_reread; Aprovar inalterado; `--root` default unchanged
+
+### Task N56.3 — Registrar o caminho certo e a fila só-elegível no chamado e no mapa
+
+**Entrega:** Mapa e chamado descrevem o volume certo e que a fila do Prodígio só mostra quem passa na janela de 15 dias; o chamado permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; três provedores sem operação na janela documentados como ausência correta; Feature 9 marcada só se os testes existirem.
+**Por quê:** Separar o defeito da pasta duplicada da fila vazia honesta de quem não pontua.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 canonical `{root}/providers/raw` under `--root /app/reports`; eligible-only Prodígio queue; C2 key; TV ingested origins), `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/FINDINGS.md` (F-019; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N56 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
 
 ---
 

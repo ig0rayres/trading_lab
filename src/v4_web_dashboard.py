@@ -954,6 +954,14 @@ def _intelligence_dir(root: Path) -> Path:
     return path
 
 
+def _providers_raw_dir(root: Path) -> Path:
+    return root / 'providers' / 'raw'
+
+
+def _providers_signals_dir(root: Path) -> Path:
+    return root / 'providers' / 'signals'
+
+
 def _prodigy_rank_has_eligible_rows(rank: dict) -> bool:
     top = rank.get('top_10_research')
     if isinstance(top, list) and top:
@@ -972,8 +980,7 @@ def _ledger_conn_factory(conn_factory):
 
 
 def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) -> None:
-    raw_dir = root / 'reports' / 'providers' / 'raw'
-    raw_dir.mkdir(parents=True, exist_ok=True)
+    raw_dir = _providers_raw_dir(root)
     try:
         rank = prodigy_rank.calculate(raw_dir)
     except (OSError, ValueError, TypeError, KeyError) as exc:
@@ -993,11 +1000,11 @@ def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[st
     if not key:
         issues.append('C2_API4_KEY_missing')
         return
-    raw_dir = root / 'reports' / 'providers' / 'raw'
+    raw_dir = _providers_raw_dir(root)
     try:
         ids = _merged_c2_strategy_ids(root)
         _invoke_c2_history_collect(ids, key, raw_dir)
-        snap_dir = root / 'reports' / 'providers' / 'signals'
+        snap_dir = _providers_signals_dir(root)
         if ids:
             c2_signal_feed.snapshot([int(x) for x in ids], key, snap_dir)
         sources_ok.append('collective2')

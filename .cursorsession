@@ -175,7 +175,45 @@
   "checkpoint": {
     "sprint": "N56",
     "phase": "implementation",
-    "branch": "front/sinais-raw-path"
+    "branch": "front/sinais-raw-path",
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N56",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-19T17:21:32Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N56 canonical providers/raw path; 100 panel_ops passed; ISS-024 open until ops homologation",
+      "round": 1,
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -c \"print(\\\"ok\\\")\"",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [],
+      "missing_backends": [],
+      "last_validated_sha": "68598af732c6391d1f90a72c9679956920743600",
+      "stamped_at": "2026-11-19T17:22:33Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "506b611a12f229b2777b8cde034ef53fd85a3a511a9239c95ed5d7d2087f6d23",
+      "patch_id": "aa70c2ed2b3f2f42d55bd81782ef5a602754b6c1",
+      "patch_id_version": 2
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N56"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

@@ -194,7 +194,46 @@
     "phase": "implementation",
     "branch": "front/sinais-raw-path",
     "current_task": "N60.0",
-    "updated_at": "2026-11-19T20:20:32.823629+00:00"
+    "updated_at": "2026-11-19T20:20:32.823629+00:00",
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N60",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-19T20:27:18Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N60: 115 passed tests/test_panel_ops.py incl N60PartialClosedTradesCollectTests (3); F-023 corrigido; ISS-024 aberto; LIVE false",
+      "senior_status": "PASS"
+    },
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "/usr/bin/python3 -m pytest tests/test_panel_ops.py -q --tb=no",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".beesy/stamp-gate-logs/",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "f19c7fcee4045eeaa573544424965863f0dc9086",
+      "stamped_at": "2026-11-19T20:29:46Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "1fe60996717806a083d148bcbbc8d7cb87108e29caa8a6b85b1608be688d173a",
+      "patch_id": "7dd4a8d8c75367b9e7208188d489e215f05d9395",
+      "patch_id_version": 2
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N60"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

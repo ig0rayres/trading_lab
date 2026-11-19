@@ -1,6 +1,6 @@
 # Requisitos — Trading Lab
 
-> Gerado em: 2026-10-29 · Revisado em: 2026-11-19 (v0.7.6, Sinais — aceite N58 SearchStrategies + Feature 4; TradingView varredura OUT ISS-025; ISS-024 aberto)
+> Gerado em: 2026-10-29 · Revisado em: 2026-11-19 (v0.7.7, Sinais — rascunho de aceite N60 histórico fechado parcial + botão; ISS-024 aberto)
 > Status: Em Revisão
 > Fonte: adendo técnico de 29/10/2026, que detalha o handoff da mesma data. O snapshot de código na raiz é o MVP de pesquisa mais novo que estava disponível (`ba36049`). Contagens de teste citadas em nomes de ZIP não foram reexecutadas aqui.
 
@@ -286,6 +286,7 @@ O identificador concreto da conta (login/account id) e as chaves ficam só no am
 - [x] **Atualizar candidatos** varre a Collective2 no servidor (GET `/Strategies/SearchStrategies` disponível à chave, **sem** allowlist para aparecer) e só enfileira quem passa Feature 4 / Prodígio 15d já no código; identificador ausente do disco pode entrar se a varredura o trouxer e ele passar as regras; glob canônico permanece cache; cópia paper continua na lista nomeada/livro-razão (N58 / ISS-024 / F-021; `tests/test_panel_ops.py` `N58Collective2SearchStrategiesScanTests.test_n58_empty_allowlist_scan_eligible_pending_without_raw_on_disk`, `test_n58_fetch_must_not_use_leaderboard_or_historical_strategies_post`, `test_n58_missing_c2_api4_key_no_fake_scan`, `test_n58_refresh_no_auto_approve_live_false_orders_sent_zero`, `test_n58_next_cursor_surfaces_incomplete_scan_issue`, `test_n58_prodigy_rank_constants_unchanged`).
 - [x] TradingView: varredura de marketplace **fora** desta sprint até existir contrato de busca (ISS-025); origens já recebidas (N55) **não** contam como varredura; refresh registra aviso honesto **sem** inventar HTTP de busca (N58; `tests/test_panel_ops.py` `N58Collective2SearchStrategiesScanTests.test_n58_tradingview_ingested_no_search_scan_out_iss025`).
 - [x] Instantâneo de ordens ativas Collective2 **não** aborta varredura SearchStrategies + histórico fechado; falha do instantâneo é aviso isolado (`collective2_active_orders_snapshot_failed:*`), não critério de elegibilidade Feature 4 (N59 / ISS-024 / F-022; `tests/test_panel_ops.py` `N59Collective2SnapshotIsolationTests.test_n59_empty_allowlist_scan_ok_snapshot_skips_scan_page_ids`, `test_n59_snapshot_414_with_allowlist_does_not_abort_collective2_source`).
+- [x] Falha na coleta de histórico fechado Collective2 **depois** de a listagem passar **não** marca a fonte como morta; o que já foi gravado segue no filtro de quinze dias; o aviso é de histórico parcial (não «fonte inteira falhou»); o botão **Atualizar candidatos** sai de «Atualizando…» se a espera estourar (N60 / ISS-024 / F-023; `tests/test_panel_ops.py` `N60PartialClosedTradesCollectTests.test_n60_search_ok_closed_trades_partial_keeps_collective2_source`, `test_n60_search_strategies_http_error_still_collective2_refresh_failed`, `test_n60_candidates_reload_script_has_abort_signal_and_honest_timeout_copy`).
 
 ### Feature 10: Performance
 
@@ -446,6 +447,7 @@ Estas linhas não são aprovação. Servem para não perder o que já foi medido
 | 2026-11-13 | 0.4 | G-MKT: Clear Smart Trader simulado (B3), Alpaca Paper (cripto), OANDA Practice (forex); integrações e Feature 7 atualizados | Analista de Requisitos (IA) com o operador |
 | 2026-11-16 | 0.4 | Dúvida #8 G-AJUSTE respondida (ISS-012): ciclo diário fills+não-fills + TimesFM research-only; Feature 11 critérios 2–4 seguem `[ ]` até N28.2–4 | Planejador N31 (IA) com o operador |
 | 2026-11-16 | 0.4 | Feature 11 critérios 2–4 `[x]` após N28.2–4 (`tests/test_n28_supervised_adjustment.py`); closeout papel N33 — sem bump de versão de contrato | Sprint N33 docs |
+| 2026-11-19 | 0.7.7 | Feature 9: rascunho de aceite N60 `[ ]` — histórico fechado parcial não derruba a Collective2; botão sai de «Atualizando…»; constantes de quinze dias intactas; ISS-024 permanece aberto | N60 PLAN |
 | 2026-11-19 | 0.7.6 | Feature 9: aceite N58 `[x]` — Atualizar varre Collective2 via SearchStrategies + Feature 4/15d (disco = cache); TV varredura OUT ISS-025; F-021 corrigido (`N58Collective2SearchStrategiesScanTests`; ISS-024 aberto) | N58.3 docs |
 | 2026-11-19 | 0.7.5 | Feature 9: rascunho de aceite N58 `[ ]` — Atualizar varre Collective2 nas regras 15d (não inventário em disco); TradingView varredura OUT até ISS-025; ISS-024 permanece aberto | N58 PLAN |
 | 2026-11-19 | 0.7.4 | Feature 9: aceite N57 `[x]` — fila Collective2 a partir de arquivos brutos canônicos sem allowlist como pré-requisito de visibilidade; cópia paper continua na lista nomeada/ledger; F-020 corrigido (nodeids `N57Collective2RawQueueDiscoveryTests`; ISS-024 aberto) | N57.3 docs |

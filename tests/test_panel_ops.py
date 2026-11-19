@@ -3806,6 +3806,158 @@ class N59Collective2SnapshotIsolationTests(unittest.TestCase):
                 self._shutdown(server, thread)
 
 
+class N60PartialClosedTradesCollectTests(unittest.TestCase):
+    """N60 — closed-trades partial failure must not abort Collective2 source (ISS-024 / F-023)."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+        from prodigy_rank import calculate as prodigy_calculate
+
+        self._prodigy_calculate = prodigy_calculate
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, *, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(root, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n60_search_ok_closed_trades_partial_keeps_collective2_source(self):
+        fail_id = _N58_SCAN_INELIGIBLE_ID
+
+        def _fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+            del key, opener
+            label = _n58_call_path_label((strategy_ids,), kwargs)
+            out = Path(out_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            if _N58_SEARCH_STRATEGIES_PATH in label or 'SearchStrategies' in label:
+                snap = {
+                    'dataset': 'search_strategies',
+                    'raw': {
+                        'ResponseStatus': {'ErrorCode': '200'},
+                        'Results': [
+                            {
+                                'StrategyId': int(_N58_SCAN_ELIGIBLE_ID),
+                                'IsAlive': True,
+                                'IsPrivate': False,
+                            },
+                            {
+                                'StrategyId': int(fail_id),
+                                'IsAlive': True,
+                                'IsPrivate': False,
+                            },
+                        ],
+                        'Pagination': {},
+                    },
+                }
+                intel = out.parent.parent / 'intelligence'
+                intel.mkdir(parents=True, exist_ok=True)
+                (intel / 'c2_search_strategies_latest.json').write_text(
+                    json.dumps(snap),
+                    encoding='utf-8',
+                )
+                return {
+                    'status': 'ok',
+                    'strategy_ids': [_N58_SCAN_ELIGIBLE_ID, fail_id],
+                    'next_cursor': '',
+                }
+            sid = str((strategy_ids or [''])[0])
+            if sid == fail_id:
+                raise HTTPError(
+                    'https://api4-general.collective2.com/world/api4',
+                    503,
+                    'Service Unavailable',
+                    {},
+                    None,
+                )
+            if sid == _N58_SCAN_ELIGIBLE_ID:
+                _n56_write_closed_trades_file(out, sid, _n58_eligible_closed_trades())
+                return {'status': 'ok', 'written': [f'{sid}_closed_trades.json']}
+            return {'status': 'ok', 'written': []}
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _, server, thread, base = self._server(root)
+            try:
+                payload, _ = _n58_post_refresh_with_fetch(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=_fetch,
+                )
+                issues = [str(i) for i in (payload.get('issues') or [])]
+                self.assertIn('collective2', payload.get('sources_ok') or [])
+                self.assertFalse(
+                    any('collective2_refresh_failed' in i for i in issues),
+                    msg='partial closed-trades must not use collective2_refresh_failed',
+                )
+                self.assertTrue(
+                    any('collective2_closed_trades_partial_failed' in i for i in issues),
+                )
+                queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
+                ids = {str(r.get('provider_id')) for r in queue}
+                self.assertIn(_N58_SCAN_ELIGIBLE_ID, ids)
+                self.assertNotIn(fail_id, ids)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n60_search_strategies_http_error_still_collective2_refresh_failed(self):
+        def _fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+            del strategy_ids, key, out_dir, opener, kwargs
+            raise HTTPError(
+                'https://api4-general.collective2.com/world/api4',
+                500,
+                'Server Error',
+                {},
+                None,
+            )
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _, server, thread, base = self._server(root)
+            try:
+                payload, _ = _n58_post_refresh_with_fetch(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=_fetch,
+                )
+                issues = [str(i) for i in (payload.get('issues') or [])]
+                self.assertTrue(
+                    any('collective2_refresh_failed' in i for i in issues),
+                )
+                self.assertNotIn('collective2', payload.get('sources_ok') or [])
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n60_candidates_reload_script_has_abort_signal_and_honest_timeout_copy(self):
+        from panel_ops_html import _CANDIDATES_RELOAD_SCRIPT
+        from prodigy_rank import WINDOW_DAYS, MIN_TRADES
+
+        self.assertIn('AbortController', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertIn('signal:controller.signal', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertIn('AbortError', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertIn('A fila anterior foi mantida', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertEqual(WINDOW_DAYS, 15)
+        self.assertEqual(MIN_TRADES, 5)
+
+
 class PanelOpsRunbookTest(unittest.TestCase):
     def test_daily_runbook_points_to_panel_not_exec(self):
         doc = Path(__file__).resolve().parents[1] / 'docs' / 'DASHBOARD-OPERATIONS.md'

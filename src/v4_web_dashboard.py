@@ -876,6 +876,8 @@ _LIVE_CRITERIA_COOLDOWN_SEC = 30
 _LAST_LIVE_CRITERIA_REFRESH_MONO: float | None = None
 _LIVE_CRITERIA_REFRESH_LOCK = threading.Lock()
 _C2_API4_HTTP_FETCH = c2_history_collect.fetch
+# Wall-clock cap for closed-trades collect within one POST (seconds; not Feature 4 thresholds).
+_C2_CLOSED_TRADES_COLLECT_BUDGET_SEC = 35.0
 
 
 def _live_criteria_cooldown_wait(now_mono: float) -> int:
@@ -946,22 +948,91 @@ def _panel_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs)
     return {'status': 'ok', 'written': written}
 
 
-def _panel_c2_closed_trades_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
-    del opener, kwargs
+def _collective2_closed_trades_partial_issue(exc: BaseException) -> str:
+    label = type(exc).__name__
+    code = getattr(exc, 'code', None)
+    if code is not None:
+        return f'collective2_closed_trades_partial_failed:{label}:{code}'
+    return f'collective2_closed_trades_partial_failed:{label}'
+
+
+def _c2_closed_trades_pending_from_refresh(root: Path) -> list[str]:
+    record = _panel_ops.load_candidates_refresh(root)
+    if not isinstance(record, dict):
+        return []
+    raw = record.get('c2_closed_trades_pending_ids') or []
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for item in raw:
+        s = str(item).strip()
+        if s.isdigit():
+            out.append(s)
+    return sorted(set(out), key=int)
+
+
+def _panel_c2_closed_trades_collect(
+    strategy_ids,
+    key,
+    out_dir,
+    issues: list[str] | None = None,
+    *,
+    deadline: float | None = None,
+    opener=None,
+    **kwargs,
+):
+    del kwargs
     root = Path(out_dir)
     api_path = c2_history_collect.PATHS['closed_trades']
     written: list[str] = []
-    for sid in sorted({str(x) for x in strategy_ids}):
+    pending: list[str] = []
+    partial_labels: set[str] = set()
+    if deadline is None and _C2_CLOSED_TRADES_COLLECT_BUDGET_SEC > 0:
+        deadline = time.monotonic() + _C2_CLOSED_TRADES_COLLECT_BUDGET_SEC
+    bound_fetch = c2_history_collect.fetch
+    sorted_ids = sorted({str(x) for x in strategy_ids})
+    budget_stopped = False
+    for idx, sid in enumerate(sorted_ids):
+        if deadline is not None and time.monotonic() >= deadline:
+            budget_stopped = True
+            pending.extend(sorted_ids[idx:])
+            break
         try:
-            raw = _C2_API4_HTTP_FETCH(
-                api_path,
-                {'StrategyId': int(sid), 'CommissionPlan': '0'},
-                key,
-            )
-        except (OSError, ValueError, TypeError, KeyError):
+            if bound_fetch is _C2_API4_HTTP_FETCH:
+                raw = _C2_API4_HTTP_FETCH(
+                    api_path,
+                    {'StrategyId': int(sid), 'CommissionPlan': '0'},
+                    key,
+                )
+            else:
+                panel = bound_fetch(
+                    [sid],
+                    key,
+                    out_dir,
+                    opener=opener,
+                    path=api_path,
+                )
+                if isinstance(panel, dict) and panel.get('written'):
+                    written.extend(str(x) for x in panel['written'])
+                    continue
+                raw = panel.get('raw') if isinstance(panel, dict) else panel
+                if raw is None:
+                    raise ValueError('closed_trades_fetch_empty')
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            if issues is not None:
+                label = _collective2_closed_trades_partial_issue(exc)
+                if label not in partial_labels:
+                    partial_labels.add(label)
+                    issues.append(label)
             continue
         written.append(_write_c2_history_dataset(root, sid, 'closed_trades', raw))
-    return {'status': 'ok', 'written': written}
+    if budget_stopped and issues is not None:
+        budget_issue = 'collective2_closed_trades_partial_failed:time_budget'
+        if budget_issue not in partial_labels:
+            issues.append(budget_issue)
+    if pending:
+        pending = sorted(set(pending), key=int)
+    return {'status': 'ok', 'written': written, 'pending_ids': pending}
 
 
 def _invoke_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
@@ -971,17 +1042,22 @@ def _invoke_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs
     return bound_fetch(strategy_ids, key, out_dir, opener=opener, **kwargs)
 
 
-def _invoke_c2_closed_trades_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
-    bound_fetch = c2_history_collect.fetch
-    if bound_fetch is _C2_API4_HTTP_FETCH:
-        return _panel_c2_closed_trades_collect(strategy_ids, key, out_dir, opener=opener, **kwargs)
-    path = c2_history_collect.PATHS['closed_trades']
-    return bound_fetch(
-        list(strategy_ids),
+def _invoke_c2_closed_trades_collect(
+    strategy_ids,
+    key,
+    out_dir,
+    issues: list[str] | None = None,
+    opener=None,
+    **kwargs,
+):
+    deadline = kwargs.pop('deadline', None)
+    return _panel_c2_closed_trades_collect(
+        strategy_ids,
         key,
         out_dir,
+        issues,
+        deadline=deadline,
         opener=opener,
-        path=path,
         **kwargs,
     )
 
@@ -1150,27 +1226,39 @@ def _live_refresh_collective2(
     root: Path,
     issues: list[str],
     sources_ok: list[str],
-) -> str:
+) -> tuple[str, list[str]]:
     key = os.environ.get('C2_API4_KEY', '').strip()
     if not key:
         issues.append('C2_API4_KEY_missing')
-        return ''
+        return '', []
     raw_dir = _providers_raw_dir(root)
     _append_collective2_non_numeric_id_issues(root, issues)
+    next_cursor = ''
     try:
         cursor = _c2_search_cursor_from_refresh(root)
         scan_ids, next_cursor = _invoke_c2_search_strategies(key, raw_dir, cursor)
         incomplete = _collective2_search_incomplete_issue(next_cursor)
         if incomplete:
             issues.append(incomplete)
-        if scan_ids:
-            _invoke_c2_closed_trades_collect(scan_ids, key, raw_dir)
-        sources_ok.append('collective2')
     except (OSError, ValueError, TypeError, KeyError) as exc:
         issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
-        return ''
+        return '', []
+    sources_ok.append('collective2')
+    pending_prior = _c2_closed_trades_pending_from_refresh(root)
+    collect_ids = sorted(set(pending_prior) | set(scan_ids or []), key=int)
+    closed_pending: list[str] = []
+    if collect_ids:
+        collect_deadline = time.monotonic() + _C2_CLOSED_TRADES_COLLECT_BUDGET_SEC
+        result = _invoke_c2_closed_trades_collect(
+            collect_ids,
+            key,
+            raw_dir,
+            issues,
+            deadline=collect_deadline,
+        )
+        closed_pending = list(result.get('pending_ids') or [])
     _run_collective2_active_orders_snapshot(root, key, issues)
-    return next_cursor
+    return next_cursor, closed_pending
 
 
 def _live_refresh_tradingview(
@@ -1203,9 +1291,10 @@ def _live_criteria_job(
     issues: list[str] = []
     sources_ok: list[str] = []
     c2_next_cursor = ''
+    c2_closed_pending: list[str] = []
     if 'collective2' in sources:
         try:
-            c2_next_cursor = _live_refresh_collective2(root, issues, sources_ok)
+            c2_next_cursor, c2_closed_pending = _live_refresh_collective2(root, issues, sources_ok)
         except (OSError, ValueError, TypeError, KeyError) as exc:
             issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
     if 'prodigy' in sources:
@@ -1215,7 +1304,7 @@ def _live_criteria_job(
             _live_refresh_tradingview(root, conn_factory, issues, sources_ok)
         except (OSError, ValueError, TypeError, KeyError) as exc:
             issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
-    return issues, sources_ok, sources, c2_next_cursor
+    return issues, sources_ok, sources, c2_next_cursor, c2_closed_pending
 
 
 def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, body=None):
@@ -1236,7 +1325,7 @@ def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, bod
             )
             return
         sources = _resolve_live_refresh_sources(body)
-        issues, sources_ok, sources_attempted, c2_next_cursor = _live_criteria_job(
+        issues, sources_ok, sources_attempted, c2_next_cursor, c2_closed_pending = _live_criteria_job(
             root,
             sources,
             conn_factory,
@@ -1272,6 +1361,10 @@ def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, bod
         }
         if c2_next_cursor:
             refresh_record['c2_search_next_cursor'] = c2_next_cursor
+        if c2_closed_pending:
+            refresh_record['c2_closed_trades_pending_ids'] = c2_closed_pending
+        else:
+            refresh_record['c2_closed_trades_pending_ids'] = []
         _panel_ops.persist_candidates_refresh(root, refresh_record)
         try:
             bundle = _panel_ops.build_panel_bundle(root, factory)

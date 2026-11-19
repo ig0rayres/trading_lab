@@ -313,6 +313,8 @@ _CANDIDATES_RELOAD_SCRIPT = '''
   const box=document.getElementById('reload-feedback');
   if(!btn||!box)return;
   const failClosed='Não foi possível atualizar. A fila anterior foi mantida.';
+  const waitEnded='A espera terminou antes da resposta do servidor. A fila anterior foi mantida.';
+  const clientWaitMs=45000;
   const fmtClock=(iso)=>{
     if(!iso)return'';
     try{
@@ -327,11 +329,16 @@ _CANDIDATES_RELOAD_SCRIPT = '''
     box.hidden=false;
     box.className='inline-alert inline-alert--loading';
     box.textContent='Atualizando candidatos…';
+    let timer=null;
     try{
+      const controller=new AbortController();
+      timer=setTimeout(()=>controller.abort(),clientWaitMs);
       const res=await fetch('/api/signals/candidates/refresh',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        credentials:'same-origin',body:JSON.stringify({})});
-      if(res.status===401){location.href='/login';return;}
+        credentials:'same-origin',body:JSON.stringify({}),
+        signal:controller.signal});
+      clearTimeout(timer);
+      if(res.status===401){clearTimeout(timer);location.href='/login';return;}
       const data=await res.json().catch(()=>({}));
       if(res.status===429){
         box.className='inline-alert inline-alert--err';
@@ -349,10 +356,12 @@ _CANDIDATES_RELOAD_SCRIPT = '''
         ?'Candidatos atualizados às '+clock+'.'
         :(data.message||'Critérios ao vivo aplicados no servidor.');
       setTimeout(()=>location.reload(),500);
-    }catch(_e){
+    }catch(err){
       box.className='inline-alert inline-alert--err';
-      box.textContent=failClosed;
+      const aborted=err&&(err.name==='AbortError'||err.name==='TimeoutError');
+      box.textContent=aborted?waitEnded:failClosed;
     }finally{
+      try{clearTimeout(timer);}catch(_t){}
       btn.disabled=false;
       btn.removeAttribute('aria-busy');
     }

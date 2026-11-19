@@ -84,6 +84,7 @@
 | N57 | N | Collective2 na fila a partir dos arquivos brutos, sem lista nomeada para aparecer; LIVE false | concluida | 4 | observability | ISS-024 / F-020 fila C2 sem allowlist · PR #77 | *(abaixo)* |
 | N58 | N | Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca; LIVE false | concluida | 4 | observability | ISS-024 / F-021 varredura C2 · PR #78 | *(abaixo)* |
 | N59 | N | Varredura Collective2 segue se ordens ativas falharem; LIVE false | concluida | 4 | observability | ISS-024 / F-022 isolamento snapshot | *(abaixo)* |
+| N60 | N | Histórico fechado parcial não derruba a Collective2; botão sai de «Atualizando…»; LIVE false | em_execucao | 5 | observability | ISS-024 / F-023 coleta em massa · plan_only | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -154,6 +155,7 @@
 | N57 | senior+qa | Collective2 na fila a partir dos arquivos brutos sem allowlist para aparecer; LIVE false |
 | N58 | senior+qa | Varredura Collective2 com regras de 15 dias; TradingView fora até contrato de busca; LIVE false |
 | N59 | senior+qa | Isolar consulta de ordens ativas da varredura Collective2; LIVE false |
+| N60 | senior+qa | Isolar coleta de histórico fechado da fonte Collective2; botão não fica preso; LIVE false |
 
 ---
 
@@ -6696,6 +6698,326 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = SearchStrategies + Feature 4; snapshot failure is isolated issue, not dead C2 source; paper-copy gate unchanged; TV scan OUT ISS-025), `docs/DASHBOARD-OPERATIONS.md` if the Sinais row mentions C2 refresh, `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 unchanged), `docs/FINDINGS.md` (F-022; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N59 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
+
+---
+
+## Sprint N60 — Não perder a Collective2 se o histórico fechado falhar, e soltar o botão
+> Categoria: N  
+> Status: em_execucao  
+> Gerado via: `/pmo plan` 2026-11-19 · fonte ISS-024 / F-023 · N59 #79 em `main` (`2d609f0`)  
+> titulo_humano: Atualizar não mata a Collective2 se o histórico fechado falhar, e o botão não fica preso  
+> resumo_humano: Ao atualizar candidatos, a listagem Collective2 continua valendo mesmo se o histórico fechado falhar no meio. O que já foi gravado entra no filtro de quinze dias. O botão sai de «Atualizando…» se a espera estourar. LIVE false.  
+> Gate: SearchStrategies mock ok + HTTPError na coleta depois de arquivos bons → refresh 200 com fila elegível e sources_ok collective2; aviso collective2_closed_trades_partial_failed sem collective2_refresh_failed; script do botão sai de loading em AbortError; pytest verde; LIVE false; constantes Feature 4 intactas  
+> review: senior+qa  
+> Brief: `docs/.briefs/N60.brief.md`  
+> Git First: `docs/.briefs/N60-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N59 concluída (#79) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N59  
+> plan_only: false
+
+### Em uma frase
+
+Ao atualizar candidatos, a Collective2 continua na fila mesmo se o histórico fechado falhar no meio, e o botão deixa de ficar preso em atualizando.
+
+### O que muda para você
+
+- Atualizar deixa de tratar a Collective2 como morta quando o histórico fechado de alguma estratégia falha
+- O que já foi gravado entra no filtro de quinze dias e pode aparecer na fila
+- O aviso fala de histórico parcial, sem dizer que a fonte inteira morreu
+- O botão sai de «Atualizando…» se a espera estourar, com uma mensagem honesta
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Histórico parcial não derruba a Collective2 | Atualizar ainda mostra quem já tem histórico bom, mesmo se outra estratégia falhar na coleta |
+| 2 | Aviso de histórico parcial | O painel descreve a falha parcial e marca a varredura Collective2 como feita quando a listagem passou |
+| 3 | Fila com o que chegou | Quem passa quinze dias com o histórico gravado aparece; métricas indisponíveis não substituem esse resultado |
+| 4 | Botão não fica preso | Se a espera estourar, o botão volta a ser clicável e o texto deixa de ser «Atualizando candidatos…» |
+| 5 | Cópia paper continua fechada | Atualizar não aprova nem envia operação |
+| 6 | Prova automática | A bateria falha se um erro no histórico derrubar a fila, se o botão ficar preso, ou se mudar os números de quinze dias |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N60.0 Inventariar o histórico fechado versus a fonte Collective2 | `docs/.briefs/N60-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N60.1 Isolar a coleta do histórico fechado da fonte Collective2 | `src/v4_web_dashboard.py` | N60.0 |
+| [x] | M | N60.2 Fazer o botão sair de «Atualizando…» quando a espera estourar | `src/panel_ops_html.py` | N60.1 |
+| [x] | M | N60.3 Provar que falha no histórico não mata a fila nem prende o botão | `tests/test_panel_ops.py` | N60.1, N60.2 |
+| [x] | P | N60.4 Registrar no mapa o aviso parcial e o fim da espera infinita | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md, docs/REQUIREMENTS.md` | N60.3 |
+
+### Quality Brief (Sprint N60)
+
+**Alvo:** **Atualizar candidatos** continua a marcar a Collective2 como varrida quando a listagem oficial passa, mesmo se o histórico fechado falhar no meio; o que foi gravado entra no filtro de quinze dias; o botão não fica em «Atualizando…» para sempre.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh`, N55–N59 queue/join/discovery/SearchStrategies/snapshot isolation; argparse `--root` default `/app/reports` unchanged.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS = 15`, `MIN_TRADES = 5`); do not change them.
+Maintain: N59 `_run_collective2_active_orders_snapshot` — do not pass SearchStrategies page IDs back into the snapshot.
+Avoid: mapping closed-trades HTTPError to `collective2_refresh_failed` after SearchStrategies succeeded; one `fetch` call with the full scan page; inventing a bulk Collective2 query; TradingView search HTTP; auto-approve; `process_after_gate_b`; printing API keys; stealing N45–N47; a new job-status endpoint.
+
+### Technical Advisory
+
+- [ABORDAGEM] SearchStrategies ok ⇒ `sources_ok` inclui `collective2`. Coleta por ID com `GetStrategyHistoricalClosedTrades`, pulando quem falhar, gravando o parcial, com orçamento de tempo do job (não constante de quinze dias). Aviso `collective2_closed_trades_partial_failed:*`. Ranking existente roda no que chegou. Botão: `AbortSignal` no POST que já existe.
+- [RISCO] Engolir de novo o `OSError` em silêncio deixa o banner honesto de fora — o código parcial é obrigatório quando houve falha ou corte por tempo.
+- [RISCO] Tratar HTTPError da listagem como parcial esconderia fonte realmente morta — `collective2_refresh_failed` fica só na falha de SearchStrategies (e erros antes da listagem).
+- [RISCO] Orçamento numérico 15 ou 5 no job seria lido como limiar Feature 4. O orçamento é segundos (ou um nome explícito no dashboard), patchável em teste, fora de `prodigy_rank`.
+
+> EXPIRES at end of Sprint N60. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Inventar lote na query, paginação nova ou cliente novo para o histórico fechado
+- Inventar busca TradingView (ISS-025)
+- Alterar constantes de quinze dias / mínimo de operações
+- Recolocar a página da listagem no instantâneo de ordens ativas
+- Autoaprovar; mutar livro-razão no refresh
+- Ordem / fill / LIVE true
+- SSH no EasyPanel; N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N60.0 — Inventariar o histórico fechado versus a fonte Collective2
+
+**Entrega:** Inventário dizendo que a listagem oficial marca a fonte como ok, que o histórico fechado é a entrada do filtro de quinze dias já existente, e que misturar a coleta da página inteira nesse bloco derruba a Collective2 e prende o botão.
+**Como conferir:** O inventário cita a listagem e o histórico por identificador como reuso, proíbe uma chamada única com a página inteira, e marca o TradingView como fora.
+**Por quê:** Sem isso o EXECUTE tenta “acelerar” os centenas de identificadores inventando um cliente novo, ou deixa o erro abortar de novo a fonte.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N60-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `_live_refresh_collective2` shared try around `_invoke_c2_closed_trades_collect`; `_panel_c2_closed_trades_collect` already swallows per-id `OSError` silently when `fetch` is the original; the else branch passes the full id list in one call; `HTTPError` subclasses `OSError`; button script has no `AbortSignal`; N59 snapshot stays isolated; Feature 4 is `prodigy_rank` not a new collect threshold; ADR-012 TV ingest only; LIVE false. Never print secrets.
+
+### Task N60.1 — Isolar a coleta do histórico fechado da fonte Collective2
+
+**Entrega:** Depois de atualizar, a Collective2 continua marcada como varrida quando a listagem passou, mesmo se o histórico de alguma estratégia falhar; o que foi gravado segue no filtro de quinze dias.
+**Como conferir:** Com a lista de cópia vazia, um erro no histórico não esvazia quem já tem arquivo bom; o aviso fala de histórico parcial e não de fonte morta; atualizar não grava aprovação.
+**Por quê:** Hoje a coleta da página inteira vive no mesmo bloco que marca a fonte: um erro HTTP mata a Collective2 e a fila fica com métricas indisponíveis.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_live_refresh_collective2` calls `_invoke_c2_closed_trades_collect(scan_ids, …)` for the full SearchStrategies page inside the `try` that `sources_ok.append('collective2')`. Escaped `HTTPError` (`OSError`) becomes `collective2_refresh_failed:HTTPError` and returns before the rank sees new files. The per-id helper swallows `OSError` with no issue when `fetch` is the original object. The else branch sends `list(strategy_ids)` in one `fetch` call. `fetch` timeout is 25s with no job budget (~846 IDs). N59 snapshot is already outside this try.
+- **Estado desejado:** SearchStrategies success appends `sources_ok` `'collective2'` even when collect raises or is partial. Collect stays per-id via `c2_history_collect.fetch(path, {StrategyId, CommissionPlan}, token)` / `_panel_c2_closed_trades_collect`. Never pass the page as one call. On per-id `HTTPError`/`URLError`/`TimeoutError`/`OSError`: skip that id, keep files already written, append `collective2_closed_trades_partial_failed:{Type}` plus HTTP code when present — no secrets, no ID dump. Do **not** use `collective2_refresh_failed` for that case. Stop scheduling new IDs when a wall-clock budget elapses (module-level name on `v4_web_dashboard.py`, **not** `prodigy_rank`; default must let the POST return inside a ~45s client abort; tests may patch it). Persist the remainder and resume on the next click (honest incomplete/partial issue, distinct from `collective2_search_incomplete`). Then the existing `_live_refresh_prodigy` → `prodigy_rank.calculate` runs on `{root}/providers/raw`. Real SearchStrategies `HTTPError` still `collective2_refresh_failed` and does **not** append `sources_ok`. Leave `_run_collective2_active_orders_snapshot` as N59. TV ISS-025 unchanged. `--root` default unchanged. Empty allowlist still shows eligible rows from files that landed.
+- **Arquivo(s):** `src/v4_web_dashboard.py`
+- **Fonte(s):** ISS-024 operador 2026-11-19 após #79, F-023, N58 scan, N59 snapshot isolation
+- **Risco:** MEDIUM — shared live-criteria job; must not swallow real SearchStrategies failures or change Feature 4 constants
+- **Task size:** M (1 file + isolation and budget design)
+
+**executor_prompt**:
+
+```yaml
+id: N60.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N60.0"]
+files:
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "_live_refresh_collective2" src/v4_web_dashboard.py && rg "_invoke_c2_closed_trades_collect" src/v4_web_dashboard.py && rg "collective2_closed_trades_partial_failed" src/v4_web_dashboard.py'
+  - component: src/c2_history_collect.py
+    reuse_as: call
+    convergence_check: 'rg "GetStrategyHistoricalClosedTrades" src/c2_history_collect.py && rg "def fetch" src/c2_history_collect.py'
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "WINDOW_DAYS = 15" src/prodigy_rank.py && rg "MIN_TRADES = 5" src/prodigy_rank.py && rg "def calculate" src/prodigy_rank.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: call
+    convergence_check: 'rg "_run_collective2_active_orders_snapshot" src/v4_web_dashboard.py && rg "collective2_active_orders_snapshot_failed" src/v4_web_dashboard.py'
+guardrail_contract:
+  - class: secrets
+    id: n60-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' in t"
+    pass_condition: no live keys hardcoded; partial-collect issues must not interpolate the API key
+  - class: subagent-safety
+    id: n60-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n60-1-no-auto-approve
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'upsert_signal_provider_approval' not in t"
+    pass_condition: live-criteria refresh does not write ledger approve
+  - class: subagent-safety
+    id: n60-1-partial-isolated
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'collective2_closed_trades_partial_failed' in t; assert 'def _live_refresh_collective2' in t"
+    pass_condition: closed-trades failures use a dedicated issue prefix, not collective2_refresh_failed
+  - class: subagent-safety
+    id: n60-1-no-invented-c2-stats
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/c2_history_collect.py').read_text(); assert 'SearchHistoricalStrategies' not in t; assert 'GetLeaderBoard' not in t"
+    pass_condition: scan stays SearchStrategies plus recovered closed_trades per StrategyId
+  - class: subagent-safety
+    id: n60-1-keep-root-default
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert \"default='/app/reports'\" in t or 'default=\"/app/reports\"' in t"
+    pass_condition: argparse --root default remains /app/reports
+  - class: subagent-safety
+    id: n60-1-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: Feature 4 / Prodigy 15d constants unchanged
+  - class: subagent-safety
+    id: n60-1-keep-snapshot-isolation
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'def _run_collective2_active_orders_snapshot' in t; assert 'collective2_active_orders_snapshot_failed' in t"
+    pass_condition: N59 snapshot isolation remains
+```
+
+### Quality Brief (Sprint N60)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; isolate closed-trades collect; do not invent Feature 4 thresholds; TradingView search remains out; do not undo N59 snapshot isolation.
+
+Melhoria: isolate `_invoke_c2_closed_trades_collect` from the `sources_ok` try in `_live_refresh_collective2`; per-id skip-on-error; persist partial raw; record `collective2_closed_trades_partial_failed:*`; still run `prodigy_rank.calculate` on what landed.
+Contexto: after N59 #79 on air, the orange banner is still `collective2_refresh_failed:HTTPError` (not the snapshot code). The full SearchStrategies page (~846 IDs) is collected inside the same try that marks the C2 source ok. `HTTPError` subclasses `OSError`. The per-id helper swallows errors silently; the patched-fetch branch sends the whole list at once. The button stays on «Atualizando…» because that POST does not return.
+Objetivo: keep `POST /api/signals/candidates/refresh` (`mode: live_criteria`, `orders_sent=0`). SearchStrategies success ⇒ `collective2` in `sources_ok` even if collect is partial. Never one fetch with the page. Job wall-clock budget on the dashboard module (patchable; not 15 and not `MIN_TRADES`). Resume remainder next click. Never `process_after_gate_b`. Never print `C2_API4_KEY`. Never call a TradingView search host. Never put scan IDs back into the active-order snapshot.
+Critério de pronto: mocked SearchStrategies success + HTTPError during closed-trades after at least one good trades file → HTTP 200, eligible queue from those files, `collective2` in `sources_ok`, partial issue present, `collective2_refresh_failed` absent for that case.
+Cenários de teste (mínimo no implementer self-check; N60.3 owns pytest):
+  1. Caso normal: listagem ok + um ID grava trades elegíveis + o próximo ID levanta HTTPError → fila elegível, sources_ok, aviso parcial, sem collective2_refresh_failed
+  2. Edge: a coleta estoura o orçamento de tempo e para; arquivos já gravados permanecem; o restante retoma no próximo clique
+  3. Edge: HTTPError na própria listagem continua collective2_refresh_failed e a fonte não entra em sources_ok
+  4. Regressão: N59 instantâneo isolado; cópia paper fechada; `--root` default; `orders_sent=0`; sem busca TV; constantes 15d intactas
+
+### Task N60.2 — Fazer o botão sair de «Atualizando…» quando a espera estourar
+
+**Entrega:** O botão Atualizar deixa o texto «Atualizando candidatos…» e volta a ser clicável se a espera estourar ou a chamada for cancelada, com uma frase honesta de que a fila anterior foi mantida.
+**Como conferir:** No painel, uma espera que não volta não deixa o botão ocupado para sempre; a mensagem não promete que a varredura terminou.
+**Por quê:** Hoje o script só muda o texto quando o pedido responde, então uma coleta longa parece que o botão não faz nada.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_CANDIDATES_RELOAD_SCRIPT` in `src/panel_ops_html.py` posts `/api/signals/candidates/refresh` with no `AbortSignal` / timeout. It sets «Atualizando candidatos…», disables the button, and clears `aria-busy` only in `finally` after `fetch` settles. A hung POST never reaches `finally`.
+- **Estado desejado:** Same POST, same JSON body, no new route. Add `AbortSignal` (timeout or `AbortController`) so the wait is bounded (about 45s, longer than the server job budget from N60.1). On `AbortError` / timeout: set an honest Portuguese message that the wait ended and the previous queue was kept — not «Atualizando candidatos…», not a claim that criteria were applied. Re-enable the button and clear `aria-busy` on that path as well as on success/HTTP error. Do not call a Collective2 host from the browser. Do not embed `C2_API4_KEY`. Do not auto-approve.
+- **Arquivo(s):** `src/panel_ops_html.py`
+- **Fonte(s):** ISS-024 operador 2026-11-19, F-023, N53/N54 button script
+- **Risco:** MEDIUM — operator-facing script; must not turn a real HTTP 401/429 into a timeout message
+- **Task size:** M (1 file + abort design)
+
+**executor_prompt**:
+
+```yaml
+id: N60.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N60.1"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "_CANDIDATES_RELOAD_SCRIPT" src/panel_ops_html.py && rg "AbortSignal" src/panel_ops_html.py && rg "/api/signals/candidates/refresh" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n60-2-no-key-in-script
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'sk_live' not in t.lower(); assert 'api4-general.collective2.com' not in t"
+    pass_condition: the browser script does not embed the Collective2 key or call the Collective2 host
+  - class: subagent-safety
+    id: n60-2-abort-leaves-loading
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'AbortSignal' in t; assert 'Atualizando candidatos' in t; assert 'reload-candidates' in t"
+    pass_condition: the existing button keeps a deadline; loading copy is not the only terminal state
+  - class: subagent-safety
+    id: n60-2-no-new-status-route
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert t.count('/api/signals/candidates/refresh')>=1; assert '/api/signals/candidates/status' not in t"
+    pass_condition: timeout uses the existing refresh POST, not a new status endpoint
+```
+
+### Quality Brief (Sprint N60)
+
+See sprint Quality Brief. No new route. No Collective2 HTTP from the browser. 401 still goes to login; 429 still says to wait; abort/timeout is a different honest message and must re-enable the button.
+
+Melhoria: add AbortSignal/timeout to `_CANDIDATES_RELOAD_SCRIPT` so the button cannot stay on «Atualizando candidatos…» forever.
+Contexto: the POST can run for a long closed-trades collect. `finally` never runs if `fetch` does not settle. The operator sees a stuck button.
+Objetivo: bounded wait on the existing POST. AbortError clears the loading label, shows that the previous queue was kept, re-enables the button. Do not claim success. Do not print secrets.
+Critério de pronto: the script source contains `AbortSignal` (or `AbortController`) and a non-loading Portuguese sentence used on abort; `finally` or the abort branch sets `disabled` false and removes `aria-busy`.
+Cenários de teste (N60.3 asserts the script text):
+  1. Caso normal: resposta 200 ainda recarrega e mostra horário
+  2. Edge: AbortError / timeout não deixa o texto em «Atualizando candidatos…» e reabilita o botão
+  3. Regressão: 401 vai ao login; 429 pede para aguardar; sem host Collective2 no script
+
+### Task N60.3 — Provar que falha no histórico não mata a fila nem prende o botão
+
+**Entrega:** Testes comprovam que um erro no histórico fechado, depois da listagem, mantém a Collective2 e a fila de quem já tem arquivo bom, e que o botão não fica em atualizando para sempre.
+**Como conferir:** A bateria falha se esse erro virar fonte morta, se a fila exigir lista nomeada, se os números de quinze dias mudarem, ou se o script não tiver prazo de espera.
+**Por quê:** Os testes da varredura fingem que a coleta sempre dá certo, então o painel no ar quebrou sem o pytest vermelho.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — N58/N59 helpers mock collect as success; do not hide HTTPError behind `_n54_mock_c2_snapshot` or an always-ok closed-trades mock in the new case
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N60.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N60.1", "N60.2"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "N59Collective2SnapshotIsolationTests" tests/test_panel_ops.py && rg "N58Collective2SearchStrategiesScanTests" tests/test_panel_ops.py && rg "N60" tests/test_panel_ops.py'
+  - component: tests/test_panel_ops.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "approved_for_paper_copy" tests/test_panel_ops.py && rg "collective2_closed_trades_partial_failed" tests/test_panel_ops.py'
+  - component: src/panel_ops_html.py
+    reuse_as: call
+    convergence_check: 'rg "AbortSignal" src/panel_ops_html.py && rg "_CANDIDATES_RELOAD_SCRIPT" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n60-3-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'api.collective2.com' not in t.lower(); assert 'api4-general.collective2.com' not in t.lower()"
+    pass_condition: tests do not call live Collective2 or invented TradingView search hosts
+  - class: subagent-safety
+    id: n60-3-no-harness-bug
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'tests/' not in t"
+    pass_condition: production does not special-case tests/ paths
+  - class: subagent-safety
+    id: n60-3-no-committed-allowlist-seed
+    target: config/c2_paper_copy_allowlist.json
+    check: python3 -c "import json; from pathlib import Path; d=json.loads(Path('config/c2_paper_copy_allowlist.json').read_text()); assert d.get('approved_ids')==[]"
+    pass_condition: committed allowlist stays empty
+  - class: subagent-safety
+    id: n60-3-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: tests must not rewrite Feature 4 constants
+```
+
+### Quality Brief (Sprint N60)
+
+See sprint Quality Brief.
+
+Melhoria: pytest proving SearchStrategies success plus HTTPError during closed-trades, after at least one successful trades file, still yields HTTP 200 with eligible queue rows and `collective2` in `sources_ok`, plus a button script that leaves the loading label on abort.
+Objetivo: nodeids covering (1) empty allowlist + mocked SearchStrategies + one ID whose closed trades yield `PRODIGY_CANDIDATE_RESEARCH` and a later ID (or the collect call) raising `urllib.error.HTTPError` → POST refresh 200, eligible pending row in `copy.preapproval.queue`, `collective2` in `sources_ok`, issues contain `collective2_closed_trades_partial_failed` with `HTTPError` and/or the HTTP code, `collective2_refresh_failed` absent, `approved_for_paper_copy` false, no secrets; (2) SearchStrategies itself raising HTTPError → `collective2_refresh_failed`, `collective2` not in `sources_ok`; (3) job budget stops further IDs and keeps files already written (patch the dashboard budget; do not use 15 or 5 as that budget); (4) `_CANDIDATES_RELOAD_SCRIPT` contains `AbortSignal` or `AbortController`, and the abort path text is not `Atualizando candidatos`; button is re-enabled (`disabled = false` or equivalent) on that path; script has no `api4-general.collective2.com` and no `C2_API4_KEY`; (5) N59 regressions: snapshot 414 does not abort the source; scan page IDs are not passed to snapshot; (6) N58 regressions: TV `tradingview_scan_out:ISS-025`, `orders_sent=0`, `--root` default, no `SearchHistoricalStrategies` / `GetLeaderBoard`, no ledger upsert, `process_after_gate_b` absent; (7) `WINDOW_DAYS = 15` and `MIN_TRADES = 5` unchanged. Do not teach production about `tests/` paths (no HARNESS_BUG). Do not commit operator IDs into `config/c2_paper_copy_allowlist.json`.
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: listagem ok + arquivo bom + HTTPError na coleta → 200, fila elegível, sources_ok, aviso parcial, sem collective2_refresh_failed
+  2. Edge: HTTPError na listagem → fonte não ok, collective2_refresh_failed
+  3. Edge: orçamento de tempo corta a página; arquivos já gravados ficam
+  4. Edge: script do botão tem AbortSignal e não termina em «Atualizando candidatos…» no aborto
+  5. Regressão: N59 instantâneo; N58 varredura; cópia paper fechada; sem busca TV; constantes 15d intactas
+
+### Task N60.4 — Registrar no mapa o aviso parcial e o fim da espera infinita
+
+**Entrega:** Mapa e chamado descrevem que uma falha no histórico fechado não apaga a Collective2, e que o botão não fica preso em atualizando; o chamado ISS-024 permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; aviso de histórico parcial não é fonte morta; Feature 9 desta rodada continua desmarcada até existirem os testes.
+**Por quê:** O texto atual ainda pode fazer o operador achar que a Collective2 morreu, ou que o botão não responde, quando só a coleta atrasou ou falhou no meio.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = SearchStrategies + closed trades per ID with partial issue `collective2_closed_trades_partial_failed`; snapshot stays N59; button leaves «Atualizando…» on timeout; paper-copy gate unchanged; TV scan OUT ISS-025), `docs/DASHBOARD-OPERATIONS.md` if the Sinais row mentions C2 refresh, `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 unchanged), `docs/FINDINGS.md` (F-023; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N60 checkbox only `[x]` with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
 
 ---
 

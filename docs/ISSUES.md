@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N59 (N58 #78 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
+| ISS-024 | aberto | N60 (N59 #79 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
 | ISS-025 | aberto | follow-up (fora de N58) | TradingView: varredura de estratégias exige contrato de busca — não existe no código recuperado |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -678,8 +678,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | **N59** (`front/sinais-raw-path`; N58 merge **#78** em `main`; não rouba N45–N47) |
-| Status | aberto — N54–N58 em `main` (#73/#74/#75/#76/#77/#78); N59 PLAN isolamento do instantâneo de ordens ativas; **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
+| Sprint | **N60** (`front/sinais-raw-path`; N59 merge **#79** em `main`; não rouba N45–N47) |
+| Status | aberto — N54–N59 em `main` (#73–#79); N60 PLAN isolamento da coleta de histórico fechado + botão que não fica preso em «Atualizando…»; **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **varrer plataformas homologadas** e trazer **candidatos que já passam** Feature 4 / Prodígio 15d; allowlist não é pré-requisito para aparecer; aprovar ≠ fill. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -734,6 +734,14 @@
 **Nota planejamento N59 (2026-11-19):** follow-up ISS-024 / F-022; bloco `## Sprint N59` em `docs/ROADMAP.md`; brief `docs/.briefs/N59.brief.md`; Git First `docs/.briefs/N59-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até isolamento do instantâneo + testes + merge + rebuild operador. TradingView scan **OUT** (ISS-025 inalterado).
 
 **Nota EXECUTE N59 (2026-11-19):** código isola `c2_signal_feed.snapshot` da varredura SearchStrategies; página da listagem **não** vai ao instantâneo; HTTP 403/414 do instantâneo → `collective2_active_orders_snapshot_failed:*`, `sources_ok` collective2 se search+trades passaram. Pytest `N59Collective2SnapshotIsolationTests` (2). **Chamado permanece aberto** até merge + rebuild EasyPanel + homologação operador. LIVE false.
+
+**Nota closeout N59 (2026-11-19):** PR **#79** MERGED → `main` @ `2d609f08e9d1bf364b95ef67d10f37ac137f145b` (no ar). F-022 permanece o aceite do instantâneo. Chamado **permanece aberto**.
+
+**Nota operador 2026-11-19 (follow-up N60, painel no ar após #79):** banner laranja ainda mostra `collective2_refresh_failed:HTTPError` — **não** `collective2_active_orders_snapshot_failed:*`. Botão fica em «Atualizando candidatos…» enquanto o POST corre ou não volta (operador lê como «não faz nada»). Fila Collective2 com métricas «indisponível». Laboratório anterior: SearchStrategies 200 / 846 IDs; instantâneo 5→403 / página→414 (N59 isolou isso). Caminho que sobrou: coleta de histórico fechado da página inteira no mesmo bloco que marca a fonte Collective2 como ok. `HTTPError` (subclasse de `OSError`) vira falha da fonte inteira antes do filtro/fila daquela varredura. LIVE false; aprovar ≠ fill. Constantes Feature 4 / Prodígio 15d **não** mudam. TradingView varredura = **ISS-025**.
+
+**Nota planejamento N60 (2026-11-19):** follow-up ISS-024 / F-023; bloco `## Sprint N60` em `docs/ROADMAP.md`; brief `docs/.briefs/N60.brief.md`; Git First `docs/.briefs/N60-GIT-FIRST-REUSE.md`. `plan_only: true` — **não** ativa `sprint_atual`. Chamado permanece **aberto** até coleta parcial honesta + botão que sai de «Atualizando…» + testes + merge + rebuild operador. TradingView scan **OUT** (ISS-025 inalterado).
+
+**Nota N60 EXECUTE (2026-11-19):** frente `sinais-raw-path` — SearchStrategies ok marca `collective2` em `sources_ok` mesmo com coleta parcial de histórico fechado; falha por ID → `collective2_closed_trades_partial_failed:*` (não `collective2_refresh_failed`); coleta sempre por ID + orçamento `_C2_CLOSED_TRADES_COLLECT_BUDGET_SEC`; IDs pendentes em `c2_closed_trades_pending_ids` no refresh JSON; botão Atualizar com `AbortController` (~45s) e mensagem honesta se a espera terminar. F-023 **corrigido**; `N60PartialClosedTradesCollectTests` (3) + suíte `tests/test_panel_ops.py` **115** passed. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
 
 ---
 

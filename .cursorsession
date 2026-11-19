@@ -12,16 +12,16 @@
       "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
     }
   ],
-  "fase_atual": 9,
+  "fase_atual": 10,
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "implementation",
+  "fase_nome": "Sprint N60 — closed_trades partial + button abort",
   "sprint_pending_merge": null,
   "sprint_pr": 54,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-11-17T09:58:00-03:00",
+  "ultimo_update": "2026-11-19T20:20:32.823629+00:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -121,102 +121,80 @@
     "/pmo plan N37",
     "/pmo plan N56",
     "/pmo plan N58",
-    "/pmo plan N59"
+    "/pmo plan N59",
+    "/pmo sprint N60"
   ],
-  "contexto_rapido": "N59 plan_only isola snapshot C2 ISS-024/F-022; N58 #78 em main; TV ISS-025; LIVE false.",
+  "contexto_rapido": "N60 EXECUTE: isolate closed_trades collect; button AbortSignal; ISS-024 open; LIVE false",
   "sprint_tasks": [
     {
-      "id": "N59.0",
-      "file": "docs/.briefs/N59-GIT-FIRST-REUSE.md",
-      "files": [
-        "docs/.briefs/N59-GIT-FIRST-REUSE.md"
-      ],
+      "id": "N60.0",
+      "title": "Inventariar o histórico fechado versus a fonte Collective2",
+      "size": "P",
+      "status": "pending",
       "depends_on": [],
-      "executor_prompt": "",
-      "status": "pending"
+      "files": [
+        "docs/.briefs/N60-GIT-FIRST-REUSE.md"
+      ]
     },
     {
-      "id": "N59.1",
-      "file": "src/v4_web_dashboard.py",
+      "id": "N60.1",
+      "title": "Isolar a coleta do histórico fechado da fonte Collective2",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N60.0"
+      ],
       "files": [
         "src/v4_web_dashboard.py"
-      ],
-      "depends_on": [
-        "N59.0"
-      ],
-      "executor_prompt": "",
-      "status": "pending"
+      ]
     },
     {
-      "id": "N59.2",
-      "file": "tests/test_panel_ops.py",
+      "id": "N60.2",
+      "title": "Fazer o botão sair de Atualizando quando a espera estourar",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N60.1"
+      ],
+      "files": [
+        "src/panel_ops_html.py"
+      ]
+    },
+    {
+      "id": "N60.3",
+      "title": "Provar que falha no histórico não mata a fila nem prende o botão",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N60.1",
+        "N60.2"
+      ],
       "files": [
         "tests/test_panel_ops.py"
-      ],
-      "depends_on": [
-        "N59.1"
-      ],
-      "executor_prompt": "",
-      "status": "pending"
+      ]
     },
     {
-      "id": "N59.3",
-      "file": "docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md, docs/REQUIREMENTS.md",
+      "id": "N60.4",
+      "title": "Registrar no mapa o aviso parcial e o fim da espera infinita",
+      "size": "P",
+      "status": "pending",
+      "depends_on": [
+        "N60.3"
+      ],
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
         "docs/ISSUES.md",
         "docs/FINDINGS.md",
         "docs/REQUIREMENTS.md"
-      ],
-      "depends_on": [
-        "N59.2"
-      ],
-      "executor_prompt": "",
-      "status": "pending"
+      ]
     }
   ],
   "checkpoint": {
-    "sprint": "N59",
+    "sprint": "N60",
     "phase": "implementation",
     "branch": "front/sinais-raw-path",
-    "validation_gate_qa": {
-      "result": "APROVADA",
-      "sprint": "N59",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS",
-      "findings_registered": [],
-      "recorded_at": "2026-11-19T19:20:44Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N59 snapshot isolation; 112 panel_ops; ISS-024 open",
-      "round": 1,
-      "full_suite_ran": true,
-      "first_pass": true,
-      "senior_status": "PASS"
-    },
-    "validation_gate": {
-      "produced_by": "validation-stamp.py",
-      "result": "APROVADA",
-      "validation_mode": "full",
-      "gates": [
-        {
-          "name": "cmd_0",
-          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -c \"print(\\\"ok\\\")\"",
-          "exit_code": 0
-        }
-      ],
-      "dirty_production_paths": [],
-      "missing_backends": [],
-      "last_validated_sha": "87c9a24b3bfc9aec6488996e2026620f9e068f2d",
-      "stamped_at": "2026-11-19T19:20:44Z",
-      "validation_gate_keys": [
-        "cmd_0"
-      ],
-      "content_hash": "1bd2557a3bfb50e52ba59f836152b481624ec040566b966887bf59039153d30b",
-      "patch_id": "cf6fa5004bfe7d7d06cd5368201ec1bedb5563b2",
-      "patch_id_version": 2
-    },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N59"
+    "current_task": "N60.0",
+    "updated_at": "2026-11-19T20:20:32.823629+00:00"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -260,7 +238,6 @@
   },
   "sprint_branch": "front/sinais-raw-path",
   "sprint_categoria": "F",
-  "plan_only": false,
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",
@@ -302,7 +279,7 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N58",
+  "previous_sprint": "N59",
   "sprint_nome": "Sprint N59",
   "autopilot": {
     "active": true,
@@ -574,6 +551,12 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual remains N58; previous_sprint=N58; preserve autopilot",
         "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T20:20:32.823629+00:00",
+        "file": "pmo-sprint",
+        "decision": "activate N60 EXECUTE; sprint_atual=N60; plan_only cleared",
+        "rationale": "Operator /pmo sprint; N60 planned with PASS verifier; autopilot mandate full"
       }
     ]
   },
@@ -585,5 +568,5 @@
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": "N59"
+  "sprint_atual": "N60"
 }

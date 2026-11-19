@@ -120,48 +120,47 @@
     "/pmo plan N36",
     "/pmo plan N37",
     "/pmo plan N56",
-    "/pmo plan N58"
+    "/pmo plan N58",
+    "/pmo plan N59"
   ],
-  "contexto_rapido": "N58 plan_only varredura C2 SearchStrategies ISS-024/F-021; N57 #77 em main; TV scan ISS-025; LIVE false.",
+  "contexto_rapido": "N59 plan_only isola snapshot C2 ISS-024/F-022; N58 #78 em main; TV ISS-025; LIVE false.",
   "sprint_tasks": [
     {
-      "id": "N58.0",
-      "file": "docs/.briefs/N58-GIT-FIRST-REUSE.md",
+      "id": "N59.0",
+      "file": "docs/.briefs/N59-GIT-FIRST-REUSE.md",
       "files": [
-        "docs/.briefs/N58-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N59-GIT-FIRST-REUSE.md"
       ],
       "depends_on": [],
       "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N58.1",
-      "file": "src/c2_history_collect.py, src/v4_web_dashboard.py, src/panel_ops_data.py",
+      "id": "N59.1",
+      "file": "src/v4_web_dashboard.py",
       "files": [
-        "src/c2_history_collect.py",
-        "src/v4_web_dashboard.py",
-        "src/panel_ops_data.py"
+        "src/v4_web_dashboard.py"
       ],
       "depends_on": [
-        "N58.0"
+        "N59.0"
       ],
       "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N58.2",
+      "id": "N59.2",
       "file": "tests/test_panel_ops.py",
       "files": [
         "tests/test_panel_ops.py"
       ],
       "depends_on": [
-        "N58.1"
+        "N59.1"
       ],
       "executor_prompt": "",
       "status": "pending"
     },
     {
-      "id": "N58.3",
+      "id": "N59.3",
       "file": "docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md, docs/REQUIREMENTS.md",
       "files": [
         "docs/OPERATOR-PANEL-MAP.md",
@@ -170,25 +169,25 @@
         "docs/REQUIREMENTS.md"
       ],
       "depends_on": [
-        "N58.2"
+        "N59.2"
       ],
       "executor_prompt": "",
       "status": "pending"
     }
   ],
   "checkpoint": {
-    "sprint": "N58",
+    "sprint": "N59",
     "phase": "implementation",
     "branch": "front/sinais-raw-path",
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N58",
+      "sprint": "N59",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-19T18:59:50Z",
+      "recorded_at": "2026-11-19T19:20:44Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N58 SearchStrategies scan; 110 panel_ops; ISS-024/025 open",
+      "notes": "N59 snapshot isolation; 112 panel_ops; ISS-024 open",
       "round": 1,
       "full_suite_ran": true,
       "first_pass": true,
@@ -207,17 +206,17 @@
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "38c8cc74255c1d17733b9f59a86d5cdaf376d32d",
-      "stamped_at": "2026-11-19T18:59:51Z",
+      "last_validated_sha": "87c9a24b3bfc9aec6488996e2026620f9e068f2d",
+      "stamped_at": "2026-11-19T19:20:44Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "b20bd1d77dcc72684d66a821b3acc9c5bf8e7a1a6188c94ea2be7f4a6daee491",
-      "patch_id": "360f7f4b64aa4752647fc634407679e08e497ad8",
+      "content_hash": "1bd2557a3bfb50e52ba59f836152b481624ec040566b966887bf59039153d30b",
+      "patch_id": "cf6fa5004bfe7d7d06cd5368201ec1bedb5563b2",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N58"
+    "sprint_delivery_sprint": "N59"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -303,8 +302,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N57",
-  "sprint_nome": "Sprint N58",
+  "previous_sprint": "N58",
+  "sprint_nome": "Sprint N59",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -557,6 +556,24 @@
         "file": ".cursorsession",
         "decision": "plan_only=true; sprint_atual remains N57; previous_sprint=N57; preserve autopilot",
         "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T16:10:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; melhoria/isolamento pós-N58; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N59; plan_only=true; sprint_atual remains N58 until parent activates",
+        "rationale": "Parent classified N59; ISS-024 series N54-N58; operator confirmed EasyPanel SearchStrategies 200 vs snapshot 403/414 aborting C2; heuristic also matched bug; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-19T16:10:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not pass SearchStrategies page IDs into snapshot; isolate HTTPError; keep Feature 4 constants; TV scan OUT ISS-025; LIVE false; do not steal N45-N47",
+        "rationale": "Git First: snapshot is read-only diagnostic not Feature 4; 414 is URL limit; 403 is access"
+      },
+      {
+        "timestamp": "2026-11-19T16:10:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains N58; previous_sprint=N58; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
       }
     ]
   },
@@ -564,9 +581,9 @@
   "rock_mandate": "full",
   "active_automation": null,
   "journal": [],
-  "sprint_tasks_sha256": "6ef54a385f494c61a5f171ce0d3c20babed20504194b3127ea3ab1b0aab521eb",
+  "sprint_tasks_sha256": "3eee61417ca2da3b4f28cb7fa6929e2c64da72dee01a13361e28cfcfec776a22",
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": "N58"
+  "sprint_atual": "N59"
 }

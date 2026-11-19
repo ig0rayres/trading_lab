@@ -19,6 +19,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit, unquote
 
 try:
@@ -1123,6 +1124,28 @@ def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) 
     sources_ok.append('prodigy')
 
 
+def _collective2_active_orders_snapshot_issue(exc: BaseException) -> str:
+    label = type(exc).__name__
+    code = getattr(exc, 'code', None)
+    if code is not None:
+        return f'collective2_active_orders_snapshot_failed:{label}:{code}'
+    return f'collective2_active_orders_snapshot_failed:{label}'
+
+
+def _run_collective2_active_orders_snapshot(
+    root: Path,
+    key: str,
+    issues: list[str],
+) -> None:
+    snap_ids = sorted({int(x) for x in _panel_ops.load_c2_paper_copy_approved_ids(root)})
+    if not snap_ids:
+        return
+    try:
+        c2_signal_feed.snapshot(snap_ids, key, _providers_signals_dir(root))
+    except (HTTPError, URLError, ValueError, OSError) as exc:
+        issues.append(_collective2_active_orders_snapshot_issue(exc))
+
+
 def _live_refresh_collective2(
     root: Path,
     issues: list[str],
@@ -1142,17 +1165,12 @@ def _live_refresh_collective2(
             issues.append(incomplete)
         if scan_ids:
             _invoke_c2_closed_trades_collect(scan_ids, key, raw_dir)
-        snap_ids = sorted(
-            {int(x) for x in scan_ids}
-            | {int(x) for x in _panel_ops.load_c2_paper_copy_approved_ids(root)},
-        )
-        if snap_ids:
-            c2_signal_feed.snapshot(snap_ids, key, _providers_signals_dir(root))
         sources_ok.append('collective2')
-        return next_cursor
     except (OSError, ValueError, TypeError, KeyError) as exc:
         issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
         return ''
+    _run_collective2_active_orders_snapshot(root, key, issues)
+    return next_cursor
 
 
 def _live_refresh_tradingview(

@@ -4,7 +4,8 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N57 | v4_web_dashboard, panel_ops_data, tests, docs | C2 na fila via raw glob; F-020; allowlist = cópia paper | 36–47 |
+| N58 | c2_history_collect, v4_web_dashboard, panel_ops_data, tests, docs | SearchStrategies + Feature 4; F-021; TV scan OUT ISS-025; disco = cache | 37–45 |
+| N57 | v4_web_dashboard, panel_ops_data, tests, docs | C2 na fila via raw glob; F-020; allowlist = cópia paper | 47–58 |
 | N56 | v4_web_dashboard, tests, docs | Join canônico providers/raw; F-019; fila Prodígio só elegíveis | 49–57 |
 | N55 | v4_web_dashboard, panel_ops_data, panel_ops_html, tests, docs | Fila multiplataforma; partial persist; F-018; closeout PR #74 | 59–70 |
 | N54 | v4_web_dashboard, panel_ops_html, tests, docs | POST live_criteria; GET disk_reread; ISS-024; EXECUTE frente | 33–41 |
@@ -31,6 +32,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N58 — Varredura Collective2 SearchStrategies (ISS-024 / F-021 / ISS-025)
+
+**Frente:** `sinais-raw-path` · **Estado:** EXECUTE (código + pytest na frente); merge/rebuild operador pendente.
+
+**Entregue (N58.0–N58.3):** `docs/.briefs/N58-GIT-FIRST-REUSE.md`; `_live_refresh_collective2` usa GET `/Strategies/SearchStrategies`, busca histórico fechado, `prodigy_rank.calculate` inalterado; elegível pode aparecer sem arquivo bruto prévio; glob N57 = **cache**; TradingView sem varredura (aviso ISS-025); suíte `N58Collective2SearchStrategiesScanTests` (7); mapa §2, ISS-024/025 notas EXECUTE, F-021 corrigido, Feature 9 aceite N58.
+
+**Honestidade:** LIVE false; `orders_sent=0`; allowlist/ledger inalterados como portão de **cópia paper**; refresh **não** aprova; **ISS-024 permanece aberto** até painel no ar.
 
 ---
 

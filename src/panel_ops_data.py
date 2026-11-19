@@ -1136,6 +1136,59 @@ def discover_c2_strategy_ids_from_raw(root: Path) -> list[str]:
     return sorted(ids, key=int)
 
 
+def _prodigy_research_row_by_id(root: Path) -> dict[str, dict[str, Any]]:
+    rows = _load_prodigy_research_rows(root)
+    out: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        pid = row.get('provider_id') or row.get('provider')
+        if pid is not None:
+            out[str(pid).strip()] = row
+    return out
+
+
+def _c2_scan_strategy_ids(root: Path) -> set[str]:
+    for rel in (
+        Path(root) / 'intelligence' / 'c2_search_strategies_latest.json',
+        _providers_raw_dir(root) / 'c2_search_strategies_latest.json',
+    ):
+        if not rel.is_file():
+            continue
+        try:
+            payload = json.loads(rel.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        raw = payload.get('raw') if isinstance(payload, dict) else {}
+        if not isinstance(raw, dict):
+            continue
+        found: set[str] = set()
+        for row in raw.get('Results') or []:
+            if not isinstance(row, dict):
+                continue
+            sid = row.get('StrategyId')
+            if sid is None:
+                continue
+            try:
+                found.add(str(int(sid)))
+            except (TypeError, ValueError):
+                continue
+        if found:
+            return found
+    return set()
+
+
+def _c2_raw_closed_trades_results_empty(root: Path, provider_id: str) -> bool:
+    path = _providers_raw_dir(root) / f'{provider_id}_closed_trades.json'
+    if not path.is_file():
+        return True
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError, TypeError):
+        return True
+    raw = payload.get('raw') if isinstance(payload, dict) else {}
+    results = raw.get('Results') if isinstance(raw, dict) else None
+    return not results
+
+
 def _unique_tradingview_origins(signals: list[dict[str, Any]]) -> list[str]:
     seen: set[str] = set()
     origins: list[str] = []
@@ -1162,7 +1215,14 @@ def build_preapproval_queue(
     seen: set[tuple[str, str]] = set()
     queue: list[dict[str, Any]] = []
 
-    def add(platform: str, provider_id: str, metrics_row: dict[str, Any] | None, *, seed: bool = False) -> None:
+    def add(
+        platform: str,
+        provider_id: str,
+        metrics_row: dict[str, Any] | None,
+        *,
+        seed: bool = False,
+        source_label: str | None = None,
+    ) -> None:
         pid = str(provider_id or '').strip()
         if not pid:
             return
@@ -1177,6 +1237,9 @@ def build_preapproval_queue(
         elif seed and platform == 'collective2':
             status = 'pending'
             source = _c2_seed_source_for_id(root, pid)
+        elif source_label:
+            status = 'pending'
+            source = source_label
         else:
             status = 'pending'
             source = 'discovered'
@@ -1201,8 +1264,20 @@ def build_preapproval_queue(
     for pid in load_c2_paper_copy_approved_ids(root):
         add('collective2', pid, metrics_by_c2.get(pid), seed=True)
 
+    scan_ids = _c2_scan_strategy_ids(root)
+    prodigy_by_id = _prodigy_research_row_by_id(root)
     for pid in discover_c2_strategy_ids_from_raw(root):
-        add('collective2', pid, metrics_by_c2.get(pid))
+        prow = prodigy_by_id.get(pid)
+        if prow and prow.get('status') == 'PRODIGY_CANDIDATE_RESEARCH':
+            label = 'scanned' if pid in scan_ids else 'discovered'
+            add(
+                'collective2',
+                pid,
+                prow,
+                source_label=label,
+            )
+        elif _c2_raw_closed_trades_results_empty(root, pid):
+            add('collective2', pid, metrics_by_c2.get(pid))
 
     for row in _load_prodigy_research_rows(root):
         pid = row.get('provider') or row.get('provider_id')

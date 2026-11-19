@@ -25,6 +25,7 @@
 | F-017 | N54 | P | POST refresh só exige cookie se `DASHBOARD_OPERATOR_SESSION` definido | corrigido |
 | F-018 | N55 | P | Falha silenciosa no ramo TradingView do job live-criteria | corrigido — `N55MultiPlatformLiveCriteriaTests.test_n55_tradingview_refresh_failure_records_issue_without_wiping_queue` |
 | F-019 | N56 | M | Job live-criteria junta `reports/` em `--root /app/reports` → pasta vazia `/app/reports/reports/providers/raw` | corrigido — `N56ProdigyCanonicalRawPathTests` |
+| F-020 | N57 | M | Fila Collective2 só nasce da allowlist/JSON de pesquisa; arquivos brutos canônicos não entram como candidatos pendentes | corrigido — `N57Collective2RawQueueDiscoveryTests` |
 | CQ-003 | N55 | L | `_unique_tradingview_origins` não filtra por `source` quando o campo existe | deferido |
 | CQ-004 | N55 | M | Redesign lock/cooldown live-criteria (threading + persistência) | deferido |
 
@@ -37,3 +38,4 @@
 - **N9** homolog itens 3–7 operador (2026-10-30 / 2026-11-01): evidência em `TEST-EVIDENCE.md`. **F-013** fechado em **`main` `0509732`**: worker passa `queue_idempotency_key` (stem da fila); unittest integração OK no EasyPanel (2026-11-01).
 - **N10** closeout: ROADMAP N9 concluída; runbook §4 documenta armadilhas de smoke (TTL/sessão).
 - **N56 / F-019 (2026-11-19):** join duplicado em `_live_refresh_prodigy` / `_live_refresh_collective2` corrigido para `{root}/providers/raw` e `{root}/providers/signals` (`_providers_raw_dir`); pytest `N56ProdigyCanonicalRawPathTests` (3 nodeids). Fila Prodígio continua só `PRODIGY_CANDIDATE_RESEARCH`; `UNSCORABLE` + `closed_trades_15d=0` ausentes — comportamento esperado, não segundo defeito.
+- **N57 / F-020 (2026-11-19):** após #76, allowlist vazia + fila sem linhas C2 apesar de arquivos brutos canônicos — `_merged_c2_strategy_ids` / `build_preapproval_queue` passam a unir glob `{root}/providers/raw/*_closed_trades.json` + JSON de pesquisa C2; fila pendente com `source: discovered` **sem** exigir allowlist/env. Allowlist / livro-razão permanece portão de **cópia paper** (`approved_for_paper_copy` false com lista vazia). Pytest `N57Collective2RawQueueDiscoveryTests` (3 nodeids). **ISS-024 permanece aberto** até merge + rebuild operador.

@@ -4,8 +4,9 @@
 
 | Sprint | Módulos | Temas | Linhas |
 |--------|---------|-------|--------|
-| N56 | v4_web_dashboard, tests, docs | Join canônico providers/raw; F-019; fila Prodígio só elegíveis | 35–45 |
-| N55 | v4_web_dashboard, panel_ops_data, panel_ops_html, tests, docs | Fila multiplataforma; partial persist; F-018; closeout PR #74 | 46–57 |
+| N57 | v4_web_dashboard, panel_ops_data, tests, docs | C2 na fila via raw glob; F-020; allowlist = cópia paper | 36–47 |
+| N56 | v4_web_dashboard, tests, docs | Join canônico providers/raw; F-019; fila Prodígio só elegíveis | 49–57 |
+| N55 | v4_web_dashboard, panel_ops_data, panel_ops_html, tests, docs | Fila multiplataforma; partial persist; F-018; closeout PR #74 | 59–70 |
 | N54 | v4_web_dashboard, panel_ops_html, tests, docs | POST live_criteria; GET disk_reread; ISS-024; EXECUTE frente | 33–41 |
 | N53 | panel_ops_html, v4_web_dashboard, docs | PanelShell v2 todas rotas; Atualizar candidatos + GET reload; ISS-023; N54=POST job | 42–50 |
 | N52 | panel_ops_html, docs/design | Cockpit Sinais UX; métricas pesquisa completas; ISS-022; «finalizado» só pós-merge | 42–50 |
@@ -30,6 +31,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N57 — Collective2 na fila a partir dos arquivos brutos (ISS-024 / F-020)
+
+**Frente:** `sinais-raw-path` · **Estado:** EXECUTE (código + pytest na frente); merge/rebuild operador pendente.
+
+**Entregue (N57.0–N57.3):** `docs/.briefs/N57-GIT-FIRST-REUSE.md`; `_merged_c2_strategy_ids` / `build_preapproval_queue` descobrem IDs em `{root}/providers/raw/*_closed_trades.json`; fila pendente `source: discovered` sem allowlist/env como pré-requisito de visibilidade; cópia paper continua fechada com lista vazia; suíte `N57Collective2RawQueueDiscoveryTests` (3); mapa §2, ISS-024 nota EXECUTE, F-020 corrigido, Feature 9 aceite N57.
+
+**Honestidade:** LIVE false; `orders_sent=0`; aparecer na pré-aprovação **≠** cópia paper; allowlist/ledger inalterados como portão de operação; arquivos C2 `UNSCORABLE` permanecem fora da fila Prodígio 15d; **ISS-024 permanece aberto** até painel no ar.
 
 ---
 

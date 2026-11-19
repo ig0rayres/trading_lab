@@ -182,13 +182,13 @@
     "branch": "front/sinais-raw-path",
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N57",
+      "sprint": "N58",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-19T18:23:12Z",
+      "recorded_at": "2026-11-19T18:59:50Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N57 C2 raw discovery; 103 panel_ops; ISS-024 open",
+      "notes": "N58 SearchStrategies scan; 110 panel_ops; ISS-024/025 open",
       "round": 1,
       "full_suite_ran": true,
       "first_pass": true,
@@ -207,17 +207,17 @@
       ],
       "dirty_production_paths": [],
       "missing_backends": [],
-      "last_validated_sha": "92ffc76897a92318b6dec0d803e97075a6caade7",
-      "stamped_at": "2026-11-19T18:23:13Z",
+      "last_validated_sha": "38c8cc74255c1d17733b9f59a86d5cdaf376d32d",
+      "stamped_at": "2026-11-19T18:59:51Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "ad58abcd1459601cbc70fc32a43b5e88f0917f11c272ec415c42b2dd20680220",
-      "patch_id": "ba9d3ca130a2f568066aa16890ab17f5696b52af",
+      "content_hash": "b20bd1d77dcc72684d66a821b3acc9c5bf8e7a1a6188c94ea2be7f4a6daee491",
+      "patch_id": "360f7f4b64aa4752647fc634407679e08e497ad8",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N57"
+    "sprint_delivery_sprint": "N58"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",

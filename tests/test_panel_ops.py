@@ -2231,7 +2231,14 @@ _N54_FAKE_RANK = {
 
 
 def _n54_mock_c2_fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
-    del key, kwargs
+    del key
+    label = str(strategy_ids or '')
+    for k in ('path', 'endpoint', 'url'):
+        if kwargs.get(k):
+            label = str(kwargs[k])
+    if 'SearchStrategies' in label:
+        return {'status': 'ok', 'strategy_ids': [], 'next_cursor': '', 'written': []}
+    del kwargs
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     ids = sorted({str(x) for x in (strategy_ids or [])})
@@ -3296,6 +3303,337 @@ class N57Collective2RawQueueDiscoveryTests(unittest.TestCase):
                         self.assertEqual(row.get('status'), 'PRODIGY_CANDIDATE_RESEARCH')
             finally:
                 self._shutdown(server, thread)
+
+
+_N58_SCAN_ELIGIBLE_ID = '88001001'
+_N58_SCAN_INELIGIBLE_ID = '88001002'
+_N58_FORBIDDEN_C2_PATHS = ('SearchHistoricalStrategies', 'GetLeaderBoard')
+_N58_SEARCH_STRATEGIES_PATH = '/Strategies/SearchStrategies'
+
+
+def _n58_eligible_closed_trades() -> list[dict]:
+    now = _n56_prodigy_now()
+    return [
+        {'CloseDate': (now - timedelta(days=d)).isoformat(), 'ProfitLoss': pl}
+        for d, pl in ((6, 120.0), (5, -30.0), (4, 80.0), (3, 40.0), (2, 25.0))
+    ]
+
+
+def _n58_ineligible_closed_trades() -> list[dict]:
+    now = _n56_prodigy_now()
+    return [
+        {'CloseDate': (now - timedelta(days=190)).isoformat(), 'ProfitLoss': 100.0}
+        for _ in range(5)
+    ]
+
+
+def _n58_call_path_label(args: tuple, kwargs: dict) -> str:
+    for key in ('path', 'endpoint', 'url'):
+        if kwargs.get(key):
+            return str(kwargs[key])
+    if args:
+        first = str(args[0])
+        if '/Strategies/' in first or 'SearchStrategies' in first:
+            return first
+    return ''
+
+
+def _n58_make_search_strategies_fetch_mock(
+    *,
+    next_cursor: str = '',
+    fetch_log: list | None = None,
+    search_seen: list | None = None,
+):
+    """Mock GET SearchStrategies + closed_trades for scan IDs (N58 contract)."""
+    log = fetch_log if fetch_log is not None else []
+    seen = search_seen if search_seen is not None else []
+
+    def _fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+        del key, opener
+        label = _n58_call_path_label((strategy_ids,), kwargs)
+        log.append(label or repr(strategy_ids))
+        for forbidden in _N58_FORBIDDEN_C2_PATHS:
+            if forbidden in label:
+                raise AssertionError('forbidden Collective2 path in fetch: %s' % forbidden)
+
+        out = Path(out_dir)
+        out.mkdir(parents=True, exist_ok=True)
+
+        if _N58_SEARCH_STRATEGIES_PATH in label or 'SearchStrategies' in label:
+            seen.append(True)
+            snap = {
+                'dataset': 'search_strategies',
+                'raw': {
+                    'ResponseStatus': {'ErrorCode': '200'},
+                    'Results': [
+                        {
+                            'StrategyId': int(_N58_SCAN_ELIGIBLE_ID),
+                            'IsAlive': True,
+                            'IsPrivate': False,
+                        },
+                        {
+                            'StrategyId': int(_N58_SCAN_INELIGIBLE_ID),
+                            'IsAlive': True,
+                            'IsPrivate': False,
+                        },
+                    ],
+                    'Pagination': {'next_cursor': next_cursor},
+                },
+            }
+            (out / 'c2_search_strategies_latest.json').write_text(
+                json.dumps(snap),
+                encoding='utf-8',
+            )
+            return {
+                'status': 'ok',
+                'written': ['c2_search_strategies_latest.json'],
+                'strategy_ids': [_N58_SCAN_ELIGIBLE_ID, _N58_SCAN_INELIGIBLE_ID],
+                'next_cursor': next_cursor,
+            }
+
+        ids = sorted({str(x) for x in (strategy_ids or [])})
+        written: list[str] = []
+        for sid in ids:
+            if sid == _N58_SCAN_ELIGIBLE_ID:
+                trades = _n58_eligible_closed_trades()
+            elif sid == _N58_SCAN_INELIGIBLE_ID:
+                trades = _n58_ineligible_closed_trades()
+            else:
+                trades = []
+            _n56_write_closed_trades_file(out, sid, trades)
+            written.append(f'{sid}_closed_trades.json')
+        return {'status': 'ok', 'written': written, 'opener_used': False}
+
+    return _fetch
+
+
+def _n58_collective2_queue_rows(queue: list[dict]) -> list[dict]:
+    return [r for r in queue if r.get('platform') == 'collective2']
+
+
+def _n58_post_refresh_with_fetch(
+    base: str,
+    prodigy_calculate,
+    *,
+    fetch_side_effect,
+    c2_key: str | None = 'test-c2-secret',
+    connect_factory=None,
+) -> tuple[dict, list]:
+    env = _n57_env_without_c2_paper_copy_ids()
+    if c2_key is not None:
+        env['C2_API4_KEY'] = c2_key
+    else:
+        env.pop('C2_API4_KEY', None)
+    patches = [
+        patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=fetch_side_effect),
+        patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_n54_mock_c2_snapshot),
+        patch.dict(os.environ, env, clear=True),
+    ]
+    for p in patches:
+        p.start()
+    try:
+        with patch('v4_web_dashboard.prodigy_rank.calculate', wraps=prodigy_calculate):
+            req = _post_candidates_refresh(
+                base + '/api/signals/candidates/refresh',
+                {},
+                session='panel-secret',
+            )
+            with urlopen(req, timeout=5) as resp:
+                payload = json.load(resp)
+        return payload, []
+    finally:
+        for p in reversed(patches):
+            p.stop()
+
+
+class N58Collective2SearchStrategiesScanTests(unittest.TestCase):
+    """N58.2 — Atualizar varre Collective2 via SearchStrategies; fila só elegíveis 15d."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+        from prodigy_rank import calculate as prodigy_calculate
+
+        self._prodigy_calculate = prodigy_calculate
+        self._fetch_log: list = []
+        self._search_seen: list = []
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, *, connect_factory=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(
+            root,
+            operator_session=session,
+            connect_factory=connect_factory,
+        )
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def _fetch_mock(self, *, next_cursor: str = ''):
+        return _n58_make_search_strategies_fetch_mock(
+            next_cursor=next_cursor,
+            fetch_log=self._fetch_log,
+            search_seen=self._search_seen,
+        )
+
+    def _post_refresh(self, base: str, *, next_cursor: str = '') -> dict:
+        payload, _ = _n58_post_refresh_with_fetch(
+            base,
+            self._prodigy_calculate,
+            fetch_side_effect=self._fetch_mock(next_cursor=next_cursor),
+        )
+        return payload
+
+    def test_n58_empty_allowlist_scan_eligible_pending_without_raw_on_disk(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            raw = root / 'providers' / 'raw'
+            self.assertFalse((raw / f'{_N58_SCAN_ELIGIBLE_ID}_closed_trades.json').exists())
+            _, server, thread, base = self._server(root)
+            try:
+                payload = self._post_refresh(base)
+                self.assertTrue(self._search_seen, msg='refresh must call GET SearchStrategies via fetch')
+                queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
+                ids = {str(r.get('provider_id')) for r in queue}
+                self.assertIn(
+                    _N58_SCAN_ELIGIBLE_ID,
+                    ids,
+                    msg='eligible scanned Collective2 id must appear without allowlist',
+                )
+                self.assertNotIn(_N58_SCAN_INELIGIBLE_ID, ids)
+                for row in queue:
+                    if str(row.get('provider_id')) == _N58_SCAN_ELIGIBLE_ID:
+                        self.assertEqual(row.get('status'), 'pending')
+                        self.assertIn(
+                            row.get('source'),
+                            ('scanned', 'discovered'),
+                            msg='scanned Collective2 row source must be scanned or discovered',
+                        )
+                c2 = (payload.get('copy') or {}).get('collective2') or {}
+                self.assertFalse(c2.get('approved_for_paper_copy'))
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n58_fetch_must_not_use_leaderboard_or_historical_strategies_post(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _, server, thread, base = self._server(root)
+            try:
+                self._post_refresh(base)
+                joined = ' '.join(self._fetch_log)
+                self.assertIn('SearchStrategies', joined)
+                for forbidden in _N58_FORBIDDEN_C2_PATHS:
+                    self.assertNotIn(forbidden, joined)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n58_missing_c2_api4_key_no_fake_scan(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+
+            def _forbidden_fetch(*_a, **_kw):
+                raise AssertionError('fetch must not run when C2_API4_KEY is missing')
+
+            _, server, thread, base = self._server(root)
+            try:
+                payload, _ = _n58_post_refresh_with_fetch(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=_forbidden_fetch,
+                    c2_key=None,
+                )
+                issues = payload.get('issues') or []
+                self.assertIn('C2_API4_KEY_missing', issues)
+                self.assertFalse(self._search_seen)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n58_tradingview_ingested_no_search_scan_out_iss025(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _n55_write_tradingview_ingest_fixture(root)
+            _, server, thread, base = self._server(root)
+            try:
+                payload = self._post_refresh(base)
+                platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
+                self.assertIn('tradingview', platforms)
+                issues_text = ' '.join(str(i) for i in (payload.get('issues') or [])).lower()
+                self.assertTrue(
+                    'tradingview' in issues_text
+                    and (
+                        'scan' in issues_text
+                        or 'iss-025' in issues_text
+                        or '025' in issues_text
+                        or 'out' in issues_text
+                        or 'not' in issues_text
+                    ),
+                    msg='refresh must record TradingView scan is OUT (ISS-025), not invent search',
+                )
+                joined = ' '.join(self._fetch_log)
+                self.assertNotIn('tradingview.com/search', joined.lower())
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n58_refresh_no_auto_approve_live_false_orders_sent_zero(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            store = {'signal_provider_approvals': {}}
+            _, server, thread, base = self._server(
+                root,
+                connect_factory=_approvals_memory_connect(store),
+            )
+            try:
+                payload = self._post_refresh(base)
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertFalse(payload.get('execution_authorized', True))
+                self.assertEqual(store['signal_provider_approvals'], {})
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n58_next_cursor_surfaces_incomplete_scan_issue(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _, server, thread, base = self._server(root)
+            try:
+                payload = self._post_refresh(base, next_cursor='cursor-page-2')
+                issues = [str(i).lower() for i in (payload.get('issues') or [])]
+                self.assertTrue(
+                    any(
+                        token in ' '.join(issues)
+                        for token in ('incomplete', 'next_cursor', 'pagination', 'partial')
+                    ),
+                    msg='non-empty SearchStrategies next_cursor must warn scan is incomplete',
+                )
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n58_prodigy_rank_constants_unchanged(self):
+        import prodigy_rank
+
+        self.assertEqual(prodigy_rank.WINDOW_DAYS, 15)
+        self.assertEqual(prodigy_rank.MIN_TRADES, 5)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

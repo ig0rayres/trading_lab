@@ -81,7 +81,8 @@
 | N54 | N | POST critérios ao vivo em Atualizar candidatos; GET declara releitura; LIVE false | concluida | 5 | observability | ISS-024 job C2/Prodígio/TV mínimo · PR #73 | *(abaixo)* |
 | N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | concluida | 5 | observability | ISS-024 follow-up fila multiplataforma · PR #74 | *(abaixo)* |
 | N56 | N | Job lê arquivos brutos no volume certo; fila Prodígio só elegíveis 15d; LIVE false | concluida | 4 | observability | ISS-024 / F-019 join duplicado · PR #76 | *(abaixo)* |
-| N57 | N | Collective2 na fila a partir dos arquivos brutos, sem lista nomeada para aparecer; LIVE false | planejada | 4 | observability | ISS-024 / F-020 fila C2 sem allowlist · plan_only | *(abaixo)* |
+| N57 | N | Collective2 na fila a partir dos arquivos brutos, sem lista nomeada para aparecer; LIVE false | concluida | 4 | observability | ISS-024 / F-020 fila C2 sem allowlist · PR #77 | *(abaixo)* |
+| N58 | N | Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca; LIVE false | planejada | 4 | observability | ISS-024 / F-021 varredura C2 · plan_only | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -150,6 +151,7 @@
 | N55 | senior+qa | Fila pré-aprovação multiplataforma após refresh; ISS-024 follow-up |
 | N56 | senior+qa | Join dos arquivos brutos no volume de relatórios; fila só elegíveis; LIVE false |
 | N57 | senior+qa | Collective2 na fila a partir dos arquivos brutos sem allowlist para aparecer; LIVE false |
+| N58 | senior+qa | Varredura Collective2 com regras de 15 dias; TradingView fora até contrato de busca; LIVE false |
 
 ---
 
@@ -6198,6 +6200,252 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 C2 queue from canonical raw without allowlist show-prerequisite; paper-copy gate unchanged; Prodígio 15d; TV ingested origins), `docs/DASHBOARD-OPERATIONS.md` (replace “IDs Collective2 só após allowlist/env” — visibility vs paper-copy), `docs/ISSUES.md` (ISS-024 notes; **do not close**), `docs/FINDINGS.md` (F-020; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N57 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets. Never copy operator IDs into committed allowlist.
+
+---
+
+## Sprint N58 — Varrer a Collective2 nas regras já definidas, sem lista nomeada para aparecer
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-19 · fonte ISS-024 / F-021 · N57 #77 em `main`  
+> titulo_humano: Atualizar varre Collective2 nas regras já definidas  
+> resumo_humano: Ao atualizar candidatos, o laboratório procura estratégias na Collective2 com as regras de quinze dias já no código e mostra só quem passa, mesmo com a lista de cópia vazia. O TradingView ainda não tem busca e fica de fora até haver contrato. LIVE false.  
+> Gate: lista vazia + chave no servidor → varredura Collective2 mockável + fila só elegíveis 15d, inclusive IDs ausentes do disco; cópia paper fechada; TradingView sem varredura com aviso; pytest verde; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N58.brief.md`  
+> Git First: `docs/.briefs/N58-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N57 concluída (#77) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N57  
+> plan_only: true
+
+### Em uma frase
+
+Ao atualizar candidatos, o laboratório varre a Collective2 com as regras de quinze dias já definidas e mostra só quem passa; o TradingView ainda não tem busca e fica de fora até haver contrato.
+
+### O que muda para você
+
+- Atualizar candidatos passa a procurar estratégias na Collective2 com a chave do servidor, sem lista nomeada para aparecer
+- Só entra na fila quem já passa a janela de quinze dias, o mínimo de operações e os demais critérios já no código — sem nota nova
+- Quem não passa continua fora; a lista nomeada só autoriza cópia paper
+- TradingView não é varrido nesta rodada: o laboratório só vê origens já recebidas, até existir contrato de busca
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Varredura Collective2 sem lista nomeada | Com a lista de cópia vazia, atualizar candidatos traz estratégias da Collective2 que passam as regras de quinze dias, não só o que já estava no disco |
+| 2 | Fila só com quem passa as regras | Estratégias sem histórico recente suficiente não aparecem como candidatas |
+| 3 | Cópia paper continua fechada | Atualizar não aprova nem envia operação; a seção de cópia continua fechada sem lista e livro-razão |
+| 4 | TradingView explícito fora da varredura | O aviso deixa claro que o TradingView não foi varrido; origens já recebidas continuam visíveis |
+| 5 | Prova automática | A bateria de testes falha se a fila exigir lista nomeada, se usar o ranking da loja Collective2, se inventar busca TradingView, ou se mudar os números de quinze dias |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N58.0 Inventariar a varredura Collective2 e o bloqueio TradingView | `docs/.briefs/N58-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N58.1 Varrer a Collective2 e filtrar candidatos pelas regras já definidas | `src/c2_history_collect.py, src/v4_web_dashboard.py, src/panel_ops_data.py` | N58.0 |
+| [x] | M | N58.2 Provar a varredura sem lista nomeada e sem inventar busca TradingView | `tests/test_panel_ops.py` | N58.1 |
+| [x] | P | N58.3 Registrar no mapa que atualizar varre Collective2 e deixa TradingView de fora | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md, docs/REQUIREMENTS.md` | N58.2 |
+
+### Quality Brief (Sprint N58)
+
+**Alvo:** **Atualizar candidatos** varre Collective2 na listagem oficial disponível à chave, aplica Feature 4 / Prodígio 15d já no código, e mostra só elegíveis **sem** allowlist; TradingView não é varrido (ISS-025).
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh`, N55–N57 queue/join/discovery; argparse `--root` default `/app/reports` unchanged.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS = 15`, `MIN_TRADES = 5`); do not change them.
+Avoid: SearchHistoricalStrategies C2 stats; GetLeaderBoard as eligibility; TradingView search HTTP; auto-approve; treating disk glob as Atualizar definition of done; `process_after_gate_b`; printing API keys; stealing N45–N47.
+
+### Technical Advisory
+
+- [ABORDAGEM] Reusar `c2_history_collect.fetch` para um GET `SearchStrategies` por clique; gravar só `closed_trades`; filtrar com `prodigy_rank.calculate`; cursor da próxima página no instantâneo de refresh já existente.
+- [RISCO] Uma página da listagem oficial pode ser grande demais para o timeout de 25s — parar com aviso honesto de incompleto; não inventar tamanho de página no texto do produto.
+- [RISCO] Usar estatísticas Collective2 (`SearchHistoricalStrategies`, Score, leaderboard) no lugar das constantes recuperadas reescreveria o aceite Feature 4.
+
+> EXPIRES at end of Sprint N58. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Inventar loja Collective2, ranking da loja ou estatísticas históricas Collective2 como filtro
+- Inventar busca TradingView (ISS-025)
+- Alterar constantes de quinze dias / mínimo de operações
+- Tratar arquivos brutos no disco como história do botão Atualizar
+- Autoaprovar; mutar livro-razão no refresh
+- Ordem / fill / LIVE true
+- SSH no EasyPanel; N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N58.0 — Inventariar a varredura Collective2 e o bloqueio TradingView
+
+**Entrega:** Inventário dizendo que a Collective2 tem listagem oficial para varrer, que as regras de quinze dias já estão no código, e que o TradingView não tem busca neste laboratório.
+**Como conferir:** O inventário cita a listagem oficial, proíbe usar o ranking da loja no lugar das regras já definidas, e marca o TradingView como fora até haver contrato.
+**Por quê:** Sem isso o EXECUTE ou inventa uma loja, ou volta a vender o disco como se fosse varredura.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N58-GIT-FIRST-REUSE.md` and `docs/proposals/N58-collective2-api4-search.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: recovered `PATHS` history-by-id only; official GET `/Strategies/SearchStrategies`; POST `SearchHistoricalStrategies` forbidden; `GetLeaderBoard` forbidden; ADR-012 TV ingest only; `prodigy_rank` constants; N57 glob is cache not DoD; LIVE false. Never print secrets.
+
+### Task N58.1 — Varrer a Collective2 e filtrar candidatos pelas regras já definidas
+
+**Entrega:** Depois de atualizar, o laboratório procura estratégias na Collective2 com a chave do servidor e lista só quem passa as regras de quinze dias, mesmo com a lista de cópia vazia e mesmo que o identificador ainda não estivesse no disco.
+**Como conferir:** Com a lista vazia, atualizar traz candidatos da varredura que passam as regras; quem não passa fica fora; a cópia paper continua fechada; atualizar não grava aprovação.
+**Por quê:** Hoje o trabalho só atualiza identificadores já conhecidos no disco ou na lista, e a fila Collective2 ainda mostra quem não pontua na janela de quinze dias.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_live_refresh_collective2` fetches `_merged_c2_strategy_ids` (allowlist ∪ raw glob ∪ research JSON). `build_preapproval_queue` lists every discovered raw C2 ID as pending even when `prodigy_rank` marks `UNSCORABLE`. Recovered `PATHS` are history-by-id only. TradingView job only unions ingested origins.
+- **Estado desejado:** with `C2_API4_KEY`, one GET `/Strategies/SearchStrategies` via `c2_history_collect.fetch` per Atualizar. Persist `Pagination.next_cursor` on existing `candidates-refresh-latest.json`. For IDs on that page, GET `PATHS['closed_trades']` only; then `prodigy_rank.calculate` **without** changing `WINDOW_DAYS`/`MIN_TRADES`. Queue Collective2 and Prodígio only `PRODIGY_CANDIDATE_RESEARCH`. Skip `IsPrivate=true`. Empty allowlist still shows eligible scan rows as pending (`source: scanned` or keep `discovered` — do **not** auto-approve). Key missing → existing `C2_API4_KEY_missing`; do not fake a scan. Incomplete page → honest issue, not silent ok. TV: ingested origins + issue that scan is out (ISS-025). `--root` default unchanged.
+- **Arquivo(s):** `src/c2_history_collect.py`, `src/v4_web_dashboard.py`, `src/panel_ops_data.py`
+- **Fonte(s):** ISS-024 restatement 2026-11-19, F-021, Feature 4 / N50 paper-copy gate, N57 cache, ADR-012
+- **Risco:** MEDIUM — shared live-criteria job, queue, paper-copy gate, new C2 GET
+- **Task size:** M (3 files + scan vs cache design)
+
+**executor_prompt**:
+
+```yaml
+id: N58.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N58.0"]
+files:
+  - src/c2_history_collect.py
+  - src/v4_web_dashboard.py
+  - src/panel_ops_data.py
+reuse_targets:
+  - component: src/c2_history_collect.py
+    reuse_as: extend
+    convergence_check: 'rg "SearchStrategies" src/c2_history_collect.py src/v4_web_dashboard.py && rg "GetStrategyHistoricalClosedTrades" src/c2_history_collect.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "_live_refresh_collective2" src/v4_web_dashboard.py && rg "c2_history_collect" src/v4_web_dashboard.py && rg "_providers_raw_dir" src/v4_web_dashboard.py'
+  - component: src/panel_ops_data.py
+    reuse_as: extend
+    convergence_check: 'rg "def build_preapproval_queue" src/panel_ops_data.py && rg "PRODIGY_CANDIDATE_RESEARCH" src/panel_ops_data.py'
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "WINDOW_DAYS = 15" src/prodigy_rank.py && rg "MIN_TRADES = 5" src/prodigy_rank.py'
+guardrail_contract:
+  - class: secrets
+    id: n58-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_data.py').read_text()+Path('src/c2_history_collect.py').read_text(); assert 'sk_live' not in t.lower()"
+    pass_condition: no live keys hardcoded
+  - class: subagent-safety
+    id: n58-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_data.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n58-1-no-auto-approve
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'upsert_signal_provider_approval' not in t"
+    pass_condition: live-criteria refresh does not write ledger approve
+  - class: subagent-safety
+    id: n58-1-no-invented-c2-stats
+    target: src/c2_history_collect.py
+    check: python3 -c "from pathlib import Path; t=Path('src/c2_history_collect.py').read_text()+Path('src/v4_web_dashboard.py').read_text(); assert 'SearchHistoricalStrategies' not in t; assert 'GetLeaderBoard' not in t"
+    pass_condition: scan uses SearchStrategies plus recovered closed_trades; no C2 stats marketplace filter
+  - class: subagent-safety
+    id: n58-1-keep-root-default
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert \"default='/app/reports'\" in t or 'default=\"/app/reports\"' in t"
+    pass_condition: argparse --root default remains /app/reports
+  - class: subagent-safety
+    id: n58-1-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: Feature 4 / Prodigy 15d constants unchanged
+```
+
+### Quality Brief (Sprint N58)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; scan Collective2 via existing GET fetch; do not invent Feature 4 thresholds; TradingView search remains out.
+
+Melhoria: wire official GET SearchStrategies through recovered `c2_history_collect.fetch`, fetch closed_trades for those IDs, filter with unchanged `prodigy_rank.calculate`, list only eligible pending rows without allowlist.
+Contexto: after N57 #77, Atualizar still means refresh IDs already on disk/research. Operator restated scan of homologated Collective2 as DoD. Recovered PATHS are history-by-id; official API4 SearchStrategies exists on the same host. SearchHistoricalStrategies / GetLeaderBoard are not Feature 4. TV has ingest only (ADR-012) — ISS-025.
+Objetivo: keep `POST /api/signals/candidates/refresh` (`mode: live_criteria`, `orders_sent=0`). Do **not** add a parallel package. One SearchStrategies GET per click; persist next_cursor on existing refresh snapshot; closed_trades only on scan path; queue only `PRODIGY_CANDIDATE_RESEARCH`. Allowlist remains paper-copy only. Never `process_after_gate_b`. Never invent scores. Never print `C2_API4_KEY`. Never call a TradingView search host.
+Critério de pronto: empty allowlist + mocked SearchStrategies IDs not on disk → eligible C2/Prodígio pending in `copy.preapproval.queue`; unscorable mocked histories absent; `approved_for_paper_copy` false; TV issue records scan-out; key missing → no fake scan.
+Cenários de teste (mínimo no implementer self-check; N58.2 owns pytest):
+  1. Caso normal: SearchStrategies devolve ID novo que passa 15d → aparece pendente sem allowlist
+  2. Edge: o mesmo ID falha 15d → ausente da fila
+  3. Edge: next_cursor presente → aviso de varredura incompleta
+  4. Regressão: cópia paper fechada; N54–N57; `--root` default; `orders_sent=0`; sem busca TV
+
+### Task N58.2 — Provar a varredura sem lista nomeada e sem inventar busca TradingView
+
+**Entrega:** Testes comprovam que atualizar varre a Collective2 sem lista nomeada, que só quem passa as regras entra na fila, que a cópia paper segue fechada, e que nenhuma busca TradingView foi inventada.
+**Como conferir:** A bateria falha se a fila exigir lista nomeada, se aceitar quem não passa quinze dias, se autoaprovar, se chamar ranking da loja Collective2, ou se inventar HTTP de busca TradingView.
+**Por quê:** Sem essa prova o painel volta a vender o disco como varredura, ou alguém inventa filtro da loja no lugar das regras já recuperadas.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — HTTP in-process + N57 fixtures currently treat raw glob as C2 show path
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N58.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N58.1"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "N57Collective2RawQueueDiscoveryTests" tests/test_panel_ops.py && rg "N56ProdigyCanonicalRawPathTests" tests/test_panel_ops.py && rg "_n54_mock_c2_fetch" tests/test_panel_ops.py'
+  - component: tests/test_panel_ops.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "approved_for_paper_copy" tests/test_panel_ops.py && rg "PRODIGY_CANDIDATE_RESEARCH" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n58-2-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'api.collective2.com' not in t.lower(); assert 'tradingview.com' not in t.lower() or 'webhook' in t.lower()"
+    pass_condition: tests do not call live Collective2 or invented TradingView search hosts
+  - class: subagent-safety
+    id: n58-2-no-harness-bug
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_data.py').read_text()+Path('src/c2_history_collect.py').read_text(); assert 'tests/' not in t"
+    pass_condition: production does not special-case tests/ paths
+  - class: subagent-safety
+    id: n58-2-no-committed-allowlist-seed
+    target: config/c2_paper_copy_allowlist.json
+    check: python3 -c "import json; from pathlib import Path; d=json.loads(Path('config/c2_paper_copy_allowlist.json').read_text()); assert d.get('approved_ids')==[]"
+    pass_condition: committed allowlist stays empty
+  - class: subagent-safety
+    id: n58-2-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: tests must not rewrite Feature 4 constants
+```
+
+### Quality Brief (Sprint N58)
+
+See sprint Quality Brief.
+
+Melhoria: pytest proving mocked SearchStrategies IDs (not on disk) become pending queue rows only when recovered Prodígio 15d passes, empty allowlist, paper-copy closed, no TV search, no C2 leaderboard.
+Objetivo: nodeids covering (1) empty allowlist + mocked SearchStrategies ID absent from raw + closed_trades fixture that yields `PRODIGY_CANDIDATE_RESEARCH` → Collective2/Prodígio pending; (2) same ID with `UNSCORABLE` / `closed_trades_15d=0` → absent from queue; (3) `approved_for_paper_copy` false; (4) POST refresh does not upsert ledger approve; (5) next_cursor → honest incomplete issue; (6) missing key → `C2_API4_KEY_missing`, no SearchStrategies call pretended ok; (7) TradingView still ingested origins only — no search HTTP; issue or flag that TV scan is out; (8) N54–N57 regressions: `orders_sent=0`, `--root` default, raw glob still must not require allowlist for cache rows that pass 15d; (9) `SearchHistoricalStrategies` / `GetLeaderBoard` absent from production; (10) `process_after_gate_b` absent. Do not teach production about `tests/` paths (no HARNESS_BUG). Do not commit operator IDs into `config/c2_paper_copy_allowlist.json`.
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: SearchStrategies ID novo elegível → fila pendente sem allowlist
+  2. Edge: ID novo inelegível 15d → fora da fila
+  3. Edge: next_cursor → aviso incompleto
+  4. Edge: sem chave → aviso de chave; sem fingir varredura
+  5. Regressão: N50 paper-copy closed; N55 union; N56 Prodígio 15d; N57 cache without allowlist; cooldown 429; Aprovar inalterado; sem busca TV
+
+### Task N58.3 — Registrar no mapa que atualizar varre Collective2 e deixa TradingView de fora
+
+**Entrega:** Mapa e chamado descrevem que atualizar varre a Collective2 nas regras já definidas, que a lista nomeada só autoriza cópia paper, e que o TradingView permanece sem varredura até haver contrato; o chamado ISS-024 permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; disco não é a história do botão; Feature 9 marcada só se os testes existirem.
+**Por quê:** O texto atual ainda vende arquivos brutos no volume como se fossem a varredura que o operador pediu.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = Collective2 SearchStrategies + Feature 4 filter; disk glob is cache; paper-copy gate unchanged; TV scan OUT ISS-025; ingested origins remain), `docs/DASHBOARD-OPERATIONS.md` (Atualizar is platform scan, not raw inventory), `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 TV search contract), `docs/FINDINGS.md` (F-021; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N58 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
 
 ---
 

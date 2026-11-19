@@ -27,7 +27,8 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N57 (N56 #76 em main) | Critérios ao vivo: Collective2 na fila a partir dos arquivos brutos, sem allowlist para aparecer |
+| ISS-024 | aberto | N58 (N57 #77 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
+| ISS-025 | aberto | follow-up (fora de N58) | TradingView: varredura de estratégias exige contrato de busca — não existe no código recuperado |
 
 ## Release train MVP-OP (visão alvo operacional)
 
@@ -677,9 +678,9 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | **N57** (`front/sinais-raw-path`; N56 merge **#76** em `main`; não rouba N45–N47) |
-| Status | aberto — N54–N56 em `main` (#73/#74/#75/#76); **permanece aberto** até Collective2 aparecer na fila a partir dos arquivos brutos (sem allowlist como pré-requisito de visibilidade) + rebuild EasyPanel + homologação operador |
-| Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **aplicar critérios de seleção** nas plataformas e trazer **todos os candidatos elegíveis** (Collective2, Prodígio e TradingView); não basta reler `prodigy-top10` / `provider-research` estáticos nem mostrar só uma origem TradingView sem métricas. |
+| Sprint | **N58** (`front/sinais-raw-path`; N57 merge **#77** em `main`; não rouba N45–N47) |
+| Status | aberto — N54–N57 em `main` (#73/#74/#75/#76/#77); N58 EXECUTE na frente `sinais-raw-path` (SearchStrategies + Feature 4 / Prodígio 15d; disco = cache); **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
+| Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **varrer plataformas homologadas** e trazer **candidatos que já passam** Feature 4 / Prodígio 15d; allowlist não é pré-requisito para aparecer; aprovar ≠ fill. |
 
 **Diretrizes do operador (2026-11-18):**
 1. Aprovar entrada de sinais no painel exige ledger **003** no ar (rebuild + migrate com código atual).
@@ -717,5 +718,30 @@
 **Nota planejamento N57 (2026-11-19):** follow-up ISS-024 / F-020; bloco `## Sprint N57` em `docs/ROADMAP.md`; brief `docs/.briefs/N57.brief.md`; Git First `docs/.briefs/N57-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até descoberta dos IDs brutos + testes + merge + rebuild operador.
 
 **Nota N57 EXECUTE (2026-11-19):** frente `sinais-raw-path` — IDs Collective2 descobertos em `{root}/providers/raw/*_closed_trades.json` entram na fila de pré-aprovação como pendentes (`source: discovered`) **sem** lista nomeada/env como pré-requisito de visibilidade; `config/c2_paper_copy_allowlist.json` / `C2_PAPER_COPY_APPROVED_IDS` / aprovação no livro-razão **permanecem** o portão da **cópia paper** (`approved_for_paper_copy` false com lista vazia); refresh **não** grava aprovação; arquivos brutos compartilhados com IDs C2 continuam `UNSCORABLE` / fora da fila Prodígio 15d. F-020 **corrigido**; `tests/test_panel_ops.py` `N57Collective2RawQueueDiscoveryTests` (3/3) verde na frente. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
+
+**Nota closeout N57 (2026-11-19):** PR **#77** MERGED → `main` @ `5ea662cfa1590a7a97be11e047c785998dcd1fbd`. Chamado **permanece aberto**.
+
+**Nota operador 2026-11-19 (follow-up N58):** aceite de **Atualizar candidatos** restabelecido — (1) regras fixas de elegibilidade já no código (Feature 4 / Prodígio 15d; **não** inventar limiar); (2) o botão **varre plataformas homologadas** (Collective2 + espírito Prodígio); **sem** allowlist para aparecer; **sem** «só o que já está no cache/raw» como história do produto. LIVE false; aprovar ≠ fill. Inventário Git First: API4 tem `SearchStrategies` (GET); o cliente recuperado só tem histórico por ID; `SearchHistoricalStrategies` / leaderboard **não** são Feature 4. TradingView: só ingest — **sem** API de busca; varredura TV = **ISS-025**.
+
+**Nota planejamento N58 (2026-11-19):** follow-up ISS-024 / F-021; bloco `## Sprint N58` em `docs/ROADMAP.md`; brief `docs/.briefs/N58.brief.md`; Git First `docs/.briefs/N58-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até varredura Collective2 + filtro 15d + testes + merge + rebuild operador. TradingView scan **OUT**.
+
+**Nota N58 EXECUTE (2026-11-19):** frente `sinais-raw-path` — **Atualizar candidatos** obtém IDs Collective2 via GET `/Strategies/SearchStrategies`, grava `closed_trades` no volume canônico, aplica `prodigy_rank.calculate` (constantes Feature 4 / 15d **inalteradas**); fila enfileira só elegíveis e IDs ausentes do disco **antes** do refresh podem aparecer se a varredura + filtro passarem — **sem** allowlist como pré-requisito de visibilidade. Glob `{root}/providers/raw/*_closed_trades.json` (**N57**) permanece **cache**, não define o botão. Cópia paper: lista nomeada / env / livro-razão inalterados (`approved_for_paper_copy` false com lista vazia); refresh **não** grava aprovação. TradingView: **sem** varredura — aviso honesto ISS-025; origens ingeridas visíveis. F-021 **corrigido**; `tests/test_panel_ops.py` `N58Collective2SearchStrategiesScanTests` (7/7) verde na frente. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
+
+---
+
+## ISS-025 — TradingView: varredura de candidatos exige contrato de busca
+
+| Campo | Valor |
+|-------|--------|
+| Categoria | feature-sem-dominio |
+| Sprint | follow-up (não é N58; N45–N47 não usados) |
+| Status | aberto — bloqueador honesto: código recuperado só tem ingest/webhook; **não** há API de busca TradingView neste repositório nem no vendor pin `3d0f4ef` |
+| Impacto | Operador quer **Atualizar candidatos** varrendo TradingView como a Collective2. Sem contrato de busca, qualquer HTTP inventado seria produto falso. N58 deixa origens já ingeridas visíveis e declara a varredura TV **fora**. |
+
+**Diretriz:** não inventar endpoint TradingView. Quando existir contrato (fonte homologada, autenticação, o que a busca devolve, como aplica Feature 4 sem limiar novo), planejar sprint própria. LIVE false.
+
+**Fontes:** operador 2026-11-19; ADR-012; `src/tradingview_webhook.py` `ingest`; N54–N57 job `_live_refresh_tradingview`.
+
+**Nota N58 EXECUTE (2026-11-19):** refresh live-criteria **não** inventa busca TradingView; registra `tradingview_scan_out:ISS-025` (sem API de marketplace); origens já ingeridas continuam na fila via `_live_refresh_tradingview`. Prova: `tests/test_panel_ops.py` `N58Collective2SearchStrategiesScanTests.test_n58_tradingview_ingested_no_search_scan_out_iss025`. Chamado **permanece aberto** até existir contrato de busca homologado. LIVE false.
 
 ---

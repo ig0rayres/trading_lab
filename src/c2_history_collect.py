@@ -2,6 +2,7 @@
 """Read-only Collective2 API4 historical data collector. Never submits trades."""
 import argparse, datetime as dt, json, os, pathlib, urllib.parse, urllib.request, urllib.error
 BASE = 'https://api4-general.collective2.com'
+SEARCH_STRATEGIES_PATH = '/Strategies/SearchStrategies'
 PATHS = {
     'daily_equity': '/Strategies/GetStrategyHistoricalDailyEquity',
     'monthly_equity': '/Strategies/GetStrategyHistoricalEquity',

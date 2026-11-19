@@ -945,11 +945,135 @@ def _panel_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs)
     return {'status': 'ok', 'written': written}
 
 
+def _panel_c2_closed_trades_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    del opener, kwargs
+    root = Path(out_dir)
+    api_path = c2_history_collect.PATHS['closed_trades']
+    written: list[str] = []
+    for sid in sorted({str(x) for x in strategy_ids}):
+        try:
+            raw = _C2_API4_HTTP_FETCH(
+                api_path,
+                {'StrategyId': int(sid), 'CommissionPlan': '0'},
+                key,
+            )
+        except (OSError, ValueError, TypeError, KeyError):
+            continue
+        written.append(_write_c2_history_dataset(root, sid, 'closed_trades', raw))
+    return {'status': 'ok', 'written': written}
+
+
 def _invoke_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
     bound_fetch = c2_history_collect.fetch
     if bound_fetch is _C2_API4_HTTP_FETCH:
         return _panel_c2_history_collect(strategy_ids, key, out_dir, opener=opener, **kwargs)
     return bound_fetch(strategy_ids, key, out_dir, opener=opener, **kwargs)
+
+
+def _invoke_c2_closed_trades_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    bound_fetch = c2_history_collect.fetch
+    if bound_fetch is _C2_API4_HTTP_FETCH:
+        return _panel_c2_closed_trades_collect(strategy_ids, key, out_dir, opener=opener, **kwargs)
+    path = c2_history_collect.PATHS['closed_trades']
+    return bound_fetch(
+        list(strategy_ids),
+        key,
+        out_dir,
+        opener=opener,
+        path=path,
+        **kwargs,
+    )
+
+
+def _c2_search_cursor_from_refresh(root: Path) -> str:
+    record = _panel_ops.load_candidates_refresh(root)
+    if not isinstance(record, dict):
+        return ''
+    return str(record.get('c2_search_next_cursor') or '').strip()
+
+
+def _persist_c2_search_snapshot(root: Path, raw_api: dict) -> None:
+    intel = _intelligence_dir(root)
+    payload = {
+        'dataset': 'search_strategies',
+        'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
+        'raw': raw_api,
+    }
+    (intel / 'c2_search_strategies_latest.json').write_text(
+        json.dumps(payload, indent=2),
+        encoding='utf-8',
+    )
+
+
+def _parse_c2_search_ids(raw_api: dict) -> tuple[list[str], str]:
+    results = raw_api.get('Results') or []
+    pagination = raw_api.get('Pagination') if isinstance(raw_api.get('Pagination'), dict) else {}
+    next_cursor = str(pagination.get('next_cursor') or '').strip()
+    ids: list[str] = []
+    for row in results:
+        if not isinstance(row, dict) or row.get('IsPrivate') is True:
+            continue
+        sid = row.get('StrategyId')
+        if sid is None:
+            continue
+        try:
+            ids.append(str(int(sid)))
+        except (TypeError, ValueError):
+            continue
+    return sorted(set(ids), key=int), next_cursor
+
+
+def _collective2_search_incomplete_issue(next_cursor: str) -> str:
+    if not next_cursor:
+        return ''
+    return (
+        'collective2_search_incomplete:pagination next_cursor present; '
+        'click Atualizar again to continue scan'
+    )
+
+
+def _append_collective2_non_numeric_id_issues(root: Path, issues: list[str]) -> None:
+    bad = False
+    for pid in _panel_ops.load_c2_paper_copy_approved_ids(root):
+        if pid and not str(pid).isdigit():
+            bad = True
+            break
+    if not bad:
+        for row in _panel_ops._load_c2_research_candidates(root):
+            pid = str(row.get('provider_id') or row.get('provider') or '').strip()
+            if pid and not pid.isdigit():
+                bad = True
+                break
+    if bad:
+        issues.append('collective2_refresh_failed:non_numeric_strategy_id')
+
+
+def _invoke_c2_search_strategies(key: str, out_dir: Path, cursor: str, opener=None):
+    search_path = c2_history_collect.SEARCH_STRATEGIES_PATH
+    bound_fetch = c2_history_collect.fetch
+    if bound_fetch is _C2_API4_HTTP_FETCH:
+        params: dict[str, str] = {}
+        if cursor:
+            params['Cursor'] = cursor
+        raw = bound_fetch(search_path, params, key)
+        _persist_c2_search_snapshot(Path(out_dir).parent.parent, raw)
+        return _parse_c2_search_ids(raw)
+    panel = bound_fetch(
+        search_path,
+        key,
+        out_dir,
+        opener=opener,
+        path=search_path,
+        cursor=cursor,
+    )
+    if isinstance(panel, dict) and panel.get('strategy_ids') is not None:
+        ids = [str(x) for x in panel.get('strategy_ids') or []]
+        ncur = str(panel.get('next_cursor') or '').strip()
+        return sorted(set(ids), key=int), ncur
+    raw = panel.get('raw') if isinstance(panel, dict) else {}
+    if isinstance(raw, dict):
+        return _parse_c2_search_ids(raw)
+    return [], ''
 
 
 def _intelligence_dir(root: Path) -> Path:
@@ -999,23 +1123,36 @@ def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) 
     sources_ok.append('prodigy')
 
 
-def _live_refresh_collective2(root: Path, issues: list[str], sources_ok: list[str]) -> None:
+def _live_refresh_collective2(
+    root: Path,
+    issues: list[str],
+    sources_ok: list[str],
+) -> str:
     key = os.environ.get('C2_API4_KEY', '').strip()
     if not key:
         issues.append('C2_API4_KEY_missing')
-        return
+        return ''
     raw_dir = _providers_raw_dir(root)
+    _append_collective2_non_numeric_id_issues(root, issues)
     try:
-        ids = _merged_c2_strategy_ids(root)
-        if not ids:
-            issues.append('collective2_discoverable_ids_missing')
-            return
-        _invoke_c2_history_collect(ids, key, raw_dir)
-        snap_dir = _providers_signals_dir(root)
-        c2_signal_feed.snapshot([int(x) for x in ids], key, snap_dir)
+        cursor = _c2_search_cursor_from_refresh(root)
+        scan_ids, next_cursor = _invoke_c2_search_strategies(key, raw_dir, cursor)
+        incomplete = _collective2_search_incomplete_issue(next_cursor)
+        if incomplete:
+            issues.append(incomplete)
+        if scan_ids:
+            _invoke_c2_closed_trades_collect(scan_ids, key, raw_dir)
+        snap_ids = sorted(
+            {int(x) for x in scan_ids}
+            | {int(x) for x in _panel_ops.load_c2_paper_copy_approved_ids(root)},
+        )
+        if snap_ids:
+            c2_signal_feed.snapshot(snap_ids, key, _providers_signals_dir(root))
         sources_ok.append('collective2')
+        return next_cursor
     except (OSError, ValueError, TypeError, KeyError) as exc:
         issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
+        return ''
 
 
 def _live_refresh_tradingview(
@@ -1024,6 +1161,9 @@ def _live_refresh_tradingview(
     issues: list[str],
     sources_ok: list[str],
 ) -> None:
+    issues.append(
+        'tradingview_scan_out:ISS-025 no platform search API; ingested origins only',
+    )
     factory = _ledger_conn_factory(conn_factory)
     try:
         bundle = _panel_ops.build_panel_bundle(root, factory)
@@ -1041,22 +1181,23 @@ def _live_criteria_job(
     root: Path,
     sources: list[str],
     conn_factory,
-) -> tuple[list[str], list[str], list[str]]:
+) -> tuple[list[str], list[str], list[str], str]:
     issues: list[str] = []
     sources_ok: list[str] = []
-    if 'prodigy' in sources:
-        _live_refresh_prodigy(root, issues, sources_ok)
+    c2_next_cursor = ''
     if 'collective2' in sources:
         try:
-            _live_refresh_collective2(root, issues, sources_ok)
+            c2_next_cursor = _live_refresh_collective2(root, issues, sources_ok)
         except (OSError, ValueError, TypeError, KeyError) as exc:
             issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
+    if 'prodigy' in sources:
+        _live_refresh_prodigy(root, issues, sources_ok)
     if 'tradingview' in sources:
         try:
             _live_refresh_tradingview(root, conn_factory, issues, sources_ok)
         except (OSError, ValueError, TypeError, KeyError) as exc:
             issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
-    return issues, sources_ok, sources
+    return issues, sources_ok, sources, c2_next_cursor
 
 
 def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, body=None):
@@ -1077,7 +1218,11 @@ def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, bod
             )
             return
         sources = _resolve_live_refresh_sources(body)
-        issues, sources_ok, sources_attempted = _live_criteria_job(root, sources, conn_factory)
+        issues, sources_ok, sources_attempted, c2_next_cursor = _live_criteria_job(
+            root,
+            sources,
+            conn_factory,
+        )
         factory = _ledger_conn_factory(conn_factory)
         try:
             bundle = _panel_ops.build_panel_bundle(root, factory)
@@ -1107,6 +1252,8 @@ def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, bod
             'orders_sent': 0,
             'execution_authorized': False,
         }
+        if c2_next_cursor:
+            refresh_record['c2_search_next_cursor'] = c2_next_cursor
         _panel_ops.persist_candidates_refresh(root, refresh_record)
         try:
             bundle = _panel_ops.build_panel_bundle(root, factory)

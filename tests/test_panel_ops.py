@@ -6,6 +6,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from http.server import ThreadingHTTPServer
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
@@ -3634,6 +3635,175 @@ class N58Collective2SearchStrategiesScanTests(unittest.TestCase):
 
         self.assertEqual(prodigy_rank.WINDOW_DAYS, 15)
         self.assertEqual(prodigy_rank.MIN_TRADES, 5)
+
+
+def _n59_http_error_414() -> HTTPError:
+    return HTTPError(
+        url='https://api.collective2.com/Strategies/GetStrategyActiveOrders',
+        code=414,
+        msg='URI Too Long',
+        hdrs={},
+        fp=BytesIO(),
+    )
+
+
+def _n59_post_refresh_snapshot_side_effect(
+    base: str,
+    prodigy_calculate,
+    *,
+    fetch_side_effect,
+    snapshot_side_effect,
+    root_allowlist: Path,
+    approved_ids: list[str],
+    c2_key: str | None = 'test-c2-secret',
+) -> tuple[dict, list]:
+    _write_c2_allowlist_fixture(root_allowlist, approved_ids)
+    env = _n57_env_without_c2_paper_copy_ids()
+    if c2_key is not None:
+        env['C2_API4_KEY'] = c2_key
+    else:
+        env.pop('C2_API4_KEY', None)
+    snapshot_calls: list = []
+    seen = snapshot_calls
+
+    def _wrapped_snapshot(strategy_ids, key, out_dir, **kwargs):
+        seen.append(list(strategy_ids or []))
+        if snapshot_side_effect is not None:
+            return snapshot_side_effect(strategy_ids, key, out_dir, **kwargs)
+        return _n54_mock_c2_snapshot(strategy_ids, key, out_dir, **kwargs)
+
+    patches = [
+        patch('v4_web_dashboard.c2_history_collect.fetch', side_effect=fetch_side_effect),
+        patch('v4_web_dashboard.c2_signal_feed.snapshot', side_effect=_wrapped_snapshot),
+        patch.dict(os.environ, env, clear=True),
+    ]
+    for p in patches:
+        p.start()
+    try:
+        with patch('v4_web_dashboard.prodigy_rank.calculate', wraps=prodigy_calculate):
+            req = _post_candidates_refresh(
+                base + '/api/signals/candidates/refresh',
+                {},
+                session='panel-secret',
+            )
+            with urlopen(req, timeout=5) as resp:
+                payload = json.load(resp)
+        return payload, snapshot_calls
+    finally:
+        for p in reversed(patches):
+            p.stop()
+
+
+class N59Collective2SnapshotIsolationTests(unittest.TestCase):
+    """N59 — active-orders snapshot must not abort SearchStrategies scan (F-022)."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+        from prodigy_rank import calculate as prodigy_calculate
+
+        self._prodigy_calculate = prodigy_calculate
+        self._fetch_log: list = []
+        self._search_seen: list = []
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, *, connect_factory=None, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(
+            root,
+            operator_session=session,
+            connect_factory=connect_factory,
+        )
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def _fetch_mock(self, *, next_cursor: str = ''):
+        return _n58_make_search_strategies_fetch_mock(
+            next_cursor=next_cursor,
+            fetch_log=self._fetch_log,
+            search_seen=self._search_seen,
+        )
+
+    def test_n59_empty_allowlist_scan_ok_snapshot_skips_scan_page_ids(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _, server, thread, base = self._server(root)
+            try:
+                payload, snap_calls = _n59_post_refresh_snapshot_side_effect(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=self._fetch_mock(),
+                    snapshot_side_effect=lambda *_a, **_kw: (_ for _ in ()).throw(_n59_http_error_414()),
+                    root_allowlist=root,
+                    approved_ids=[],
+                )
+                self.assertTrue(self._search_seen)
+                queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
+                ids = {str(r.get('provider_id')) for r in queue}
+                self.assertIn(_N58_SCAN_ELIGIBLE_ID, ids)
+                issues = [str(i) for i in (payload.get('issues') or [])]
+                self.assertFalse(any('collective2_refresh_failed' in i for i in issues))
+                self.assertFalse(snap_calls, msg='empty paper-copy allowlist must skip snapshot')
+                sources = payload.get('sources_ok') or []
+                self.assertIn('collective2', sources)
+                c2 = (payload.get('copy') or {}).get('collective2') or {}
+                self.assertFalse(c2.get('approved_for_paper_copy'))
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n59_snapshot_414_with_allowlist_does_not_abort_collective2_source(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            store = {'signal_provider_approvals': {}}
+            _, server, thread, base = self._server(
+                root,
+                connect_factory=_approvals_memory_connect(store),
+            )
+            paper_id = '88001001'
+            try:
+                payload, snap_calls = _n59_post_refresh_snapshot_side_effect(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=self._fetch_mock(),
+                    snapshot_side_effect=lambda *_a, **_kw: (_ for _ in ()).throw(_n59_http_error_414()),
+                    root_allowlist=root,
+                    approved_ids=[paper_id],
+                )
+                queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
+                ids = {str(r.get('provider_id')) for r in queue}
+                self.assertIn(_N58_SCAN_ELIGIBLE_ID, ids)
+                issues = [str(i) for i in (payload.get('issues') or [])]
+                self.assertTrue(
+                    any('collective2_active_orders_snapshot_failed' in i for i in issues),
+                    msg='snapshot HTTPError must be isolated issue',
+                )
+                self.assertTrue(
+                    any('414' in i or 'HTTPError' in i for i in issues),
+                    msg='issue must name HTTP 414 or HTTPError without secrets',
+                )
+                self.assertFalse(any('collective2_refresh_failed' in i for i in issues))
+                self.assertIn('collective2', payload.get('sources_ok') or [])
+                self.assertEqual(snap_calls, [[int(paper_id)]])
+                self.assertEqual(payload.get('orders_sent'), 0)
+                self.assertEqual(store['signal_provider_approvals'], {})
+            finally:
+                self._shutdown(server, thread)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

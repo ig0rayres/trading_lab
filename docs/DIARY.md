@@ -35,6 +35,16 @@
 
 ---
 
+## Sprint N59 — Isolamento snapshot ordens ativas Collective2 (ISS-024 / F-022)
+
+**Escopo:** falha HTTP 403/414 no instantâneo de ordens ativas não pode derrubar varredura SearchStrategies + fila elegível 15d.
+
+**Entregue (N59.0–N59.3):** `docs/.briefs/N59-GIT-FIRST-REUSE.md`; `_live_refresh_collective2` isola `c2_signal_feed.snapshot` (só lista nomeada cópia paper; pula sem IDs); aviso `collective2_active_orders_snapshot_failed:*`; suíte `N59Collective2SnapshotIsolationTests` (2); mapa §2, ISS-024 nota EXECUTE, F-022 corrigido, Feature 9 aceite N59.
+
+**Honestidade:** LIVE false; `orders_sent=0`; instantâneo **não** é Feature 4; **ISS-024 permanece aberto** até painel no ar.
+
+---
+
 ## Sprint N58 — Varredura Collective2 SearchStrategies (ISS-024 / F-021 / ISS-025)
 
 **Frente:** `sinais-raw-path` · **Estado:** EXECUTE (código + pytest na frente); merge/rebuild operador pendente.

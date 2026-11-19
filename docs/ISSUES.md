@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N58 (N57 #77 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
+| ISS-024 | aberto | N59 (N58 #78 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
 | ISS-025 | aberto | follow-up (fora de N58) | TradingView: varredura de estratégias exige contrato de busca — não existe no código recuperado |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -678,8 +678,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | **N58** (`front/sinais-raw-path`; N57 merge **#77** em `main`; não rouba N45–N47) |
-| Status | aberto — N54–N57 em `main` (#73/#74/#75/#76/#77); N58 EXECUTE na frente `sinais-raw-path` (SearchStrategies + Feature 4 / Prodígio 15d; disco = cache); **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
+| Sprint | **N59** (`front/sinais-raw-path`; N58 merge **#78** em `main`; não rouba N45–N47) |
+| Status | aberto — N54–N58 em `main` (#73/#74/#75/#76/#77/#78); N59 PLAN isolamento do instantâneo de ordens ativas; **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **varrer plataformas homologadas** e trazer **candidatos que já passam** Feature 4 / Prodígio 15d; allowlist não é pré-requisito para aparecer; aprovar ≠ fill. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -726,6 +726,14 @@
 **Nota planejamento N58 (2026-11-19):** follow-up ISS-024 / F-021; bloco `## Sprint N58` em `docs/ROADMAP.md`; brief `docs/.briefs/N58.brief.md`; Git First `docs/.briefs/N58-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até varredura Collective2 + filtro 15d + testes + merge + rebuild operador. TradingView scan **OUT**.
 
 **Nota N58 EXECUTE (2026-11-19):** frente `sinais-raw-path` — **Atualizar candidatos** obtém IDs Collective2 via GET `/Strategies/SearchStrategies`, grava `closed_trades` no volume canônico, aplica `prodigy_rank.calculate` (constantes Feature 4 / 15d **inalteradas**); fila enfileira só elegíveis e IDs ausentes do disco **antes** do refresh podem aparecer se a varredura + filtro passarem — **sem** allowlist como pré-requisito de visibilidade. Glob `{root}/providers/raw/*_closed_trades.json` (**N57**) permanece **cache**, não define o botão. Cópia paper: lista nomeada / env / livro-razão inalterados (`approved_for_paper_copy` false com lista vazia); refresh **não** grava aprovação. TradingView: **sem** varredura — aviso honesto ISS-025; origens ingeridas visíveis. F-021 **corrigido**; `tests/test_panel_ops.py` `N58Collective2SearchStrategiesScanTests` (7/7) verde na frente. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
+
+**Nota closeout N58 (2026-11-19):** PR **#78** MERGED → `main` @ `e7de7b6797cf39a755348d872d2a3db3ae46c541`. Chamado **permanece aberto**.
+
+**Nota operador 2026-11-19 (follow-up N59, EasyPanel):** SearchStrategies sozinho HTTP 200, 846 Results. `c2_signal_feed.snapshot` com 5 IDs → HTTP 403; com os 846 → HTTP 414. `_live_refresh_collective2` chama `snapshot(snap_ids, ...)` no **mesmo** `try` da varredura → fonte Collective2 inteira falha com `collective2_refresh_failed:HTTPError` e a fila perde o resultado da varredura / Prodígio. Instantâneo de ordens ativas **não** é Feature 4. LIVE false.
+
+**Nota planejamento N59 (2026-11-19):** follow-up ISS-024 / F-022; bloco `## Sprint N59` em `docs/ROADMAP.md`; brief `docs/.briefs/N59.brief.md`; Git First `docs/.briefs/N59-GIT-FIRST-REUSE.md`. Chamado permanece **aberto** até isolamento do instantâneo + testes + merge + rebuild operador. TradingView scan **OUT** (ISS-025 inalterado).
+
+**Nota EXECUTE N59 (2026-11-19):** código isola `c2_signal_feed.snapshot` da varredura SearchStrategies; página da listagem **não** vai ao instantâneo; HTTP 403/414 do instantâneo → `collective2_active_orders_snapshot_failed:*`, `sources_ok` collective2 se search+trades passaram. Pytest `N59Collective2SnapshotIsolationTests` (2). **Chamado permanece aberto** até merge + rebuild EasyPanel + homologação operador. LIVE false.
 
 ---
 

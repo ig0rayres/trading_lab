@@ -82,7 +82,8 @@
 | N55 | N | Fila de pré-aprovação com elegíveis de Collective2, Prodígio e TradingView após atualizar; LIVE false | concluida | 5 | observability | ISS-024 follow-up fila multiplataforma · PR #74 | *(abaixo)* |
 | N56 | N | Job lê arquivos brutos no volume certo; fila Prodígio só elegíveis 15d; LIVE false | concluida | 4 | observability | ISS-024 / F-019 join duplicado · PR #76 | *(abaixo)* |
 | N57 | N | Collective2 na fila a partir dos arquivos brutos, sem lista nomeada para aparecer; LIVE false | concluida | 4 | observability | ISS-024 / F-020 fila C2 sem allowlist · PR #77 | *(abaixo)* |
-| N58 | N | Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca; LIVE false | planejada | 4 | observability | ISS-024 / F-021 varredura C2 · plan_only | *(abaixo)* |
+| N58 | N | Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca; LIVE false | concluida | 4 | observability | ISS-024 / F-021 varredura C2 · PR #78 | *(abaixo)* |
+| N59 | N | Varredura Collective2 segue se ordens ativas falharem; LIVE false | concluida | 4 | observability | ISS-024 / F-022 isolamento snapshot | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -152,6 +153,7 @@
 | N56 | senior+qa | Join dos arquivos brutos no volume de relatórios; fila só elegíveis; LIVE false |
 | N57 | senior+qa | Collective2 na fila a partir dos arquivos brutos sem allowlist para aparecer; LIVE false |
 | N58 | senior+qa | Varredura Collective2 com regras de 15 dias; TradingView fora até contrato de busca; LIVE false |
+| N59 | senior+qa | Isolar consulta de ordens ativas da varredura Collective2; LIVE false |
 
 ---
 
@@ -6446,6 +6448,254 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = Collective2 SearchStrategies + Feature 4 filter; disk glob is cache; paper-copy gate unchanged; TV scan OUT ISS-025; ingested origins remain), `docs/DASHBOARD-OPERATIONS.md` (Atualizar is platform scan, not raw inventory), `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 TV search contract), `docs/FINDINGS.md` (F-021; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N58 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
+
+---
+
+## Sprint N59 — Não perder a varredura Collective2 se a consulta de ordens ativas falhar
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-19 · fonte ISS-024 / F-022 · N58 #78 em `main`  
+> titulo_humano: Atualizar não perde a varredura Collective2 se ordens ativas falharem  
+> resumo_humano: Ao atualizar candidatos, a listagem Collective2 e o filtro de quinze dias continuam mesmo se a consulta de ordens ativas recusar ou o endereço ficar longo demais. Quem passa as regras entra na fila com a lista de cópia vazia. LIVE false.  
+> Gate: lista vazia + SearchStrategies e histórico fechado mockados ok + snapshot HTTP 414 → refresh 200 com fila elegível e sources_ok collective2; aviso de instantâneo sem collective2_refresh_failed; pytest verde; LIVE false  
+> review: senior+qa  
+> Brief: `docs/.briefs/N59.brief.md`  
+> Git First: `docs/.briefs/N59-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N58 concluída (#78) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N58  
+> plan_only: true
+
+### Em uma frase
+
+Ao atualizar candidatos, a varredura Collective2 e o filtro de quinze dias continuam mesmo se a consulta de ordens ativas falhar; quem passa as regras entra na fila.
+
+### O que muda para você
+
+- Atualizar deixa de tratar a Collective2 como morta só porque a consulta de ordens ativas recusou ou o endereço ficou longo demais
+- Com a lista de cópia vazia, quem já passa as regras de quinze dias continua aparecendo na fila
+- O aviso descreve a falha das ordens ativas sem apagar o resultado da varredura
+- A consulta de ordens ativas deixa de receber a página inteira da listagem — ela não define quem é candidato
+- «Finalizado» só depois do merge no ramo principal e rebuild do painel no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Varredura Collective2 sobrevive à falha de ordens ativas | Atualizar com lista de cópia vazia ainda traz quem passa quinze dias; o aviso de ordens ativas não esvazia a fila |
+| 2 | Aviso honesto, fonte Collective2 ainda ok | O painel diz que a consulta de ordens ativas falhou e mesmo assim marca a varredura Collective2 como feita |
+| 3 | Ordens ativas fora da elegibilidade | A listagem oficial não é mandada inteira para a consulta de ordens ativas |
+| 4 | Cópia paper continua fechada | Atualizar não aprova nem envia operação |
+| 5 | Prova automática | A bateria falha se a consulta de ordens ativas derrubar a fila, se exigir lista nomeada, ou se mudar os números de quinze dias |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [x] | P | N59.0 Inventariar a consulta de ordens ativas versus a varredura | `docs/.briefs/N59-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N59.1 Isolar a consulta de ordens ativas da varredura Collective2 | `src/v4_web_dashboard.py` | N59.0 |
+| [x] | M | N59.2 Provar que a falha de ordens ativas não esvazia a fila | `tests/test_panel_ops.py` | N59.1 |
+| [x] | P | N59.3 Registrar no mapa que ordens ativas não definem quem é candidato | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md, docs/REQUIREMENTS.md` | N59.2 |
+
+### Quality Brief (Sprint N59)
+
+**Alvo:** **Atualizar candidatos** continua a varrer Collective2 e a enfileirar só quem passa quinze dias mesmo quando a consulta de ordens ativas falha; o instantâneo não recebe a página da listagem.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh`, N55–N58 queue/join/discovery/SearchStrategies; argparse `--root` default `/app/reports` unchanged.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS = 15`, `MIN_TRADES = 5`); do not change them.
+Avoid: passing SearchStrategies page IDs into `c2_signal_feed.snapshot`; mapping snapshot HTTPError to `collective2_refresh_failed`; inventing GetStrategyActiveOrders batching; TradingView search HTTP; auto-approve; `process_after_gate_b`; printing API keys; stealing N45–N47.
+
+### Technical Advisory
+
+- [ABORDAGEM] Isolar `snapshot` num `try` interno; nunca unir IDs da listagem; pular se a lista nomeada de cópia estiver vazia — ordens ativas não são elegibilidade.
+- [RISCO] Capturar HTTPError da listagem no mesmo `except` interno esconderia falha real de varredura — o `except` de instantâneo fica só em volta de `snapshot`.
+- [RISCO] Inventar lote/paginação para `GetStrategyActiveOrders` transformaria diagnóstico em segundo cliente Collective2; 414 é limite de URL, não Feature 4.
+
+> EXPIRES at end of Sprint N59. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Inventar lote, paginação ou cliente novo para ordens ativas da página da listagem
+- Inventar busca TradingView (ISS-025)
+- Alterar constantes de quinze dias / mínimo de operações
+- Autoaprovar; mutar livro-razão no refresh
+- Ordem / fill / LIVE true
+- SSH no EasyPanel; N45–N47; marcar «finalizado» antes do merge em `main`
+
+### Task N59.0 — Inventariar a consulta de ordens ativas versus a varredura
+
+**Entrega:** Inventário dizendo que a consulta de ordens ativas é só diagnóstico, que a varredura e o filtro de quinze dias já existem, e que misturar os dois no mesmo bloco derruba a fonte Collective2.
+**Como conferir:** O inventário cita a listagem oficial e o histórico fechado como elegibilidade, proíbe mandar a página inteira para ordens ativas, e marca o TradingView como fora.
+**Por quê:** Sem isso o EXECUTE tenta “consertar” o 414 inventando lote, ou deixa a falha abortar de novo a varredura.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N59-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `_live_refresh_collective2` shared try; `c2_signal_feed.snapshot` / `GetStrategyActiveOrders`; HTTPError subclasses OSError; N50 snapshot-not-ticket; Feature 4 is `prodigy_rank` not active orders; ADR-012 TV ingest only; LIVE false. Never print secrets.
+
+### Task N59.1 — Isolar a consulta de ordens ativas da varredura Collective2
+
+**Entrega:** Depois de atualizar, a varredura Collective2 e o filtro de quinze dias terminam mesmo se a consulta de ordens ativas falhar; a fila mostra quem passa, com a lista de cópia vazia.
+**Como conferir:** Com a lista vazia, atualizar traz candidatos da varredura; um aviso descreve a falha das ordens ativas sem dizer que a Collective2 inteira morreu; atualizar não grava aprovação.
+**Por quê:** Hoje a consulta de ordens ativas vive no mesmo bloco da varredura: recusa ou endereço longo demais marca a fonte como falha e a fila perde o resultado.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_live_refresh_collective2` runs SearchStrategies + closed_trades then `c2_signal_feed.snapshot(snap_ids)` where `snap_ids` unions **scan page IDs** with approved IDs, all in one `try`. `HTTPError` is an `OSError`, so 403/414 become `collective2_refresh_failed:HTTPError` and skip `sources_ok.append('collective2')`.
+- **Estado desejado:** SearchStrategies + closed_trades + Feature 4 filter stay the success path. `sources_ok.append('collective2')` if that path succeeded. Snapshot in a **nested** `try` catching `urllib.error.HTTPError`, `URLError`, `ValueError` (and `OSError` only there): append `collective2_active_orders_snapshot_failed:{Type}` plus HTTP code when present (403/414), **no secrets, no ID dump**. **Never** pass SearchStrategies page IDs to snapshot. Preferred: skip snapshot on live-criteria when approved IDs are empty, or omit snapshot from the job (active orders are not eligibility). Do not invent GetStrategyActiveOrders batching. Empty allowlist still shows eligible scan rows. TV ISS-025 unchanged. `--root` default unchanged.
+- **Arquivo(s):** `src/v4_web_dashboard.py`
+- **Fonte(s):** ISS-024 operador EasyPanel 2026-11-19, F-022, N50 snapshot-not-ticket, N58 scan path
+- **Risco:** MEDIUM — shared live-criteria job; must not swallow real SearchStrategies failures
+- **Task size:** M (1 file + isolation design)
+
+**executor_prompt**:
+
+```yaml
+id: N59.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N59.0"]
+files:
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "_live_refresh_collective2" src/v4_web_dashboard.py && rg "c2_signal_feed.snapshot" src/v4_web_dashboard.py && rg "collective2_active_orders_snapshot_failed" src/v4_web_dashboard.py'
+  - component: src/c2_signal_feed.py
+    reuse_as: call
+    convergence_check: 'rg "GetStrategyActiveOrders" src/c2_signal_feed.py && rg "execution_authorized" src/c2_signal_feed.py'
+  - component: src/c2_history_collect.py
+    reuse_as: call
+    convergence_check: 'rg "SearchStrategies" src/c2_history_collect.py src/v4_web_dashboard.py'
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "WINDOW_DAYS = 15" src/prodigy_rank.py && rg "MIN_TRADES = 5" src/prodigy_rank.py'
+guardrail_contract:
+  - class: secrets
+    id: n59-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' in t"
+    pass_condition: no live keys hardcoded; snapshot issues must not interpolate the API key
+  - class: subagent-safety
+    id: n59-1-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t"
+    pass_condition: dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n59-1-no-auto-approve
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'upsert_signal_provider_approval' not in t"
+    pass_condition: live-criteria refresh does not write ledger approve
+  - class: subagent-safety
+    id: n59-1-snapshot-isolated
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'collective2_active_orders_snapshot_failed' in t; assert 'def _live_refresh_collective2' in t"
+    pass_condition: snapshot failures use dedicated issue prefix, not collective2_refresh_failed
+  - class: subagent-safety
+    id: n59-1-no-invented-c2-stats
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/c2_history_collect.py').read_text(); assert 'SearchHistoricalStrategies' not in t; assert 'GetLeaderBoard' not in t"
+    pass_condition: scan stays SearchStrategies plus recovered closed_trades
+  - class: subagent-safety
+    id: n59-1-keep-root-default
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert \"default='/app/reports'\" in t or 'default=\"/app/reports\"' in t"
+    pass_condition: argparse --root default remains /app/reports
+  - class: subagent-safety
+    id: n59-1-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: Feature 4 / Prodigy 15d constants unchanged
+```
+
+### Quality Brief (Sprint N59)
+
+See sprint Quality Brief above. LIVE false; refresh ≠ approve ≠ fill; isolate snapshot; do not invent Feature 4 thresholds; TradingView search remains out.
+
+Melhoria: isolate `c2_signal_feed.snapshot` from the SearchStrategies + closed_trades try in `_live_refresh_collective2`; never pass the scan page; on snapshot HTTPError/URLError/ValueError record `collective2_active_orders_snapshot_failed:*` and still `sources_ok` collective2.
+Contexto: after N58 #78, EasyPanel SearchStrategies returns 846 IDs (HTTP 200) but snapshot with those IDs is HTTP 414 (5 IDs → 403). Shared try maps that to `collective2_refresh_failed:HTTPError` (`HTTPError` subclasses `OSError`) and drops `sources_ok`. Snapshot is N50 read-only diagnostic, not Feature 4.
+Objetivo: keep `POST /api/signals/candidates/refresh` (`mode: live_criteria`, `orders_sent=0`). Nested try around snapshot only. Preferred skip snapshot on scan path / approved-IDs-only / omit from live-criteria. Never `process_after_gate_b`. Never invent scores or GetStrategyActiveOrders batching. Never print `C2_API4_KEY`. Never call a TradingView search host.
+Critério de pronto: mocked SearchStrategies + closed_trades success + snapshot HTTPError 414 → HTTP 200 with eligible C2 queue rows, `collective2` in `sources_ok`, empty allowlist, no `collective2_refresh_failed` for that case.
+Cenários de teste (mínimo no implementer self-check; N59.2 owns pytest):
+  1. Caso normal: varredura ok + snapshot 414 → fila elegível, sources_ok, aviso de instantâneo se invocado
+  2. Edge: snapshot não recebe IDs da página da listagem
+  3. Edge: lista nomeada vazia ainda mostra quem passa quinze dias
+  4. Regressão: N58 scan; cópia paper fechada; `--root` default; `orders_sent=0`; sem busca TV
+
+### Task N59.2 — Provar que a falha de ordens ativas não esvazia a fila
+
+**Entrega:** Testes comprovam que a consulta de ordens ativas pode falhar e a fila Collective2 elegível continua, sem lista nomeada e sem tratar a varredura como morta.
+**Como conferir:** A bateria falha se um erro 414 no instantâneo virar falha da fonte Collective2, se a fila exigir lista nomeada, se autoaprovar, ou se mudar os números de quinze dias.
+**Por quê:** Os testes atuais da varredura fingem que o instantâneo sempre dá certo, então o painel no ar quebrou sem o pytest vermelho.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — N58 helpers patch snapshot to always succeed (`_n54_mock_c2_snapshot`)
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N59.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N59.1"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "N58Collective2SearchStrategiesScanTests" tests/test_panel_ops.py && rg "_n54_mock_c2_snapshot" tests/test_panel_ops.py'
+  - component: tests/test_panel_ops.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "approved_for_paper_copy" tests/test_panel_ops.py && rg "N59" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n59-2-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'api.collective2.com' not in t.lower(); assert 'tradingview.com' not in t.lower() or 'webhook' in t.lower()"
+    pass_condition: tests do not call live Collective2 or invented TradingView search hosts
+  - class: subagent-safety
+    id: n59-2-no-harness-bug
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'tests/' not in t"
+    pass_condition: production does not special-case tests/ paths
+  - class: subagent-safety
+    id: n59-2-no-committed-allowlist-seed
+    target: config/c2_paper_copy_allowlist.json
+    check: python3 -c "import json; from pathlib import Path; d=json.loads(Path('config/c2_paper_copy_allowlist.json').read_text()); assert d.get('approved_ids')==[]"
+    pass_condition: committed allowlist stays empty
+  - class: subagent-safety
+    id: n59-2-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: tests must not rewrite Feature 4 constants
+```
+
+### Quality Brief (Sprint N59)
+
+See sprint Quality Brief.
+
+Melhoria: pytest proving mocked SearchStrategies + closed_trades success while snapshot raises HTTPError 414 still yields HTTP 200 with eligible queue rows and `collective2` in `sources_ok`, empty allowlist.
+Objetivo: nodeids covering (1) empty allowlist + mocked SearchStrategies eligible ID + closed_trades that yield `PRODIGY_CANDIDATE_RESEARCH` + `c2_signal_feed.snapshot` `side_effect` `urllib.error.HTTPError` code 414 → POST refresh 200, eligible C2/Prodígio pending in `copy.preapproval.queue`, `collective2` in `sources_ok`, `approved_for_paper_copy` false, `collective2_refresh_failed` absent; (2) snapshot **not** called with the SearchStrategies page ID list (call args empty, skipped, or approved-only); (3) when snapshot **is** invoked and raises, issues contain `collective2_active_orders_snapshot_failed` with `HTTPError` and/or `414` — no secrets; (4) POST refresh does not upsert ledger approve; (5) N58 regressions: scan without allowlist, TV `tradingview_scan_out:ISS-025`, `orders_sent=0`, `--root` default, no `SearchHistoricalStrategies` / `GetLeaderBoard`; (6) `process_after_gate_b` absent. Do **not** reuse `_n54_mock_c2_snapshot` in the 414 case (that mock hid the bug). Do not teach production about `tests/` paths (no HARNESS_BUG). Do not commit operator IDs into `config/c2_paper_copy_allowlist.json`.
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_c2_signal_feed.py -q` green.
+Cenários:
+  1. Caso normal: varredura ok + snapshot 414 → 200, fila elegível, sources_ok, sem collective2_refresh_failed
+  2. Edge: snapshot não recebe a página da listagem
+  3. Edge: instantâneo invocado + 414 → aviso `collective2_active_orders_snapshot_failed`
+  4. Edge: lista nomeada vazia → cópia paper fechada
+  5. Regressão: N58 scan; N55 union; N56 path; cooldown 429; Aprovar inalterado; sem busca TV
+
+### Task N59.3 — Registrar no mapa que ordens ativas não definem quem é candidato
+
+**Entrega:** Mapa e chamado descrevem que a consulta de ordens ativas não aborta a varredura Collective2 e não substitui as regras de quinze dias; o chamado ISS-024 permanece aberto até merge.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: sprint desta rodada; instantâneo de ordens ativas é aviso, não critério; Feature 9 marcada só se os testes existirem.
+**Por quê:** O texto atual ainda pode fazer o operador achar que a Collective2 morreu quando só a consulta de ordens ativas falhou.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = SearchStrategies + Feature 4; snapshot failure is isolated issue, not dead C2 source; paper-copy gate unchanged; TV scan OUT ISS-025), `docs/DASHBOARD-OPERATIONS.md` if the Sinais row mentions C2 refresh, `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 unchanged), `docs/FINDINGS.md` (F-022; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N59 checkboxes only with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
 
 ---
 

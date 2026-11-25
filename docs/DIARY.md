@@ -2,8 +2,9 @@
 
 ## Índice
 
-| Sprint | Módulos | Temas | Linhas |
+| Sprint | Módulos | Temas | Linhas | 
 |--------|---------|-------|--------|
+| N61 | v4_web_dashboard, panel_ops_html, Dockerfile, CI, tests, docs | APP_GIT_SHA; aviso listagem com código; refresh honesto; F-024 | 38–46 |
 | N58 | c2_history_collect, v4_web_dashboard, panel_ops_data, tests, docs | SearchStrategies + Feature 4; F-021; TV scan OUT ISS-025; disco = cache | 37–45 |
 | N57 | v4_web_dashboard, panel_ops_data, tests, docs | C2 na fila via raw glob; F-020; allowlist = cópia paper | 47–58 |
 | N56 | v4_web_dashboard, tests, docs | Join canônico providers/raw; F-019; fila Prodígio só elegíveis | 49–57 |
@@ -32,6 +33,16 @@
 | N24 | v4_web_dashboard, panel_ops | Onda 3 bundle N24–N26; PR #27; MVP-OP-1.3 | 40–69 |
 | D1 | baseline, vendor | CI, submodule, EasyPanel 2 apps | 25–41 |
 | D2 | ledger | migrations, ledger_store, CI Postgres | 15–21 |
+
+---
+
+## Sprint N61 — Versão do painel e aviso honesto da listagem (ISS-024 / F-024)
+
+**Escopo:** distinguir versão do app (`APP_GIT_SHA`) do pin vendor; aviso Collective2 com código HTTP; `refreshed_at` no início do refresh; meta `sources_ok` no banner; uma repetição em 429/5xx.
+
+**Entregue (N61.0–N61.5):** `Dockerfile` + CI `--build-arg APP_GIT_SHA`; `/healthz` e `build_snapshot`; Sinais «Versão do painel»; `_collective2_refresh_failed_issue`, `_persist_refresh_attempt_start`, retry SearchStrategies; suíte `N61Collective2RefreshHonestyTests` (7); mapa §2, ISS-024 nota EXECUTE, F-024 corrigido, Feature 9 aceite N61.
+
+**Honestidade:** LIVE false; **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador.
 
 ---
 

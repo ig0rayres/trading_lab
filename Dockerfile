@@ -10,8 +10,10 @@ COPY scripts /app/scripts
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 ARG UPSTREAM_COMMIT=3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd
+ARG APP_GIT_SHA=unknown
 ENV UPSTREAM_DIR=/app/vendor/day-trader-skill
 ENV UPSTREAM_COMMIT=${UPSTREAM_COMMIT}
+ENV APP_GIT_SHA=${APP_GIT_SHA}
 RUN mkdir -p /app/vendor \
     && git clone --depth 1 https://github.com/Jakeschincariol/day-trader-skill /app/vendor/day-trader-skill \
     && cd /app/vendor/day-trader-skill \

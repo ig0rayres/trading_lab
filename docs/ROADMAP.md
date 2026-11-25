@@ -85,6 +85,7 @@
 | N58 | N | Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca; LIVE false | concluida | 4 | observability | ISS-024 / F-021 varredura C2 · PR #78 | *(abaixo)* |
 | N59 | N | Varredura Collective2 segue se ordens ativas falharem; LIVE false | concluida | 4 | observability | ISS-024 / F-022 isolamento snapshot | *(abaixo)* |
 | N60 | N | Histórico fechado parcial não derruba a Collective2; botão sai de «Atualizando…»; LIVE false | em_execucao | 5 | observability | ISS-024 / F-023 coleta em massa · plan_only | *(abaixo)* |
+| N61 | N | Versão do painel no ar e aviso da listagem Collective2 com número e hora; LIVE false | planejada | 6 | observability | ISS-024 / F-024 · plan_only | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -156,6 +157,7 @@
 | N58 | senior+qa | Varredura Collective2 com regras de 15 dias; TradingView fora até contrato de busca; LIVE false |
 | N59 | senior+qa | Isolar consulta de ordens ativas da varredura Collective2; LIVE false |
 | N60 | senior+qa | Isolar coleta de histórico fechado da fonte Collective2; botão não fica preso; LIVE false |
+| N61 | senior+qa | Versão do painel no ar; aviso da listagem com número e hora; uma nova tentativa só em erro temporário; LIVE false |
 
 ---
 
@@ -7018,6 +7020,386 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = SearchStrategies + closed trades per ID with partial issue `collective2_closed_trades_partial_failed`; snapshot stays N59; button leaves «Atualizando…» on timeout; paper-copy gate unchanged; TV scan OUT ISS-025), `docs/DASHBOARD-OPERATIONS.md` if the Sinais row mentions C2 refresh, `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 unchanged), `docs/FINDINGS.md` (F-023; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N60 checkbox only `[x]` with cited nodeids. LIVE false. N45–N47 not started. Never print secrets.
+
+---
+
+## Sprint N61 — Ver a versão no ar e o número do erro da listagem Collective2
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo plan` 2026-11-25 · fonte ISS-024 / F-024 · N60 #80 em `main` (`4264213`)  
+> titulo_humano: Ver a versão no ar e o número do erro da listagem Collective2  
+> resumo_humano: Ao atualizar candidatos, o painel mostra a versão que está no ar, a hora da tentativa e o número do erro da listagem Collective2. Um aviso antigo deixa de parecer a falha de agora. LIVE false.  
+> Gate: /healthz e /api/status expõem app_git_sha distinto de UPSTREAM_COMMIT; HTTPError 403 na listagem grava collective2_refresh_failed:HTTPError:403 e refreshed_at novo sem o aviso velho; 5xx/429 tentam no máximo duas vezes e 403 uma; banner mostra refreshed_at e sources_ok; script do botão sai de loading no aborto; pytest verde; LIVE false; constantes Feature 4 intactas; ISS-024 aberto  
+> review: senior+qa  
+> Brief: `docs/.briefs/N61.brief.md`  
+> Git First: `docs/.briefs/N61-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N60 concluída no remoto (#80 @ `4264213`) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N60  
+> plan_only: true
+
+### Em uma frase
+
+Ao atualizar candidatos, o painel mostra a versão que está no ar, a hora da tentativa e o número do erro da listagem Collective2, e um aviso antigo deixa de parecer a falha de agora.
+
+### O que muda para você
+
+- A tela Sinais mostra a versão do painel que está no ar, para não adivinhar se o deploy novo entrou
+- Se a listagem Collective2 falhar, o aviso traz o número do erro e a hora desta tentativa
+- Um aviso antigo de listagem some quando uma nova atualização começa
+- Falha temporária do servidor tenta a listagem mais uma vez; erro de acesso não dispara essa segunda tentativa
+- O botão continua saindo de «Atualizando…» se a espera estourar, e o chamado segue aberto até você confirmar no ar
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Versão do painel visível | Abrir Sinais ou a checagem de vida e ler a versão; se o build não gravou, aparece desconhecida |
+| 2 | Aviso com número e hora | Quando a listagem falha, o aviso inclui o número do erro e a hora desta tentativa |
+| 3 | Aviso velho não fica | Uma nova atualização tira o aviso anterior de falha da listagem |
+| 4 | Uma nova tentativa só no erro temporário | Erro de acesso não dispara segunda chamada; falha temporária do servidor tenta mais uma vez |
+| 5 | Botão não fica preso | Se a espera estourar, o texto deixa de ser «Atualizando candidatos…» |
+| 6 | Cópia paper continua fechada | Atualizar não aprova nem envia operação |
+| 7 | Prova automática | A bateria falha se o aviso não tiver o número, se a versão sumir, ou se mudar os números de quinze dias |
+
+Tabela para o agente; o operador lê as tarefas abaixo.
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N61.0 Inventariar a versão do painel e o aviso da listagem | `docs/.briefs/N61-GIT-FIRST-REUSE.md` | — |
+| [ ] | M | N61.1 Mostrar a versão do painel que está no ar | `Dockerfile, src/v4_web_dashboard.py, src/panel_ops_html.py, .github/workflows/ci.yml, .github/workflows/docker-smoke.yml` | N61.0 |
+| [ ] | M | N61.2 Gravar o número do erro e a hora de cada tentativa | `src/v4_web_dashboard.py` | N61.1 |
+| [ ] | M | N61.3 Mostrar hora e fontes ao lado do aviso | `src/panel_ops_html.py` | N61.2 |
+| [ ] | M | N61.4 Provar versão, número do erro e botão que solta | `tests/test_panel_ops.py` | N61.3 |
+| [ ] | P | N61.5 Registrar o resíduo sem fechar a homologação | `docs/OPERATOR-PANEL-MAP.md, docs/ISSUES.md, docs/FINDINGS.md, docs/REQUIREMENTS.md, docs/DIARY.md` | N61.4 |
+
+### Quality Brief (Sprint N61)
+
+**Alvo:** o operador e o agente conseguem ler a versão do painel que está no ar, e uma falha da listagem Collective2 deixa número do erro e hora desta tentativa — sem reaproveitar um aviso antigo e sem tratar o pin do vendor como versão do produto.
+
+Maintain: `LIVE_TRADING_ENABLED=false`; paper host only; dashboard does not submit or cancel orders; refresh and approval are not fills.
+Maintain: load `trader-entry|exit|budget|risk|scanner` only via `src/original.py`.
+Maintain: N54 POST `/api/signals/candidates/refresh`, N55–N60 queue/join/discovery/SearchStrategies/snapshot isolation/partial closed trades/AbortController; argparse `--root` default `/app/reports` unchanged.
+Maintain: Feature 4 / Prodígio 15d thresholds already in `prodigy_rank` (`WINDOW_DAYS = 15`, `MIN_TRADES = 5`); do not change them.
+Maintain: `UPSTREAM_COMMIT` as the vendor pin; `APP_GIT_SHA` is a different field and defaults to `unknown`.
+Avoid: EasyPanel API calls; retry on 403/414; `time.sleep` backoff; inventing a job-status route; TradingView search HTTP; auto-approve; `process_after_gate_b`; printing API keys; stealing N45–N47; mapping closed-trades failures back to `collective2_refresh_failed`.
+
+### Technical Advisory
+
+- [ABORDAGEM] Espelhar `ARG`/`ENV` de `UPSTREAM_COMMIT` com o nome `APP_GIT_SHA`. Mostrar em `/healthz`, `build_snapshot` e Sinais. Aviso da listagem no formato já usado pelo instantâneo (`tipo` + `code`). `persist_candidates_refresh` no início do POST para `refreshed_at` e para tirar `collective2_refresh_failed:*` anterior. Uma chamada extra só em HTTP 429 ou 500–599, sem espera.
+- [RISCO] Gravar o pin do vendor no campo da versão do painel faria o operador achar que a N60 está no ar quando só o vendor está pinado.
+- [RISCO] Apagar cursor ou IDs pendentes no registro inicial perderia a retomada da coleta N60. Copiar esses campos; não apagar arquivos brutos.
+- [RISCO] Repetir 403 ou inventar um `sleep` numérico seria um limiar novo. 403/414 continuam uma chamada só.
+
+> EXPIRES at end of Sprint N61. Not reusable in future sprints without a new preventive audit.
+
+### Fora de escopo
+
+- Ligar trading ao vivo ou chamar API do EasyPanel
+- Inventar busca TradingView (ISS-025)
+- Alterar constantes de quinze dias / mínimo de operações
+- Segunda tentativa em erro de acesso, ou mais de uma repetição
+- Autoaprovar; mutar livro-razão no refresh
+- Ordem / fill / LIVE true
+- N45–N47; marcar «finalizado» ou fechar ISS-024 antes da homologação no ar
+
+### Task N61.0 — Inventariar a versão do painel e o aviso da listagem
+
+**Entrega:** Inventário que separa a versão deste painel do pin do vendor, e diz que o aviso da listagem precisa do número do erro e da hora desta tentativa.
+**Como conferir:** O inventário cita a checagem de vida e o registro de refresh como reuso, proíbe tratar o pin do vendor como versão do painel, e marca o TradingView como fora.
+**Por quê:** Sem isso o EXECUTE ou confunde o pin do vendor com o deploy, ou inventa outro cliente Collective2 para “explicar” o aviso.
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N61-GIT-FIRST-REUSE.md`. Re-check vendor pin `3d0f4ef`; no bump. Cite: `/healthz` body today has no git field; `build_snapshot` neither; `UPSTREAM_COMMIT` is the vendor pin; SearchStrategies except uses `collective2_refresh_failed:{type}` without `code`; `_collective2_active_orders_snapshot_issue` already appends code; `persist_candidates_refresh` runs only after the job; N60 `AbortController` stays; Feature 4 is `prodigy_rank`; ADR-012 TV ingest only; LIVE false. Never print secrets. Do not set `sprint_atual` to N61.
+
+### Task N61.1 — Mostrar a versão do painel que está no ar
+
+**Entrega:** Sinais e a checagem de vida mostram a versão do painel que foi construída; se o build não gravou, dizem que está desconhecida.
+**Como conferir:** Com a versão injetada no ambiente, a checagem de vida e o status mostram esse valor; sem ela, mostram desconhecida; o pin do vendor continua noutro campo.
+**Por quê:** Depois do deploy da N60 o banner igual ao de antes não diz se a imagem nova entrou.
+
+**Detalhe técnico**
+
+- **Estado atual:** `GET /healthz` returns fixed `{"status":"alive","orders_enabled":false}`. `build_snapshot` (used by `GET /api/status`) has no app git field. `Dockerfile` has `ARG`/`ENV UPSTREAM_COMMIT` only. Sinais has no version line. CI `docker build -t trading-lab:ci .` passes no app SHA.
+- **Estado desejado:** `Dockerfile` gains `ARG APP_GIT_SHA=unknown` and `ENV APP_GIT_SHA=${APP_GIT_SHA}` **beside** the existing upstream pin (do not change the pin default). `/healthz` JSON adds `app_git_sha` (env stripped, or `unknown`) and `upstream_commit` from existing `UPSTREAM_COMMIT` (or `unknown`). `orders_enabled` stays false. Auth on `serve_public_get` unchanged. `build_snapshot` adds `app_git_sha` with the same value. `render_signals_page` shows a muted line «Versão do painel» with that value (no secrets, no broker host). `.github/workflows/ci.yml` and `docker-smoke.yml` pass `--build-arg APP_GIT_SHA=${{ github.sha }}` on the existing `docker build` line; do not remove or narrow test/smoke steps. Bare `docker build` without the arg must still succeed (`unknown`).
+- **Arquivo(s):** `Dockerfile`, `src/v4_web_dashboard.py`, `src/panel_ops_html.py`, `.github/workflows/ci.yml`, `.github/workflows/docker-smoke.yml`
+- **Fonte(s):** ISS-024 operador 2026-11-19 após #80, continuação 2026-11-25, F-024
+- **Risco:** MEDIUM — liveness body shape changes; must not flip `orders_enabled` or weaken CI
+- **Task size:** M (5 files + build-arg design)
+
+**executor_prompt**:
+
+```yaml
+id: N61.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N61.0"]
+files:
+  - Dockerfile
+  - src/v4_web_dashboard.py
+  - src/panel_ops_html.py
+  - .github/workflows/ci.yml
+  - .github/workflows/docker-smoke.yml
+reuse_targets:
+  - component: Dockerfile
+    reuse_as: copy_pattern
+    convergence_check: 'rg "ARG UPSTREAM_COMMIT" Dockerfile && rg "ARG APP_GIT_SHA" Dockerfile && rg "ENV APP_GIT_SHA" Dockerfile'
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "def build_snapshot" src/v4_web_dashboard.py && rg "app_git_sha" src/v4_web_dashboard.py && rg "/healthz" src/v4_web_dashboard.py'
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def render_signals_page" src/panel_ops_html.py && rg "APP_GIT_SHA" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n61-1-no-key-leak
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text()+Path('src/panel_ops_html.py').read_text(); assert 'sk_live' not in t.lower(); assert 'C2_API4_KEY' not in Path('src/panel_ops_html.py').read_text()"
+    pass_condition: version line does not embed API keys
+  - class: subagent-safety
+    id: n61-1-orders-stay-off
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'orders_enabled' in t; assert 'process_after_gate_b' not in t"
+    pass_condition: healthz still reports orders disabled; dashboard still never submits via Gate B
+  - class: subagent-safety
+    id: n61-1-sha-is-not-vendor-pin
+    target: Dockerfile
+    check: python3 -c "from pathlib import Path; t=Path('Dockerfile').read_text(); assert 'ARG APP_GIT_SHA=unknown' in t; assert 'ARG UPSTREAM_COMMIT=3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd' in t"
+    pass_condition: app SHA defaults unknown and the vendor pin argument is unchanged
+  - class: subagent-safety
+    id: n61-1-ci-still-builds
+    target: .github/workflows/ci.yml
+    check: python3 -c "from pathlib import Path; t=Path('.github/workflows/ci.yml').read_text()+Path('.github/workflows/docker-smoke.yml').read_text(); assert t.count('docker build')>=2; assert 'APP_GIT_SHA' in t"
+    pass_condition: both workflows still build an image and pass the app SHA build-arg
+```
+
+### Quality Brief (Sprint N61)
+
+See sprint Quality Brief above. LIVE false. `APP_GIT_SHA` is not `UPSTREAM_COMMIT`. Do not add a broker host. Do not call EasyPanel.
+
+Melhoria: expose the trading-lab git SHA on `/healthz`, `/api/status`, and Sinais via `APP_GIT_SHA`, default `unknown`.
+Contexto: after N60 #80 the operator still sees the old banner. Nothing on the panel distinguishes image digest from the vendor pin.
+Objetivo: same liveness route and snapshot. `orders_enabled` false. CI passes `github.sha` as the build-arg without dropping steps.
+Critério de pronto: with `APP_GIT_SHA=abc` the health JSON and snapshot contain `abc`; unset yields `unknown`; Dockerfile still pins `UPSTREAM_COMMIT` to `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd`.
+Cenários de teste (mínimo no implementer self-check; N61.4 owns pytest):
+  1. Caso normal: env definido aparece em `/healthz` e no status
+  2. Edge: env vazio vira `unknown`, não o pin do vendor
+  3. Regressão: `orders_enabled` false; pin `UPSTREAM_COMMIT` inalterado; sem chave no HTML
+
+### Task N61.2 — Gravar o número do erro e a hora de cada tentativa
+
+**Entrega:** Quando a listagem Collective2 falha, o aviso traz o número do erro, a hora gravada é a desta tentativa, e o aviso da tentativa anterior sai no começo da atualização.
+**Como conferir:** Um erro de acesso mostra o número no aviso e não dispara segunda chamada; uma falha temporária do servidor tenta mais uma vez; a hora no arquivo muda nesta tentativa.
+**Por quê:** O aviso de hoje só diz o tipo do erro, e um arquivo antigo continua na tela como se a falha fosse agora.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_live_refresh_collective2` and `_live_criteria_job` append `collective2_refresh_failed:{type(exc).__name__}` with no HTTP code. `_collective2_active_orders_snapshot_issue` already uses `exc.code` when set. `serve_signals_candidates_refresh` calls `persist_candidates_refresh` only after the job. `_invoke_c2_search_strategies` does not retry. N60 partial collect and N59 snapshot are separate issue prefixes. `collective2_refresh_failed:non_numeric_strategy_id` has no HTTP code and must stay.
+- **Estado desejado:** Add `_collective2_refresh_failed_issue(exc)` mirroring the snapshot helper: `collective2_refresh_failed:{Type}:{code}` when `getattr(exc, 'code', None)` is not None, else `collective2_refresh_failed:{Type}`. Use it in both except sites. No URL, body, key, or id list in the string. At the start of `serve_signals_candidates_refresh` (after the cooldown reject, before `_live_criteria_job`), `load_candidates_refresh` and `persist_candidates_refresh` with a new `refreshed_at`, issues minus any `collective2_refresh_failed:*`, `sources_ok` empty for this attempt, and **copied** `c2_search_next_cursor` / `c2_closed_trades_pending_ids` (the job still reads those fields from disk). Do not delete raw files. The existing end-of-request persist remains the final record. The 503 returns that already happen before that final write stay; this sprint does not add a third persist on those paths. In `_invoke_c2_search_strategies`, on `urllib.error.HTTPError` whose `code` is 429 or in 500–599, call the same attempt **once more** immediately (no `time.sleep`). Any other error, including 403/404/414 and errors without `code`, is single-shot. Record the last error. Do not change Feature 4 constants. Real SearchStrategies failure still omits `collective2` from `sources_ok`. `signals_providers_post` keeps `upsert_signal_provider_approval`; the refresh functions must not call it.
+- **Arquivo(s):** `src/v4_web_dashboard.py`
+- **Fonte(s):** ISS-024, F-024, N59 snapshot issue helper, N60 partial isolation
+- **Risco:** MEDIUM — shared live-criteria job; a broad retry or a start-write that drops pending ids would undo N58/N60
+- **Task size:** M (1 file + issue, supersede, and single-retry design)
+
+**executor_prompt**:
+
+```yaml
+id: N61.2
+size: M
+bom_ref: BOM-3
+depends_on: ["N61.1"]
+files:
+  - src/v4_web_dashboard.py
+reuse_targets:
+  - component: src/v4_web_dashboard.py
+    reuse_as: copy_pattern
+    convergence_check: 'rg "def _collective2_active_orders_snapshot_issue" src/v4_web_dashboard.py && rg "def _collective2_refresh_failed_issue" src/v4_web_dashboard.py && rg "collective2_refresh_failed:" src/v4_web_dashboard.py'
+  - component: src/panel_ops_data.py
+    reuse_as: call
+    convergence_check: 'rg "def persist_candidates_refresh" src/panel_ops_data.py && rg "def load_candidates_refresh" src/panel_ops_data.py && rg "persist_candidates_refresh" src/v4_web_dashboard.py && rg "load_candidates_refresh" src/v4_web_dashboard.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: extend
+    convergence_check: 'rg "def _invoke_c2_search_strategies" src/v4_web_dashboard.py && rg "SEARCH_STRATEGIES_PATH" src/c2_history_collect.py'
+  - component: src/prodigy_rank.py
+    reuse_as: call
+    convergence_check: 'rg "WINDOW_DAYS = 15" src/prodigy_rank.py && rg "MIN_TRADES = 5" src/prodigy_rank.py'
+guardrail_contract:
+  - class: secrets
+    id: n61-2-no-key-in-issue
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'sk_live' not in t.lower(); assert 'def _collective2_refresh_failed_issue' in t"
+    pass_condition: issue helper exists and no live key is hardcoded
+  - class: subagent-safety
+    id: n61-2-no-order
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'process_after_gate_b' not in t; refresh=t[t.index('def _live_refresh_collective2'):t.index('def serve_signals_reload')]; assert 'upsert_signal_provider_approval' not in refresh; assert 'def signals_providers_post' in t"
+    pass_condition: refresh functions do not approve; the existing providers POST may still call upsert_signal_provider_approval
+  - class: subagent-safety
+    id: n61-2-no-sleep-retry
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'time.sleep' not in t"
+    pass_condition: the extra SearchStrategies attempt does not invent a sleep threshold
+  - class: subagent-safety
+    id: n61-2-keep-partial-and-snapshot
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'collective2_closed_trades_partial_failed' in t; assert 'collective2_active_orders_snapshot_failed' in t; assert 'non_numeric_strategy_id' in t"
+    pass_condition: N59 and N60 issue prefixes and the non-numeric id issue remain
+  - class: subagent-safety
+    id: n61-2-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: Feature 4 constants unchanged
+```
+
+### Quality Brief (Sprint N61)
+
+See sprint Quality Brief. Do not retry 403. Do not sleep. Do not drop pending closed-trade ids on the start write. Do not map partial closed-trades onto `collective2_refresh_failed`.
+
+Melhoria: HTTP code on SearchStrategies failures, persist `refreshed_at` when the attempt starts, drop the previous `collective2_refresh_failed:*`, one immediate retry on 429/5xx.
+Contexto: the on-air banner is `collective2_refresh_failed:HTTPError` with no code. The JSON is written only when the POST finishes, so a stuck request keeps the old issue. N60 already handled closed-trades separately.
+Objetivo: `collective2_refresh_failed:HTTPError:403` when code is 403; start record has a new `refreshed_at` and no prior refresh-failed issue; 503 then success uses two calls; 403 uses one call. `orders_sent=0`.
+Critério de pronto: mocked HTTPError 403 → issue contains `:403`, `collective2` absent from `sources_ok`, on-disk `refreshed_at` is not the seeded stale timestamp.
+Cenários de teste (N61.4 owns pytest):
+  1. Caso normal: HTTPError 403 → aviso com `:403`, uma chamada, fonte fora de sources_ok, refreshed_at novo
+  2. Edge: primeiro 503 e segundo sucesso → duas chamadas e a fonte pode seguir
+  3. Edge: 403 não é repetido; aviso sem `code` fica só com o tipo
+  4. Edge: no momento em que a listagem levanta, o JSON já não tem o aviso velho sem número
+  5. Regressão: N60 parcial, N59 instantâneo, non_numeric, constantes 15d, sem sleep
+
+### Task N61.3 — Mostrar hora e fontes ao lado do aviso
+
+**Entrega:** Ao lado do aviso, a tela mostra a hora da última tentativa e quais fontes responderam, mesmo quando não há lista de erros.
+**Como conferir:** Com uma tentativa gravada, a área de candidatos mostra a hora e as fontes; se a espera estourar, o botão deixa «Atualizando candidatos…».
+**Por quê:** O aviso sozinho não diz se o arquivo é desta tentativa nem se a Collective2 respondeu.
+
+**Detalhe técnico**
+
+- **Estado atual:** `_candidates_refresh_warning_html` renders issues only, and returns empty when there are none. `_CANDIDATES_RELOAD_SCRIPT` already has `AbortController`, `clientWaitMs=45000`, `waitEnded`, and `finally` sets `disabled=false`. Success reloads after 500ms; abort does **not** need a new reload to clear the loading label.
+- **Estado desejado:** In the preapproval section, next to that banner, always show `candidates_refresh.refreshed_at` (or an honest empty) and `sources_ok` (or none). Keep the issue list. Do not remove `AbortController`. Do not add a status route. Do not call Collective2 from the browser. Do not embed `C2_API4_KEY`. 401 still goes to login; 429 still asks to wait.
+- **Arquivo(s):** `src/panel_ops_html.py`
+- **Fonte(s):** ISS-024, F-024, N60 button script
+- **Risco:** MEDIUM — operator-facing banner; must not drop the N60 abort path
+- **Task size:** M (1 file + banner line; abort is regress-only)
+
+**executor_prompt**:
+
+```yaml
+id: N61.3
+size: M
+bom_ref: BOM-3
+depends_on: ["N61.2"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: src/panel_ops_html.py
+    reuse_as: extend
+    convergence_check: 'rg "def _candidates_refresh_warning_html" src/panel_ops_html.py && rg "refreshed_at" src/panel_ops_html.py && rg "sources_ok" src/panel_ops_html.py'
+  - component: src/panel_ops_html.py
+    reuse_as: call
+    convergence_check: 'rg "AbortController" src/panel_ops_html.py && rg "Atualizando candidatos" src/panel_ops_html.py && rg "clientWaitMs=45000" src/panel_ops_html.py'
+guardrail_contract:
+  - class: secrets
+    id: n61-3-no-key-in-script
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'C2_API4_KEY' not in t; assert 'api4-general.collective2.com' not in t"
+    pass_condition: the browser script still does not embed the key or call Collective2
+  - class: subagent-safety
+    id: n61-3-abort-remains
+    target: src/panel_ops_html.py
+    check: python3 -c "from pathlib import Path; t=Path('src/panel_ops_html.py').read_text(); assert 'AbortController' in t; assert 'A espera terminou antes da resposta do servidor' in t; assert '/api/signals/candidates/status' not in t"
+    pass_condition: N60 abort copy remains; no new status route
+```
+
+### Quality Brief (Sprint N61)
+
+See sprint Quality Brief. Do not rewrite the abort script except to keep it. The new line is server-rendered from the refresh record.
+
+Melhoria: show `refreshed_at` and `sources_ok` beside the partial banner, including when the issue list is empty.
+Contexto: the operator cannot tell a stale `collective2_refresh_failed:HTTPError` from a fresh attempt. N60 already clears «Atualizando…» on abort when the image contains the script.
+Objetivo: the Sinais preapproval HTML includes the timestamp and the sources that responded. Abort path unchanged.
+Critério de pronto: a fixture refresh record with `refreshed_at` and `sources_ok` appears in the HTML next to the warning; the script still contains `AbortController` and the honest timeout sentence.
+Cenários de teste (N61.4 asserts HTML and script text):
+  1. Caso normal: record com hora e sources_ok aparece ao lado do aviso
+  2. Edge: sem issues, a hora ainda aparece
+  3. Regressão: AbortController, 45s, frase de espera, 401/429, sem host Collective2
+
+### Task N61.4 — Provar versão, número do erro e botão que solta
+
+**Entrega:** Testes comprovam a versão no ar, o número no aviso da listagem, a hora nova, a repetição só no erro temporário, e que o botão não fica em atualizando.
+**Como conferir:** A bateria falha se a versão sumir, se o erro de acesso não trouxer o número, se esse erro for repetido, ou se o botão puder ficar preso.
+**Por quê:** O teste da N60 só exige que o texto `collective2_refresh_failed` exista, então um aviso sem número continua verde.
+
+**Detalhe técnico**
+
+- **Arquivo(s):** `tests/test_panel_ops.py`
+- **Risco:** MEDIUM — extend N60 tests; do not weaken `test_n60_search_strategies_http_error_still_collective2_refresh_failed` into a prefix-only check that hides a missing code
+- **Task size:** M
+
+**executor_prompt**:
+
+```yaml
+id: N61.4
+size: M
+bom_ref: BOM-3
+depends_on: ["N61.3"]
+files:
+  - tests/test_panel_ops.py
+reuse_targets:
+  - component: tests/test_panel_ops.py
+    reuse_as: extend
+    convergence_check: 'rg "N60PartialClosedTradesCollectTests" tests/test_panel_ops.py && rg "N61" tests/test_panel_ops.py'
+  - component: src/v4_web_dashboard.py
+    reuse_as: call
+    convergence_check: 'rg "def _collective2_refresh_failed_issue" src/v4_web_dashboard.py && rg "collective2_refresh_failed:HTTPError:403" tests/test_panel_ops.py'
+  - component: src/panel_ops_html.py
+    reuse_as: call
+    convergence_check: 'rg "AbortController" src/panel_ops_html.py && rg "_CANDIDATES_RELOAD_SCRIPT" tests/test_panel_ops.py'
+guardrail_contract:
+  - class: subagent-safety
+    id: n61-4-no-live-net
+    target: tests/test_panel_ops.py
+    check: python3 -c "from pathlib import Path; t=Path('tests/test_panel_ops.py').read_text(); assert 'easypanel.io' not in t.lower(); assert 'HTTPError' in t"
+    pass_condition: tests do not name EasyPanel; Collective2 stays mocked via HTTPError; existing fixtures may cite the Collective2 host string
+  - class: subagent-safety
+    id: n61-4-no-harness-bug
+    target: src/v4_web_dashboard.py
+    check: python3 -c "from pathlib import Path; t=Path('src/v4_web_dashboard.py').read_text(); assert 'tests/' not in t"
+    pass_condition: production does not special-case tests/ paths
+  - class: subagent-safety
+    id: n61-4-keep-prodigy-constants
+    target: src/prodigy_rank.py
+    check: python3 -c "from pathlib import Path; t=Path('src/prodigy_rank.py').read_text(); assert 'WINDOW_DAYS = 15' in t; assert 'MIN_TRADES = 5' in t"
+    pass_condition: tests must not rewrite Feature 4 constants
+  - class: subagent-safety
+    id: n61-4-no-committed-allowlist-seed
+    target: config/c2_paper_copy_allowlist.json
+    check: python3 -c "import json; from pathlib import Path; d=json.loads(Path('config/c2_paper_copy_allowlist.json').read_text()); assert d.get('approved_ids')==[]"
+    pass_condition: committed allowlist stays empty
+```
+
+### Quality Brief (Sprint N61)
+
+See sprint Quality Brief.
+
+Melhoria: pytest for the fingerprint, the coded SearchStrategies issue, the start-of-refresh supersede, the single 5xx retry, the banner line, and the N60 abort regression.
+Objetivo: nodeids covering (1) `APP_GIT_SHA` set → `/healthz` and `/api/status` `app_git_sha` equals it, `orders_enabled` is false, and `upstream_commit` is not substituted for the app SHA; unset → `unknown`; (2) seeded stale `collective2_refresh_failed:HTTPError` plus a SearchStrategies `HTTPError` code 403 → response issues contain `collective2_refresh_failed:HTTPError:403`, `collective2` not in `sources_ok`, on-disk refresh `refreshed_at` differs from the seed, and the bare uncoded issue is not the surviving listagem failure; the mock sees **one** search call; (3) first call HTTP 503 and second call success → **two** search calls; (4) HTTP 403 is not retried; an `OSError` without `code` stays type-only; (5) while the mocked search runs, the on-disk record already dropped the stale uncoded issue and has a new `refreshed_at` (read the file inside the mock before raising); pending ids seeded on the previous record are still present at that moment; (6) Sinais HTML for a refresh record includes `refreshed_at` and a `sources_ok` entry next to the banner, including when issues are empty; (7) `_CANDIDATES_RELOAD_SCRIPT` still has `AbortController`, `clientWaitMs=45000`, the honest timeout sentence, and the abort path does not leave `Atualizando candidatos` as the terminal text; (8) N60 partial and N59 snapshot tests stay green; `WINDOW_DAYS = 15` and `MIN_TRADES = 5` unchanged; `orders_sent=0`; no `time.sleep` in the dashboard; no `tests/` special case. Do not teach production about `tests/` paths (no HARNESS_BUG). Do not commit operator IDs into `config/c2_paper_copy_allowlist.json`.
+Critério de pronto: `python3 -m pytest tests/test_panel_ops.py tests/test_prodigy_rank.py tests/test_image_pin.py -q` green.
+Cenários:
+  1. Caso normal: SHA no healthz e no status; 403 vira aviso com número e uma chamada
+  2. Edge: 503 depois sucesso → duas chamadas; sem code → só o tipo
+  3. Edge: JSON no meio da listagem já sem o aviso velho e com hora nova; pendências de histórico conservadas
+  4. Edge: HTML mostra hora e fontes mesmo sem lista de erros
+  5. Regressão: AbortController N60; N59/N60; constantes 15d; LIVE false; allowlist vazia
+
+### Task N61.5 — Registrar o resíduo sem fechar a homologação
+
+**Entrega:** Mapa e chamado descrevem a versão do painel e o aviso com número e hora; o chamado ISS-024 continua aberto até você confirmar no ar.
+**Como conferir:** Ler a área Sinais do mapa e o chamado: esta rodada está descrita; o aceite desta rodada na lista de funções continua desmarcado até existirem os testes.
+**Por quê:** Sem esse texto, o próximo deploy parece de novo um aviso genérico e ninguém sabe qual versão olhar.
+
+**Detalhe técnico**
+
+P task. Files: `docs/OPERATOR-PANEL-MAP.md` (Sinais shows app version; refresh banner shows `refreshed_at` and `sources_ok`; listagem issue includes HTTP code; one retry only on 429/5xx; button abort remains N60; paper-copy gate unchanged; TV scan OUT ISS-025), `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 unchanged), `docs/FINDINGS.md` (F-024; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N61 checkbox only `[x]` with cited nodeids. LIVE false. N45–N47 not started. Never print secrets. Do not close ISS-024.
 
 ---
 

@@ -819,12 +819,34 @@ def _preapproval_metrics_block_html(metrics: dict[str, Any] | None) -> str:
     return f'<div class="metrics-block">{"".join(spans)}</div>'
 
 
+def _candidates_refresh_meta_html(refresh: dict[str, Any] | None) -> str:
+    block = refresh if isinstance(refresh, dict) else {}
+    refreshed_at = str(block.get('refreshed_at') or '').strip()
+    sources = block.get('sources_ok')
+    if isinstance(sources, list) and sources:
+        sources_label = ', '.join(str(s) for s in sources)
+    else:
+        sources_label = 'nenhuma'
+    chunks: list[str] = []
+    if refreshed_at:
+        chunks.append(f'Última tentativa: <code>{esc(refreshed_at)}</code>')
+    chunks.append(f'Fontes OK: <code>{esc(sources_label)}</code>')
+    if not chunks:
+        return ''
+    return (
+        f'<p class="muted candidates-refresh-meta" role="status">'
+        f'{" · ".join(chunks)}</p>'
+    )
+
+
 def _candidates_refresh_warning_html(copy: dict[str, Any]) -> str:
     block = copy if isinstance(copy, dict) else {}
     refresh = block.get('candidates_refresh')
     issues: list[str] = []
     status: str | None = None
+    refresh_record: dict[str, Any] | None = None
     if isinstance(refresh, dict):
+        refresh_record = refresh
         raw_issues = refresh.get('issues')
         if isinstance(raw_issues, list):
             issues = [str(item) for item in raw_issues if str(item).strip()]
@@ -838,18 +860,20 @@ def _candidates_refresh_warning_html(copy: dict[str, Any]) -> str:
                 issues = [str(item) for item in raw_issues if str(item).strip()]
             status_val = pre.get('refresh_status')
             status = str(status_val) if status_val is not None else status
+    meta = _candidates_refresh_meta_html(refresh_record)
     if not issues:
-        return ''
+        return meta
     if status and status not in ('partial', 'ok'):
-        return ''
+        return meta
     items = ''.join(f'<li><code>{esc(issue)}</code></li>' for issue in issues)
-    return (
+    banner = (
         '<div class="inline-alert inline-alert--warn partial-refresh-banner" '
         'role="status" aria-live="polite">'
         '<p><strong>Atualização parcial.</strong> Algumas fontes falharam; '
         'a fila abaixo mantém as plataformas que responderam.</p>'
         f'<ul class="partial-issues-list">{items}</ul></div>'
     )
+    return f'{meta}{banner}'
 
 
 def _preapproval_status_badge(status: Any) -> str:
@@ -937,8 +961,15 @@ def _signals_audit_section_html(signals: list[dict[str, Any]]) -> str:
 
 
 def render_signals_page(bundle: dict[str, Any]) -> str:
+    import os
+
     copy = bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {}
     signals = bundle.get('signals') or []
+    app_version = os.environ.get('APP_GIT_SHA', '').strip() or 'unknown'
+    version_line = (
+        f'<p class="muted panel-version">Versão do painel: '
+        f'<code>{esc(app_version)}</code></p>'
+    )
     operating_body = _signals_operating_section_html(copy)
     preapproval_body = _signals_preapproval_section_html(
         copy.get('preapproval') or {},
@@ -951,6 +982,7 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     audit_body = _signals_audit_section_html(signals)
     footer = f'<p class="muted">{esc(_N48_FOOTER)}</p>'
     body = (
+        f'{version_line}'
         f'{preapproval_body}'
         f'{operating_body}'
         f'{inventory_body}'

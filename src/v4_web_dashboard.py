@@ -124,6 +124,16 @@ def research_overview(root):
             'explanation': 'Observações de pesquisa, sem autorização de execução.'}
 
 
+def _app_git_sha() -> str:
+    raw = os.environ.get('APP_GIT_SHA', '').strip()
+    return raw if raw else 'unknown'
+
+
+def _upstream_commit_env() -> str:
+    raw = os.environ.get('UPSTREAM_COMMIT', '').strip()
+    return raw if raw else 'unknown'
+
+
 def build_snapshot(root):
     root = Path(root)
     data = summary(root)
@@ -178,6 +188,8 @@ def build_snapshot(root):
     except Exception:
         data['panel_ops'] = {'status': 'PANEL_OPS_UNAVAILABLE'}
         data['performance_panel'] = None
+    data['app_git_sha'] = _app_git_sha()
+    data['upstream_commit'] = _upstream_commit_env()
     # No inference of P&L from research candidates or incomplete brokerage records.
     return data
 
@@ -1125,31 +1137,57 @@ def _append_collective2_non_numeric_id_issues(root: Path, issues: list[str]) -> 
         issues.append('collective2_refresh_failed:non_numeric_strategy_id')
 
 
+def _c2_search_retryable(exc: BaseException) -> bool:
+    code = getattr(exc, 'code', None)
+    if code is None:
+        return False
+    try:
+        numeric = int(code)
+    except (TypeError, ValueError):
+        return False
+    return numeric == 429 or 500 <= numeric <= 599
+
+
 def _invoke_c2_search_strategies(key: str, out_dir: Path, cursor: str, opener=None):
     search_path = c2_history_collect.SEARCH_STRATEGIES_PATH
     bound_fetch = c2_history_collect.fetch
-    if bound_fetch is _C2_API4_HTTP_FETCH:
-        params: dict[str, str] = {}
-        if cursor:
-            params['Cursor'] = cursor
-        raw = bound_fetch(search_path, params, key)
-        _persist_c2_search_snapshot(Path(out_dir).parent.parent, raw)
-        return _parse_c2_search_ids(raw)
-    panel = bound_fetch(
-        search_path,
-        key,
-        out_dir,
-        opener=opener,
-        path=search_path,
-        cursor=cursor,
-    )
-    if isinstance(panel, dict) and panel.get('strategy_ids') is not None:
-        ids = [str(x) for x in panel.get('strategy_ids') or []]
-        ncur = str(panel.get('next_cursor') or '').strip()
-        return sorted(set(ids), key=int), ncur
-    raw = panel.get('raw') if isinstance(panel, dict) else {}
-    if isinstance(raw, dict):
-        return _parse_c2_search_ids(raw)
+
+    def _attempt_once():
+        if bound_fetch is _C2_API4_HTTP_FETCH:
+            params: dict[str, str] = {}
+            if cursor:
+                params['Cursor'] = cursor
+            raw = bound_fetch(search_path, params, key)
+            _persist_c2_search_snapshot(Path(out_dir).parent.parent, raw)
+            return _parse_c2_search_ids(raw)
+        panel = bound_fetch(
+            search_path,
+            key,
+            out_dir,
+            opener=opener,
+            path=search_path,
+            cursor=cursor,
+        )
+        if isinstance(panel, dict) and panel.get('strategy_ids') is not None:
+            ids = [str(x) for x in panel.get('strategy_ids') or []]
+            ncur = str(panel.get('next_cursor') or '').strip()
+            return sorted(set(ids), key=int), ncur
+        raw = panel.get('raw') if isinstance(panel, dict) else {}
+        if isinstance(raw, dict):
+            return _parse_c2_search_ids(raw)
+        return [], ''
+
+    last_exc: BaseException | None = None
+    for attempt in range(2):
+        try:
+            return _attempt_once()
+        except HTTPError as exc:
+            last_exc = exc
+            if attempt == 0 and _c2_search_retryable(exc):
+                continue
+            raise
+    if last_exc is not None:
+        raise last_exc
     return [], ''
 
 
@@ -1208,6 +1246,14 @@ def _collective2_active_orders_snapshot_issue(exc: BaseException) -> str:
     return f'collective2_active_orders_snapshot_failed:{label}'
 
 
+def _collective2_refresh_failed_issue(exc: BaseException) -> str:
+    label = type(exc).__name__
+    code = getattr(exc, 'code', None)
+    if code is not None:
+        return f'collective2_refresh_failed:{label}:{code}'
+    return f'collective2_refresh_failed:{label}'
+
+
 def _run_collective2_active_orders_snapshot(
     root: Path,
     key: str,
@@ -1240,8 +1286,11 @@ def _live_refresh_collective2(
         incomplete = _collective2_search_incomplete_issue(next_cursor)
         if incomplete:
             issues.append(incomplete)
+    except HTTPError as exc:
+        issues.append(_collective2_refresh_failed_issue(exc))
+        return '', []
     except (OSError, ValueError, TypeError, KeyError) as exc:
-        issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
+        issues.append(_collective2_refresh_failed_issue(exc))
         return '', []
     sources_ok.append('collective2')
     pending_prior = _c2_closed_trades_pending_from_refresh(root)
@@ -1295,8 +1344,10 @@ def _live_criteria_job(
     if 'collective2' in sources:
         try:
             c2_next_cursor, c2_closed_pending = _live_refresh_collective2(root, issues, sources_ok)
+        except HTTPError as exc:
+            issues.append(_collective2_refresh_failed_issue(exc))
         except (OSError, ValueError, TypeError, KeyError) as exc:
-            issues.append(f'collective2_refresh_failed:{type(exc).__name__}')
+            issues.append(_collective2_refresh_failed_issue(exc))
     if 'prodigy' in sources:
         _live_refresh_prodigy(root, issues, sources_ok)
     if 'tradingview' in sources:
@@ -1305,6 +1356,42 @@ def _live_criteria_job(
         except (OSError, ValueError, TypeError, KeyError) as exc:
             issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
     return issues, sources_ok, sources, c2_next_cursor, c2_closed_pending
+
+
+def _persist_refresh_attempt_start(root: Path) -> None:
+    prior = _panel_ops.load_candidates_refresh(root)
+    if not isinstance(prior, dict):
+        prior = {}
+    refreshed_at = datetime.now(timezone.utc).isoformat()
+    raw_issues = prior.get('issues')
+    kept: list[str] = []
+    if isinstance(raw_issues, list):
+        for item in raw_issues:
+            text = str(item).strip()
+            if not text:
+                continue
+            if text.startswith('collective2_refresh_failed:'):
+                continue
+            kept.append(text)
+    record: dict = {
+        'mode': 'live_criteria',
+        'status': 'partial',
+        'refreshed_at': refreshed_at,
+        'sources_attempted': list(prior.get('sources_attempted') or []),
+        'sources_ok': [],
+        'issues': kept,
+        'orders_sent': 0,
+        'execution_authorized': False,
+    }
+    cursor = prior.get('c2_search_next_cursor')
+    if cursor:
+        record['c2_search_next_cursor'] = cursor
+    pending = prior.get('c2_closed_trades_pending_ids')
+    if isinstance(pending, list):
+        record['c2_closed_trades_pending_ids'] = [str(x) for x in pending]
+    else:
+        record['c2_closed_trades_pending_ids'] = []
+    _panel_ops.persist_candidates_refresh(root, record)
 
 
 def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, body=None):
@@ -1324,6 +1411,7 @@ def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, bod
                 },
             )
             return
+        _persist_refresh_attempt_start(root)
         sources = _resolve_live_refresh_sources(body)
         issues, sources_ok, sources_attempted, c2_next_cursor, c2_closed_pending = _live_criteria_job(
             root,
@@ -1443,7 +1531,13 @@ def serve_public_get(handler, root, token, path):
         handler.send_error(404)
         return
     if path == '/healthz':
-        body = b'{"status":"alive","orders_enabled":false}'
+        health = {
+            'status': 'alive',
+            'orders_enabled': False,
+            'app_git_sha': _app_git_sha(),
+            'upstream_commit': _upstream_commit_env(),
+        }
+        body = json.dumps(health, ensure_ascii=False).encode('utf-8')
         mime = 'application/json; charset=utf-8'
     else:
         try:

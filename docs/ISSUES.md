@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N60 (N59 #79 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
+| ISS-024 | aberto | N61 (N60 #80 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
 | ISS-025 | aberto | follow-up (fora de N58) | TradingView: varredura de estratégias exige contrato de busca — não existe no código recuperado |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -678,8 +678,8 @@
 | Campo | Valor |
 |-------|--------|
 | Categoria | feature-com-dominio |
-| Sprint | **N60** (`front/sinais-raw-path`; N59 merge **#79** em `main`; não rouba N45–N47) |
-| Status | aberto — N54–N59 em `main` (#73–#79); N60 PLAN isolamento da coleta de histórico fechado + botão que não fica preso em «Atualizando…»; **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
+| Sprint | **N61** (`front/sinais-raw-path`; N60 merge **#80** em `main` @ `4264213`; não rouba N45–N47) |
+| Status | aberto — N54–N60 em `main` (#73–#80); N61 PLAN versão do painel no ar + aviso da listagem com número do erro e hora da tentativa; **permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView varredura = **ISS-025**. |
 | Impacto | Operador rejeita modelo “ler JSON no disco”. Botão **Atualizar candidatos** deve **varrer plataformas homologadas** e trazer **candidatos que já passam** Feature 4 / Prodígio 15d; allowlist não é pré-requisito para aparecer; aprovar ≠ fill. |
 
 **Diretrizes do operador (2026-11-18):**
@@ -742,6 +742,14 @@
 **Nota planejamento N60 (2026-11-19):** follow-up ISS-024 / F-023; bloco `## Sprint N60` em `docs/ROADMAP.md`; brief `docs/.briefs/N60.brief.md`; Git First `docs/.briefs/N60-GIT-FIRST-REUSE.md`. `plan_only: true` — **não** ativa `sprint_atual`. Chamado permanece **aberto** até coleta parcial honesta + botão que sai de «Atualizando…» + testes + merge + rebuild operador. TradingView scan **OUT** (ISS-025 inalterado).
 
 **Nota N60 EXECUTE (2026-11-19):** frente `sinais-raw-path` — SearchStrategies ok marca `collective2` em `sources_ok` mesmo com coleta parcial de histórico fechado; falha por ID → `collective2_closed_trades_partial_failed:*` (não `collective2_refresh_failed`); coleta sempre por ID + orçamento `_C2_CLOSED_TRADES_COLLECT_BUDGET_SEC`; IDs pendentes em `c2_closed_trades_pending_ids` no refresh JSON; botão Atualizar com `AbortController` (~45s) e mensagem honesta se a espera terminar. F-023 **corrigido**; `N60PartialClosedTradesCollectTests` (3) + suíte `tests/test_panel_ops.py` **115** passed. **ISS-024 permanece aberto** até merge `main` + rebuild EasyPanel + homologação operador. LIVE false.
+
+**Nota closeout N60 (2026-11-19):** PR **#80** MERGED → `main` remoto @ `42642134715ef899f487c9a92608c1052e16323d` (código N60 `f71c763`). Chamado **permanece aberto**.
+
+**Nota operador 2026-11-25 (continuação após #80, painel no ar):** o mesmo banner `collective2_refresh_failed:HTTPError` (sem número HTTP), «Atualizando candidatos…» preso e métricas indisponíveis. O operador não colou view-source nem `candidates-refresh-latest.json`. Três leituras continuam possíveis: imagem sem a N60, JSON de refresh antigo, ou falha real da listagem SearchStrategies (a N60 grava só o tipo da exceção, não o código). LIVE false. Constantes Feature 4 / Prodígio 15d **não** mudam. TradingView varredura = **ISS-025**.
+
+**Nota EXECUTE N61 (2026-11-25):** código em `front/sinais-raw-path` — `APP_GIT_SHA`, aviso da listagem com código HTTP, `refreshed_at` no início do refresh, meta `sources_ok` no banner; pytest `N61Collective2RefreshHonestyTests`. Chamado **permanece aberto** até merge `main` + rebuild EasyPanel com `--build-arg APP_GIT_SHA=<sha>` + homologação operador.
+
+**Nota planejamento N61 (2026-11-25):** follow-up ISS-024 / F-024; bloco `## Sprint N61` em `docs/ROADMAP.md`; brief `docs/.briefs/N61.brief.md`; Git First `docs/.briefs/N61-GIT-FIRST-REUSE.md`. `plan_only: true` — **não** ativa `sprint_atual` (permanece N60 até o parent). Versão do painel (`APP_GIT_SHA`, distinta do pin do vendor) em Sinais, checagem de vida e status; aviso da listagem com código HTTP quando existir; `refreshed_at` no início da tentativa e aviso velho de listagem removido; uma nova tentativa só em HTTP 5xx/429, sem espera inventada; hora e fontes ao lado do banner; botão N60 só regressão. Chamado permanece **aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView scan **OUT** (ISS-025 inalterado).
 
 ---
 

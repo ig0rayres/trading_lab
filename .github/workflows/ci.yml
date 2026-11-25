@@ -56,4 +56,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Docker build
-        run: docker build -t trading-lab:ci .
+        run: docker build --build-arg APP_GIT_SHA=${{ github.sha }} -t trading-lab:ci .

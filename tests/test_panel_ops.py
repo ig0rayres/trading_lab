@@ -13,7 +13,7 @@ from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from gate_b_risk import evaluate_signed_signal
-from panel_ops_html import render_central_page
+from panel_ops_html import _CANDIDATES_RELOAD_SCRIPT, render_central_page, render_signals_page
 from panel_ops_data import (
     PERFORMANCE_LABEL_GROSS,
     PREAPPROVAL_METRICS_LABEL,
@@ -21,8 +21,10 @@ from panel_ops_data import (
     build_panel_bundle,
     build_preapproval_queue,
     load_c2_paper_copy_approved_ids,
+    load_candidates_refresh,
     load_panel_signals,
     performance_from_snapshots,
+    persist_candidates_refresh,
     resolve_c2_paper_copy_approved_ids,
     signal_destination,
     upsert_signal_provider_approval,
@@ -2871,7 +2873,7 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
 
 
 def _n56_prodigy_now() -> datetime:
-    return datetime(2026, 11, 16, 12, 0, tzinfo=timezone.utc)
+    return datetime.now(timezone.utc)
 
 
 def _n56_write_closed_trades_file(raw_dir: Path, strategy_id: str, trades: list[dict]) -> None:
@@ -2887,12 +2889,10 @@ def _n56_write_closed_trades_file(raw_dir: Path, strategy_id: str, trades: list[
 def _n56_write_prodigy_raw_eligible_canonical(root: Path, *, strategy_id: str = '9') -> Path:
     """Production layout: tmp root == REPORTS_DIR; raw under root/providers/raw."""
     raw = root / 'providers' / 'raw'
+    now = _n56_prodigy_now()
     trades = [
-        {'CloseDate': '2026-11-10T12:00:00+00:00', 'ProfitLoss': 120.0},
-        {'CloseDate': '2026-11-11T12:00:00+00:00', 'ProfitLoss': -30.0},
-        {'CloseDate': '2026-11-12T12:00:00+00:00', 'ProfitLoss': 80.0},
-        {'CloseDate': '2026-11-13T12:00:00+00:00', 'ProfitLoss': 40.0},
-        {'CloseDate': '2026-11-14T12:00:00+00:00', 'ProfitLoss': 25.0},
+        {'CloseDate': (now - timedelta(days=d)).isoformat(), 'ProfitLoss': pl}
+        for d, pl in ((6, 120.0), (5, -30.0), (4, 80.0), (3, 40.0), (2, 25.0))
     ]
     _n56_write_closed_trades_file(raw, strategy_id, trades)
     return raw
@@ -3954,6 +3954,263 @@ class N60PartialClosedTradesCollectTests(unittest.TestCase):
         self.assertIn('signal:controller.signal', _CANDIDATES_RELOAD_SCRIPT)
         self.assertIn('AbortError', _CANDIDATES_RELOAD_SCRIPT)
         self.assertIn('A fila anterior foi mantida', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertEqual(WINDOW_DAYS, 15)
+        self.assertEqual(MIN_TRADES, 5)
+
+
+class N61Collective2RefreshHonestyTests(unittest.TestCase):
+    """N61 — app version fingerprint, coded listagem issues, refresh honesty (ISS-024 / F-024)."""
+
+    def setUp(self):
+        self._ledger_env = patch.dict(os.environ, {'LEDGER_DATABASE_URL': ''}, clear=False)
+        self._ledger_env.start()
+        self._cooldown_patch = patch(
+            'v4_web_dashboard._live_criteria_cooldown_wait',
+            return_value=0,
+        )
+        self._cooldown_patch.start()
+        from prodigy_rank import calculate as prodigy_calculate
+
+        self._prodigy_calculate = prodigy_calculate
+
+    def tearDown(self):
+        self._cooldown_patch.stop()
+        self._ledger_env.stop()
+
+    def _server(self, root=None, *, session='panel-secret'):
+        root = Path(root or tempfile.mkdtemp())
+        handler = make_handler(root, operator_session=session)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = 'http://127.0.0.1:' + str(server.server_port)
+        return root, server, thread, base
+
+    def _shutdown(self, server, thread):
+        server.shutdown()
+        server.server_close()
+        thread.join(3)
+
+    def test_n61_healthz_and_status_expose_app_git_sha_when_set(self):
+        stamp = 'n61-test-sha-abc123'
+        vendor_pin = '3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd'
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            with patch.dict(
+                os.environ,
+                {'APP_GIT_SHA': stamp, 'UPSTREAM_COMMIT': vendor_pin, 'LEDGER_DATABASE_URL': ''},
+                clear=False,
+            ):
+                snap = build_snapshot(root)
+                self.assertEqual(snap['app_git_sha'], stamp)
+                self.assertEqual(snap['upstream_commit'], vendor_pin)
+                self.assertNotEqual(snap['app_git_sha'], snap['upstream_commit'])
+                _, server, thread, base = self._server(root)
+                try:
+                    with urlopen(_get(base + '/healthz'), timeout=3) as resp:
+                        health = json.load(resp)
+                    self.assertEqual(health.get('orders_enabled'), False)
+                    self.assertEqual(health['app_git_sha'], stamp)
+                    self.assertEqual(health['upstream_commit'], vendor_pin)
+                    with urlopen(_get(base + '/api/status'), timeout=5) as resp:
+                        status = json.load(resp)
+                    self.assertEqual(status['app_git_sha'], stamp)
+                finally:
+                    self._shutdown(server, thread)
+
+    def test_n61_healthz_unknown_when_app_git_sha_unset(self):
+        with patch.dict(os.environ, {'APP_GIT_SHA': '', 'LEDGER_DATABASE_URL': ''}, clear=False):
+            self.assertEqual(build_snapshot(Path(tempfile.mkdtemp()))['app_git_sha'], 'unknown')
+
+    def test_n61_search_strategies_403_codes_issue_single_call(self):
+        stale_at = '2020-01-01T00:00:00+00:00'
+        search_calls: list[int] = []
+
+        def _fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+            label = _n58_call_path_label((strategy_ids,), kwargs)
+            del key, out_dir, opener, kwargs
+            if _N58_SEARCH_STRATEGIES_PATH in label or 'SearchStrategies' in label:
+                search_calls.append(1)
+                raise HTTPError(
+                    'https://api4-general.collective2.com/world/api4',
+                    403,
+                    'Forbidden',
+                    {},
+                    None,
+                )
+            return {'status': 'ok', 'written': []}
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            persist_candidates_refresh(
+                root,
+                {
+                    'mode': 'live_criteria',
+                    'status': 'partial',
+                    'refreshed_at': stale_at,
+                    'sources_ok': [],
+                    'issues': ['collective2_refresh_failed:HTTPError'],
+                    'orders_sent': 0,
+                    'execution_authorized': False,
+                },
+            )
+            _, server, thread, base = self._server(root)
+            try:
+                payload, _ = _n58_post_refresh_with_fetch(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=_fetch,
+                )
+                issues = [str(i) for i in (payload.get('issues') or [])]
+                self.assertIn('collective2_refresh_failed:HTTPError:403', issues)
+                self.assertNotIn('collective2_refresh_failed:HTTPError', issues)
+                self.assertNotIn('collective2', payload.get('sources_ok') or [])
+                self.assertEqual(len(search_calls), 1)
+                on_disk = load_candidates_refresh(root)
+                self.assertIsNotNone(on_disk)
+                self.assertNotEqual(on_disk.get('refreshed_at'), stale_at)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n61_search_strategies_503_retries_twice_then_succeeds(self):
+        search_calls: list[int] = []
+
+        def _fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+            del key, opener
+            label = _n58_call_path_label((strategy_ids,), kwargs)
+            out = Path(out_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            if _N58_SEARCH_STRATEGIES_PATH in label or 'SearchStrategies' in label:
+                search_calls.append(1)
+                if len(search_calls) == 1:
+                    raise HTTPError(
+                        'https://api4-general.collective2.com/world/api4',
+                        503,
+                        'Service Unavailable',
+                        {},
+                        None,
+                    )
+                snap = {
+                    'dataset': 'search_strategies',
+                    'raw': {
+                        'ResponseStatus': {'ErrorCode': '200'},
+                        'Results': [
+                            {
+                                'StrategyId': int(_N58_SCAN_ELIGIBLE_ID),
+                                'IsAlive': True,
+                                'IsPrivate': False,
+                            },
+                        ],
+                        'Pagination': {},
+                    },
+                }
+                intel = out.parent.parent / 'intelligence'
+                intel.mkdir(parents=True, exist_ok=True)
+                (intel / 'c2_search_strategies_latest.json').write_text(
+                    json.dumps(snap),
+                    encoding='utf-8',
+                )
+                return {
+                    'status': 'ok',
+                    'strategy_ids': [_N58_SCAN_ELIGIBLE_ID],
+                    'next_cursor': '',
+                }
+            sid = str((strategy_ids or [''])[0])
+            _n56_write_closed_trades_file(out, sid, _n58_eligible_closed_trades())
+            return {'status': 'ok', 'written': [f'{sid}_closed_trades.json']}
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_c2_allowlist_fixture(root, [])
+            _, server, thread, base = self._server(root)
+            try:
+                payload, _ = _n58_post_refresh_with_fetch(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=_fetch,
+                )
+                self.assertEqual(len(search_calls), 2)
+                self.assertIn('collective2', payload.get('sources_ok') or [])
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n61_start_refresh_strips_stale_listagem_issue_before_search_raises(self):
+        stale_at = '2019-06-01T12:00:00+00:00'
+        pending_id = _N58_SCAN_ELIGIBLE_ID
+        observed: dict = {}
+
+        def _fetch(strategy_ids, key, out_dir, opener=None, **kwargs):
+            label = _n58_call_path_label((strategy_ids,), kwargs)
+            del key, out_dir, opener, kwargs
+            if _N58_SEARCH_STRATEGIES_PATH in label or 'SearchStrategies' in label:
+                mid = load_candidates_refresh(root)
+                observed['mid'] = mid
+                raise HTTPError(
+                    'https://api4-general.collective2.com/world/api4',
+                    403,
+                    'Forbidden',
+                    {},
+                    None,
+                )
+            return {'status': 'ok', 'written': []}
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            persist_candidates_refresh(
+                root,
+                {
+                    'mode': 'live_criteria',
+                    'status': 'partial',
+                    'refreshed_at': stale_at,
+                    'sources_ok': ['prodigy'],
+                    'issues': ['collective2_refresh_failed:HTTPError', 'prodigy_raw_missing:x'],
+                    'orders_sent': 0,
+                    'execution_authorized': False,
+                    'c2_closed_trades_pending_ids': [pending_id],
+                },
+            )
+            _, server, thread, base = self._server(root)
+            try:
+                _n58_post_refresh_with_fetch(
+                    base,
+                    self._prodigy_calculate,
+                    fetch_side_effect=_fetch,
+                )
+                mid = observed.get('mid') or {}
+                issues = [str(i) for i in (mid.get('issues') or [])]
+                self.assertNotIn('collective2_refresh_failed:HTTPError', issues)
+                self.assertIn('prodigy_raw_missing:x', issues)
+                self.assertNotEqual(mid.get('refreshed_at'), stale_at)
+                pending = mid.get('c2_closed_trades_pending_ids') or []
+                self.assertIn(pending_id, pending)
+            finally:
+                self._shutdown(server, thread)
+
+    def test_n61_banner_meta_without_issues_and_version_line(self):
+        refreshed = '2026-11-25T15:00:00+00:00'
+        bundle = build_panel_bundle(Path(tempfile.mkdtemp()), conn_factory=None)
+        copy = dict(bundle.get('copy') or {})
+        copy['candidates_refresh'] = {
+            'refreshed_at': refreshed,
+            'sources_ok': ['prodigy'],
+            'issues': [],
+            'status': 'ok',
+        }
+        bundle['copy'] = copy
+        with patch.dict(os.environ, {'APP_GIT_SHA': 'n61-html-sha'}, clear=False):
+            html = render_signals_page(bundle)
+        self.assertIn('Versão do painel', html)
+        self.assertIn('n61-html-sha', html)
+        self.assertIn('candidates-refresh-meta', html)
+        self.assertIn(refreshed, html)
+        self.assertIn('prodigy', html)
+
+    def test_n61_abort_controller_and_prodigy_constants_unchanged(self):
+        from prodigy_rank import MIN_TRADES, WINDOW_DAYS
+
+        self.assertIn('AbortController', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertIn('clientWaitMs=45000', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertIn('A espera terminou antes da resposta do servidor', _CANDIDATES_RELOAD_SCRIPT)
         self.assertEqual(WINDOW_DAYS, 15)
         self.assertEqual(MIN_TRADES, 5)
 

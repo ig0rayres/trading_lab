@@ -197,13 +197,13 @@
     "updated_at": "2026-11-25T15:25:00Z",
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N60",
+      "sprint": "N61",
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-25T14:39:44Z",
+      "recorded_at": "2026-11-25T15:27:11Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N61 deliverable; qa recorded under N60 sprint_atual until closeout activates N61",
+      "notes": "N61 merged #81 a3c2a75; closeout docs; ISS-024 open",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -223,13 +223,13 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "77b3caadfacd53aa05af75e19c8693d347481409",
-      "stamped_at": "2026-11-25T15:18:49Z",
+      "last_validated_sha": "f624b58ce4b32b1842101e1b99fb615d7bade668",
+      "stamped_at": "2026-11-25T15:27:59Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "0e648f615a85827057e3b2c7334f4fd91061062a3829b8594b6462d631106202",
-      "patch_id": "1b580841fd5cf4b61174824d34961baf839a791a",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "470abc609d370a66f288631d78d2ea2e9e15aac9",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
@@ -318,7 +318,7 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N59",
+  "previous_sprint": "N60",
   "sprint_nome": "Sprint N59",
   "autopilot": {
     "active": true,
@@ -607,6 +607,5 @@
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": "N61",
-  "previous_sprint": "N60"
+  "sprint_atual": "N61"
 }

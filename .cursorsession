@@ -201,9 +201,9 @@
       "produced_by": "/qa validar",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-19T20:27:18Z",
+      "recorded_at": "2026-11-25T14:39:44Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N60: 115 passed tests/test_panel_ops.py incl N60PartialClosedTradesCollectTests (3); F-023 corrigido; ISS-024 aberto; LIVE false",
+      "notes": "N61 deliverable; qa recorded under N60 sprint_atual until closeout activates N61",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -223,13 +223,13 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "f19c7fcee4045eeaa573544424965863f0dc9086",
-      "stamped_at": "2026-11-19T20:29:46Z",
+      "last_validated_sha": "02f42a48d252abb8ae0601c7fad5b3a4271a868a",
+      "stamped_at": "2026-11-25T15:17:39Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "1fe60996717806a083d148bcbbc8d7cb87108e29caa8a6b85b1608be688d173a",
-      "patch_id": "7dd4a8d8c75367b9e7208188d489e215f05d9395",
+      "content_hash": "0e648f615a85827057e3b2c7334f4fd91061062a3829b8594b6462d631106202",
+      "patch_id": "1b580841fd5cf4b61174824d34961baf839a791a",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",

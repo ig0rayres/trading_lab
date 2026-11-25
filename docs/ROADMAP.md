@@ -7025,7 +7025,7 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = SearchStrategies + 
 
 ## Sprint N61 — Ver a versão no ar e o número do erro da listagem Collective2
 > Categoria: N  
-> Status: planejada  
+> Status: concluida *(PR [#81](https://github.com/ig0rayres/trading_lab/pull/81) merge `a3c2a75` 2026-11-25; validation_gate APROVADA; pytest `test_panel_ops.py` 122; **ISS-024 aberto** — homologação EasyPanel operador)*  
 > Gerado via: `/pmo plan` 2026-11-25 · fonte ISS-024 / F-024 · N60 #80 em `main` (`4264213`)  
 > titulo_humano: Ver a versão no ar e o número do erro da listagem Collective2  
 > resumo_humano: Ao atualizar candidatos, o painel mostra a versão que está no ar, a hora da tentativa e o número do erro da listagem Collective2. Um aviso antigo deixa de parecer a falha de agora. LIVE false.  
@@ -7037,7 +7037,8 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md` (§2 Atualizar = SearchStrategies + 
 > Depende de: N60 concluída no remoto (#80 @ `4264213`) · ISS-024 · Release: ISS-024 (não usa N45–N47)  
 > LIVE_TRADING_ENABLED: false  
 > previous_sprint: N60  
-> plan_only: true
+> plan_only: false  
+> Closeout: merge `main` @ `a3c2a75`; rebuild `APP_GIT_SHA=a3c2a75`
 
 ### Em uma frase
 

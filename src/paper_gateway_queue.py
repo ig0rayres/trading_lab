@@ -8,6 +8,7 @@ from typing import Any
 from gate_a_signal import idempotency_key
 from ledger_store import insert_row
 from paper_fill_cycle import track_once as default_track_once
+from demo_account_gate import DEMO_PANEL_MARKETS, demo_market_block_reason
 from signal_paper_runner import make_order, run as paper_run, token
 
 
@@ -261,6 +262,9 @@ def process_after_gate_b(
         return _resume_track_existing(existing, env, track_fn=track_fn)
     if not broker_auto_allowed(env):
         return queued
+    from risk_snapshot_refresh import maybe_auto_refresh_risk_snapshot
+
+    maybe_auto_refresh_risk_snapshot(env)
     from risk_control_flags import demo_send_allowed
 
     allowed_demo, demo_reason = demo_send_allowed(conn_factory=conn_factory)
@@ -271,6 +275,15 @@ def process_after_gate_b(
             'orders_sent': 0,
             'mode': 'DEMO_OPERATION_OFF',
         }
+    market = signal.get('market')
+    if market in DEMO_PANEL_MARKETS:
+        demo_block = demo_market_block_reason(str(market), env)
+        if demo_block:
+            return {
+                'status': 'BLOCKED',
+                'reasons': [demo_block],
+                'orders_sent': 0,
+            }
     result = broker_run(signal, env, ledger or '/app/reports/paper/signal-orders.jsonl')
     if _broker_submitted_persistable(result):
         _persist_broker_submitted(

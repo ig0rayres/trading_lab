@@ -59,5 +59,12 @@ def main():
         results=[]
         for path in sorted(BASE.glob('*.json')):
             results.append(process_one(path))
+        try:
+            from platform_health import write_worker_stamp
+
+            reports_root = Path(os.environ.get('DASHBOARD_ROOT', '/app/reports'))
+            write_worker_stamp(reports_root, processed=len([r for r in results if r is not None]))
+        except Exception:
+            pass
         print(json.dumps({'processed':len(results),'outcomes':results,'live_trading':False},ensure_ascii=False))
 if __name__=='__main__':main()

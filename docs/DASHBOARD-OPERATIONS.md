@@ -7,7 +7,8 @@
 
 | Superfície | URL | Uso |
 |------------|-----|-----|
-| **Painel HTML** | `GET /` | Visão do operador: saúde, catálogo, Prodígio, melhoria contínua, limitações |
+| **Painel HTML (operador)** | `GET /login` → menu (`/`, `/sinais`, …) | **N53** PanelShell v2: topbar Paper, sidebar escura; Sinais com **Atualizar candidatos** (`GET /api/signals/reload`, só releitura de disco) |
+| **Painel HTML (legado)** | `GET /` sem sessão operador | Command Panel v1 (`render_page`) — bearer/token |
 | **API JSON** | `GET /api/status` | Integrações, scripts, monitoramento (`command_panel`, kill switch, shadow vs paper) |
 | **Liveness** | `GET /healthz` | Probe (mesmas regras de auth que as outras rotas) |
 
@@ -68,14 +69,21 @@ Após **rebuild + redeploy** do `trading-lab`, mapear porta **8765** no EasyPane
 
 ## Dia a dia do operador (sem Exec)
 
+Antes de achar que uma área “sumiu” do painel, leia o [**mapa de onde está cada coisa**](OPERATOR-PANEL-MAP.md) (N40 mapa · **N41** Ordens/Histórico · **N42** Estratégias · **N43** Análise Google · **N44** passeio homologação · **N48–N50** Sinais): o login diário mostra **Central / Sinais / Estratégias / Análise Google / Ordens / Histórico / Prodígio / Performance**. Na tela **Sinais** (**N50**): **Em operação / assinados** → inventário → **Collective2** (lista nomeada vazia = cópia fechada) → **Candidatos Prodígio (pesquisa)** → critérios → **auditoria de ingresso** por último. Ingresso **não** é fill. **Atualizar candidatos** (**N58** / ISS-024): varre Collective2 no servidor via listagem oficial `SearchStrategies`, aplica Feature 4 / Prodígio 15d já no código e grava histórico no volume; arquivos em `{root}/providers/raw` são **cache** (N57), não substituem a varredura. TradingView **não** é varrido (**ISS-025**) — só origens já ingeridas, com aviso honesto no refresh. Collective2 na **pré-aprovação** pode listar IDs do cache ou da varredura — **aparecer na fila ≠** cópia paper autorizada; lista nomeada (`config/c2_paper_copy_allowlist.json` / env) + aprovação no livro-razão continuam o portão da **cópia paper**. LIVE false. Rebuild EasyPanel continua **operador**. Depois do rebuild pós-N41–N43, siga o roteiro **ação americana + cripto** em [`docs/HOMOLOGATION.md`](HOMOLOGATION.md) § **Homologar operar US + cripto pelo menu do painel (Sprint N44)** e registre o que viu em [`docs/TEST-EVIDENCE.md`](TEST-EVIDENCE.md) § Sprint N44 — pytest e fila **não** substituem o passeio. **Análise Google** é dica de pesquisa (TimesFM quando disponível) — **não** autoriza ordem; vazio típico `Análise Google indisponível: modelo ou dependência ausente.` Tá Barato e melhoria contínua ainda ficam na **Command Panel v1** (página única) ou só em **`GET /api/status`**. O painel **não** envia nem cancela ordem (POST continua **405**); a tela **Estratégias** não promove fase.
+
 | Ação | Onde |
 |------|------|
 | Entrar | `GET /login` → senha não vazia (protótipo) → cookie `trading_lab_session` (= `DASHBOARD_OPERATOR_SESSION` no env) |
-| Ver âncoras, mercados, parada | `GET /` (Central) após login |
-| Ligar parada geral | Botão na Central → `PATCH /api/triggers` (cookie obrigatório) |
-| Ver sinais com motivo | `GET /sinais` ou `GET /api/signals` |
+| Ver âncoras, mercados, freio | `GET /` (Central) após login |
+| Ativar freio | Com o freio liberado, só aparece **Ativar freio** na faixa da Central → `PATCH /api/triggers` com `kill_switch_on: true` (cookie obrigatório). |
+| Liberar freio | Com o freio ativo, só aparece **Liberar freio** na faixa → `PATCH /api/triggers` com `kill_switch_on: false` (cookie obrigatório). Liberar o freio não liga a operação demo (`demo_operation_on` permanece separado). |
+| Ver cópia de terceiros, fila de pré-aprovação, proveniência ordem↔sinal, inventário, critérios de adoção, pool Prodígio (pesquisa) + auditoria de ingresso | `GET /sinais` ou `GET /api/signals` (objeto `copy` com `preapproval`, `inventory`, `adoption`, `prodigy_pool` + lista `signals`). Decisão: `POST /api/signals/providers` (sessão obrigatória; não envia ordem). |
+| Ver catálogo de fases (somente leitura) | `GET /estrategias` ou `GET /api/estrategias` |
+| Ver dicas Análise Google (só pesquisa) | `GET /analise-google` ou `GET /api/analise-google` |
 | Ver ranking Prodígio | `GET /prodigy` |
 | Ver performance só de fill | `GET /performance` ou `GET /api/performance` |
+| Ver ordens paper ainda abertas (lista) | `GET /ordens` ou `GET /api/orders` |
+| Ver histórico só de fill confirmado | `GET /historico` ou `GET /api/history` |
 | Monitoramento JSON | `GET /api/status` com Bearer (como antes) |
 
 Rotina **não** exige shell no Exec do EasyPanel para parar, ajustar âncora ou ler sinais — só o painel HTTPS. Exec permanece para migrate, segredos e rebuild (operação rara).
@@ -86,9 +94,21 @@ Bearer sozinho **não** autoriza escrita (`PATCH` → **401**); cookie de operad
 
 ## Abrir o HTML no browser
 
-1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Prodígio / Performance.
+1. **Com login operacional:** abra `https://…/login`, informe senha (qualquer valor não vazio no protótipo), navegue Central / Sinais / Estratégias / Análise Google / Ordens / Histórico / Prodígio / Performance.
 2. **API/monitoramento:** `curl -H "Authorization: Bearer …" https://…/api/status` (token ≥ 32 se remoto).
 3. Sem Bearer nem cookie → **401** ou redirecionamento para `/login` nas rotas operacionais.
+
+---
+
+## Rotina diária (sem Exec)
+
+| Passo | Onde |
+|-------|------|
+| Saúde da stack | Painel HTML: seção **Plataforma — semáforo** ou `GET /api/status` → `platform_health` |
+| Gatilhos | Central / `GET /api/triggers` (sessão operador) |
+| Incidente | EasyPanel só se semáforo vermelho persistente |
+
+Probes automáticos: `v4-ops` com `PLATFORM_HEALTH_AUTOSTART=true` (default); worker com `TV_WORKER_AUTOSTART=true`.
 
 ---
 

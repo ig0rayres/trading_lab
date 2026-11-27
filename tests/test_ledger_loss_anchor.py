@@ -41,6 +41,33 @@ class LossAnchorPureTest(unittest.TestCase):
         self.assertTrue(state['blocks_new_order'])
         self.assertEqual(state['reject_code'], 'UNCONVERTED_FILL')
 
+    def test_loss_ceiling_reject_daily_at_tight_default(self):
+        now = datetime(2026, 11, 11, 15, 0, tzinfo=timezone.utc)
+        rows = [
+            {'amount_cents': -20_000, 'created_at': datetime(2026, 11, 11, 14, 0, tzinfo=timezone.utc)},
+        ]
+        snap = la.build_anchor_state(rows, [], now_utc=now)
+        code = la.loss_ceiling_reject(snap)
+        self.assertEqual(code, la.REJECT_DAILY_LOSS)
+
+    def test_loss_ceiling_reject_weekly_at_tight_default(self):
+        now = datetime(2026, 11, 13, 15, 0, tzinfo=timezone.utc)
+        rows = [
+            {'amount_cents': -25_000, 'created_at': datetime(2026, 11, 10, 14, 0, tzinfo=timezone.utc)},
+            {'amount_cents': -25_000, 'created_at': datetime(2026, 11, 12, 14, 0, tzinfo=timezone.utc)},
+        ]
+        snap = la.build_anchor_state(rows, [], now_utc=now)
+        code = la.loss_ceiling_reject(snap)
+        self.assertEqual(code, la.REJECT_WEEKLY_LOSS)
+
+    def test_loss_ceiling_below_limit_allows(self):
+        now = datetime(2026, 11, 11, 15, 0, tzinfo=timezone.utc)
+        rows = [
+            {'amount_cents': -19_900, 'created_at': datetime(2026, 11, 11, 14, 0, tzinfo=timezone.utc)},
+        ]
+        snap = la.build_anchor_state(rows, [], now_utc=now)
+        self.assertIsNone(la.loss_ceiling_reject(snap))
+
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
 class LossAnchorLedgerIntegration(unittest.TestCase):
@@ -167,6 +194,33 @@ class LossAnchorLedgerIntegration(unittest.TestCase):
                 },
             )
             conn.commit()
+
+    def test_gate_b_blocks_when_daily_loss_at_ceiling(self):
+        import gate_b_risk as gb
+        from original import load_original
+
+        po = self._seed_order('AAPL', 'nf-' + 'g' * 24)
+        self._insert_brl_fill(po, 'fill-daily-cap', -20_000)
+        risk_now = load_original().risk.parse_now('2026-10-28 10:15')
+        d = gb.evaluate_signed_signal(
+            {
+                'provider': 'tradingview',
+                'signal_id': 'LOSS_CAP_DAILY',
+                'symbol': 'MSFT',
+                'side': 'buy',
+                'asset_class': 'us_equity',
+                'entry': '100',
+                'stop': '99',
+                'target': '102',
+                'quantity': 1,
+                'strategy_key': 'signal_copy',
+            },
+            fx=Decimal('5'),
+            now=risk_now,
+            strategy_phase='paper_limited',
+        )
+        self.assertEqual(d['decision'], 'rejected')
+        self.assertEqual(d['reject_code'], 'DAILY_LOSS_HALT')
 
     def test_gate_b_blocks_when_usd_fill_unconverted(self):
         import gate_b_risk as gb

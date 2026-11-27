@@ -11,12 +11,15 @@ import html
 import json
 import os
 import re
+import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit, unquote
 
 try:
@@ -35,10 +38,18 @@ try:
     from . import panel_ops_data as _panel_ops
     from . import panel_ops_html as _panel_html
     from .demo_account_gate import demo_market_block_reason
+    from . import supervised_adjustment as _supervised
+    from . import c2_history_collect
+    from . import c2_signal_feed
+    from . import prodigy_rank
 except ImportError:
     import panel_ops_data as _panel_ops
     import panel_ops_html as _panel_html
     from demo_account_gate import demo_market_block_reason
+    import supervised_adjustment as _supervised
+    import c2_history_collect
+    import c2_signal_feed
+    import prodigy_rank
 
 MODULES = ('market', 'news', 'signals', 'risk', 'paper', 'reconciliation')
 
@@ -113,6 +124,16 @@ def research_overview(root):
             'explanation': 'Observações de pesquisa, sem autorização de execução.'}
 
 
+def _app_git_sha() -> str:
+    raw = os.environ.get('APP_GIT_SHA', '').strip()
+    return raw if raw else 'unknown'
+
+
+def _upstream_commit_env() -> str:
+    raw = os.environ.get('UPSTREAM_COMMIT', '').strip()
+    return raw if raw else 'unknown'
+
+
 def build_snapshot(root):
     root = Path(root)
     data = summary(root)
@@ -150,15 +171,25 @@ def build_snapshot(root):
         data['operational_acceptance_reason'] = 'LEDGER_FILLS_AND_CLOSED_SNAPSHOTS_PRESENT'
     data['command_panel'] = panel
     try:
+        from platform_health import load_health_snapshot
+
+        data['platform_health'] = load_health_snapshot(root)
+    except Exception:
+        data['platform_health'] = None
+    try:
         conn_factory = default_connect if os.environ.get('LEDGER_DATABASE_URL', '').strip() else None
         bundle = _panel_ops.build_panel_bundle(root, conn_factory)
         data['panel_ops'] = bundle
         data['performance_panel'] = bundle.get('performance')
         if isinstance(panel.get('opportunities'), dict) and isinstance(bundle.get('prodigy'), dict):
             bundle['prodigy']['ranking'] = panel['opportunities']
+        if data.get('platform_health') is not None:
+            bundle['platform_health'] = data['platform_health']
     except Exception:
         data['panel_ops'] = {'status': 'PANEL_OPS_UNAVAILABLE'}
         data['performance_panel'] = None
+    data['app_git_sha'] = _app_git_sha()
+    data['upstream_commit'] = _upstream_commit_env()
     # No inference of P&L from research candidates or incomplete brokerage records.
     return data
 
@@ -188,15 +219,28 @@ def render_page(data):
         f'<td>{"sim" if s.get("paper_allowed") else "não"}</td></tr>'
         for s in strategies
     ) or '<tr><td colspan="3">Catálogo indisponível (ledger)</td></tr>'
-    opps = panel.get('opportunities', {}).get('items') or []
+    prodigy_surface = panel.get('opportunities') or {}
+    opps = prodigy_surface.get('items') or []
+    prodigy_disclaimer = esc(prodigy_surface.get('disclaimer') or 'Sugestão de pesquisa — não autoriza ordem.')
     opp_rows = ''.join(
         f'<tr><td>{esc(o.get("provider",""))}</td><td>{esc(o.get("status",""))}</td>'
-        f'<td>{esc(o.get("prodigy_score",""))}</td></tr>'
+        f'<td>{esc(o.get("prodigy_score",""))}</td><td>{esc(o.get("label","research_tip"))}</td></tr>'
         for o in opps
-    ) or '<tr><td colspan="3">Execute prodigy-rank ou aguarde relatório</td></tr>'
+    ) or '<tr><td colspan="4">Execute prodigy-rank ou aguarde relatório</td></tr>'
+    tb = panel.get('ta_barato_shadow') or {}
+    tb_rows = ''.join(
+        f'<tr><td>{esc(o.get("market",""))}</td><td>{esc(o.get("symbol",""))}</td>'
+        f'<td>{esc(o.get("drop_pct",""))}</td><td>{"sim" if o.get("radar_candidate") else "não"}</td>'
+        f'<td>{esc(o.get("label","shadow_suggestion"))}</td></tr>'
+        for o in (tb.get('items') or [])
+    ) or '<tr><td colspan="5">Execute v4-cycle com --opportunity-input ou aguarde relatório</td></tr>'
+    tb_upstream = esc(tb.get('upstream_formula', 'BLOCKED'))
+    tb_note = esc(tb.get('local_shadow_note', ''))
     evo = panel.get('continuous_improvement', {}).get('recent') or []
     evo_items = ''.join(
-        f'<li><span class="muted">{esc(e.get("at",""))}</span> — {esc(e.get("summary") or e.get("kind") or "—")}</li>'
+        f'<li><span class="muted">{esc(e.get("at",""))}</span> '
+        f'<code>{esc(e.get("label","continuous_improvement"))}</code> — '
+        f'{esc(e.get("summary") or e.get("kind") or "—")}</li>'
         for e in evo
     ) or '<li>Nenhum evento em evolution/decisions.jsonl</li>'
     health = panel.get('financial_health') or {}
@@ -207,9 +251,25 @@ def render_page(data):
     )
     if health.get('queued_is_not_fill'):
         health_line += ' · <b>queued ≠ fill</b>'
+    ph = data.get('platform_health') or {}
+    overall = ph.get('overall') or 'unknown'
+    comp_rows = ''
+    for comp in ph.get('components') or []:
+        comp_rows += (
+            f'<tr><td>{esc(comp.get("id", ""))}</td>'
+            f'<td>{esc(comp.get("status", ""))}</td>'
+            f'<td>{esc(comp.get("detail", ""))}</td></tr>'
+        )
+    if not comp_rows:
+        comp_rows = '<tr><td colspan="3">Aguardando primeira checagem automática (v4-ops)</td></tr>'
+    platform_block = (
+        f'<h2>Plataforma — semáforo</h2>'
+        f'<p class="muted">Agregado: <strong>{esc(overall)}</strong> · atualizado em {esc(ph.get("generated_at", "—"))}</p>'
+        f'<table><thead><tr><th>Componente</th><th>Status</th><th>Detalhe</th></tr></thead><tbody>{comp_rows}</tbody></table>'
+    )
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Trading Lab — Command Panel</title><style>
     :root{{color-scheme:dark}}body{{font:16px system-ui;background:#0c1322;color:#eef3fa;max-width:1040px;margin:auto;padding:40px 20px}}h1{{font-size:32px}}h2{{margin-top:28px;font-size:20px}}.muted,small{{color:#a6b4c5}}.warning{{background:#30251a;border:1px solid #765124;border-radius:12px;padding:14px;margin:20px 0}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}}article{{background:#182337;border:1px solid #2c3c56;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}}strong{{font-size:24px}}footer{{margin-top:32px;color:#a6b4c5}}a{{color:#9bc5fa}}table{{width:100%;border-collapse:collapse;margin-top:10px}}td,th{{border:1px solid #2c3c56;padding:8px;text-align:left}}th{{color:#a6b4c5;font-weight:600}}
-    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div><p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (research)</h2><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Melhoria contínua</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
+    </style></head><body><h1>Trading Lab <span class="muted">/ Command Panel v1</span></h1><p class="muted">Atualizado em {esc(data['generated_at'])} UTC · Somente leitura · MVP-OP ISS-007</p><div class="warning"><b>Não homologado para execução autônoma.</b> Dados parciais, valores brutos sem custos completos e nenhum envio de ordens pelo painel.</div>{platform_block}<p>{health_line}</p><div class="grid">{items}</div><p class="muted">Último ciclo de pesquisa: {esc(cycle)} · Aceitação operacional: {esc(data.get("operational_acceptance_reason","NO"))}</p><h2>Estratégias (catálogo)</h2><table><thead><tr><th>Chave</th><th>Fase</th><th>Paper permitido</th></tr></thead><tbody>{strat_rows}</tbody></table><p class="muted">Promoção de fase: somente operador (fora do painel).</p><h2>Oportunidades Prodígio (sugestão / research)</h2><p class="muted">{prodigy_disclaimer}</p><table><thead><tr><th>Provedor</th><th>Status</th><th>Score</th><th>Rótulo</th></tr></thead><tbody>{opp_rows}</tbody></table><h2>Tá Barato (<code>ta_barato</code>) — sombra / homolog</h2><p class="muted">Upstream ({tb_upstream} @ pin vendor) · {tb_note}</p><table><thead><tr><th>Mercado</th><th>Símbolo</th><th>Queda % (5 barras)</th><th>Radar</th><th>Rótulo</th></tr></thead><tbody>{tb_rows}</tbody></table><p class="muted">Fase catálogo: research — Gate B bloqueia paper até fórmula upstream (G-FORM).</p><h2>Melhoria contínua (sugestão)</h2><ul>{evo_items}</ul><h2>Limitações</h2><ul>{caveats}</ul><footer>API: <a href="/api/status">/api/status</a> (inclui command_panel) · Sem controles de negociação.</footer></body></html>'''
 
 
 def default_connect():
@@ -428,6 +488,19 @@ def validate_strategy_patch(strategy_key, body):
     return None
 
 
+def fetch_strategy_state_row(conn, strategy_key):
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT id, phase FROM strategy_states '
+            'WHERE strategy_key = %s AND deleted_at IS NULL',
+            (strategy_key,),
+        )
+        row = cur.fetchone()
+    if not row:
+        return None
+    return {'id': row[0], 'phase': row[1]}
+
+
 def apply_strategy_patch(conn, strategy_key, body):
     err = validate_strategy_patch(strategy_key, body)
     if err:
@@ -552,6 +625,85 @@ def respond_mutation(handler, kind, code, payload):
     send_json_response(handler, 200, payload)
 
 
+def strategy_parameters_get_payload():
+    root = Path(os.environ.get('REPORTS_DIR', '/app/reports'))
+    evo = root / 'evolution'
+    return {
+        'catalog': _supervised.parameter_catalog_public_view(),
+        'history': _supervised.list_adjustment_history(evo),
+        'overrides': _supervised.load_overrides(evo).get('strategies') or {},
+        'execution_authorized': False,
+        'paper_allowed': False,
+        'orders_sent': 0,
+    }
+
+
+def signals_providers_post(body: dict, connect_factory, root: Path):
+    if not isinstance(body, dict):
+        return 'reject', 'INVALID_BODY', None
+    platform = str(body.get('platform') or '').strip().lower()
+    provider_id = str(body.get('provider_id') or '').strip()
+    action = str(body.get('action') or '').strip().lower()
+    if not platform or not provider_id or action not in ('approve', 'reject'):
+        return 'reject', 'INVALID_BODY', None
+    if connect_factory is None:
+        return 'reject', 'LEDGER_UNAVAILABLE', None
+    try:
+        result = _panel_ops.upsert_signal_provider_approval(
+            connect_factory, platform, provider_id, action
+        )
+    except ValueError:
+        return 'reject', 'INVALID_BODY', None
+    except Exception as exc:
+        err = str(exc).lower()
+        if 'undefinedtable' in err or 'signal_provider_approvals' in err:
+            return 'reject', 'LEDGER_UNAVAILABLE', None
+        if 'not set' in err or 'ledger_database_url' in err:
+            return 'reject', 'LEDGER_UNAVAILABLE', None
+        raise
+    _ = root
+    return 'ok', None, {**result, 'execution_authorized': False, 'orders_sent': 0}
+
+
+def strategy_parameters_post(path: str, body: dict, connect_factory):
+    root = Path(os.environ.get('REPORTS_DIR', '/app/reports')) / 'evolution'
+    audit_hooks = {
+        'conn_factory': connect_factory,
+        'insert_trigger_change': insert_trigger_change,
+        'fetch_strategy_row': fetch_strategy_state_row,
+    }
+    if path == '/api/strategy-parameters/propose':
+        required = ('strategy_key', 'parameter', 'proposed_value', 'reason')
+        if not isinstance(body, dict) or any(k not in body for k in required):
+            return 'reject', 'INVALID_BODY', None
+        row = _supervised.propose_adjustment(
+            strategy_key=body['strategy_key'],
+            parameter=body['parameter'],
+            proposed_value=body['proposed_value'],
+            reason=str(body['reason']),
+            root=root,
+        )
+        return 'ok', None, row
+    if path == '/api/strategy-parameters/apply':
+        pid = body.get('proposal_id') if isinstance(body, dict) else None
+        if not pid:
+            return 'reject', 'INVALID_BODY', None
+        updated, code = _supervised.apply_proposal(str(pid), root=root, **audit_hooks)
+        if code:
+            return 'reject', code, None
+        return 'ok', None, updated
+    if path == '/api/strategy-parameters/undo':
+        aid = body.get('applied_id') if isinstance(body, dict) else None
+        if not aid:
+            return 'reject', 'INVALID_BODY', None
+        reason = str(body.get('reason') or 'operator_undo')
+        updated, code = _supervised.undo_adjustment(str(aid), reason=reason, root=root, **audit_hooks)
+        if code:
+            return 'reject', code, None
+        return 'ok', None, updated
+    return 'not_found', None, None
+
+
 def dispatch_patch(path, body, connect_factory):
     if path == '/api/triggers':
         return mutation_outcome(patch_triggers_op(body), connect_factory)
@@ -662,29 +814,708 @@ def serve_operator_panel(handler, root: Path, path: str, connect_factory):
     bundle = data.get('panel_ops') or {}
     triggers = load_triggers_for_page(connect_factory)
     if path in ('/', '/central'):
+        if data.get('platform_health') is not None:
+            bundle = {**bundle, 'platform_health': data['platform_health']}
         page = _panel_html.render_central_page(bundle, triggers)
     elif path == '/sinais':
         page = _panel_html.render_signals_page(bundle)
+    elif path == '/estrategias':
+        page = _panel_html.render_strategies_page(bundle)
+    elif path == '/analise-google':
+        page = _panel_html.render_analise_google_page(bundle)
     elif path == '/prodigy':
         cp = data.get('command_panel') or {}
         page = _panel_html.render_prodigy_page(bundle, cp.get('opportunities') or {})
     elif path == '/performance':
         page = _panel_html.render_performance_page(bundle.get('performance') or {})
+    elif path == '/ordens':
+        page = _panel_html.render_orders_page(bundle)
+    elif path == '/historico':
+        page = _panel_html.render_history_page(bundle)
     else:
         handler.send_error(404)
         return
     send_html_page(handler, page)
 
 
+def _panel_ops_bundle(snapshot: dict) -> dict:
+    bundle = snapshot.get('panel_ops') if isinstance(snapshot, dict) else None
+    if not isinstance(bundle, dict) or bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+        return {}
+    return bundle
+
+
 def serve_panel_json(handler, root: Path, path: str):
-    data = build_snapshot(root)
+    try:
+        data = build_snapshot(root)
+    except Exception:
+        data = {}
+    bundle = _panel_ops_bundle(data)
     if path == '/api/signals':
-        payload = {'signals': (data.get('panel_ops') or {}).get('signals') or []}
+        payload = {
+            'signals': bundle.get('signals') or [],
+            'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+        }
+    elif path == '/api/orders':
+        payload = {'orders': bundle.get('open_orders') or []}
+    elif path == '/api/history':
+        payload = {'history': bundle.get('order_history') or []}
+    elif path == '/api/estrategias':
+        catalog = bundle.get('strategy_catalog') or {}
+        payload = {'strategies': catalog.get('strategies') or []}
+    elif path == '/api/analise-google':
+        block = bundle.get('timesfm') if isinstance(bundle.get('timesfm'), dict) else {}
+        payload = {
+            'timesfm_status': block.get('timesfm_status', 'UNAVAILABLE'),
+            'tips': block.get('tips') or [],
+            'operator_reason': block.get('operator_reason'),
+            'execution_authorized': False,
+            'paper_allowed': False,
+        }
+        if block.get('note') is not None:
+            payload['note'] = block.get('note')
     elif path == '/api/performance':
-        payload = data.get('performance_panel') or {}
+        payload = data.get('performance_panel') if isinstance(data, dict) else {}
+        payload = payload or {}
     else:
         handler.send_error(404)
         return
+    send_json_response(handler, 200, payload)
+
+
+_LIVE_CRITERIA_SOURCES = ('collective2', 'prodigy', 'tradingview')
+_LIVE_CRITERIA_COOLDOWN_SEC = 30
+_LAST_LIVE_CRITERIA_REFRESH_MONO: float | None = None
+_LIVE_CRITERIA_REFRESH_LOCK = threading.Lock()
+_C2_API4_HTTP_FETCH = c2_history_collect.fetch
+# Wall-clock cap for closed-trades collect within one POST (seconds; not Feature 4 thresholds).
+_C2_CLOSED_TRADES_COLLECT_BUDGET_SEC = 35.0
+
+
+def _live_criteria_cooldown_wait(now_mono: float) -> int:
+    if _LAST_LIVE_CRITERIA_REFRESH_MONO is None:
+        return 0
+    elapsed = now_mono - _LAST_LIVE_CRITERIA_REFRESH_MONO
+    if elapsed >= _LIVE_CRITERIA_COOLDOWN_SEC:
+        return 0
+    return max(1, int(_LIVE_CRITERIA_COOLDOWN_SEC - elapsed) + 1)
+
+
+def _resolve_live_refresh_sources(body: dict) -> list[str]:
+    if not isinstance(body, dict):
+        return list(_LIVE_CRITERIA_SOURCES)
+    raw = body.get('sources')
+    if raw is None:
+        return list(_LIVE_CRITERIA_SOURCES)
+    if not isinstance(raw, list):
+        return list(_LIVE_CRITERIA_SOURCES)
+    picked = [s for s in raw if s in _LIVE_CRITERIA_SOURCES]
+    return picked or list(_LIVE_CRITERIA_SOURCES)
+
+
+def _merged_c2_strategy_ids(root: Path) -> list[str]:
+    seen: set[str] = set()
+    merged: list[str] = []
+    for pid in _panel_ops.load_c2_paper_copy_approved_ids(root):
+        if pid not in seen:
+            seen.add(pid)
+            merged.append(pid)
+    for pid in _panel_ops.discover_c2_strategy_ids_from_raw(root):
+        if pid not in seen:
+            seen.add(pid)
+            merged.append(pid)
+    for row in _panel_ops._load_c2_research_candidates(root):
+        pid = str(row.get('provider_id') or '').strip()
+        if pid and pid not in seen:
+            seen.add(pid)
+            merged.append(pid)
+    return sorted(merged, key=int)
+
+
+def _write_c2_history_dataset(out_dir: Path, sid: str, dataset: str, raw: dict) -> str:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    name = f'{sid}_{dataset}.json'
+    payload = {
+        'strategy_id': sid,
+        'dataset': dataset,
+        'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
+        'raw': raw,
+    }
+    (out_dir / name).write_text(json.dumps(payload, indent=2), encoding='utf-8')
+    return name
+
+
+def _panel_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    del opener, kwargs
+    root = Path(out_dir)
+    written: list[str] = []
+    for sid in sorted({str(x) for x in strategy_ids}):
+        sid_int = int(sid)
+        for dataset, api_path in c2_history_collect.PATHS.items():
+            try:
+                raw = _C2_API4_HTTP_FETCH(api_path, {'StrategyId': sid_int, 'CommissionPlan': '0'}, key)
+            except (OSError, ValueError, TypeError, KeyError):
+                continue
+            written.append(_write_c2_history_dataset(root, sid, dataset, raw))
+    return {'status': 'ok', 'written': written}
+
+
+def _collective2_closed_trades_partial_issue(exc: BaseException) -> str:
+    label = type(exc).__name__
+    code = getattr(exc, 'code', None)
+    if code is not None:
+        return f'collective2_closed_trades_partial_failed:{label}:{code}'
+    return f'collective2_closed_trades_partial_failed:{label}'
+
+
+def _c2_closed_trades_pending_from_refresh(root: Path) -> list[str]:
+    record = _panel_ops.load_candidates_refresh(root)
+    if not isinstance(record, dict):
+        return []
+    raw = record.get('c2_closed_trades_pending_ids') or []
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for item in raw:
+        s = str(item).strip()
+        if s.isdigit():
+            out.append(s)
+    return sorted(set(out), key=int)
+
+
+def _panel_c2_closed_trades_collect(
+    strategy_ids,
+    key,
+    out_dir,
+    issues: list[str] | None = None,
+    *,
+    deadline: float | None = None,
+    opener=None,
+    **kwargs,
+):
+    del kwargs
+    root = Path(out_dir)
+    api_path = c2_history_collect.PATHS['closed_trades']
+    written: list[str] = []
+    pending: list[str] = []
+    partial_labels: set[str] = set()
+    if deadline is None and _C2_CLOSED_TRADES_COLLECT_BUDGET_SEC > 0:
+        deadline = time.monotonic() + _C2_CLOSED_TRADES_COLLECT_BUDGET_SEC
+    bound_fetch = c2_history_collect.fetch
+    sorted_ids = sorted({str(x) for x in strategy_ids})
+    budget_stopped = False
+    for idx, sid in enumerate(sorted_ids):
+        if deadline is not None and time.monotonic() >= deadline:
+            budget_stopped = True
+            pending.extend(sorted_ids[idx:])
+            break
+        try:
+            if bound_fetch is _C2_API4_HTTP_FETCH:
+                raw = _C2_API4_HTTP_FETCH(
+                    api_path,
+                    {'StrategyId': int(sid), 'CommissionPlan': '0'},
+                    key,
+                )
+            else:
+                panel = bound_fetch(
+                    [sid],
+                    key,
+                    out_dir,
+                    opener=opener,
+                    path=api_path,
+                )
+                if isinstance(panel, dict) and panel.get('written'):
+                    written.extend(str(x) for x in panel['written'])
+                    continue
+                raw = panel.get('raw') if isinstance(panel, dict) else panel
+                if raw is None:
+                    raise ValueError('closed_trades_fetch_empty')
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            if issues is not None:
+                label = _collective2_closed_trades_partial_issue(exc)
+                if label not in partial_labels:
+                    partial_labels.add(label)
+                    issues.append(label)
+            continue
+        written.append(_write_c2_history_dataset(root, sid, 'closed_trades', raw))
+    if budget_stopped and issues is not None:
+        budget_issue = 'collective2_closed_trades_partial_failed:time_budget'
+        if budget_issue not in partial_labels:
+            issues.append(budget_issue)
+    if pending:
+        pending = sorted(set(pending), key=int)
+    return {'status': 'ok', 'written': written, 'pending_ids': pending}
+
+
+def _invoke_c2_history_collect(strategy_ids, key, out_dir, opener=None, **kwargs):
+    bound_fetch = c2_history_collect.fetch
+    if bound_fetch is _C2_API4_HTTP_FETCH:
+        return _panel_c2_history_collect(strategy_ids, key, out_dir, opener=opener, **kwargs)
+    return bound_fetch(strategy_ids, key, out_dir, opener=opener, **kwargs)
+
+
+def _invoke_c2_closed_trades_collect(
+    strategy_ids,
+    key,
+    out_dir,
+    issues: list[str] | None = None,
+    opener=None,
+    **kwargs,
+):
+    deadline = kwargs.pop('deadline', None)
+    return _panel_c2_closed_trades_collect(
+        strategy_ids,
+        key,
+        out_dir,
+        issues,
+        deadline=deadline,
+        opener=opener,
+        **kwargs,
+    )
+
+
+def _c2_search_cursor_from_refresh(root: Path) -> str:
+    record = _panel_ops.load_candidates_refresh(root)
+    if not isinstance(record, dict):
+        return ''
+    return str(record.get('c2_search_next_cursor') or '').strip()
+
+
+def _persist_c2_search_snapshot(root: Path, raw_api: dict) -> None:
+    intel = _intelligence_dir(root)
+    payload = {
+        'dataset': 'search_strategies',
+        'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
+        'raw': raw_api,
+    }
+    (intel / 'c2_search_strategies_latest.json').write_text(
+        json.dumps(payload, indent=2),
+        encoding='utf-8',
+    )
+
+
+def _parse_c2_search_ids(raw_api: dict) -> tuple[list[str], str]:
+    results = raw_api.get('Results') or []
+    pagination = raw_api.get('Pagination') if isinstance(raw_api.get('Pagination'), dict) else {}
+    next_cursor = str(pagination.get('next_cursor') or '').strip()
+    ids: list[str] = []
+    for row in results:
+        if not isinstance(row, dict) or row.get('IsPrivate') is True:
+            continue
+        sid = row.get('StrategyId')
+        if sid is None:
+            continue
+        try:
+            ids.append(str(int(sid)))
+        except (TypeError, ValueError):
+            continue
+    return sorted(set(ids), key=int), next_cursor
+
+
+def _collective2_search_incomplete_issue(next_cursor: str) -> str:
+    if not next_cursor:
+        return ''
+    return (
+        'collective2_search_incomplete:pagination next_cursor present; '
+        'click Atualizar again to continue scan'
+    )
+
+
+def _append_collective2_non_numeric_id_issues(root: Path, issues: list[str]) -> None:
+    bad = False
+    for pid in _panel_ops.load_c2_paper_copy_approved_ids(root):
+        if pid and not str(pid).isdigit():
+            bad = True
+            break
+    if not bad:
+        for row in _panel_ops._load_c2_research_candidates(root):
+            pid = str(row.get('provider_id') or row.get('provider') or '').strip()
+            if pid and not pid.isdigit():
+                bad = True
+                break
+    if bad:
+        issues.append('collective2_refresh_failed:non_numeric_strategy_id')
+
+
+def _c2_search_retryable(exc: BaseException) -> bool:
+    code = getattr(exc, 'code', None)
+    if code is None:
+        return False
+    try:
+        numeric = int(code)
+    except (TypeError, ValueError):
+        return False
+    return numeric == 429 or 500 <= numeric <= 599
+
+
+def _invoke_c2_search_strategies(key: str, out_dir: Path, cursor: str, opener=None):
+    search_path = c2_history_collect.SEARCH_STRATEGIES_PATH
+    bound_fetch = c2_history_collect.fetch
+
+    def _attempt_once():
+        if bound_fetch is _C2_API4_HTTP_FETCH:
+            params: dict[str, str] = {}
+            if cursor:
+                params['Cursor'] = cursor
+            raw = bound_fetch(search_path, params, key)
+            _persist_c2_search_snapshot(Path(out_dir).parent.parent, raw)
+            return _parse_c2_search_ids(raw)
+        panel = bound_fetch(
+            search_path,
+            key,
+            out_dir,
+            opener=opener,
+            path=search_path,
+            cursor=cursor,
+        )
+        if isinstance(panel, dict) and panel.get('strategy_ids') is not None:
+            ids = [str(x) for x in panel.get('strategy_ids') or []]
+            ncur = str(panel.get('next_cursor') or '').strip()
+            return sorted(set(ids), key=int), ncur
+        raw = panel.get('raw') if isinstance(panel, dict) else {}
+        if isinstance(raw, dict):
+            return _parse_c2_search_ids(raw)
+        return [], ''
+
+    last_exc: BaseException | None = None
+    for attempt in range(2):
+        try:
+            return _attempt_once()
+        except HTTPError as exc:
+            last_exc = exc
+            if attempt == 0 and _c2_search_retryable(exc):
+                continue
+            raise
+    if last_exc is not None:
+        raise last_exc
+    return [], ''
+
+
+def _intelligence_dir(root: Path) -> Path:
+    path = root / 'intelligence'
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _providers_raw_dir(root: Path) -> Path:
+    return root / 'providers' / 'raw'
+
+
+def _providers_signals_dir(root: Path) -> Path:
+    return root / 'providers' / 'signals'
+
+
+def _prodigy_rank_has_eligible_rows(rank: dict) -> bool:
+    top = rank.get('top_10_research')
+    if isinstance(top, list) and top:
+        return True
+    providers = rank.get('providers')
+    return isinstance(providers, list) and bool(providers)
+
+
+def _persist_prodigy_rank(root: Path, rank: dict) -> None:
+    intel = _intelligence_dir(root)
+    (intel / 'prodigy-top10-latest.json').write_text(json.dumps(rank, indent=2), encoding='utf-8')
+
+
+def _ledger_conn_factory(conn_factory):
+    return conn_factory if os.environ.get('LEDGER_DATABASE_URL', '').strip() else None
+
+
+def _live_refresh_prodigy(root: Path, issues: list[str], sources_ok: list[str]) -> None:
+    raw_dir = _providers_raw_dir(root)
+    try:
+        rank = prodigy_rank.calculate(raw_dir)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        issues.append(f'prodigy_rank_failed:{type(exc).__name__}')
+        return
+    if not _prodigy_rank_has_eligible_rows(rank):
+        issues.append(
+            'prodigy_raw_missing:reports/providers/raw/{sid}_closed_trades.json',
+        )
+        return
+    _persist_prodigy_rank(root, rank)
+    sources_ok.append('prodigy')
+
+
+def _collective2_active_orders_snapshot_issue(exc: BaseException) -> str:
+    label = type(exc).__name__
+    code = getattr(exc, 'code', None)
+    if code is not None:
+        return f'collective2_active_orders_snapshot_failed:{label}:{code}'
+    return f'collective2_active_orders_snapshot_failed:{label}'
+
+
+def _collective2_refresh_failed_issue(exc: BaseException) -> str:
+    label = type(exc).__name__
+    code = getattr(exc, 'code', None)
+    if code is not None:
+        return f'collective2_refresh_failed:{label}:{code}'
+    return f'collective2_refresh_failed:{label}'
+
+
+def _run_collective2_active_orders_snapshot(
+    root: Path,
+    key: str,
+    issues: list[str],
+) -> None:
+    snap_ids = sorted({int(x) for x in _panel_ops.load_c2_paper_copy_approved_ids(root)})
+    if not snap_ids:
+        return
+    try:
+        c2_signal_feed.snapshot(snap_ids, key, _providers_signals_dir(root))
+    except (HTTPError, URLError, ValueError, OSError) as exc:
+        issues.append(_collective2_active_orders_snapshot_issue(exc))
+
+
+def _live_refresh_collective2(
+    root: Path,
+    issues: list[str],
+    sources_ok: list[str],
+) -> tuple[str, list[str]]:
+    key = os.environ.get('C2_API4_KEY', '').strip()
+    if not key:
+        issues.append('C2_API4_KEY_missing')
+        return '', []
+    raw_dir = _providers_raw_dir(root)
+    _append_collective2_non_numeric_id_issues(root, issues)
+    next_cursor = ''
+    try:
+        cursor = _c2_search_cursor_from_refresh(root)
+        scan_ids, next_cursor = _invoke_c2_search_strategies(key, raw_dir, cursor)
+        incomplete = _collective2_search_incomplete_issue(next_cursor)
+        if incomplete:
+            issues.append(incomplete)
+    except HTTPError as exc:
+        issues.append(_collective2_refresh_failed_issue(exc))
+        return '', []
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        issues.append(_collective2_refresh_failed_issue(exc))
+        return '', []
+    sources_ok.append('collective2')
+    pending_prior = _c2_closed_trades_pending_from_refresh(root)
+    collect_ids = sorted(set(pending_prior) | set(scan_ids or []), key=int)
+    closed_pending: list[str] = []
+    if collect_ids:
+        collect_deadline = time.monotonic() + _C2_CLOSED_TRADES_COLLECT_BUDGET_SEC
+        result = _invoke_c2_closed_trades_collect(
+            collect_ids,
+            key,
+            raw_dir,
+            issues,
+            deadline=collect_deadline,
+        )
+        closed_pending = list(result.get('pending_ids') or [])
+    _run_collective2_active_orders_snapshot(root, key, issues)
+    return next_cursor, closed_pending
+
+
+def _live_refresh_tradingview(
+    root: Path,
+    conn_factory,
+    issues: list[str],
+    sources_ok: list[str],
+) -> None:
+    issues.append(
+        'tradingview_scan_out:ISS-025 no platform search API; ingested origins only',
+    )
+    factory = _ledger_conn_factory(conn_factory)
+    try:
+        bundle = _panel_ops.build_panel_bundle(root, factory)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
+        return
+    signals = bundle.get('signals') if isinstance(bundle, dict) else []
+    if not isinstance(signals, list):
+        signals = []
+    _panel_ops._unique_tradingview_origins(signals)
+    sources_ok.append('tradingview')
+
+
+def _live_criteria_job(
+    root: Path,
+    sources: list[str],
+    conn_factory,
+) -> tuple[list[str], list[str], list[str], str]:
+    issues: list[str] = []
+    sources_ok: list[str] = []
+    c2_next_cursor = ''
+    c2_closed_pending: list[str] = []
+    if 'collective2' in sources:
+        try:
+            c2_next_cursor, c2_closed_pending = _live_refresh_collective2(root, issues, sources_ok)
+        except HTTPError as exc:
+            issues.append(_collective2_refresh_failed_issue(exc))
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            issues.append(_collective2_refresh_failed_issue(exc))
+    if 'prodigy' in sources:
+        _live_refresh_prodigy(root, issues, sources_ok)
+    if 'tradingview' in sources:
+        try:
+            _live_refresh_tradingview(root, conn_factory, issues, sources_ok)
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            issues.append(f'tradingview_refresh_failed:{type(exc).__name__}')
+    return issues, sources_ok, sources, c2_next_cursor, c2_closed_pending
+
+
+def _persist_refresh_attempt_start(root: Path) -> None:
+    prior = _panel_ops.load_candidates_refresh(root)
+    if not isinstance(prior, dict):
+        prior = {}
+    refreshed_at = datetime.now(timezone.utc).isoformat()
+    raw_issues = prior.get('issues')
+    kept: list[str] = []
+    if isinstance(raw_issues, list):
+        for item in raw_issues:
+            text = str(item).strip()
+            if not text:
+                continue
+            if text.startswith('collective2_refresh_failed:'):
+                continue
+            kept.append(text)
+    record: dict = {
+        'mode': 'live_criteria',
+        'status': 'partial',
+        'refreshed_at': refreshed_at,
+        'sources_attempted': list(prior.get('sources_attempted') or []),
+        'sources_ok': [],
+        'issues': kept,
+        'orders_sent': 0,
+        'execution_authorized': False,
+    }
+    cursor = prior.get('c2_search_next_cursor')
+    if cursor:
+        record['c2_search_next_cursor'] = cursor
+    pending = prior.get('c2_closed_trades_pending_ids')
+    if isinstance(pending, list):
+        record['c2_closed_trades_pending_ids'] = [str(x) for x in pending]
+    else:
+        record['c2_closed_trades_pending_ids'] = []
+    _panel_ops.persist_candidates_refresh(root, record)
+
+
+def serve_signals_candidates_refresh(handler, root: Path, conn_factory=None, body=None):
+    global _LAST_LIVE_CRITERIA_REFRESH_MONO
+    body = body if isinstance(body, dict) else {}
+    with _LIVE_CRITERIA_REFRESH_LOCK:
+        wait = _live_criteria_cooldown_wait(time.monotonic())
+        if wait:
+            send_json_response(
+                handler,
+                429,
+                {
+                    'reject_code': 'REFRESH_COOLDOWN',
+                    'retry_after_seconds': wait,
+                    'mode': 'live_criteria',
+                    'message': 'Aguarde antes de um novo refresh de critérios ao vivo.',
+                },
+            )
+            return
+        _persist_refresh_attempt_start(root)
+        sources = _resolve_live_refresh_sources(body)
+        issues, sources_ok, sources_attempted, c2_next_cursor, c2_closed_pending = _live_criteria_job(
+            root,
+            sources,
+            conn_factory,
+        )
+        factory = _ledger_conn_factory(conn_factory)
+        try:
+            bundle = _panel_ops.build_panel_bundle(root, factory)
+        except (OSError, ValueError, TypeError, KeyError):
+            send_json_response(
+                handler,
+                503,
+                {'reject_code': 'PANEL_BUNDLE_UNAVAILABLE', 'mode': 'live_criteria'},
+            )
+            return
+        if bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+            send_json_response(
+                handler,
+                503,
+                {'reject_code': 'PANEL_OPS_UNAVAILABLE', 'mode': 'live_criteria'},
+            )
+            return
+        refreshed_at = datetime.now(timezone.utc).isoformat()
+        status = 'partial' if issues else 'ok'
+        refresh_record = {
+            'mode': 'live_criteria',
+            'status': status,
+            'refreshed_at': refreshed_at,
+            'sources_attempted': sources_attempted,
+            'sources_ok': sources_ok,
+            'issues': issues,
+            'orders_sent': 0,
+            'execution_authorized': False,
+        }
+        if c2_next_cursor:
+            refresh_record['c2_search_next_cursor'] = c2_next_cursor
+        if c2_closed_pending:
+            refresh_record['c2_closed_trades_pending_ids'] = c2_closed_pending
+        else:
+            refresh_record['c2_closed_trades_pending_ids'] = []
+        _panel_ops.persist_candidates_refresh(root, refresh_record)
+        try:
+            bundle = _panel_ops.build_panel_bundle(root, factory)
+        except (OSError, ValueError, TypeError, KeyError):
+            pass
+        payload = {
+            'status': status,
+            'mode': 'live_criteria',
+            'refreshed_at': refreshed_at,
+            'sources_attempted': sources_attempted,
+            'sources_ok': sources_ok,
+            'issues': issues,
+            'message': 'Critérios ao vivo aplicados no servidor (sem envio de ordem).',
+            'execution_authorized': False,
+            'orders_sent': 0,
+            'signals': bundle.get('signals') or [],
+            'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+        }
+        _LAST_LIVE_CRITERIA_REFRESH_MONO = time.monotonic()
+        send_json_response(handler, 200, payload)
+
+
+def serve_signals_reload(handler, root: Path, conn_factory=None):
+    """Honest refresh (N53): re-read build_panel_bundle from disk only.
+
+    N54 will add POST/job + cooldown; no ranking job in this GET path.
+    """
+    try:
+        factory = conn_factory if os.environ.get('LEDGER_DATABASE_URL', '').strip() else None
+        bundle = _panel_ops.build_panel_bundle(root, factory)
+    except Exception:
+        send_json_response(
+            handler,
+            503,
+            {
+                'status': 'error',
+                'reload': False,
+                'message': 'Não foi possível reler o bundle do painel.',
+            },
+        )
+        return
+    if bundle.get('status') == 'PANEL_OPS_UNAVAILABLE':
+        send_json_response(
+            handler,
+            503,
+            {
+                'status': 'error',
+                'reload': False,
+                'message': 'Painel indisponível para releitura.',
+            },
+        )
+        return
+    payload = {
+        'status': 'ok',
+        'reload': True,
+        'mode': 'disk_reread',
+        'message': 'Candidatos relidos a partir do disco (sem cálculo de ranking).',
+        'refreshed_at': datetime.now(timezone.utc).isoformat(),
+        'execution_authorized': False,
+        'orders_sent': 0,
+        'signals': bundle.get('signals') or [],
+        'copy': bundle.get('copy') if isinstance(bundle.get('copy'), dict) else {},
+    }
     send_json_response(handler, 200, payload)
 
 
@@ -700,7 +1531,13 @@ def serve_public_get(handler, root, token, path):
         handler.send_error(404)
         return
     if path == '/healthz':
-        body = b'{"status":"alive","orders_enabled":false}'
+        health = {
+            'status': 'alive',
+            'orders_enabled': False,
+            'app_git_sha': _app_git_sha(),
+            'upstream_commit': _upstream_commit_env(),
+        }
+        body = json.dumps(health, ensure_ascii=False).encode('utf-8')
         mime = 'application/json; charset=utf-8'
     else:
         try:
@@ -721,6 +1558,8 @@ def serve_public_get(handler, root, token, path):
 
 
 def make_handler(root, token=None, operator_session=None, connect_factory=None):
+    global _LAST_LIVE_CRITERIA_REFRESH_MONO
+    _LAST_LIVE_CRITERIA_REFRESH_MONO = None
     db_connect = connect_factory or default_connect
 
     class Handler(BaseHTTPRequestHandler):
@@ -729,7 +1568,20 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             if path == '/login':
                 serve_login_page(self)
                 return
-            if path in ('/api/signals', '/api/performance'):
+            if path == '/api/signals/reload':
+                if operator_session and not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                serve_signals_reload(self, root, db_connect)
+                return
+            if path in (
+                '/api/signals',
+                '/api/performance',
+                '/api/orders',
+                '/api/history',
+                '/api/estrategias',
+                '/api/analise-google',
+            ):
                 if operator_session and not operator_session_authorized(self.headers, operator_session):
                     send_empty_response(self, 401)
                     return
@@ -744,6 +1596,12 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
                     send_json_response(self, 500, {'reject_code': outcome})
                     return
                 send_json_response(self, 200, outcome)
+                return
+            if path == '/api/strategy-parameters':
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                send_json_response(self, 200, strategy_parameters_get_payload())
                 return
             if operator_session and operator_panel_route(path):
                 if not operator_session_authorized(self.headers, operator_session):
@@ -773,6 +1631,53 @@ def make_handler(root, token=None, operator_session=None, connect_factory=None):
             path = urlsplit(self.path).path
             if path in ('/api/login', '/login'):
                 handle_login_post(self, operator_session)
+                return
+            if path.startswith('/api/strategy-parameters/'):
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                try:
+                    body = read_json_body(self)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                    return
+                kind, code, payload = strategy_parameters_post(path, body, db_connect)
+                if kind == 'not_found':
+                    self.send_error(404)
+                    return
+                respond_mutation(self, kind, code, payload)
+                return
+            if path == '/api/signals/providers':
+                if not operator_session_authorized(self.headers, operator_session):
+                    send_empty_response(self, 401)
+                    return
+                try:
+                    body = read_json_body(self)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                    return
+                kind, code, payload = signals_providers_post(body, db_connect, root)
+                if kind == 'reject' and code == 'LEDGER_UNAVAILABLE':
+                    send_json_response(self, 503, {'reject_code': code})
+                    return
+                if kind == 'not_found':
+                    self.send_error(404)
+                    return
+                respond_mutation(self, kind, code, payload)
+                return
+            if path == '/api/signals/candidates/refresh':
+                if not operator_session or not operator_session_authorized(
+                    self.headers,
+                    operator_session,
+                ):
+                    send_empty_response(self, 401)
+                    return
+                try:
+                    body = read_json_body(self)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    send_json_response(self, 422, {'reject_code': 'INVALID_BODY'})
+                    return
+                serve_signals_candidates_refresh(self, root, db_connect, body)
                 return
             self.send_error(405, 'Read only')
     return Handler

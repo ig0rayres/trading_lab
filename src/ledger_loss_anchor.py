@@ -7,6 +7,8 @@ from decimal import Decimal
 from typing import Any, Callable
 
 REJECT_UNCONVERTED = 'UNCONVERTED_FILL'
+REJECT_DAILY_LOSS = 'DAILY_LOSS_HALT'
+REJECT_WEEKLY_LOSS = 'WEEKLY_LOSS_HALT'
 
 
 def _utc_day_start(now: datetime) -> datetime:
@@ -125,15 +127,42 @@ def loss_anchor_snapshot(
     return build_anchor_state(rows, pending, now_utc=now)
 
 
+def loss_ceiling_reject(
+    snap: dict[str, Any],
+    *,
+    conn_factory: Callable[..., Any] | None = None,
+) -> str | None:
+    """Return reject_code when verified P&L breaches control_flags loss ceilings only."""
+    if snap.get('blocks_new_order'):
+        return snap.get('reject_code') or REJECT_UNCONVERTED
+    if snap.get('daily_pnl_verified') is not True or snap.get('weekly_pnl_verified') is not True:
+        return None
+    from risk_control_flags import brl_from_cents, fetch_control_flags
+
+    flags = fetch_control_flags(conn_factory=conn_factory)
+    max_daily = brl_from_cents(int(flags['max_daily_loss_cents']))
+    max_weekly = brl_from_cents(int(flags['max_weekly_loss_cents']))
+    try:
+        daily_pnl = Decimal(str(snap.get('daily_pnl_brl') or '0'))
+        weekly_pnl = Decimal(str(snap.get('weekly_pnl_brl') or '0'))
+    except Exception:
+        return 'LOSS_DATA_NOT_VERIFIED'
+    if daily_pnl <= -max_daily:
+        return REJECT_DAILY_LOSS
+    if weekly_pnl <= -max_weekly:
+        return REJECT_WEEKLY_LOSS
+    return None
+
+
 def gate_b_loss_reject(
     *,
     conn_factory: Callable[..., Any] | None = None,
     now_utc: datetime | None = None,
 ) -> str | None:
     snap = loss_anchor_snapshot(conn_factory=conn_factory, now_utc=now_utc)
-    if snap.get('blocks_new_order'):
-        return snap.get('reject_code') or REJECT_UNCONVERTED
-    return None
+    if snap.get('reject_code') == 'LOSS_DATA_NOT_VERIFIED' and snap.get('blocks_new_order'):
+        return 'LOSS_DATA_NOT_VERIFIED'
+    return loss_ceiling_reject(snap, conn_factory=conn_factory)
 
 
 def portfolio_risk_snapshot(

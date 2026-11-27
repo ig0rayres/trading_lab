@@ -1,344 +1,246 @@
-# Design System — Trading Lab
+# Design System — Painel Operacional Trading Lab
 
-> Fase 2 (Design) | Modo: RETROFIT (redesign) | Engine: Beesy nativo | Biblioteca: Tailwind puro | Dark mode: Sim, troca manual
+> Issue: **ISS-023** (substitui pacote N52 / ISS-022)  
+> Modo: **RETROFIT** · Escopo: plataforma inteira (`panel_ops_html`)  
+> Engine: Beesy nativo (tokens + wireframes) · Dark mode: **não** (light-only até decisão explícita)  
+> `LIVE_TRADING_ENABLED=false` · Aprovar ≠ fill · Refresh ≠ ordem
 
-Operador aprovou a direção 1 (sóbrio, menu escuro, conteúdo claro) em 2026-11-03, com ícone mais texto nos estados e tema claro e escuro. Protótipos em `docs/design/canvas/` (login, central, sinais). Números daquelas telas são exemplo.
+## 1. Identidade visual
+
+**Estilo:** operacional / laboratório (ops lab) — denso onde há tabela, arejado onde há decisão.  
+**Tom:** confiança auditável; pesquisa sempre rotulada; ação destrutiva isolada.  
+**Público:** operador único em sessão diária; leitura prolongada de tabelas e números de pesquisa.
+
+**Anti-padrões:** gradientes “AI purple”, cards flutuantes sem hierarquia, métricas sem rótulo `pesquisa`, zeros para campo ausente.
+
+### Referências (conceituais, não URLs inventadas)
+
+| Referência | O que reutilizar |
+|-----------|------------------|
+| Grafana / ops consoles | sidebar escura, conteúdo claro, badges de saúde |
+| Stripe Dashboard (tabelas) | alinhamento tabular, cabeçalhos fixos, empty states curtos |
+| WCAG 2.1 AA | contraste 4,5:1 corpo; 3:1 UI; foco visível em todo controle |
 
 ---
 
-## 1. Identidade Visual
+## 2. Design tokens (v2 — pós-N52)
 
-**Estilo**: operacional, sóbrio
-**Tom**: Uma pessoa olha o painel por sessão longa. A tela mostra se a conta demo pode abrir ordem, o que barrou um sinal e onde estão as âncoras. Sem gráfico de candle e sem cara de campanha.
-**Público-alvo**: Operador único, semi-técnico. Densidade de mesa, leitura em português.
+Substituem tokens N52 no bloco `_PANEL_CSS` (implementação futura). Sem hardcode de hex no HTML por linha — só variáveis.
 
-### Referencias visuais
-
-| Referencia | O que inspirou | Link |
-|-----------|---------------|------|
-| Direção 1, sóbrio | Menu escuro, seis âncoras, faixa de operação, parada geral | `docs/design/moodboards/moodboard-sobrio.jpg` |
-| Direção 3, neutro | Estado com ícone e texto, não só cor | `docs/design/moodboards/moodboard-neutro.jpg` |
-
----
-
-## 2. Design Tokens
-
-Extraídos dos protótipos aprovados. Contraste texto/fundo conferido em 2026-11-03: os pares abaixo passam 4.5:1.
-
-### 2.1 Cores
-
-#### Light mode
+### 2.1 Cores (light)
 
 | Token | Valor | Uso |
 |-------|-------|-----|
-| `--color-background` | `#f3f5f8` | Fundo da página |
-| `--color-foreground` | `#1c2430` | Texto |
-| `--color-primary` / `-foreground` | `#2c4a6e` / `#f7fafc` | Item ativo, botão Entrar |
-| `--color-muted` / `-foreground` | `#e7edf3` / `#5c6b7c` | Faixas, texto auxiliar |
-| `--color-destructive` | `#8f2d2d` | Parada geral, erro |
-| `--color-success` | `#1d6b45` | Operando, abaixo do limite |
-| `--color-warning` | `#8a5a12` | Parada ligada, atenção |
-| `--color-border` | `#d5dee8` | Bordas |
-| `--color-card` / `-foreground` | `#ffffff` / `#1c2430` | Cartões |
-| `--color-sidebar` / `-foreground` | `#1a2332` / `#e8eef6` | Menu |
+| `--color-canvas` | `#F1F5F9` | Fundo área principal |
+| `--color-surface` | `#FFFFFF` | Cards, tabelas |
+| `--color-sidebar` | `#0F172A` | Nav lateral |
+| `--color-sidebar-muted` | `#94A3B8` | Itens inativos no menu |
+| `--color-sidebar-active` | `#E2E8F0` | Texto item ativo |
+| `--color-sidebar-active-bg` | `#1E293B` | Fundo item ativo |
+| `--color-foreground` | `#0F172A` | Títulos, células |
+| `--color-muted` | `#64748B` | Subtítulos, hints |
+| `--color-border` | `#CBD5E1` | Bordas tabela/card |
+| `--color-ring` | `#0284C7` | Focus ring (3px) |
+| `--color-primary` | `#0369A1` | CTA primário (aprovar, entrar) |
+| `--color-primary-fg` | `#FFFFFF` | Texto em primário |
+| `--color-destructive` | `#B91C1C` | Rejeitar, freio |
+| `--color-destructive-fg` | `#FFFFFF` | Texto em destrutivo |
+| `--color-success-bg` | `#ECFDF5` | Semáforo OK / badge paper |
+| `--color-success-fg` | `#065F46` | |
+| `--color-warning-bg` | `#FFFBEB` | Aviso research / fila |
+| `--color-warning-fg` | `#92400E` | |
+| `--color-danger-bg` | `#FEF2F2` | Erro refresh / bloqueio |
+| `--color-danger-fg` | `#991B1B` | |
+| `--color-research-bg` | `#F8FAFC` | Faixa “somente pesquisa” |
+| `--color-research-border` | `#94A3B8` | Borda tracejada research |
 
-#### Dark mode
-
-| Token | Valor Light | Valor Dark |
-|-------|------------|------------|
-| `--color-background` | `#f3f5f8` | `#121820` |
-| `--color-foreground` | `#1c2430` | `#e7eef6` |
-| `--color-card` | `#ffffff` | `#1b2531` |
-| `--color-primary` | `#2c4a6e` | `#9ec0e6` |
-| `--color-primary-foreground` | `#f7fafc` | `#121820` |
-| `--color-muted` | `#e7edf3` | `#243041` |
-| `--color-muted-foreground` | `#5c6b7c` | `#b7c3d1` |
-| `--color-border` | `#d5dee8` | `#314255` |
-| `--color-destructive` | `#8f2d2d` | `#f0b4b4` |
-| `--color-success` | `#1d6b45` | `#8dccb0` |
-| `--color-warning` | `#8a5a12` | `#e6c48a` |
-| `--color-sidebar` | `#1a2332` | `#0e141c` |
-
-Troca pela classe `dark` no `html`. A preferência fica em `localStorage` (`trading-lab-theme`).
+**Contraste verificado (AA):** `--color-primary` em `--color-primary-fg`; `--color-foreground` em `--color-surface`; links `--color-primary` em fundo claro.
 
 ### 2.2 Tipografia
 
 | Propriedade | Valor |
 |-------------|-------|
-| **Font family** | IBM Plex Sans |
-| **Números, hora, ativo** | IBM Plex Mono |
-| **Font fallback** | sans-serif / monospace |
-| **Base size** | 16px |
+| UI | `Inter, system-ui, sans-serif` |
+| IDs / hashes / JSON | `ui-monospace, SFMono-Regular, Menlo, monospace` |
+| Base | `16px` (`--text-base`) |
+| Escala | `--text-xs` 12px · `--text-sm` 14px · `--text-lg` 18px · `--text-xl` 20px |
+| Peso | 400 corpo · 500 rótulos coluna · 600 título página · 700 freio apenas |
 
-### 2.3 Espacamento
+`font-variant-numeric: tabular-nums` em colunas numéricas (Performance, métricas pesquisa).
 
-Escala Tailwind. Cartão com padding 16px. Alvo de toque mínimo 44px.
+### 2.3 Espaçamento e radius
 
-### 2.4 Border Radius
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `--space-1` | 4px | Gap ícone-texto |
+| `--space-2` | 8px | Padding badge |
+| `--space-3` | 12px | Célula tabela compacta |
+| `--space-4` | 16px | Padding card |
+| `--space-6` | 24px | Entre seções na página |
+| `--radius-sm` | 4px | Input, badge |
+| `--radius-md` | 8px | Card, botão |
+| `--radius-lg` | 12px | Modal login |
 
-| Contexto | Token | Valor |
-|----------|-------|-------|
-| Botões e inputs | `--radius-lg` | `0.5rem` |
-| Cartões | `--radius-lg` | `0.5rem` |
-| Monograma | `--radius-lg` | `0.5rem` |
+### 2.4 Elevação
 
-### 2.5 Shadows
-
-| Contexto | Token |
-|----------|-------|
-| Menu mobile | `shadow-xl` |
-| Cartões | borda, sem sombra forte |
-
----
-
-## 3. Biblioteca de Componentes
-
-**Escolha**: Tailwind puro
-**Justificativa**: O painel de hoje é HTML gerado em Python, sem React. O protótipo não puxa biblioteca de componentes. A implementação futura reaproveita estes tokens.
-
-### Componentes utilizados
-
-| Componente | Uso no projeto | Customizacao necessaria |
-|-----------|---------------|----------------------|
-| Button | Entrar, Parada geral, filtros, tema | Primary, outline destructive, ghost |
-| Input | Login | Label visível, erro com ícone e texto |
-| Card | Âncoras | Número em mono, texto auxiliar com ícone |
-| Table | Sinais | Linha clicável, filtro por destino |
-| Status | Operando, parada, barrado, fila | Ícone mais texto |
-
-**Componentes custom**: faixa de parada geral com confirmação na própria página, sem alerta do navegador.
+| Token | Uso |
+|-------|-----|
+| `--shadow-sm` | `0 1px 2px rgb(15 23 42 / 0.06)` | Card leve |
+| `--shadow-md` | `0 4px 12px rgb(15 23 42 / 0.08)` | Dropdown / toast |
 
 ---
 
-## 4. Layout e Navegacao
+## 3. Componentes (HTML nativo no painel)
 
-### Estrutura geral
-
-```
-+------------------+----------------------------------+
-| TL  Trading Lab  | Título          Conta demo  Tema |
-| Central          | Banner: protótipo / exemplo      |
-| Estratégias      | Conteúdo                         |
-| Sinais           |                                  |
-| Prodígio         |                                  |
-| Performance      |                                  |
-| Sugestões        |                                  |
-+------------------+----------------------------------+
-```
-
-Menu com 240px. No celular, o menu abre por botão.
-
-### Navegacao
-
-| Plataforma | Tipo | Detalhes |
-|-----------|------|---------|
-| Web desktop | sidebar | Seis áreas dos requisitos. Central e Sinais existem no protótipo. |
-| Web mobile | menu sobreposto | Mesmos destinos |
-
-### Responsividade
-
-| Breakpoint | Mudancas |
-|-----------|---------|
-| Mobile (< 1024px) | Menu some e abre por botão. Cartões empilham. |
-| Desktop (>= 1024px) | Menu fixo e cartões em grade. |
+| Componente | Variantes | Regras |
+|------------|-----------|--------|
+| `PanelShell` | sidebar + topbar contexto | Ver `mockups/panel-shell.md` |
+| `PageHeader` | título + subtítulo + slot ações | Uma `h1` por rota |
+| `ResearchBanner` | fixo opcional | Texto mapa: *não autoriza ordem* / *não é fill* |
+| `DataTable` | zebra off; header sticky | Empty = string real do mapa |
+| `MetricCluster` | pré-aprovação | Só chaves recuperadas; ausente = **indisponível** |
+| `Badge` | fase estratégia, status ordem, research | Nunca “0” inventado |
+| `Button` | primary · outline · destructive · ghost | Refresh = **secondary/outline**, não primário |
+| `EmptyState` | ícone opcional + copy do mapa | Sem ilustração pesada |
+| `Toast` / `InlineAlert` | success · error · info | Refresh feedback |
+| `KillSwitch` | isolated destructive | Só Central |
 
 ---
 
-## 5. Mockups
+## 4. Arquitetura de informação (alinhada a `OPERATOR-PANEL-MAP.md`)
 
-### Entrar
-
-**Rota**: `/login`
-**Tipo**: pagina
-**Autenticacao**: publica
-
-#### Layout
+### 4.1 Ordem mental do operador
 
 ```
-+----------------------------------+
-|                         [Tema]   |
-|            TL                    |
-|        Trading Lab               |
-|   Central de controle. Conta demo|
-|   [e-mail]                       |
-|   [senha]                        |
-|   [Entrar]                       |
-+----------------------------------+
+Controle → Execução agora → Passado → Decisão cópia → Catálogo → Pesquisa → P&L paper
 ```
 
-#### Componentes
+### 4.2 Menu lateral (após login)
 
-| Componente | Tipo | Dados | Interacao |
-|-----------|------|-------|-----------|
-| Tema | Button | Claro ou escuro | Alterna e grava a preferência |
-| E-mail | Input | Placeholder | Sem envio real |
-| Senha | Input | Vazio ou preenchida | Vazio bloqueia e mostra erro |
-| Entrar | Link primary | — | Com senha, segue para a Central |
+Ordem fixa no `_nav` (rótulos PT face ao operador):
 
-#### Estados
+| # | Rótulo | Rota | Papel |
+|---|--------|------|-------|
+| 1 | Central | `/` | Freio, semáforo, atalhos |
+| 2 | Ordens | `/ordens` | Paper aberto **agora** |
+| 3 | Histórico | `/historico` | Fills confirmados |
+| 4 | Sinais | `/sinais` | Cockpit cópia + pré-aprovação + refresh |
+| 5 | Estratégias | `/estrategias` | Catálogo fases (somente leitura) |
+| 6 | Prodígio | `/prodigy` | Rank research |
+| 7 | Performance | `/performance` | Grosso paper, custos não verificados |
+| 8 | Análise Google | `/analise-google` | TimesFM research |
 
-| Estado | Comportamento |
-|--------|--------------|
-| Error | Senha vazia: ícone mais "Informe a senha do protótipo." |
-| Success | Qualquer senha não vazia abre a Central |
+**Fora do menu (mapa):** Tá Barato, Melhoria contínua — Command Panel v1 apenas; não desenhar no shell v2.
 
-#### Acoes do usuario
+### 4.3 Hierarquia global de página
 
-1. Alternar tema → as duas cores da seção 2.1.
-2. Entrar sem senha → permanece na tela com erro.
-3. Entrar com senha → Central.
+1. **Topbar contextual** — selo ambiente: `Paper · Live desligado`; hora última renderização do bundle (se exposta).
+2. **PageHeader** — título + subtítulo honesto do mapa.
+3. **ResearchBanner** (quando a rota exige).
+4. **Conteúdo primário** — tabela/card de decisão ou execução.
+5. **Conteúdo secundário** — auditoria, critérios, rodapé legal (“fila ≠ fill”).
 
-### Central
+### 4.4 Rota `/sinais` — IA v0.7 (ISS-024)
 
-**Rota**: `/`
-**Tipo**: pagina
-**Autenticacao**: autenticada
+**Objetivo da página:** pesquisar e pré-aprovar cópia de terceiros; acompanhar operação e inventário; critérios e auditoria sempre visíveis. Fluxo mental do operador (Feature 9):
 
-#### Layout
-
-```
-+--------+------------------------------------------+
-| Central| Central          Conta demo        Tema  |
-|        | Capital  Risco/op  Posições  ...         |
-|        | [ícone] Operando          [Parada geral] |
-|        | Sinais recentes                          |
-+--------+------------------------------------------+
+```text
+Candidatos → Decisão (Aprovar/Rejeitar) → Operação → Inventário
+Critérios e Auditoria: referência transversal (não são “passo 5” depois de fill)
 ```
 
-#### Componentes
+#### Cinco marcos na página (ordem de scroll — `h2` + `id` estável)
 
-| Componente | Tipo | Dados | Interacao |
-|-----------|------|-------|-----------|
-| Âncoras | Card | Capital, risco por operação, posições, risco aberto, perda do dia, perda da semana | Leitura neste corte |
-| Status | Status | Operando ou parada ligada | Ícone mais texto |
-| Parada geral | Button destructive | — | Abre confirmação na página |
-| Sinais recentes | Table | Origem, ativo, destino, motivo | Link para Sinais |
+| # | Marco (`h2`) | `id` sugerido | Papel | Fonte API |
+|---|--------------|---------------|-------|-----------|
+| 1 | **Pré-aprovação** | `sinais-preaprovacao` | Fila de **provedores** candidatos; decisão Aprovar/Rejeitar; CTA refresh | `copy.preapproval.queue[]` |
+| 2 | **Em operação / assinados** | `sinais-operacao` | Cópia paper **agora** (ordens abertas + família `signal_copy`); subtítulo *Não é fill.* | `copy.operating`, histórico família |
+| 3 | **Inventário** | `sinais-inventario` | **Sinais** rastreados com performance **só após fill**; distinto de “provedor aprovado” | `copy.inventory` |
+| 4 | **Critérios de adoção** | `sinais-criterios` | Texto Feature 4 / 9 / 10 (`copy.adoption.criteria_pt`); somente leitura | `copy.adoption` |
+| 5 | **Auditoria de ingresso** | `sinais-auditoria` | Trilha origem/destino/motivo; **última** seção; *Não é fill.* | `signals[]` (Feature 9) |
 
-#### Estados
+**Sub-regiões dentro de Operação (não são marcos `h2` separados — evita menu longo):**
 
-| Estado | Comportamento |
-|--------|--------------|
-| Success | Operando, com a frase de que a conta demo pode abrir ordem nova |
-| Warning | Depois de confirmar a parada: "Parada geral ligada" e o botão desabilitado |
+- **Collective2** — bloco `h3` sob Operação ou logo após Inventário (mapa atual): lista nomeada, `approved_ids`, cópia fechada quando vazio.
+- **Candidatos Prodígio (pesquisa)** — bloco `h3` com faixa `ResearchBanner` + badge `Pesquisa — não autoriza ordem`; não confundir com fila de pré-aprovação.
 
-#### Acoes do usuario
+#### Distinção obrigatória (confusão operador)
 
-1. Parada geral → confirmação → estado de parada. O protótipo não envia comando.
-2. Ver todos os sinais → tela Sinais.
+| Conceito | O que é | Onde aparece | Badge / copy |
+|----------|---------|--------------|--------------|
+| **Linha na fila de pré-aprovação** | Provedor **candidato** (C2 / Prodígio / TV) aguardando decisão | Seção 1 | `Decisão pendente` · métricas **(pesquisa)** |
+| **Provedor aprovado** | Decisão gravada no livro-razão; libera roteamento paper — **≠ fill** | C2 / overlay operação | `Aprovado para paper` (verde suave, token paper) |
+| **Linha no inventário** | **Sinal** (`signal_id` / evento) com proveniência ligada; P&L só com fill | Seção 3 | `Inventário · fill confirmado` ou vazio honesto |
+| **Pool Prodígio** | Ranking **research_tip**; não promove sozinho | Sub de Operação | `Pesquisa` tracejado |
+| **Auditoria** | Evento de **ingresso** (webhook/journal) | Seção 5 | Destino: fila / ordem / barrado |
 
-### Sinais
+Callout compacto acima do inventário (sempre visível quando há dado em ≥2 seções):
 
-**Rota**: `/sinais`
-**Tipo**: pagina
-**Autenticacao**: autenticada
+> **Provedor aprovado** decide quem pode copiar; **inventário** lista sinais com resultado paper — são listas diferentes.
 
-#### Layout
+Métricas pré-aprovação: `win_rate_pct`, `shrunk_win_rate_pct`, `profit_factor_reported`, `reported_pnl_sum`, `net_return_pct`, `max_drawdown_pct`, `prodigy_score`/`score`, `status` — rótulo **(pesquisa)**; ausente = **indisponível**.
 
-```
-+--------+------------------------------------------+
-| Sinais | Sinais            Conta demo        Tema |
-|        | [Todos] [Ordem] [Barrado] [Fila]         |
-|        | Tabela                                   |
-|        | Detalhe: gate, âncora, "não é um fill"   |
-+--------+------------------------------------------+
-```
+**PageHeader `/sinais`:** título + subtítulo mapa; topbar shell (N53): selo **`Paper · Live desligado`** (`--color-success-bg` / `--color-success-fg`); sem roxo, sem gradiente “AI”.
 
-#### Componentes
+**Aprovar / Rejeitar:** coluna **Ações** à direita na tabela pré-aprovação; alvo tátil ≥44×44px; Rejeitar com `--color-destructive` outline, separado ≥8px do Aprovar (primário).
 
-| Componente | Tipo | Dados | Interacao |
-|-----------|------|-------|-----------|
-| Filtros | Button | Todos, Ordem, Barrado, Fila | Esconde as outras linhas |
-| Tabela | DataTable | Hora, origem, ativo, destino, motivo | Clique abre o detalhe |
-| Detalhe | Painel | Gate e âncora | Fechar |
+### 4.5 Atualizar candidatos — dois modos honestos (N53 × N54 / ISS-024)
 
-#### Estados
+Um único CTA **`Atualizar candidatos`** no cabeçalho da seção **Pré-aprovação** (não primário). O operador precisa entender **o que o servidor fez** — não misturar “job ao vivo” com “só reler disco”.
 
-| Estado | Comportamento |
-|--------|--------------|
-| Empty | Filtro sem linha: ícone mais "Nenhum sinal neste destino." e "Limpar filtro" |
-| Success | Linhas de exemplo com destinos distintos |
+| Modo | Quando (implementação) | Endpoint (servidor) | O que comunicar na UI |
+|------|------------------------|---------------------|------------------------|
+| **Releitura disco** | **N53** (entregue) | `GET /api/signals/reload` | Status: `Fonte: bundle em disco · critérios ao vivo não executados` |
+| **Critérios ao vivo** | **N54+** (ISS-024) | `POST` job allowlisted (cooldown) | Status: `Fonte: critérios Feature 4 / Prodígio 15d aplicados no servidor (C2 server-side; TV escopo mínimo)` |
 
-#### Acoes do usuario
+Regras de produto (ambos os modos):
 
-1. Filtrar → a tabela muda.
-2. Clicar a linha → leitura do gate. O texto diz que não é um fill.
+| Regra | Detalhe |
+|-------|---------|
+| O que faz (alvo N54) | Servidor aplica critérios nas fontes C2 (sem browser) e TV (origens já ingeridas — **sem** API de busca TV inventada); regrava JSON de pesquisa; re-monta bundle |
+| O que faz hoje (N53) | Só `build_panel_bundle` / releitura em disco — **não** substitui ISS-024; UI não pode insinuar “plataforma consultada” |
+| O que não faz | Não aprova; não rejeita; não envia ordem; não promove fase; não inventa score |
+| Fail-closed | 503 / erro job / sem chave C2 → `InlineAlert` danger + fila anterior intacta + modo `fail-closed` |
+| Browser | **Nunca** chama HTTP Collective2; chave só server-side |
+| Pós-sucesso | Toast + carimbo `Atualizado às HH:MM · <fonte>` na linha de status do refresh (`aria-live="polite"`) |
+
+Estados UX canônicos: **idle · running · success · fail-closed** — detalhe visual em `mockups/sinais.md`.
 
 ---
 
-## 5b. Canvas Prototypes
+## 5. Acessibilidade (WCAG 2.1 AA)
 
-| Tela | Canvas File | Status | Exportado para Figma |
-|------|-------------|--------|----------------------|
-| Entrar | `docs/design/canvas/login.html` | Aprovado em conversa, 2026-11-03 | Nao |
-| Central | `docs/design/canvas/central.html` | Aprovado em conversa, 2026-11-03 | Nao |
-| Sinais | `docs/design/canvas/sinais.html` | Aprovado em conversa, 2026-11-03 | Nao |
-
-**Engine**: HTML no repositório
-**Boost**: Nivel 1 (Tailwind puro)
-**Export**: N/A
-
-Telas ainda sem protótipo: Estratégias, Prodígio, Performance, Sugestões, edição das âncoras. Ficam para o corte em que a operação na conta demo existir.
+- Foco visível: `outline: 3px solid var(--color-ring)` em links e botões.
+- Alvo mínimo 44×44px em Aprovar / Rejeitar / Atualizar candidatos / Entrar.
+- Tabelas: `<th scope="col">`; métricas não só por cor (rótulo + valor).
+- `aria-live="polite"` na região de feedback do refresh.
+- Semáforo: ícone + texto (não só cor).
+- Contraste sidebar: texto ativo `#E2E8F0` em `#1E293B`.
 
 ---
 
-## 6. Acessibilidade
+## 6. Mapa rota → mockup
 
-| Requisito | Implementacao |
-|-----------|--------------|
-| Contraste WCAG AA | Pares da seção 2.1 medidos em 2026-11-03, todos >= 4.5:1 |
-| Touch targets | Minimo 44px nos botões e inputs do protótipo |
-| Focus visible | Anel no foco por teclado |
-| Keyboard nav | Botões e links reais, sem div clicável |
-| Screen reader | `aria-label` no tema e no menu; erro de senha em `role="alert"` |
-| Reduced motion | Menu mobile usa transição curta; respeitar `prefers-reduced-motion` na implementação |
-| Color not sole | Operando, parada, barrado e fila levam ícone e texto |
-
----
-
-## 7. Decisoes de Design (ADRs)
-
-### ADR-D001: Redesign sóbrio com dois temas
-- **Contexto**: O painel atual é uma página escura só de leitura. Os requisitos pedem navegação e ações.
-- **Decisao**: Direção 1, com ícone mais texto vindo da direção 3. Tema claro e escuro, troca manual.
-- **Alternativas**: Formalizar o visual antigo. Ficar só no escuro.
-- **Consequencias**: A implementação nova não copia o CSS inline de `src/v4_web_dashboard.py`.
-
-### ADR-D002: Três telas neste corte
-- **Contexto**: O operador pediu para seguir a operação, não desenhar o painel inteiro.
-- **Decisao**: Entrar, Central e Sinais. O resto do menu fica visível e sem destino.
-- **Alternativas**: Prototipar as seis áreas antes de qualquer ordem.
-- **Consequencias**: Estratégias, Prodígio, Performance e Sugestões não têm layout aprovado.
+| Rota | Mockup |
+|------|--------|
+| Shell | `mockups/panel-shell.md` |
+| `/login` | `mockups/login.md` |
+| `/` | `mockups/central.md` |
+| `/sinais` | `mockups/sinais.md` |
+| `/ordens` | `mockups/ordens.md` |
+| `/historico` | `mockups/historico.md` |
+| `/estrategias` | `mockups/estrategias.md` |
+| `/prodigy` | `mockups/prodigy.md` |
+| `/performance` | `mockups/performance.md` |
+| `/analise-google` | `mockups/analise-google.md` |
 
 ---
 
-## CSS de Implementacao (copiar para o projeto)
+## 7. Plano de implementação (pós-design)
 
-```css
-@import "tailwindcss";
+1. **N53 (sugerido):** `_PANEL_CSS` tokens v2 + `PanelShell` + todas as rotas HTML (sem mudar significado de `panel_ops_data`).
+2. **N54 (sugerido):** job POST critérios ao vivo (ISS-024) + cooldown; mesmo CTA em `/sinais` com copy `critérios-ao-vivo`.
+3. Paridade: strings vazias e rótulos **idênticos** ao `OPERATOR-PANEL-MAP.md`.
+4. Regressão: `tests/test_panel_ops.py` (layout/snippets), sem assert de P&L inventado.
 
-@theme {
-  --color-background: #f3f5f8;
-  --color-foreground: #1c2430;
-  --color-primary: #2c4a6e;
-  --color-primary-foreground: #f7fafc;
-  --color-muted: #e7edf3;
-  --color-muted-foreground: #5c6b7c;
-  --color-destructive: #8f2d2d;
-  --color-success: #1d6b45;
-  --color-warning: #8a5a12;
-  --color-border: #d5dee8;
-  --color-card: #ffffff;
-  --color-card-foreground: #1c2430;
-  --color-sidebar: #1a2332;
-  --color-sidebar-foreground: #e8eef6;
-  --radius-lg: 0.5rem;
-  --font-sans: "IBM Plex Sans", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
-}
-```
-
-O tema escuro troca os valores da tabela da seção 2.1 pela classe `dark`. Não há segundo nome de token.
-
-## Implementacao pendente
-
-Não aplicar este CSS no painel em produção neste passo. A operação na conta demo vem antes do resto das telas. Quando houver sprint de interface, os arquivos candidatos são o gerador HTML em `src/v4_web_dashboard.py` e a folha que substituir o CSS inline. Preservar rotas, autenticação e os campos já lidos pelo painel.
+**Não editar nesta fase:** `src/` (design only).

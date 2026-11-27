@@ -8,6 +8,7 @@ from pathlib import Path
 MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / 'migrations'
 VERSION = '001_ledger'
 VERSION_TRIGGERS = '002_triggers'
+VERSION_PROVIDER_APPROVALS = '003_signal_provider_approvals'
 
 
 def dsn():
@@ -29,6 +30,22 @@ def _execute_migration(filename: str) -> None:
         with conn.cursor() as cur:
             cur.execute(sql)
         conn.commit()
+
+
+def _seed_operational_defaults() -> None:
+    try:
+        from operational_defaults import ensure_operational_defaults
+
+        with _connect() as conn:
+            ensure_operational_defaults(conn)
+            conn.commit()
+    except Exception as exc:
+        err = str(exc).lower()
+        if 'demo_operation_on' in err or 'market_controls' in err or 'undefinedtable' in err:
+            return
+        if 'not set' in err:
+            return
+        raise
 
 
 def _seed_strategy_catalog() -> None:
@@ -60,15 +77,21 @@ def apply():
     if not status()['triggers_applied']:
         _execute_migration('002_triggers_up.sql')
         applied_any = True
+    if not status()['provider_approvals_applied']:
+        _execute_migration('003_signal_provider_approvals_up.sql')
+        applied_any = True
     _seed_strategy_catalog()
+    _seed_operational_defaults()
     status_label = 'applied' if applied_any else 'already_applied'
     return {'status': status_label, 'version': VERSION, 'strategy_seed': 'ok'}
 
 
 def rollback():
     st = status()
-    if not st['applied'] and not st['triggers_applied']:
+    if not st['applied'] and not st['triggers_applied'] and not st['provider_approvals_applied']:
         return {'status': 'not_applied', 'version': VERSION}
+    if st['provider_approvals_applied']:
+        _execute_migration('003_signal_provider_approvals_down.sql')
     if st['triggers_applied']:
         _execute_migration('002_triggers_down.sql')
     if st['applied']:
@@ -92,13 +115,20 @@ def status():
                     (VERSION_TRIGGERS,),
                 )
                 row_triggers = cur.fetchone()
+                cur.execute(
+                    'SELECT version FROM schema_migrations WHERE version = %s',
+                    (VERSION_PROVIDER_APPROVALS,),
+                )
+                row_approvals = cur.fetchone()
             except psycopg.errors.UndefinedTable:
                 row = None
                 row_triggers = None
+                row_approvals = None
     return {
         'version': VERSION,
         'applied': row is not None,
         'triggers_applied': row_triggers is not None,
+        'provider_approvals_applied': row_approvals is not None,
     }
 
 

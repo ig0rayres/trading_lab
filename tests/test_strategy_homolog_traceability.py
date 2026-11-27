@@ -1,7 +1,12 @@
 """Traceability: every catalog strategy_key has a homolog row in TEST-EVIDENCE N13 matrix."""
 import unittest
 
-from strategy_catalog import DEFAULT_PHASE_BY_KEY, KNOWN_STRATEGY_KEYS, NEVER_PAPER_KEYS
+from strategy_catalog import (
+    DEFAULT_PHASE_BY_KEY,
+    KNOWN_STRATEGY_KEYS,
+    NEVER_PAPER_KEYS,
+    UPSTREAM_FORMULA_BLOCKED_KEYS,
+)
 
 # Keep in sync with docs/TEST-EVIDENCE.md § Sprint N13 table (strategy_key column).
 DOCUMENTED_KEYS = frozenset(
@@ -16,7 +21,7 @@ DOCUMENTED_KEYS = frozenset(
     }
 )
 
-UPSTREAM_BLOCKED = frozenset({'momentum', 'ta_barato', 'prodigy_15d'})
+UPSTREAM_BLOCKED = UPSTREAM_FORMULA_BLOCKED_KEYS | frozenset({'prodigy_15d'})
 
 
 class StrategyHomologTraceabilityTests(unittest.TestCase):

@@ -27,6 +27,10 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/v4_web_dashboard.py "$@"
    ;;
+ platform-health)
+   shift
+   exec python3 /app/src/platform_health.py "$@"
+   ;;
  v4-alpaca-activities)
    shift
    exec python3 /app/src/v4_alpaca_activities.py "$@"
@@ -131,6 +135,10 @@ case "${1:-idle}" in
    shift
    exec python3 /app/src/prodigy_rank.py "$@"
    ;;
+ prodigy-ingest)
+   shift
+   exec python3 /app/src/prodigy_paper_ingest.py "$@"
+   ;;
  continuous-review)
    shift
    exec python3 /app/src/strategy_data_adapter.py "$@"
@@ -214,6 +222,10 @@ case "${1:-idle}" in
  paper-audit)
    shift
    exec python3 /app/src/paper_audit.py "$@"
+   ;;
+ risk-snapshot-refresh)
+   shift
+   exec python3 /app/src/risk_snapshot_refresh.py "$@"
    ;;
  test-local)
    exec python3 -m unittest discover -s /app/tests -v

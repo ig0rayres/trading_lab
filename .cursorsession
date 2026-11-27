@@ -3,7 +3,7 @@
   "descricao": "Laboratorio de pesquisa para day trade e swing trade (LONG e SHORT). Identifica, estuda e filtra oportunidades; paper antes de qualquer dinheiro real. Pacote importado: MVP v4 de pesquisa (29/10/2026), scheduler research-only, LIVE_TRADING desligado.",
   "cenario": "LEGADO",
   "ambiente": "DESENVOLVIMENTO",
-  "perfil": null,
+  "perfil": "framework",
   "referencias": [
     {
       "tipo": "github",
@@ -12,15 +12,16 @@
       "notas": "Reuso obrigatorio de trader-entry/exit/budget/risk/scanner via /app/vendor. O ZIP importado nao trouxe o checkout vendor."
     }
   ],
-  "fase_atual": "9",
-  "beesy_version": "4.104.20",
+  "fase_atual": 10,
+  "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
+  "fase_nome": "Sprint N62 EXECUTE — Inbox pérola (top 10 retorno 15d)",
   "sprint_pending_merge": null,
+  "sprint_pr": 81,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
-  "ultimo_update": "2026-10-30T14:51:42-03:00",
+  "ultimo_update": "2026-11-19T20:20:32.823629+00:00",
   "modulos": [
     {
       "nome": "market-data",
@@ -77,9 +78,9 @@
     }
   ],
   "proximos_passos": [
-    "Executar N10.1–N10.4 na frente n10-closeout",
-    "/qa validar N10",
-    "PR merge + /git front finish"
+    "Parent Fable / plan-verifier N37 (não auto-PASS); EXECUTE só depois",
+    "Rock EXECUTE N37: N37.0 → N37.1 ∥ N37.2; zero M; faixa + um CTA; sem botão Live",
+    "LIVE_TRADING_ENABLED=false; sem HTTP real Clear/OANDA; não marcar N29.5"
   ],
   "features_concluidas": [
     "Pacote v4 de pesquisa importado para a raiz (src, tests, Dockerfile, scripts/run.sh, config/universe.json)",
@@ -112,112 +113,152 @@
   "perfil_usuario": "semi-tecnico",
   "principal_preocupacao": "Continuar o laboratorio ja construido, sem reiniciar e sem ligar dinheiro real",
   "comandos_recentes": [
-    "/pmo sprint N18"
+    "/pmo sprint N18",
+    "/pmo plan N33",
+    "/pmo plan N34",
+    "/pmo plan N35",
+    "/pmo plan N36",
+    "/pmo plan N37",
+    "/pmo plan N56",
+    "/pmo plan N58",
+    "/pmo plan N59",
+    "/pmo sprint N60"
   ],
-  "contexto_rapido": "Sprint N18: v4-ops autostart dashboard 8765; branch front/n16-8-panel; N18.3 operador rebuild; ISS-008.",
-  "sprint_atual": "N18",
+  "contexto_rapido": "N62 EXECUTE: Inbox top10 reported_pnl_sum 15d; P/L>0; fix refresh button; ISS-024; LIVE false",
   "sprint_tasks": [
     {
-      "id": "N18.1",
-      "title": "Layout v4-ops (run.sh, v4_ops_main.sh, Dockerfile, tests)",
-      "size": "M",
-      "status": "done",
+      "id": "N62.0",
+      "title": "Inventário Git First Inbox pérola",
+      "size": "P",
+      "status": "pending",
       "depends_on": [],
       "files": [
-        "scripts/v4_ops_main.sh",
-        "scripts/run.sh",
-        "Dockerfile",
-        "Dockerfile.demo",
-        "tests/test_v4_ops_layout.py"
+        "docs/.briefs/N62-GIT-FIRST-REUSE.md"
       ]
     },
     {
-      "id": "N18.2",
-      "title": "Runbook DASHBOARD-OPERATIONS + EASYPANEL/COMMAND-PANEL/MVP-DEMO",
-      "size": "P",
-      "status": "done",
+      "id": "N62.1",
+      "title": "Rank 15d: P/L>0 e ordenação por retorno",
+      "size": "M",
+      "status": "pending",
       "depends_on": [
-        "N18.1"
+        "N62.0"
       ],
       "files": [
-        "docs/DASHBOARD-OPERATIONS.md",
-        "EASYPANEL.md",
-        "docs/COMMAND-PANEL.md",
-        "docs/HOMOLOGATION-N16.8-PANEL.md",
-        "docs/MVP-DEMO-RUNBOOK.md"
+        "src/prodigy_rank.py"
       ]
     },
     {
-      "id": "N18.3",
-      "title": "Operador: rebuild trading-lab + TEST-EVIDENCE N18",
-      "size": "P",
-      "status": "todo",
+      "id": "N62.2",
+      "title": "Fila pré-aprovação: top 10 pérola",
+      "size": "M",
+      "status": "pending",
       "depends_on": [
-        "N18.2"
-      ],
-      "files": [],
-      "owner": "operador"
-    },
-    {
-      "id": "N18.4",
-      "title": "Closeout ROADMAP N16 concluida",
-      "size": "P",
-      "status": "todo",
-      "depends_on": [
-        "N18.3"
+        "N62.1"
       ],
       "files": [
-        "docs/ROADMAP.md"
+        "src/panel_ops_data.py"
+      ]
+    },
+    {
+      "id": "N62.3",
+      "title": "UI Sinais: copy Inbox + sem pending na pérola",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N62.2"
+      ],
+      "files": [
+        "src/panel_ops_html.py"
+      ]
+    },
+    {
+      "id": "N62.4",
+      "title": "Fix UX botão Atualizar (abort/cooldown/finally)",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N62.0"
+      ],
+      "files": [
+        "src/panel_ops_html.py"
+      ]
+    },
+    {
+      "id": "N62.5",
+      "title": "Testes top10 + P/L + regressão N54–N61",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N62.1",
+        "N62.2",
+        "N62.3",
+        "N62.4"
+      ],
+      "files": [
+        "tests/test_panel_ops.py",
+        "tests/test_prodigy_rank.py"
+      ]
+    },
+    {
+      "id": "N62.6",
+      "title": "Docs ISS-019/022/024 + mapa operador",
+      "size": "P",
+      "status": "pending",
+      "depends_on": [
+        "N62.5"
+      ],
+      "files": [
+        "docs/ISSUES.md",
+        "docs/REQUIREMENTS.md",
+        "docs/OPERATOR-PANEL-MAP.md"
       ]
     }
   ],
   "checkpoint": {
-    "sprint": "N18",
+    "sprint": "N62",
     "phase": "implementation",
-    "branch": "front/n16-8-panel",
-    "last_completed_task": "N18.2",
-    "current_task": "N18.3",
-    "timestamp": "2026-11-03T19:52:00-03:00",
-    "relevant_paths": [
-      "scripts/v4_ops_main.sh",
-      "scripts/run.sh",
-      "Dockerfile",
-      "src/v4_web_dashboard.py",
-      "docs/DASHBOARD-OPERATIONS.md",
-      "EASYPANEL.md"
-    ],
+    "branch": "front/sinais-raw-path",
+    "current_task": "N62.0",
+    "updated_at": "2026-11-27T14:53:00Z",
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N18",
-      "produced_by": "/qa validar",
+      "sprint": "N62",
+      "produced_by": "rock N62 verify",
       "senior_review_status": "PASS",
-      "senior_status": "PASS",
       "findings_registered": [],
-      "findings_found": 0,
-      "findings_disposition": [],
-      "recorded_at": "2026-11-03T19:59:00Z",
-      "recorded_by": "6b9133fb-83fe-4d81-a393-b98bdbd37f4e",
-      "notes": "N18.1-18.2: test_v4_ops_layout + test_v4_web_dashboard green; CI on PR.",
-      "round": 1,
-      "full_suite_ran": false
+      "recorded_at": "2026-11-27T15:10:16Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "senior_status": "PASS"
     },
     "validation_gate": {
       "produced_by": "validation-stamp.py",
-      "result": "BLOQUEADA_ARVORE_SUJA",
-      "validation_mode": "blocked",
-      "gates": [],
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "/usr/bin/python3 -m pytest tests/test_prodigy_rank.py tests/test_panel_ops.py -q --tb=no",
+          "exit_code": 0
+        }
+      ],
       "dirty_production_paths": [
-        ".cursor/router-state.json",
-        ".cursor/session-state-cache.json",
+        ".beesy/stamp-gate-logs/",
         ".cursorsession.bak",
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "012649666d0c9b318dd84f9c690fe9b34d29bf94",
-      "stamped_at": "2026-11-03T20:01:22Z",
-      "patch_id": "44301d3d9ca13e7be17ae62f2d20077e6d55b268",
+      "last_validated_sha": "ac25401a4e70b4b9fd3a962ef850bec7cdab7b6a",
+      "stamped_at": "2026-11-27T15:11:04Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "c8583a7f83990bbb0c95cfb7aa9ae9513d9655ec56d59928b10328d0d3de96ff",
+      "patch_id": "802a09a20b191e2aa8cf09649d6ea1d7e9db2c0b",
       "patch_id_version": 2
-    }
+    },
+    "sprint_delivery": "stamped",
+    "sprint_delivery_sprint": "N62"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -232,35 +273,35 @@
     "docs/VENDOR-PIN.md",
     ".github/workflows/ci.yml",
     "requirements-dev.txt",
-    ".dockerignore"
+    ".dockerignore",
+    ".cursor/rules/30-triggers.mdc",
+    ".cursor/rules/40-markets.mdc",
+    ".cursor/skills/panel-triggers/SKILL.md"
   ],
   "anchor": {
-    "persona": "planejador-tarefas",
-    "phase": "Sprint N9 implementation",
-    "intent": "Homologação D5 itens 3–7: runbook + evidência; operador EasyPanel.",
-    "changes_made": "ROADMAP/ISSUES closeout; sprint_atual cleared.",
-    "decisions": "Operador opção A; seed also on already_applied; no 002; no Gate B rewrite; no docker/deploy; insert-if-missing only.",
-    "next_steps": "N9.1 expand Gate A runbook in HOMOLOGATION.md",
-    "updated_at": "2026-10-30T14:51:42-03:00"
+    "persona": "tech-lead",
+    "phase": "Rules de gatilho e mercado; sprint N18 segue registrada",
+    "intent": "Travar no agente o contrato de gatilho no painel e os mercados B3, cripto e forex.",
+    "changes_made": ".cursor/rules/30-triggers.mdc, .cursor/rules/40-markets.mdc, .cursor/skills/panel-triggers/SKILL.md.",
+    "decisions": "Rules antigas não foram reescritas. PATCH não cria ordem. Simulador local não é fill. Alpaca não recebe B3 nem forex.",
+    "next_steps": "Sprint do laço via /pmo plan. Migration 002 só nessa sprint. /devops planejar se for mexer em CI ou no processo.",
+    "updated_at": "2026-11-03T22:54:00-03:00"
   },
   "compact_marker": {
-    "compacted_at": "2026-11-03T19:30:21Z",
-    "usage_percent": 90.752,
-    "messages_lost": 337
+    "compacted_at": "2026-11-04T02:00:04Z",
+    "usage_percent": 95.121875,
+    "messages_lost": 423
   },
-  "compact_count": 9,
-  "previous_sprint": "N16",
+  "compact_count": 11,
   "front": {
-    "slug": "n16-8-panel",
+    "slug": "sinais-raw-path",
     "kind": "agent",
-    "parent_root": "/media/igor/windows_part/Cursor/trading lab",
-    "worktree": "/media/igor/windows_part/Cursor/trading lab",
-    "branch": "front/n16-8-panel"
+    "parent_root": "/home/igor/cursor/trading-lab",
+    "worktree": "/home/igor/cursor/trading-lab.fronts/sinais-raw-path",
+    "branch": "front/sinais-raw-path"
   },
-  "sprint_branch": "front/n16-8-panel",
-  "sprint_nome": "Sprint N18 — Command Panel always-on (v4-ops)",
-  "sprint_categoria": "N",
-  "plan_only": false,
+  "sprint_branch": "front/sinais-raw-path",
+  "sprint_categoria": "F",
   "validation_gate_qa": {
     "result": "APROVADA",
     "sprint": "N18",
@@ -301,5 +342,307 @@
     ],
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
-  }
+  },
+  "previous_sprint": "N61",
+  "sprint_nome": "Sprint N62",
+  "autopilot": {
+    "active": true,
+    "started_at": "2026-11-16T08:59:06.336014+00:00",
+    "mandate": "full",
+    "operator_absent": true,
+    "note": "Deliver contracted Features 7-11 minus Clear/OANDA; no pause; pendencias for operator-only",
+    "auto_decisions": [
+      {
+        "timestamp": "2026-11-16T08:59:06.336014+00:00",
+        "file": "pmo-plan",
+        "decision": "category=N feature-sem-dominio; skip Passo2 (REQUIREMENTS v0.4 already defines Features 7-11); exclude Clear/OANDA",
+        "rationale": "Operator: Nao pare; entregar contrato exceto plataformas 3os nao homologadas"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "docs/ROADMAP.md",
+        "decision": "sprint_id=N30 (max existing N29); do not rewrite N17/N28/N29",
+        "rationale": "next available N >29; N17 and N28 already planned — campaign queue only"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "pmo-plan",
+        "decision": "feature-sem-dominio; skip Passo2 phase review; skip ISSUES preview (ISS-011 exists)",
+        "rationale": "autopilot conservative; REQUIREMENTS v0.4 already specifies Features 7-11; no new table/screen"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": "docs/ROADMAP.md",
+        "decision": "review=senior+qa; N28 remains blocked on G-AJUSTE; news_first stays research; orb/mean_reversion NEVER_PAPER",
+        "rationale": "G-AJUSTE unanswered; contract does not require news_first paper; REQUIREMENTS forbids ORB paper"
+      },
+      {
+        "timestamp": "2026-11-16T12:20:00Z",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N30; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Rock PLAN writes plan then parent EXECUTE; operator absent so no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-012 exists)",
+        "rationale": "Operator demanded N alta + ISS-012 already on disk; no new table/screen; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "sprint_id=N31 (max existing N30); do not rewrite N28 task block",
+        "rationale": "next free N >30; N28.1-4 stay historical; N31 defines G-AJUSTE method and TimesFM research-only"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "TimesFM dedicated task N31.2; optional fail-closed; labels research_tip; no required image dep; prefer license-safe checkpoint in N31.0",
+        "rationale": "Git First official PyPI timesfm / google-research/timesfm; suggestion≠order; 3.0 weights may be non-commercial"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": "docs/REQUIREMENTS.md",
+        "decision": "dúvida #8 Respondida ISS-012+TimesFM research-only; Feature 11 critérios 2-4 remain [ ] until N28.2-4; suggestion-first if scoring uncertain",
+        "rationale": "Operator closed G-AJUSTE method without authorizing paper or invented thresholds"
+      },
+      {
+        "timestamp": "2026-11-16T16:50:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N31; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N31; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-011 exists); sprint_id=N32",
+        "rationale": "Parent already classified N / feature-sem-dominio; max existing N is 31; autopilot no AskQuestion; conservative"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not rewrite N17/N28/N29/N30/N31 blocks; do not plan Clear/OANDA; LIVE stays false",
+        "rationale": "Operator/parent scope; ISS-010 remains operator pendency"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": "src/signal_paper_runner.py",
+        "decision": "reuse fetch_control_flags + brl_from_cents + existing fx; TIGHT_DEFAULTS fail-closed; no new FX CLI; no new scoring thresholds",
+        "rationale": "Git First / REUSE FIRST; N22 already wired Gate B and portfolio_risk_v4"
+      },
+      {
+        "timestamp": "2026-11-16T15:50:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N32; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T17:20:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-011 exists); sprint_id=N33; zero M tasks",
+        "rationale": "Parent classified N / docs closeout; max existing N is 32; autopilot no AskQuestion; conservative"
+      },
+      {
+        "timestamp": "2026-11-16T17:20:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "stamp N28/N30/N31 Status concluida only with cited SHA/PR/nodeid; keep ISS-011 aberto for B3/FOREX and N17.2/G-FORM; do not implement Clear/OANDA; do not rewrite N17 task table",
+        "rationale": "Operator/parent mandate; Alpaca Feature 7-11 already [x]; prefer split remaining vs close ISS-011"
+      },
+      {
+        "timestamp": "2026-11-16T17:20:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N33; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T18:15:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio / docs; skip Passo2; skip ISSUES preview (ISS-010 exists); sprint_id=N34; zero M tasks; /pmo pla treated as plan",
+        "rationale": "Parent classified N / docs honesty; max existing N is 33; ISS-011 restante=ISS-010+N17.2; autopilot no AskQuestion; conservative"
+      },
+      {
+        "timestamp": "2026-11-16T18:15:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not mark N29 concluida; keep N29.5/N29.6 unchecked; document adapter code N29.1-N29.4 via existing pytest nodeids; no new Clear/OANDA HTTP; no LIVE; no invented scoring",
+        "rationale": "Operator/parent mandate; credentials are operator-owned (N29.5 EasyPanel names only)"
+      },
+      {
+        "timestamp": "2026-11-16T18:15:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N34; checkpoint.phase=planning; preserve autopilot",
+        "rationale": "Deliverable list; EXECUTE waits parent Fable/plan-verifier; operator absent"
+      },
+      {
+        "timestamp": "2026-11-16T18:07:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-010 exists); rewrite N34 as N27.2 wiring 1M+3P; review=comprehensive; AgentCoder",
+        "rationale": "Prior N34 FAIL honesty: build_demo_adapter has no production callers; runner always NO_DEMO_ACCOUNT_PATH for B3/FOREX; wiring can proceed fail-closed without live creds"
+      },
+      {
+        "timestamp": "2026-11-16T18:07:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not mark N29 concluida; keep N29.5/N29.6 unchecked; check N27.2 only after N34.2 tests; no live Clear/OANDA HTTP; no LIVE; no invented scoring",
+        "rationale": "Operator/parent rewrite mandate; credentials operator-owned; CI/mock only until N29.5"
+      },
+      {
+        "timestamp": "2026-11-16T18:07:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N34; checkpoint.phase=planning; clear stale sprint_pr 43; preserve autopilot",
+        "rationale": "Rewrite plan-only; EXECUTE waits parent Fable/plan-verifier; PR 43 was N33"
+      },
+      {
+        "timestamp": "2026-11-16T20:08:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-010 exists); sprint_id=N35; zero M; not PLAN_BLOCKED",
+        "rationale": "Operator «Vamos em frente» after #46 on air without «creds ok». Per-key presence + homolog HOW-TO is honest progress; closing N29.5 would be a lie; idle wait is also a stall. Autopilot no AskQuestion."
+      },
+      {
+        "timestamp": "2026-11-16T20:08:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not mark N29 concluida; keep N29.5/N29.6 unchecked; N27.2 already [x] from N34; no live Clear/OANDA HTTP; no LIVE; no invented scoring",
+        "rationale": "#46 ≠ creds filled ≠ fill; N35 is presence+docs only"
+      },
+      {
+        "timestamp": "2026-11-16T20:08:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains null; checkpoint N34 stamp preserved; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-17T05:58:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; autopilot ISS-013; sprint_id=N36; zero M; review=skip",
+        "rationale": "Operator classified N / feature-sem-dominio / N36; UX copy not a regression; heuristic also matched trivial rename but operator wanted a full N sprint. Autopilot no AskQuestion."
+      },
+      {
+        "timestamp": "2026-11-17T05:58:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not change kill_switch logic; no Live button; refine gates→outros limites ainda valem; DESIGN.md and HOMOLOGATION env copy stay out",
+        "rationale": "Operator: clearer labels only; behavior unchanged; LIVE stays false"
+      },
+      {
+        "timestamp": "2026-11-17T05:58:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N36; checkpoint.phase=planning; preserve N35 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N36; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-17T09:58:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; autopilot ISS-014; sprint_id=N37; zero M; review=skip",
+        "rationale": "Operator classified N / feature-sem-dominio / N37; kill logic works and N36 copy is correct — presentation only. Heuristic also matched UI; operator prevails. Autopilot no AskQuestion."
+      },
+      {
+        "timestamp": "2026-11-17T09:58:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "halt-light strip + single CTA; hide no-op button; do not change kill_switch logic; no Live button; demo_operation_on OUT",
+        "rationale": "Operator frontend-design lock; Liberar when already released is no-op by design; LIVE stays false"
+      },
+      {
+        "timestamp": "2026-11-17T09:58:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual=N37; checkpoint.phase=planning; preserve N36 stamp and autopilot",
+        "rationale": "Deliverable list asked sprint_atual=N37; EXECUTE waits parent Fable/plan-verifier"
+      },
+      {
+        "timestamp": "2026-11-19T14:10:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; melhoria/path-join pós-N55; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N56; plan_only=true; sprint_atual remains null",
+        "rationale": "Parent classified N56; heuristic also matched bug; ISS-024 series is N54/N55; operator confirmed doubled reports/ join; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-19T14:10:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not change --root default; fix join to providers/raw; keep Feature 4 constants; eligible-only queue; LIVE false; do not steal N45-N47",
+        "rationale": "Operator: no workaround; 3 UNSCORABLE closed_trades_15d=0 correctly absent; C2_API4_KEY server-side; TV ingested origins only"
+      },
+      {
+        "timestamp": "2026-11-19T14:10:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains null; checkpoint.front_mode stays unplanned; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T15:10:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N57; plan_only=true; sprint_atual remains N56 until parent activates",
+        "rationale": "Parent classified N57; ISS-024 series N54-N56; allowlist is paper-copy gate not queue visibility; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-19T15:10:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "discover C2 IDs from canonical raw glob; queue pending without allowlist; keep paper-copy gate; LIVE false; do not steal N45-N47",
+        "rationale": "Operator: empty allowlist/env; sources_ok collective2; raw 132169961/148311109/30415311; do not auto-approve"
+      },
+      {
+        "timestamp": "2026-11-19T15:10:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains N56; checkpoint.front_mode stays unplanned; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T15:43:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; feature-sem-dominio; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N58; plan_only=true; sprint_atual remains N57 until parent activates",
+        "rationale": "Parent classified N58; ISS-024 series N54-N57; operator restated Atualizar as platform scan with recovered Feature 4; TV search OUT ISS-025; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-19T15:43:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "wire official GET SearchStrategies via recovered fetch; filter with prodigy_rank constants; TV scan OUT; LIVE false; do not steal N45-N47; do not use SearchHistoricalStrategies or GetLeaderBoard as eligibility",
+        "rationale": "Recovered PATHS are history-by-id; API4 SearchStrategies exists; Feature 4 already in prodigy_rank; ADR-012 ingest-only TV"
+      },
+      {
+        "timestamp": "2026-11-19T15:43:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains N57; previous_sprint=N57; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T16:10:00-03:00",
+        "file": "pmo-plan",
+        "decision": "category=N; melhoria/isolamento pós-N58; skip Passo2; skip ISSUES preview (ISS-024 exists); sprint_id=N59; plan_only=true; sprint_atual remains N58 until parent activates",
+        "rationale": "Parent classified N59; ISS-024 series N54-N58; operator confirmed EasyPanel SearchStrategies 200 vs snapshot 403/414 aborting C2; heuristic also matched bug; autopilot no AskQuestion"
+      },
+      {
+        "timestamp": "2026-11-19T16:10:00-03:00",
+        "file": "docs/ROADMAP.md",
+        "decision": "do not pass SearchStrategies page IDs into snapshot; isolate HTTPError; keep Feature 4 constants; TV scan OUT ISS-025; LIVE false; do not steal N45-N47",
+        "rationale": "Git First: snapshot is read-only diagnostic not Feature 4; 414 is URL limit; 403 is access"
+      },
+      {
+        "timestamp": "2026-11-19T16:10:00-03:00",
+        "file": ".cursorsession",
+        "decision": "plan_only=true; sprint_atual remains N58; previous_sprint=N58; preserve autopilot",
+        "rationale": "Planner role: do not start sprint until parent Fable/plan-verifier then /pmo sprint"
+      },
+      {
+        "timestamp": "2026-11-19T20:20:32.823629+00:00",
+        "file": "pmo-sprint",
+        "decision": "activate N60 EXECUTE; sprint_atual=N60; plan_only cleared",
+        "rationale": "Operator /pmo sprint; N60 planned with PASS verifier; autopilot mandate full"
+      },
+      {
+        "timestamp": "2026-11-27T14:50:00-03:00",
+        "file": "pmo-new",
+        "decision": "plan_only=true; sprint_id=N62; inbox top10 reported_pnl_sum; sprint_atual remains N61 until /pmo sprint iniciar N62",
+        "rationale": "Operator /pmo new N62; ISS-019/022/024; TV pearl OUT ISS-025; LIVE false"
+      },
+      {
+        "timestamp": "2026-11-27T14:53:00-03:00",
+        "file": "pmo-sprint",
+        "decision": "activate N62 EXECUTE; sprint_atual=N62; previous_sprint=N61; plan_only cleared",
+        "rationale": "Operator /pmo sprint iniciar N62; branch front/sinais-raw-path"
+      }
+    ]
+  },
+  "rock_auto": true,
+  "rock_mandate": "full",
+  "active_automation": null,
+  "journal": [],
+  "sprint_tasks_sha256": "3eee61417ca2da3b4f28cb7fa6929e2c64da72dee01a13361e28cfcfec776a22",
+  "operator_notes": [
+    "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
+  ],
+  "sprint_atual": "N62"
 }

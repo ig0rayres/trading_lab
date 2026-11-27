@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
-from prodigy_rank import calculate
+from prodigy_rank import calculate, is_pearl_candidate, pearl_sort_key
 
 class ProdigyTests(unittest.TestCase):
     def setUp(self):
@@ -37,3 +37,27 @@ class ProdigyTests(unittest.TestCase):
         for t in d['raw']['Results']:t['CloseDate']=(self.now-timedelta(days=190)).isoformat()
         (self.base/'1_closed_trades.json').write_text(json.dumps(d))
         self.assertEqual(calculate(self.base,self.now)['providers'][0]['closed_trades_15d'],0)
+
+    def test_negative_reported_pnl_not_pearl_candidate(self):
+        self.write(1, [80, 80, 80, 80, -400])
+        row = calculate(self.base, self.now)['providers'][0]
+        self.assertLess(row['reported_pnl_sum'], 0)
+        self.assertFalse(is_pearl_candidate(row))
+
+    def test_top10_research_sorted_by_reported_pnl_sum(self):
+        self.write(1, [10] * 8 + [5, 5])
+        self.write(2, [50] * 10, weeks=5)
+        out = calculate(self.base, self.now)
+        top = out['top_10_research']
+        pnls = [row['reported_pnl_sum'] for row in top]
+        self.assertEqual(pnls, sorted(pnls, reverse=True))
+        if len(top) >= 2:
+            self.assertGreaterEqual(top[0]['reported_pnl_sum'], top[1]['reported_pnl_sum'])
+
+    def test_pearl_sort_key_tie_breakers(self):
+        high = {'reported_pnl_sum': 100.0, 'profit_factor_reported': 1.2,
+                'shrunk_win_rate_pct': 58.0, 'prodigy_score': 5.0}
+        low = {'reported_pnl_sum': 50.0, 'profit_factor_reported': 2.0,
+               'shrunk_win_rate_pct': 70.0, 'prodigy_score': 10.0}
+        ordered = sorted([low, high], key=pearl_sort_key)
+        self.assertEqual(ordered[0], high)

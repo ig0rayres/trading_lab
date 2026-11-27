@@ -4,6 +4,7 @@ import re
 import threading
 import unittest
 import uuid
+from datetime import datetime
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
@@ -219,6 +220,22 @@ class PanelTriggerHttpTests(unittest.TestCase):
             audit = store['trigger_changes'][0]
             self.assertEqual(audit['field_name'], 'kill_switch_on')
             self.assertEqual(audit['target_table'], 'control_flags')
+            self.assertEqual(audit['old_value'], 'false')
+            self.assertEqual(audit['new_value'], 'true')
+            self.assertIsNotNone(audit.get('changed_at'))
+        finally:
+            self._shutdown(server, thread)
+
+    def test_loosening_anchor_without_operator_cookie_is_401_and_no_audit(self):
+        store = _default_store()
+        server, thread, base, _store = self._server(store=store)
+        try:
+            req = _patch(base + '/api/triggers', {'max_open_positions': 10})
+            with self.assertRaises(HTTPError) as caught:
+                urlopen(req, timeout=3)
+            self.assertEqual(caught.exception.code, 401)
+            self.assertEqual(store['control_flags']['max_open_positions'], 3)
+            self.assertEqual(store['trigger_changes'], [])
         finally:
             self._shutdown(server, thread)
 
@@ -385,3 +402,21 @@ class PanelTriggerUnitTests(unittest.TestCase):
         self.assertIsNone(err)
         self.assertEqual(updated['max_open_positions'], 5)
         self.assertEqual(len(store['trigger_changes']), 1)
+        audit = store['trigger_changes'][0]
+        self.assertEqual(audit['old_value'], '3')
+        self.assertEqual(audit['new_value'], '5')
+        self.assertIsInstance(audit.get('changed_at'), datetime)
+
+    def test_platform_never_loosens_anchors_when_db_unavailable(self):
+        from risk_control_flags import TIGHT_DEFAULTS, fetch_control_flags
+
+        def broken():
+            raise OSError('db down')
+
+        flags = fetch_control_flags(conn_factory=broken)
+        self.assertEqual(flags, TIGHT_DEFAULTS)
+        self.assertLessEqual(flags['max_open_positions'], TIGHT_DEFAULTS['max_open_positions'])
+        self.assertLessEqual(
+            flags['max_risk_per_trade_cents'],
+            TIGHT_DEFAULTS['max_risk_per_trade_cents'],
+        )

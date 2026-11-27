@@ -1,0 +1,141 @@
+{
+  "sprint_id": "N42",
+  "status": "implementation",
+  "source": "rock-execute",
+  "checkpoint": {
+    "phase": "implementation",
+    "sprint": "N42",
+    "branch": "front/n27-alpaca-loop",
+    "current_task": null,
+    "last_completed_task": "N42.4",
+    "validation_gate_ref": ".beesy/sprints/N41.json",
+    "sprint_delivery": "verify_green",
+    "sprint_delivery_sprint": "N42",
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "9ee42188726e50564e4e335c046c2620c85c4a67",
+      "stamped_at": "2026-11-17T16:09:06Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "f49019101efde614471ef35dbc484641401516ae93eb10d1c16adcaf79624ba9",
+      "patch_id": "e7674f5a505d0a43c91d2abadbb505fad3d41d04",
+      "patch_id_version": 2
+    },
+    "plan_only": false,
+    "relevant_paths": [
+      ".cursorsession",
+      "docs/.briefs/N42-GIT-FIRST-REUSE.md",
+      "docs/.briefs/N42.brief.md",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "docs/DIARY.md",
+      "docs/ISSUES.md",
+      "docs/OPERATOR-PANEL-MAP.md",
+      "docs/ROADMAP.md",
+      "src/panel_ops_data.py",
+      "src/panel_ops_html.py",
+      "src/v4_web_dashboard.py",
+      "tests/test_panel_ops.py"
+    ],
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N42",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T15:59:27Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N42 strategies; 42 OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    }
+  },
+  "archived_at": "2026-11-17T16:03:48Z",
+  "sprint_tasks": [
+    {
+      "id": "N42.0",
+      "title": "Inventariar o reuso do catálogo de fases antes de desenhar o menu",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/.briefs/N42-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N42.brief.md"
+      ],
+      "depends_on": [],
+      "file": "docs/.briefs/N42-GIT-FIRST-REUSE.md, docs/.briefs/N42.brief.md"
+    },
+    {
+      "id": "N42.1",
+      "title": "Carregar as linhas de estratégia e fase no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "depends_on": [
+        "N42.0"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N42.2",
+      "title": "Colocar Estratégias no menu do dia a dia",
+      "size": "M",
+      "status": "done",
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "depends_on": [
+        "N42.1"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N42.3",
+      "title": "Provar tabela, vazio, sessão e que a tela não promove fase",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N42.2"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N42.4",
+      "title": "Atualizar o mapa e os chamados depois da tela existir",
+      "size": "P",
+      "status": "done",
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/ISSUES.md",
+        "docs/DIARY.md",
+        "docs/ROADMAP.md",
+        ".cursorsession"
+      ],
+      "depends_on": [
+        "N42.3"
+      ],
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md, docs/DIARY.md, docs/ROADMAP.md, .cursorsession"
+    }
+  ]
+}

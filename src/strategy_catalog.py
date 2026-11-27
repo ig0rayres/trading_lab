@@ -31,6 +31,15 @@ NEVER_PAPER_KEYS = frozenset({'orb', 'mean_reversion'})
 NON_PAPER_PHASES = frozenset({'research', 'shadow'})
 PAPER_PHASES = frozenset({'paper_limited', 'paper_validated'})
 
+# G-FORM (N17): no scoring module in pinned day-trader-skill for these keys.
+UPSTREAM_FORMULA_BLOCKED_KEYS = frozenset({'momentum', 'ta_barato'})
+UPSTREAM_VENDOR_PIN = '3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd'
+
+
+def upstream_formula_blocked(strategy_key: str) -> bool:
+    key = normalize_strategy_key(strategy_key)
+    return key in UPSTREAM_FORMULA_BLOCKED_KEYS if key else False
+
 _KEY_RE = re.compile(r'^[a-z][a-z0-9_]{1,62}$')
 
 

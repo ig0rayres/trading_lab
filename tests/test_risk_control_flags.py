@@ -44,8 +44,13 @@ class RiskControlFlagsTest(unittest.TestCase):
         self.assertEqual(flags['max_open_positions'], 2)
         self.assertEqual(rcf.brl_from_cents(400_000), Decimal('4000'))
 
-    def test_demo_send_blocked_by_default(self):
-        ok, reason = rcf.demo_send_allowed()
+    def test_demo_send_blocked_when_flag_off(self):
+        with patch.object(
+            rcf,
+            'fetch_control_flags',
+            return_value={'demo_operation_on': False},
+        ):
+            ok, reason = rcf.demo_send_allowed()
         self.assertFalse(ok)
         self.assertEqual(reason, 'DEMO_OPERATION_OFF')
 

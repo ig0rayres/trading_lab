@@ -1,5 +1,5 @@
 #!/bin/sh
-# Trading Lab ops layout: research scheduler (foreground) + read-only dashboard (supervised).
+# Trading Lab ops layout: research scheduler (foreground) + dashboard + health + optional worker.
 # LIVE_TRADING_ENABLED must stay false (enforced in run.sh).
 set -eu
 
@@ -22,6 +22,16 @@ _dashboard_supervisor() {
   done
 }
 
+_health_supervisor() {
+  interval="${PLATFORM_HEALTH_INTERVAL_SEC:-60}"
+  root="${DASHBOARD_ROOT:-/app/reports}"
+  while true; do
+    echo "v4-ops: platform-health probe (interval ${interval}s)" >&2
+    PYTHONPATH=/app/src python3 /app/src/platform_health.py --root "$root" || true
+    sleep "${interval}"
+  done
+}
+
 _tv_worker_supervisor() {
   interval="${TV_WORKER_INTERVAL_SEC:-30}"
   while true; do
@@ -31,12 +41,29 @@ _tv_worker_supervisor() {
   done
 }
 
+_evolution_daily_supervisor() {
+  interval="${EVOLUTION_DAILY_INTERVAL_SEC:-86400}"
+  while true; do
+    echo "v4-ops: evolution-daily (interval ${interval}s)" >&2
+    /app/scripts/run.sh evolution-daily || true
+    sleep "${interval}"
+  done
+}
+
 if [ "$(printf '%s' "${DASHBOARD_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _dashboard_supervisor &
 fi
 
+if [ "$(printf '%s' "${PLATFORM_HEALTH_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
+  _health_supervisor &
+fi
+
 if [ "$(printf '%s' "${TV_WORKER_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
   _tv_worker_supervisor &
+fi
+
+if [ "$(printf '%s' "${EVOLUTION_DAILY_AUTOSTART:-true}" | tr '[:upper:]' '[:lower:]')" != "false" ]; then
+  _evolution_daily_supervisor &
 fi
 
 exec /app/scripts/run.sh v4-scheduler "$@"

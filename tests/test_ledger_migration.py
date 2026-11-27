@@ -60,6 +60,18 @@ class LedgerMigrationFilesTest(unittest.TestCase):
             self.assertNotIn('alpaca', text, name)
             self.assertNotIn('api.alpaca', text, name)
 
+    def test_003_up_creates_signal_provider_approvals_only(self):
+        up = (MIG / '003_signal_provider_approvals_up.sql').read_text(encoding='utf-8')
+        lower = up.lower()
+        self.assertIn('CREATE TABLE IF NOT EXISTS signal_provider_approvals', up)
+        self.assertIn("INSERT INTO schema_migrations (version) VALUES ('003_signal_provider_approvals')", up)
+        self.assertNotIn('alter table control_flags', lower)
+
+    def test_003_down_drops_signal_provider_approvals(self):
+        down = (MIG / '003_signal_provider_approvals_down.sql').read_text(encoding='utf-8')
+        self.assertIn('DROP TABLE IF EXISTS signal_provider_approvals', down)
+        self.assertIn("DELETE FROM schema_migrations WHERE version = '003_signal_provider_approvals'", down)
+
 
 @unittest.skipUnless(os.environ.get('LEDGER_DATABASE_URL'), 'LEDGER_DATABASE_URL not set')
 class LedgerMigrationIntegrationTest(unittest.TestCase):

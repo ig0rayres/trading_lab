@@ -46,3 +46,21 @@ This downloads third-party Python code into `/app/vendor` and runs its tests. Ke
 - `test-local`: offline local tests only, without needing the vendor mount.
 
 Neither deployment nor `history` performs real or paper broker orders.
+
+### G-MKT demo paths (names only — values in EasyPanel)
+
+After sprint **N34**, filling these enables B3/FOREX on the paper signal loop (fail-closed); until **N29.5** homolog, CI uses HTTP mock only:
+
+| Variable | Purpose |
+|----------|---------|
+| `DEMO_ACCOUNT_PATH_B3_EQUITY` | Must be `clear_smart_trader_simulated` |
+| `DEMO_ACCOUNT_PATH_FOREX` | Must be `oanda_fxtrade_practice` |
+| `CLEAR_SIM_BASE_URL` | Clear simulated REST base |
+| `CLEAR_SIM_API_KEY` | Clear simulated key |
+| `CLEAR_SIM_API_SECRET` | Clear simulated secret |
+| `OANDA_PRACTICE_API_TOKEN` | OANDA Practice token |
+| `OANDA_PRACTICE_ACCOUNT_ID` | OANDA Practice account id |
+
+Never commit secret values. `LIVE_TRADING_ENABLED=false`.
+
+Homologation runbook (paste keys, presence report, demo order evidence without secrets): [`docs/HOMOLOGATION.md` § G-MKT Clear simulated + OANDA Practice](docs/HOMOLOGATION.md#g-mkt-clear-simulated--oanda-practice-homolog-n35).

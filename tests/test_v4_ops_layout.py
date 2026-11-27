@@ -23,6 +23,11 @@ class V4OpsLayoutTests(unittest.TestCase):
         self.assertIn('tv-worker', body)
         self.assertIn('TV_WORKER_AUTOSTART', body)
         self.assertIn('TV_WORKER_INTERVAL_SEC', body)
+        self.assertIn('evolution-daily', body)
+        self.assertIn('EVOLUTION_DAILY_AUTOSTART', body)
+        self.assertIn('EVOLUTION_DAILY_INTERVAL_SEC', body)
+        self.assertIn('PLATFORM_HEALTH_AUTOSTART', body)
+        self.assertIn('platform_health.py', body)
 
     def test_worker_supervisor_does_not_replace_scheduler_exec(self):
         ops = _REPO / 'scripts' / 'v4_ops_main.sh'
@@ -34,6 +39,8 @@ class V4OpsLayoutTests(unittest.TestCase):
         self.assertIn('v4-scheduler', exec_lines[0])
         worker_lines = [ln for ln in lines if 'tv-worker' in ln]
         self.assertTrue(any('|| true' in ln for ln in worker_lines))
+        evolution_lines = [ln for ln in lines if 'evolution-daily' in ln]
+        self.assertTrue(any('|| true' in ln for ln in evolution_lines))
 
     def test_dockerfile_default_is_v4_ops(self):
         dockerfile = _REPO / 'Dockerfile'

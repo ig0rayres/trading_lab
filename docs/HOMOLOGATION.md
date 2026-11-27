@@ -90,6 +90,7 @@ Fill real na Alpaca Paper (aceite, fill parcial/cheio, P&L reconciliado) **não*
 - `strategy_states`: `signal_copy` em fase que permite paper (`paper_limited` após seed N8).
 - Credenciais **Alpaca Paper** só no EasyPanel (nunca no Git).
 - Snapshot de risco consolidado: arquivo JSON apontado por **`V4_RISK_SNAPSHOT_FILE`** (ver `signal_paper_runner.risk_check` — stale >120s bloqueia).
+- **Atualizar snapshot (ops, leitura paper):** `scripts/run.sh risk-snapshot-refresh --output /app/data/risk-snapshot.json` — GETs Alpaca paper + `at_utc` fresco; opcional no worker com `RISK_SNAPSHOT_AUTO_REFRESH=true` (default `false`).
 
 ### Caminho A — one-shot (`signal-paper`)
 
@@ -144,3 +145,99 @@ Evidência redigida: coluna **Status homolog** em `docs/TEST-EVIDENCE.md` § Spr
 - Ledger reconcile: `tests/test_ledger_reconcile.py` (com `LEDGER_DATABASE_URL` no job CI).
 
 Fill real na corretora com P&L verificado continua **passo operador** com chaves paper reais.
+
+**Feature 7 — âncoras no envio paper (N32.3, pytest only):** `tests.test_signal_paper_runner.PaperRunnerTests.test_n32_tight_defaults_qty1_aapl_paper_submitted`, `test_n32_lowered_capital_cents_blocks_capital_limit`, `test_n32_lowered_max_risk_per_trade_blocks_trade_risk_limit`, `test_n32_risk_check_tight_cap_not_parallel_10k_usd`, `test_n32_b3_equity_auto_blocked_no_alpaca_post`, `test_n32_forex_auto_blocked_no_alpaca_post` — não substitui homolog B3/FOREX (**ISS-010**).
+
+---
+
+## G-MKT Clear simulated + OANDA Practice homolog (N35)
+
+> **`LIVE_TRADING_ENABLED=false` obrigatório.** Valores **somente** no EasyPanel — nunca no Git nem no chat. EasyPanel **#46 no ar** ≠ chaves coladas ≠ fill. Pytest mock / `READY` no relatório de presença **não** fecha N29.5.
+
+### 1 — Colar nomes no EasyPanel
+
+Use a tabela **G-MKT demo paths** em [`EASYPANEL.md`](../EASYPANEL.md) (nomes apenas). Preencha `DEMO_ACCOUNT_PATH_B3_EQUITY=clear_smart_trader_simulated` e `DEMO_ACCOUNT_PATH_FOREX=oanda_fxtrade_practice` mais os seis nomes `CLEAR_SIM_*` / `OANDA_PRACTICE_*`. Não commitar valores.
+
+### 2 — Conferir presença (sem imprimir valores)
+
+No container ou shell com `PYTHONPATH=src` e **o mesmo env** do serviço (variáveis já injetadas pelo painel — **não** colar segredos na linha de comando):
+
+```bash
+python3 -c "from demo_account_gate import env_presence_report; print(env_presence_report())"
+```
+
+Interpretação:
+
+| Campo | Significado |
+|-------|-------------|
+| `keys.<NAME>` | `present` / `absent` — **não** mostra o valor |
+| `markets.B3_EQUITY` / `FOREX` | `READY` ou `NO_DEMO_ACCOUNT_PATH` (mesmo gate do laço paper N34) |
+| `live_trading_enabled_false` | deve ser `true` (live desligado) |
+
+Opcional: no dashboard, linhas de mercado já expõem `block_reason` por mercado (nível agregado).
+
+### 3 — Atestar ordem demo sem colar segredo no chat
+
+| Mercado | Onde confirmar | Evidência aceitável (redigida) |
+|---------|----------------|--------------------------------|
+| B3 (Clear simulado) | UI/API **simulada** Clear (`CLEAR_SIM_BASE_URL` — host practice/simulated, **não** Alpaca) | Contagem de ordem aberta/fill, `order_id` parcialmente redigido, host confirmado |
+| FOREX (OANDA Practice) | UI OANDA **Practice** (`api-fxpractice.oanda.com`, **não** fxtrade live) | Idem — sem token no chat |
+
+Anotar em `docs/TEST-EVIDENCE.md` (contagens, ids redigidos). Não colar `CLEAR_SIM_API_*`, `OANDA_PRACTICE_*` nem corpo de resposta com segredo.
+
+### 4 — O que **não** conta como homologação N29.5
+
+- HTTP 200, fila `QUEUED`, `PAPER_GATEWAY_QUEUE_ONLY`, journal `orders_sent=0`
+- Deploy EasyPanel **#46** / imagem nova sem ordem demo observada na corretora certa
+- Pytest com HTTP mock (`tests/test_demo_broker_adapters.py`, `test_n34_*`)
+- Relatório de presença com todos os nomes `present` e mercados `READY` **sem** ordem demo na Clear/OANDA
+
+### 5 — Fechar N29.5 (operador)
+
+Somente após chat **«creds ok»** **e** evidência redigida de ordem demo (passo 3). Então marcar task N29.5 no ROADMAP — **não** antecipar nesta sprint N35.
+
+---
+
+## Homologar operar US + cripto pelo menu do painel (Sprint N44, ISS-017 onda 4)
+
+> **`LIVE_TRADING_ENABLED=false` obrigatório.** Esta seção é **roteiro operador** — não substitui Feature 5 § demo nem Feature 7 pytest. **`queued_intent` / fila / HTTP 200 / pytest verde / rebuild sozinho ≠ fill.** Brief: `docs/.briefs/N44.brief.md`. Folha de evidência: [`docs/TEST-EVIDENCE.md` § Sprint N44](TEST-EVIDENCE.md). Inventário: `docs/.briefs/N44-GIT-FIRST-REUSE.md`.
+
+### Antes do passeio
+
+1. **Rebuild + republicar** o serviço EasyPanel **`trading-lab`** depois do merge das ondas **N41–N43** (menu Ordens, Histórico, Estratégias, Análise Google). Sem imagem nova no ar, o menu antigo **não** conta como homologação desta onda.
+2. Confirmar **`LIVE_TRADING_ENABLED=false`** no container publicado.
+3. Entrar com login (`GET /login`). Menu esperado após login: **Central**, **Sinais**, **Estratégias**, **Análise Google**, **Ordens**, **Histórico**, **Prodígio**, **Performance** (ver `docs/DASHBOARD-OPERATIONS.md`).
+
+### Passeio — ação americana (conta Alpaca paper)
+
+| Passo | Onde | O que observar |
+|-------|------|----------------|
+| 1 | **Sinais** (`/sinais`) | Linha nova, **recusa com motivo**, ou vazio honesto |
+| 2 | **Ordens** (`/ordens`) | Linha da ordem paper ainda aberta, ou vazio exato: `Nenhuma ordem aberta no paper.` |
+| 3 | Corretora **Alpaca paper** (fora do painel) | Fill, recusa ou ordem ainda aberta — **você** confirma lá; ids **redigidos** na folha de evidência |
+| 4 | **Histórico** (`/historico`) | Fill **só** se confirmado; fila **`queued_intent` não entra**. Vazio exato: `Nenhum fill confirmado no histórico.` |
+| 5 | **Performance** (`/performance`) | Número **só** de fill confirmado, rotulado como **bruto** (sem taxas completas) |
+
+Referências de código (N41, **não** reescrever nesta sprint): `load_panel_open_orders` / `load_panel_order_history`; strings vazias em `src/panel_ops_html.py`.
+
+### Passeio — cripto (mesma conta paper)
+
+Mesmos **cinco passos** com um ativo de **cripto** no paper loop.
+
+- **Recusa com motivo** em Sinais **vale** como desfecho honesto.
+- Fill histórico **só** de ação americana (ex. AAPL 2026-10-29 em `docs/TEST-EVIDENCE.md` § N20) **não** fecha o passeio de cripto.
+- Após rebuild, um fill antigo de AAPL pode reaparecer em Histórico se jsonl/ledger ainda estiver no volume — isso prova que a lista **não** está cega, **não** substitui o passeio de cripto.
+
+### O que conta / o que não conta
+
+| Conta | Não conta |
+|-------|-----------|
+| Fill paper que você viu na corretora **e** no Histórico | Suíte de testes verde (`tests/test_panel_ops.py`, Feature 7 pytest) |
+| Recusa com motivo em Sinais | Página no ar, semáforo, fila sozinha, `PAPER_GATEWAY_QUEUE_ONLY` |
+| Vazio honesto depois do rebuild, com linha **pendente** na folha N44 | HTTP **200**, fila, “enviado” sem fill |
+| | Fill AAPL de 2026-10-29 sozinho como passeio de cripto |
+| | Bolsa brasileira (Clear) ou câmbio (OANDA) — **ISS-010** / N29.5 |
+
+### Se Ordens ou Histórico estiverem “cegos”
+
+Se a corretora paper (ou snapshots/jsonl/ledger no volume) mostra a linha **e** **Ordens** / **Histórico** permanecem vazios (com as strings vazias acima) **depois** do rebuild: **parar**. **Não** corrigir código nesta sprint N44. Volte a `/pmo plan` (correção em sprint futura). O agente **não** afirma que o passeio foi feito — só o operador preenche `docs/TEST-EVIDENCE.md` § Sprint N44.

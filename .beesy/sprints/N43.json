@@ -1,0 +1,119 @@
+{
+  "sprint_id": "N43",
+  "checkpoint": {
+    "phase": "planning",
+    "sprint": "N43",
+    "branch": "front/n27-alpaca-loop",
+    "current_task": null,
+    "last_completed_task": "N43.4",
+    "validation_gate_ref": ".beesy/sprints/N42.json",
+    "sprint_delivery": "verify_green",
+    "sprint_delivery_sprint": "N43",
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m pytest tests/test_panel_ops.py tests/test_v4_web_dashboard.py -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [],
+      "missing_backends": [],
+      "last_validated_sha": "32e1d8228edee446b6ee98cbfb43a28513a717d7",
+      "stamped_at": "2026-11-17T16:36:21Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "82e04b7fd5a6398053d9a0cc49b8c7703c67f45cee3c0e608b0ebf74a9cd9468",
+      "patch_id": "8389aa992886a3d070bfa7dd9bb0bccd8ac430c6",
+      "patch_id_version": 2
+    },
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N43",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T16:31:54Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N43 Análise Google; 49 OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    },
+    "plan_only": false
+  },
+  "archived_at": "2026-11-17T16:35:30Z",
+  "sprint_tasks": [
+    {
+      "id": "N43.0",
+      "title": "Inventariar o reuso da análise Google antes de desenhar o menu",
+      "size": "P",
+      "status": "done",
+      "depends_on": [],
+      "files": [
+        "docs/.briefs/N43-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N43.brief.md"
+      ],
+      "file": "docs/.briefs/N43-GIT-FIRST-REUSE.md, docs/.briefs/N43.brief.md"
+    },
+    {
+      "id": "N43.1",
+      "title": "Carregar o bloco TimesFM e as dicas rotuladas no pacote do painel",
+      "size": "M",
+      "status": "done",
+      "depends_on": [
+        "N43.0"
+      ],
+      "files": [
+        "src/panel_ops_data.py"
+      ],
+      "file": "src/panel_ops_data.py"
+    },
+    {
+      "id": "N43.2",
+      "title": "Colocar Análise Google no menu do dia a dia",
+      "size": "M",
+      "status": "done",
+      "depends_on": [
+        "N43.1"
+      ],
+      "files": [
+        "src/panel_ops_html.py",
+        "src/v4_web_dashboard.py"
+      ],
+      "file": "src/panel_ops_html.py, src/v4_web_dashboard.py"
+    },
+    {
+      "id": "N43.3",
+      "title": "Provar vazio com motivo, rótulo de pesquisa e que a tela não envia ordem",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N43.2"
+      ],
+      "files": [
+        "tests/test_panel_ops.py"
+      ],
+      "file": "tests/test_panel_ops.py"
+    },
+    {
+      "id": "N43.4",
+      "title": "Atualizar o mapa e os chamados depois da tela existir",
+      "size": "P",
+      "status": "done",
+      "depends_on": [
+        "N43.3"
+      ],
+      "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/ISSUES.md"
+      ],
+      "file": "docs/OPERATOR-PANEL-MAP.md, docs/DASHBOARD-OPERATIONS.md, docs/ISSUES.md"
+    }
+  ]
+}

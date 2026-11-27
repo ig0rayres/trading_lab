@@ -1,0 +1,155 @@
+{
+  "sprint_id": "N38",
+  "status": "implementation",
+  "source": "rock-execute",
+  "checkpoint": {
+    "phase": "implementation",
+    "sprint": "N38",
+    "current_task": "N38.M",
+    "last_completed_task": "N36.2",
+    "validation_gate_ref": ".beesy/sprints/N36.json",
+    "sprint_delivery_sprint": "N38",
+    "last_validated_sha": "2157b53",
+    "validation_gate": {
+      "produced_by": "validation-stamp.py",
+      "result": "APROVADA",
+      "validation_mode": "full",
+      "gates": [
+        {
+          "name": "cmd_0",
+          "cmd": "LIVE_TRADING_ENABLED=false PYTHONPATH=src /usr/bin/python3 -m unittest tests.test_panel_ops tests.test_platform_health -q",
+          "exit_code": 0
+        }
+      ],
+      "dirty_production_paths": [
+        ".beesy/activate_n32_session.py",
+        ".beesy/archive/",
+        ".beesy/stamp-gate-logs/",
+        ".cursorsession.bak",
+        ".cursorsession.lock"
+      ],
+      "missing_backends": [],
+      "last_validated_sha": "4b50389d152afe4a5f70881015cdc6b5a0704f87",
+      "stamped_at": "2026-11-17T13:21:04Z",
+      "validation_gate_keys": [
+        "cmd_0"
+      ],
+      "content_hash": "03788748330ecc11d4554677090f05e7b52d6e0cf67b883db2448552fb07f255",
+      "patch_id": "9e11ace2d0725cd0f53c9d4d81993ec8a8495178",
+      "patch_id_version": 2
+    },
+    "branch": "front/n27-alpaca-loop",
+    "plan_only": false,
+    "validation_gate_qa": {
+      "result": "APROVADA",
+      "sprint": "N38",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS",
+      "findings_registered": [],
+      "recorded_at": "2026-11-17T13:10:58Z",
+      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
+      "notes": "N38 brake strip (renumbered from N37 collision); panel_ops+platform_health OK",
+      "full_suite_ran": true,
+      "first_pass": true,
+      "senior_status": "PASS"
+    },
+    "sprint_delivery": "verify_green",
+    "relevant_paths": [
+      "docs/.briefs/N20.brief.md",
+      "docs/.briefs/N38.brief.md",
+      "docs/.briefs/N38-GIT-FIRST-REUSE.md",
+      "docs/.briefs/N37-GIT-FIRST-REUSE.md",
+      "docs/DASHBOARD-OPERATIONS.md",
+      "docs/DIARY.md",
+      "docs/DATABASE.md",
+      "docs/ISSUES.md",
+      "docs/ROADMAP.md",
+      "docs/api-spec.yaml",
+      "scripts/run.sh",
+      "scripts/v4_ops_main.sh",
+      "src/ledger_migrate.py",
+      "src/operational_defaults.py",
+      "src/panel_ops_html.py",
+      "src/platform_health.py",
+      "src/tradingview_worker.py",
+      "src/v4_web_dashboard.py",
+      "tests/test_operational_defaults.py",
+      "tests/test_paper_gateway_queue.py",
+      "tests/test_platform_health.py",
+      "tests/test_risk_control_flags.py",
+      "tests/test_v4_ops_layout.py",
+      "tests/test_panel_ops.py"
+    ]
+  },
+  "archived_at": "2026-11-17T13:24:47Z",
+  "sprint_tasks": [
+    {
+      "id": "N38.0",
+      "file": "docs/.briefs/N37-GIT-FIRST-REUSE.md",
+      "files": [
+        "docs/.briefs/N37-GIT-FIRST-REUSE.md"
+      ],
+      "depends_on": [],
+      "status": "done"
+    },
+    {
+      "id": "N38.1",
+      "file": "src/panel_ops_html.py, tests/test_panel_ops.py",
+      "files": [
+        "src/panel_ops_html.py",
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N38.0"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "N38.2",
+      "file": "docs/DASHBOARD-OPERATIONS.md, docs/DIARY.md",
+      "files": [
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/DIARY.md"
+      ],
+      "depends_on": [
+        "N38.0"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "N38.M",
+      "title": "Merge origin/main platform_health into brake UX; renumber freio N38",
+      "file": "docs/.briefs/N20.brief.md, docs/.briefs/N38.brief.md, docs/.briefs/N38-GIT-FIRST-REUSE.md, docs/.briefs/N37-GIT-FIRST-REUSE.md, docs/DASHBOARD-OPERATIONS.md, docs/DIARY.md, docs/DATABASE.md, docs/ISSUES.md, docs/ROADMAP.md, docs/api-spec.yaml, scripts/run.sh, scripts/v4_ops_main.sh, src/ledger_migrate.py, src/operational_defaults.py, src/panel_ops_html.py, src/platform_health.py, src/tradingview_worker.py, src/v4_web_dashboard.py, tests/test_operational_defaults.py, tests/test_paper_gateway_queue.py, tests/test_platform_health.py, tests/test_risk_control_flags.py, tests/test_v4_ops_layout.py, tests/test_panel_ops.py",
+      "files": [
+        "docs/.briefs/N20.brief.md",
+        "docs/.briefs/N38.brief.md",
+        "docs/.briefs/N38-GIT-FIRST-REUSE.md",
+        "docs/.briefs/N37-GIT-FIRST-REUSE.md",
+        "docs/DASHBOARD-OPERATIONS.md",
+        "docs/DIARY.md",
+        "docs/DATABASE.md",
+        "docs/ISSUES.md",
+        "docs/ROADMAP.md",
+        "docs/api-spec.yaml",
+        "scripts/run.sh",
+        "scripts/v4_ops_main.sh",
+        "src/ledger_migrate.py",
+        "src/operational_defaults.py",
+        "src/panel_ops_html.py",
+        "src/platform_health.py",
+        "src/tradingview_worker.py",
+        "src/v4_web_dashboard.py",
+        "tests/test_operational_defaults.py",
+        "tests/test_paper_gateway_queue.py",
+        "tests/test_platform_health.py",
+        "tests/test_risk_control_flags.py",
+        "tests/test_v4_ops_layout.py",
+        "tests/test_panel_ops.py"
+      ],
+      "depends_on": [
+        "N38.1"
+      ],
+      "status": "done"
+    }
+  ]
+}

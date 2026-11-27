@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N61 (N60 #80 em main) | Critérios ao vivo: Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca |
+| ISS-024 | aberto | N62 após N61 (#81/#82 em main) | Critérios ao vivo + Inbox pérola (top 10 retorno 15d); homologação operador |
 | ISS-025 | aberto | follow-up (fora de N58) | TradingView: varredura de estratégias exige contrato de busca — não existe no código recuperado |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -748,6 +748,10 @@
 **Nota operador 2026-11-25 (continuação após #80, painel no ar):** o mesmo banner `collective2_refresh_failed:HTTPError` (sem número HTTP), «Atualizando candidatos…» preso e métricas indisponíveis. O operador não colou view-source nem `candidates-refresh-latest.json`. Três leituras continuam possíveis: imagem sem a N60, JSON de refresh antigo, ou falha real da listagem SearchStrategies (a N60 grava só o tipo da exceção, não o código). LIVE false. Constantes Feature 4 / Prodígio 15d **não** mudam. TradingView varredura = **ISS-025**.
 
 **Nota EXECUTE N61 (2026-11-25):** código em `front/sinais-raw-path` — `APP_GIT_SHA`, aviso da listagem com código HTTP, `refreshed_at` no início do refresh, meta `sources_ok` no banner; pytest `N61Collective2RefreshHonestyTests`. Chamado **permanece aberto** até merge `main` + rebuild EasyPanel com `--build-arg APP_GIT_SHA=<sha>` + homologação operador.
+
+**Nota planejamento N62 (2026-11-27):** `/pmo new N62` — Inbox pérola: só top 10 por `reported_pnl_sum` 15d após portões Feature 4 + P/L>0; remover pending/TV da fila principal; fix botão refresh preso; bloco `## Sprint N62` em `docs/ROADMAP.md`; briefs `N62.brief.md` + `N62-GIT-FIRST-REUSE.md`. `plan_only: true`. ISS-024 permanece aberto até homologação refresh **e** pérola no ar. ISS-025 inalterado. LIVE false.
+
+**Implementação N62 (frente `sinais-raw-path`):** `build_preapproval_queue` e UI Sinais passam a expor apenas o Inbox pérola (top 10 Prodígio com P/L>0); varredura C2/TV no refresh permanece para cache e `issues`, fora da fila principal.
 
 **Nota planejamento N61 (2026-11-25):** follow-up ISS-024 / F-024; bloco `## Sprint N61` em `docs/ROADMAP.md`; brief `docs/.briefs/N61.brief.md`; Git First `docs/.briefs/N61-GIT-FIRST-REUSE.md`. `plan_only: true` — **não** ativa `sprint_atual` (permanece N60 até o parent). Versão do painel (`APP_GIT_SHA`, distinta do pin do vendor) em Sinais, checagem de vida e status; aviso da listagem com código HTTP quando existir; `refreshed_at` no início da tentativa e aviso velho de listagem removido; uma nova tentativa só em HTTP 5xx/429, sem espera inventada; hora e fontes ao lado do banner; botão N60 só regressão. Chamado permanece **aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView scan **OUT** (ISS-025 inalterado).
 

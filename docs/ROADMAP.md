@@ -85,7 +85,8 @@
 | N58 | N | Atualizar varre Collective2 nas regras de 15 dias; TradingView sem busca; LIVE false | concluida | 4 | observability | ISS-024 / F-021 varredura C2 · PR #78 | *(abaixo)* |
 | N59 | N | Varredura Collective2 segue se ordens ativas falharem; LIVE false | concluida | 4 | observability | ISS-024 / F-022 isolamento snapshot | *(abaixo)* |
 | N60 | N | Histórico fechado parcial não derruba a Collective2; botão sai de «Atualizando…»; LIVE false | em_execucao | 5 | observability | ISS-024 / F-023 coleta em massa · plan_only | *(abaixo)* |
-| N61 | N | Versão do painel no ar e aviso da listagem Collective2 com número e hora; LIVE false | planejada | 6 | observability | ISS-024 / F-024 · plan_only | *(abaixo)* |
+| N61 | N | Versão do painel no ar e aviso da listagem Collective2 com número e hora; LIVE false | concluida | 6 | observability | ISS-024 / F-024 · main pós-#82 | *(abaixo)* |
+| N62 | N | Inbox Sinais: top 10 por retorno 15d; pérola sem pending/TV; P/L>0; LIVE false | em_execucao | 6 | observability | ISS-019/022/024 · Inbox pérola | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -158,6 +159,7 @@
 | N59 | senior+qa | Isolar consulta de ordens ativas da varredura Collective2; LIVE false |
 | N60 | senior+qa | Isolar coleta de histórico fechado da fonte Collective2; botão não fica preso; LIVE false |
 | N61 | senior+qa | Versão do painel no ar; aviso da listagem com número e hora; uma nova tentativa só em erro temporário; LIVE false |
+| N62 | senior+qa | Inbox: só top 10 `reported_pnl_sum` 15d + portões Feature 4; fix botão refresh; LIVE false |
 
 ---
 
@@ -7401,6 +7403,116 @@ Cenários:
 **Detalhe técnico**
 
 P task. Files: `docs/OPERATOR-PANEL-MAP.md` (Sinais shows app version; refresh banner shows `refreshed_at` and `sources_ok`; listagem issue includes HTTP code; one retry only on 429/5xx; button abort remains N60; paper-copy gate unchanged; TV scan OUT ISS-025), `docs/ISSUES.md` (ISS-024 notes keep OPEN; ISS-025 unchanged), `docs/FINDINGS.md` (F-024; mark corrigido only with nodeids), `docs/DIARY.md`, `docs/REQUIREMENTS.md` Feature 9 N61 checkbox only `[x]` with cited nodeids. LIVE false. N45–N47 not started. Never print secrets. Do not close ISS-024.
+
+---
+
+## Sprint N62 — Inbox Sinais: pérola = top 10 por retorno 15d
+> Categoria: N  
+> Status: em_execucao *(ativada `/pmo sprint iniciar N62` 2026-11-27 · ISS-019/022/024 · operador: só melhores sinais / melhor retorno)*  
+> Gerado via: `/pmo plan` + `/pmo new N62` · fonte ISS-019, ISS-022, ISS-024 · N61 em `main` pós-#82  
+> titulo_humano: Inbox Sinais mostra só os dez melhores por retorno em quinze dias  
+> resumo_humano: A pérola da tela Sinais lista só provedores que passam Feature 4 com lucro somado positivo na janela, ordenados por retorno; some pending, TV fora da pérola; o botão Atualizar volta ao normal sem precisar recarregar a página. LIVE false.  
+> Gate: fila principal ≤10 linhas só `PRODIGY_CANDIDATE_RESEARCH` com `reported_pnl_sum>0`; sem TV/pending na pérola; ordenação `reported_pnl_sum` desc; `prodigy_rank` alinhado; refresh UI libera botão em abort/cooldown; pytest verde; `WINDOW_DAYS`/`MIN_TRADES` inalterados; `orders_sent=0`; ISS-025 inalterado  
+> review: senior+qa  
+> Brief: `docs/.briefs/N62.brief.md`  
+> Git First: `docs/.briefs/N62-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N61 concluída em `main` · ISS-024 (refresh ao vivo) · Release: Inbox pérola (não usa N45–N47)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N61  
+> plan_only: false  
+
+### Em uma frase
+
+A tela Sinais vira um Inbox com até dez provedores que realmente lucraram na janela de quinze dias, ordenados pelo melhor retorno reportado, sem linhas vazias nem TradingView na pérola.
+
+### O que muda para você
+
+- A lista principal mostra **só quem passou** amostra mínima, **P/L somado positivo** e critérios Feature 4 — não centenas de IDs nem `pending`.
+- Ordenação por **melhor retorno** (`reported_pnl_sum` 15d), com desempates por fator de lucro e consistência.
+- **TradingView** sai da pérola até ISS-025 (varredura); origens TV podem ir para bloco secundário ou sumir da pré-aprovação.
+- **Atualizar candidatos** continua coletando em segundo plano; aprovar ainda não é ordem.
+- O botão **deixa de ficar preso** em «Atualizando…» sem F5.
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Só elegíveis com lucro | Nenhuma linha na pérola com métricas «indisponível» ou status pending |
+| 2 | Top 10 por retorno | No máximo dez linhas; a primeira tem o maior `reported_pnl_sum` visível |
+| 3 | TV fora da pérola | Nenhuma linha `tradingview` na tabela principal |
+| 4 | Botão honesto | Após 45s ou 429, o botão e o aviso voltam sem recarregar a página |
+| 5 | Refresh intacto | Fontes OK e `time_budget` continuam possíveis; LIVE false |
+| 6 | Cópia paper fechada | Aprovar não envia ordem |
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N62.0 Inventário Git First Inbox pérola | `docs/.briefs/N62-GIT-FIRST-REUSE.md` | — |
+| [ ] | M | N62.1 Rank 15d: P/L>0 e ordenação por retorno | `src/prodigy_rank.py` | N62.0 |
+| [ ] | M | N62.2 Fila pré-aprovação: top 10 pérola | `src/panel_ops_data.py` | N62.1 |
+| [ ] | M | N62.3 UI Sinais: copy Inbox + sem pending na pérola | `src/panel_ops_html.py` | N62.2 |
+| [ ] | M | N62.4 Fix UX botão Atualizar (abort/cooldown/finally) | `src/panel_ops_html.py` | N62.0 |
+| [ ] | M | N62.5 Testes top10 + P/L + regressão N54–N61 | `tests/test_panel_ops.py`, `tests/test_prodigy_rank.py` | N62.1–N62.4 |
+| [ ] | P | N62.6 Docs ISS-019/022/024 + mapa operador | `docs/ISSUES.md`, `docs/REQUIREMENTS.md` | N62.5 |
+
+### Quality Brief (Sprint N62)
+
+Maintain: `LIVE_TRADING_ENABLED=false`; `orders_sent=0`; N54–N61 refresh job unchanged in spirit; Feature 4 `WINDOW_DAYS=15`, `MIN_TRADES=5` unchanged; no TradingView search; no auto-approve; allowlist paper-copy unchanged.
+Avoid: inventing drawdown threshold if `max_drawdown_pct` absent in rank row; listing all SearchStrategies IDs in pérola; enabling LIVE; N45–N47.
+
+### Fora de escopo
+
+- ISS-025 varredura TV; Onda 4 / N27 paper autônomo; mudar limites numéricos de Feature 4; top N configurável no painel (fixo 10 = `top_10_research`).
+
+### Task N62.0 — Inventário Git First Inbox pérola
+
+**Detalhe técnico**
+
+P task (docs-only). Confirm `docs/.briefs/N62-GIT-FIRST-REUSE.md`. Cite `prodigy_rank.calculate`, `build_preapproval_queue`, `_CANDIDATES_RELOAD_SCRIPT`, Feature 4 REQUIREMENTS Prodigy 15d, ISS-019/022/024. Gap: today queue includes `pending` and TV; gate uses win rate not explicit P/L>0. LIVE false. `plan_only: true` until `/pmo sprint iniciar N62`.
+
+### Task N62.1 — Rank 15d: P/L positivo e ordenação por retorno
+
+**Detalhe técnico**
+
+- Require `reported_pnl_sum > 0` for `PRODIGY_CANDIDATE_RESEARCH` (or equivalent single gate before status assignment).
+- Sort providers by `reported_pnl_sum` desc before truncating `top_10_research`.
+- Do not change `WINDOW_DAYS` or `MIN_TRADES`. Drawdown gate only if field already populated on row.
+- Files: `src/prodigy_rank.py`, tests in `tests/test_prodigy_rank.py`.
+
+### Task N62.2 — Fila pré-aprovação: pérola top 10
+
+**Detalhe técnico**
+
+- `build_preapproval_queue`: main queue = top 10 from prodigy rank rows that are `PRODIGY_CANDIDATE_RESEARCH` with metrics populated; exclude `discovered`/`pending` empty raw from pérola.
+- Remove TradingView from primary queue (optional muted link or omit).
+- Reuse ledger approvals for status overlay; do not auto-approve on refresh.
+- Files: `src/panel_ops_data.py`.
+
+### Task N62.3 — UI Sinais: Inbox pérola
+
+**Detalhe técnico**
+
+- Section title/copy: Inbox — top 10 por retorno 15d (research only).
+- Hide or relocate pre-N62 multi-platform salad; banner refresh unchanged.
+- Files: `src/panel_ops_html.py`.
+
+### Task N62.4 — Fix UX botão Atualizar
+
+**Detalhe técnico**
+
+- Ensure `finally` always clears `aria-busy`; on 429 reset feedback without stuck «Atualizando…»; optional `fetch` race guard if response arrives after abort.
+- Files: `src/panel_ops_html.py`; extend `N61`/`N60` abort tests.
+
+### Task N62.5 — Testes
+
+**Detalhe técnico**
+
+- New suite e.g. `N62InboxPearlTests`: queue length ≤10, no TV in pearl, negative P/L excluded, sort order by `reported_pnl_sum`.
+- Regression: N54–N61 refresh tests green.
+
+### Task N62.6 — Documentação
+
+**Detalhe técnico**
+
+P task. Update ISS-024/019/022 notes linking N62; REQUIREMENTS Feature 9 inbox criterion; OPERATOR-PANEL-MAP §2 pérola; do not close ISS-025. Partial close ISS-024 only if operador homologa pérola + refresh após merge.
 
 ---
 

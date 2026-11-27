@@ -1098,23 +1098,44 @@ def _load_c2_research_rows(root: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def _load_prodigy_research_rows(root: Path) -> list[dict[str, Any]]:
-    path = Path(root) / 'intelligence' / 'prodigy-top10-latest.json'
-    if not path.is_file():
-        path = _repo_config_root() / 'intelligence' / 'prodigy-top10-latest.json'
-    if not path.is_file():
-        return []
+def _prodigy_rank_json_path(root: Path) -> Path | None:
+    for candidate in (
+        Path(root) / 'intelligence' / 'prodigy-top10-latest.json',
+        _repo_config_root() / 'intelligence' / 'prodigy-top10-latest.json',
+    ):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _read_prodigy_rank_payload(root: Path) -> dict[str, Any] | None:
+    path = _prodigy_rank_json_path(root)
+    if path is None:
+        return None
     try:
         payload = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError, TypeError):
-        return []
+        return None
     if not isinstance(payload, dict) or payload.get('mode') != 'PRODIGY_RANK_RESEARCH_ONLY':
+        return None
+    return payload
+
+
+def _load_prodigy_rank_provider_rows(root: Path) -> list[dict[str, Any]]:
+    payload = _read_prodigy_rank_payload(root)
+    if not payload:
         return []
-    out: list[dict[str, Any]] = []
-    for row in payload.get('top_10_research') or payload.get('providers') or []:
-        if isinstance(row, dict):
-            out.append(dict(row))
-    return out
+    providers = payload.get('providers')
+    if isinstance(providers, list) and providers:
+        return [dict(row) for row in providers if isinstance(row, dict)]
+    top = payload.get('top_10_research')
+    if isinstance(top, list):
+        return [dict(row) for row in top if isinstance(row, dict)]
+    return []
+
+
+def _load_prodigy_research_rows(root: Path) -> list[dict[str, Any]]:
+    return _load_prodigy_rank_provider_rows(root)
 
 
 def _providers_raw_dir(root: Path) -> Path:
@@ -1211,88 +1232,35 @@ def build_preapproval_queue(
     conn_factory: Callable[..., Any] | None,
     signals: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    ledger = _provider_approval_map(conn_factory)
-    seen: set[tuple[str, str]] = set()
-    queue: list[dict[str, Any]] = []
+    del signals
+    from prodigy_rank import is_pearl_candidate, pearl_sort_key
 
-    def add(
-        platform: str,
-        provider_id: str,
-        metrics_row: dict[str, Any] | None,
-        *,
-        seed: bool = False,
-        source_label: str | None = None,
-    ) -> None:
-        pid = str(provider_id or '').strip()
+    ledger = _provider_approval_map(conn_factory)
+    pearls = [dict(row) for row in _load_prodigy_rank_provider_rows(root) if is_pearl_candidate(row)]
+    pearls.sort(key=pearl_sort_key)
+    queue: list[dict[str, Any]] = []
+    for row in pearls[:10]:
+        pid = str(row.get('provider_id') or row.get('provider') or '').strip()
         if not pid:
-            return
-        key = (platform, pid)
-        if key in seen:
-            return
-        seen.add(key)
-        row = ledger.get(key)
-        if row:
-            status = row['status']
-            source = row['source']
-        elif seed and platform == 'collective2':
-            status = 'pending'
-            source = _c2_seed_source_for_id(root, pid)
-        elif source_label:
-            status = 'pending'
-            source = source_label
+            continue
+        key = ('prodigy', pid)
+        ledger_row = ledger.get(key)
+        if ledger_row:
+            status = ledger_row['status']
+            source = ledger_row['source']
         else:
             status = 'pending'
-            source = 'discovered'
+            source = 'prodigy_rank'
         queue.append(
             {
-                'platform': platform,
+                'platform': 'prodigy',
                 'provider_id': pid,
                 'status': status,
                 'source': source,
-                'metrics': _overlay_research_metrics(metrics_row or {}),
+                'metrics': _overlay_research_metrics(row),
                 'metrics_label': PREAPPROVAL_METRICS_LABEL,
             }
         )
-
-    metrics_by_c2: dict[str, dict[str, Any]] = {}
-    for row in _load_c2_research_rows(root):
-        pid = row.get('provider_id') or row.get('provider')
-        if pid is not None:
-            metrics_by_c2[str(pid).strip()] = row
-            add('collective2', str(pid), row)
-
-    for pid in load_c2_paper_copy_approved_ids(root):
-        add('collective2', pid, metrics_by_c2.get(pid), seed=True)
-
-    scan_ids = _c2_scan_strategy_ids(root)
-    prodigy_by_id = _prodigy_research_row_by_id(root)
-    for pid in discover_c2_strategy_ids_from_raw(root):
-        prow = prodigy_by_id.get(pid)
-        if prow and prow.get('status') == 'PRODIGY_CANDIDATE_RESEARCH':
-            label = 'scanned' if pid in scan_ids else 'discovered'
-            add(
-                'collective2',
-                pid,
-                prow,
-                source_label=label,
-            )
-        elif _c2_raw_closed_trades_results_empty(root, pid):
-            add('collective2', pid, metrics_by_c2.get(pid))
-
-    for row in _load_prodigy_research_rows(root):
-        pid = row.get('provider') or row.get('provider_id')
-        if pid is None:
-            continue
-        status = str(row.get('status') or '').strip()
-        if status and status != 'PRODIGY_CANDIDATE_RESEARCH':
-            continue
-        add('prodigy', str(pid), row)
-
-    sigs = signals if signals is not None else []
-    for origin in _unique_tradingview_origins(sigs):
-        add('tradingview', origin, None)
-
-    queue.sort(key=lambda item: (item['platform'], item['provider_id']))
     return {'queue': queue, 'metrics_label': PREAPPROVAL_METRICS_LABEL}
 
 

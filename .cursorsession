@@ -224,27 +224,21 @@
     "validation_gate_qa": {
       "result": "COM_RESSALVAS",
       "sprint": "N62",
-      "produced_by": "/qa validar",
-      "senior_review_status": "PASS_WITH_NOTES",
+      "produced_by": "rock docs finalize",
+      "senior_review_status": "PASS",
       "findings_registered": [
-        "F-025",
         "F-026"
       ],
-      "recorded_at": "2026-11-27T15:37:14Z",
+      "recorded_at": "2026-11-27T17:25:26Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "133 pytest ok; main missing N62; REQUIREMENTS N62.6 open; ISS-024 homolog",
-      "senior_status": "PASS_WITH_NOTES",
-      "findings_found": 2,
+      "notes": "docs-only ISS-024 close; F-025 done; F-026 open",
+      "senior_status": "PASS",
+      "findings_found": 1,
       "findings_disposition": [
-        {
-          "id": "F-025",
-          "status": "fixed",
-          "reason": "PR to main in /git flow closes deploy gap"
-        },
         {
           "id": "F-026",
           "status": "escalated",
-          "reason": "N62.6 REQUIREMENTS.md deferred post-merge"
+          "reason": "N62.6 REQUIREMENTS.md follow-up"
         }
       ]
     },
@@ -265,13 +259,13 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "8ddda974cc16b079e5b782dcd61e82da89884610",
-      "stamped_at": "2026-11-27T15:39:53Z",
+      "last_validated_sha": "730c0ddf0ce438d98926a692a46e1889b0a2382f",
+      "stamped_at": "2026-11-27T17:33:55Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "c8583a7f83990bbb0c95cfb7aa9ae9513d9655ec56d59928b10328d0d3de96ff",
-      "patch_id": "423c47b5f0b28545daba4815ade988f4bb15e055",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "patch_id": "f70904664f905e8740734b8858daa43d88c4f290",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",

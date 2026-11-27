@@ -16,7 +16,7 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Pós-N62 — MVP-FINAL Onda 4 (N27)",
+  "fase_nome": "Campanha SINAIS-3F — Sprint N63 frente 1 (pérola centro)",
   "sprint_pending_merge": null,
   "sprint_pr": 85,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
@@ -124,94 +124,81 @@
     "/pmo plan N59",
     "/pmo sprint N60"
   ],
-  "contexto_rapido": "N62 concluida; main #84-85; proximo N27 paper loop G-MKT; LIVE false",
+  "contexto_rapido": "N62 concluida main #86; SINAIS-3F N63 planejada frente 1; N64/N65 adopt+copy; N27 pausado no chat; LIVE false",
   "sprint_tasks": [
     {
-      "id": "N62.0",
-      "title": "Inventário Git First Inbox pérola",
+      "id": "N63.0",
+      "title": "Git First + wireframe pérola hero",
       "size": "P",
       "status": "done",
       "depends_on": [],
       "files": [
-        "docs/.briefs/N62-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N63-GIT-FIRST-REUSE.md",
+        "docs/design/N63-sinais-pearl-layout.md"
       ]
     },
     {
-      "id": "N62.1",
-      "title": "Rank 15d: P/L>0 e ordenação por retorno",
+      "id": "N63.1",
+      "title": "Bloco critérios Feature 4/9 na pérola",
       "size": "M",
       "status": "done",
       "depends_on": [
-        "N62.0"
-      ],
-      "files": [
-        "src/prodigy_rank.py"
-      ]
-    },
-    {
-      "id": "N62.2",
-      "title": "Fila pré-aprovação: top 10 pérola",
-      "size": "M",
-      "status": "done",
-      "depends_on": [
-        "N62.1"
-      ],
-      "files": [
-        "src/panel_ops_data.py"
-      ]
-    },
-    {
-      "id": "N62.3",
-      "title": "UI Sinais: copy Inbox + sem pending na pérola",
-      "size": "M",
-      "status": "done",
-      "depends_on": [
-        "N62.2"
+        "N63.0"
       ],
       "files": [
         "src/panel_ops_html.py"
       ]
     },
     {
-      "id": "N62.4",
-      "title": "Fix UX botão Atualizar (abort/cooldown/finally)",
+      "id": "N63.2",
+      "title": "Hierarquia render_signals_page + secundários recolhidos",
       "size": "M",
       "status": "done",
       "depends_on": [
-        "N62.0"
+        "N63.0"
       ],
       "files": [
         "src/panel_ops_html.py"
       ]
     },
     {
-      "id": "N62.5",
-      "title": "Testes top10 + P/L + regressão N54–N61",
+      "id": "N63.3",
+      "title": "Estilo pérola hero (CSS/ARIA)",
       "size": "M",
       "status": "done",
       "depends_on": [
-        "N62.1",
-        "N62.2",
-        "N62.3",
-        "N62.4"
+        "N63.2"
       ],
       "files": [
-        "tests/test_panel_ops.py",
-        "tests/test_prodigy_rank.py"
+        "src/panel_ops_html.py"
       ]
     },
     {
-      "id": "N62.6",
-      "title": "Docs ISS-019/022/024 + mapa operador",
+      "id": "N63.4",
+      "title": "Testes N63 + regressão N62",
+      "size": "M",
+      "status": "done",
+      "depends_on": [
+        "N63.1",
+        "N63.2",
+        "N63.3"
+      ],
+      "files": [
+        "tests/test_panel_ops.py"
+      ]
+    },
+    {
+      "id": "N63.5",
+      "title": "Docs ISS-022 parcial + homolog operador",
       "size": "P",
-      "status": "done",
+      "status": "pending",
       "depends_on": [
-        "N62.5"
+        "N63.4"
       ],
       "files": [
+        "docs/OPERATOR-PANEL-MAP.md",
         "docs/ISSUES.md",
-        "docs/REQUIREMENTS.md",
-        "docs/OPERATOR-PANEL-MAP.md"
+        "docs/TEST-EVIDENCE.md"
       ]
     }
   ],
@@ -300,7 +287,7 @@
     "stamped_at": "2026-11-01T20:10:00Z"
   },
   "previous_sprint": "N62",
-  "sprint_nome": "Sprint N62",
+  "sprint_nome": "Sprint N63 — SINAIS-3F frente 1",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -589,6 +576,12 @@
         "file": "pmo-sprint",
         "decision": "activate N62 EXECUTE; sprint_atual=N62; previous_sprint=N61; plan_only cleared",
         "rationale": "Operator /pmo sprint iniciar N62; branch front/sinais-raw-path"
+      },
+      {
+        "timestamp": "2026-11-27T16:35:00-03:00",
+        "file": "pmo-new",
+        "decision": "sprint_id=N63; campaign=SINAIS-3F frente 1; plan_only=true; pause N27 chat; sources ISS-022 ISS-019; skip new ISS (existing)",
+        "rationale": "Operator /pmo new N63 pearl hero; N64/N65 adopt+copy deferred"
       }
     ],
     "validator_available": true
@@ -601,5 +594,8 @@
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": null
+  "sprint_atual": "N63",
+  "sprint_planned": "N63",
+  "plan_only": false,
+  "campaign": "SINAIS-3F"
 }

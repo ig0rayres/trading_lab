@@ -31,7 +31,7 @@
 | F-023 | N60 | M | Coleta em massa do histórico fechado Collective2 aborta a fonte (`collective2_refresh_failed:HTTPError`) e o botão Atualizar fica em «Atualizando…» | corrigido — `N60PartialClosedTradesCollectTests` |
 | F-024 | N61 | M | Depois do deploy N60 o banner segue `collective2_refresh_failed:HTTPError` sem código HTTP, sem versão do painel e com hora de refresh que pode ser antiga; «Atualizando…» ainda parece preso | corrigido — `N61Collective2RefreshHonestyTests` |
 | F-025 | N62 | H | PR #83 mergeado em `sprint/D1`; `origin/main` permanece sem N62 (`1cb1090`) — EasyPanel/build em `main` não recebe Inbox pérola | corrigido — PR #84 `1a32d0f` + homolog. operador 2026-11-27 |
-| F-026 | N62 | M | N62.6 incompleto: `docs/REQUIREMENTS.md` sem critério Feature 9 Inbox pérola; ROADMAP N62 tasks `[ ]` | pendente |
+| F-026 | N62 | M | N62.6 incompleto: `docs/REQUIREMENTS.md` sem critério Feature 9 Inbox pérola; ROADMAP N62 tasks `[ ]` | corrigido — REQUIREMENTS 0.7.8 + aceite N62 (ROADMAP closeout via sprint-finalizer) |
 | CQ-003 | N55 | L | `_unique_tradingview_origins` não filtra por `source` quando o campo existe | deferido |
 | CQ-004 | N55 | M | Redesign lock/cooldown live-criteria (threading + persistência) | deferido |
 

@@ -16,7 +16,7 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint N61 concluída — homologação ISS-024 pendente",
+  "fase_nome": "Sprint N62 EXECUTE — Inbox pérola (top 10 retorno 15d)",
   "sprint_pending_merge": null,
   "sprint_pr": 81,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
@@ -124,86 +124,111 @@
     "/pmo plan N59",
     "/pmo sprint N60"
   ],
-  "contexto_rapido": "N60 EXECUTE: isolate closed_trades collect; button AbortSignal; ISS-024 open; LIVE false",
+  "contexto_rapido": "N62 EXECUTE: Inbox top10 reported_pnl_sum 15d; P/L>0; fix refresh button; ISS-024; LIVE false",
   "sprint_tasks": [
     {
-      "id": "N60.0",
-      "title": "Inventariar o histórico fechado versus a fonte Collective2",
+      "id": "N62.0",
+      "title": "Inventário Git First Inbox pérola",
       "size": "P",
       "status": "pending",
       "depends_on": [],
       "files": [
-        "docs/.briefs/N60-GIT-FIRST-REUSE.md"
+        "docs/.briefs/N62-GIT-FIRST-REUSE.md"
       ]
     },
     {
-      "id": "N60.1",
-      "title": "Isolar a coleta do histórico fechado da fonte Collective2",
+      "id": "N62.1",
+      "title": "Rank 15d: P/L>0 e ordenação por retorno",
       "size": "M",
       "status": "pending",
       "depends_on": [
-        "N60.0"
+        "N62.0"
       ],
       "files": [
-        "src/v4_web_dashboard.py"
+        "src/prodigy_rank.py"
       ]
     },
     {
-      "id": "N60.2",
-      "title": "Fazer o botão sair de Atualizando quando a espera estourar",
+      "id": "N62.2",
+      "title": "Fila pré-aprovação: top 10 pérola",
       "size": "M",
       "status": "pending",
       "depends_on": [
-        "N60.1"
+        "N62.1"
+      ],
+      "files": [
+        "src/panel_ops_data.py"
+      ]
+    },
+    {
+      "id": "N62.3",
+      "title": "UI Sinais: copy Inbox + sem pending na pérola",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N62.2"
       ],
       "files": [
         "src/panel_ops_html.py"
       ]
     },
     {
-      "id": "N60.3",
-      "title": "Provar que falha no histórico não mata a fila nem prende o botão",
+      "id": "N62.4",
+      "title": "Fix UX botão Atualizar (abort/cooldown/finally)",
       "size": "M",
       "status": "pending",
       "depends_on": [
-        "N60.1",
-        "N60.2"
+        "N62.0"
       ],
       "files": [
-        "tests/test_panel_ops.py"
+        "src/panel_ops_html.py"
       ]
     },
     {
-      "id": "N60.4",
-      "title": "Registrar no mapa o aviso parcial e o fim da espera infinita",
+      "id": "N62.5",
+      "title": "Testes top10 + P/L + regressão N54–N61",
+      "size": "M",
+      "status": "pending",
+      "depends_on": [
+        "N62.1",
+        "N62.2",
+        "N62.3",
+        "N62.4"
+      ],
+      "files": [
+        "tests/test_panel_ops.py",
+        "tests/test_prodigy_rank.py"
+      ]
+    },
+    {
+      "id": "N62.6",
+      "title": "Docs ISS-019/022/024 + mapa operador",
       "size": "P",
       "status": "pending",
       "depends_on": [
-        "N60.3"
+        "N62.5"
       ],
       "files": [
-        "docs/OPERATOR-PANEL-MAP.md",
         "docs/ISSUES.md",
-        "docs/FINDINGS.md",
-        "docs/REQUIREMENTS.md"
+        "docs/REQUIREMENTS.md",
+        "docs/OPERATOR-PANEL-MAP.md"
       ]
     }
   ],
   "checkpoint": {
-    "sprint": "N61",
-    "phase": "closeout",
+    "sprint": "N62",
+    "phase": "implementation",
     "branch": "front/sinais-raw-path",
-    "current_task": null,
-    "updated_at": "2026-11-25T15:25:00Z",
+    "current_task": "N62.0",
+    "updated_at": "2026-11-27T14:53:00Z",
     "validation_gate_qa": {
       "result": "APROVADA",
-      "sprint": "N61",
-      "produced_by": "/qa validar",
+      "sprint": "N62",
+      "produced_by": "rock N62 verify",
       "senior_review_status": "PASS",
       "findings_registered": [],
-      "recorded_at": "2026-11-25T15:27:11Z",
+      "recorded_at": "2026-11-27T15:10:16Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "N61 merged #81 a3c2a75; closeout docs; ISS-024 open",
       "senior_status": "PASS"
     },
     "validation_gate": {
@@ -213,7 +238,7 @@
       "gates": [
         {
           "name": "cmd_0",
-          "cmd": "/usr/bin/python3 -m pytest tests/test_panel_ops.py -q --tb=no",
+          "cmd": "/usr/bin/python3 -m pytest tests/test_prodigy_rank.py tests/test_panel_ops.py -q --tb=no",
           "exit_code": 0
         }
       ],
@@ -223,17 +248,17 @@
         ".cursorsession.lock"
       ],
       "missing_backends": [],
-      "last_validated_sha": "f624b58ce4b32b1842101e1b99fb615d7bade668",
-      "stamped_at": "2026-11-25T15:27:59Z",
+      "last_validated_sha": "ac25401a4e70b4b9fd3a962ef850bec7cdab7b6a",
+      "stamped_at": "2026-11-27T15:11:04Z",
       "validation_gate_keys": [
         "cmd_0"
       ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "470abc609d370a66f288631d78d2ea2e9e15aac9",
+      "content_hash": "c8583a7f83990bbb0c95cfb7aa9ae9513d9655ec56d59928b10328d0d3de96ff",
+      "patch_id": "802a09a20b191e2aa8cf09649d6ea1d7e9db2c0b",
       "patch_id_version": 2
     },
     "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N61"
+    "sprint_delivery_sprint": "N62"
   },
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
@@ -318,8 +343,8 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N60",
-  "sprint_nome": "Sprint N59",
+  "previous_sprint": "N61",
+  "sprint_nome": "Sprint N62",
   "autopilot": {
     "active": true,
     "started_at": "2026-11-16T08:59:06.336014+00:00",
@@ -596,6 +621,18 @@
         "file": "pmo-sprint",
         "decision": "activate N60 EXECUTE; sprint_atual=N60; plan_only cleared",
         "rationale": "Operator /pmo sprint; N60 planned with PASS verifier; autopilot mandate full"
+      },
+      {
+        "timestamp": "2026-11-27T14:50:00-03:00",
+        "file": "pmo-new",
+        "decision": "plan_only=true; sprint_id=N62; inbox top10 reported_pnl_sum; sprint_atual remains N61 until /pmo sprint iniciar N62",
+        "rationale": "Operator /pmo new N62; ISS-019/022/024; TV pearl OUT ISS-025; LIVE false"
+      },
+      {
+        "timestamp": "2026-11-27T14:53:00-03:00",
+        "file": "pmo-sprint",
+        "decision": "activate N62 EXECUTE; sprint_atual=N62; previous_sprint=N61; plan_only cleared",
+        "rationale": "Operator /pmo sprint iniciar N62; branch front/sinais-raw-path"
       }
     ]
   },
@@ -607,5 +644,5 @@
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": "N61"
+  "sprint_atual": "N62"
 }

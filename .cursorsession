@@ -222,14 +222,31 @@
     "current_task": "N62.0",
     "updated_at": "2026-11-27T14:53:00Z",
     "validation_gate_qa": {
-      "result": "APROVADA",
+      "result": "COM_RESSALVAS",
       "sprint": "N62",
-      "produced_by": "rock N62 verify",
-      "senior_review_status": "PASS",
-      "findings_registered": [],
-      "recorded_at": "2026-11-27T15:10:16Z",
+      "produced_by": "/qa validar",
+      "senior_review_status": "PASS_WITH_NOTES",
+      "findings_registered": [
+        "F-025",
+        "F-026"
+      ],
+      "recorded_at": "2026-11-27T15:37:14Z",
       "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "senior_status": "PASS"
+      "notes": "133 pytest ok; main missing N62; REQUIREMENTS N62.6 open; ISS-024 homolog",
+      "senior_status": "PASS_WITH_NOTES",
+      "findings_found": 2,
+      "findings_disposition": [
+        {
+          "id": "F-025",
+          "status": "fixed",
+          "reason": "PR to main in /git flow closes deploy gap"
+        },
+        {
+          "id": "F-026",
+          "status": "escalated",
+          "reason": "N62.6 REQUIREMENTS.md deferred post-merge"
+        }
+      ]
     },
     "validation_gate": {
       "produced_by": "validation-stamp.py",

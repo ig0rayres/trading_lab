@@ -16,9 +16,9 @@
   "beesy_version": "4.105.0",
   "decisions_applied_until": 427,
   "strategic_context_captured_at": null,
-  "fase_nome": "Sprint N62 EXECUTE — Inbox pérola (top 10 retorno 15d)",
+  "fase_nome": "Pós-N62 — MVP-FINAL Onda 4 (N27)",
   "sprint_pending_merge": null,
-  "sprint_pr": 81,
+  "sprint_pr": 85,
   "usuarios_alvo": "Operador do laboratorio (pesquisa e paper; sem clientes externos neste corte)",
   "prazo": null,
   "ultimo_update": "2026-11-19T20:20:32.823629+00:00",
@@ -124,13 +124,13 @@
     "/pmo plan N59",
     "/pmo sprint N60"
   ],
-  "contexto_rapido": "N62 EXECUTE: Inbox top10 reported_pnl_sum 15d; P/L>0; fix refresh button; ISS-024; LIVE false",
+  "contexto_rapido": "N62 concluida; main #84-85; proximo N27 paper loop G-MKT; LIVE false",
   "sprint_tasks": [
     {
       "id": "N62.0",
       "title": "Inventário Git First Inbox pérola",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [],
       "files": [
         "docs/.briefs/N62-GIT-FIRST-REUSE.md"
@@ -140,7 +140,7 @@
       "id": "N62.1",
       "title": "Rank 15d: P/L>0 e ordenação por retorno",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N62.0"
       ],
@@ -152,7 +152,7 @@
       "id": "N62.2",
       "title": "Fila pré-aprovação: top 10 pérola",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N62.1"
       ],
@@ -164,7 +164,7 @@
       "id": "N62.3",
       "title": "UI Sinais: copy Inbox + sem pending na pérola",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N62.2"
       ],
@@ -176,7 +176,7 @@
       "id": "N62.4",
       "title": "Fix UX botão Atualizar (abort/cooldown/finally)",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N62.0"
       ],
@@ -188,7 +188,7 @@
       "id": "N62.5",
       "title": "Testes top10 + P/L + regressão N54–N61",
       "size": "M",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N62.1",
         "N62.2",
@@ -204,7 +204,7 @@
       "id": "N62.6",
       "title": "Docs ISS-019/022/024 + mapa operador",
       "size": "P",
-      "status": "pending",
+      "status": "done",
       "depends_on": [
         "N62.5"
       ],
@@ -215,62 +215,7 @@
       ]
     }
   ],
-  "checkpoint": {
-    "sprint": "N62",
-    "phase": "implementation",
-    "branch": "front/sinais-raw-path",
-    "current_task": "N62.0",
-    "updated_at": "2026-11-27T14:53:00Z",
-    "validation_gate_qa": {
-      "result": "COM_RESSALVAS",
-      "sprint": "N62",
-      "produced_by": "rock docs finalize",
-      "senior_review_status": "PASS",
-      "findings_registered": [
-        "F-026"
-      ],
-      "recorded_at": "2026-11-27T17:25:26Z",
-      "recorded_by": "8e5c2520-c4dc-4716-b9c4-a4bafbe37837",
-      "notes": "docs-only ISS-024 close; F-025 done; F-026 open",
-      "senior_status": "PASS",
-      "findings_found": 1,
-      "findings_disposition": [
-        {
-          "id": "F-026",
-          "status": "escalated",
-          "reason": "N62.6 REQUIREMENTS.md follow-up"
-        }
-      ]
-    },
-    "validation_gate": {
-      "produced_by": "validation-stamp.py",
-      "result": "APROVADA",
-      "validation_mode": "full",
-      "gates": [
-        {
-          "name": "cmd_0",
-          "cmd": "/usr/bin/python3 -m pytest tests/test_prodigy_rank.py tests/test_panel_ops.py -q --tb=no",
-          "exit_code": 0
-        }
-      ],
-      "dirty_production_paths": [
-        ".beesy/stamp-gate-logs/",
-        ".cursorsession.bak",
-        ".cursorsession.lock"
-      ],
-      "missing_backends": [],
-      "last_validated_sha": "730c0ddf0ce438d98926a692a46e1889b0a2382f",
-      "stamped_at": "2026-11-27T17:33:55Z",
-      "validation_gate_keys": [
-        "cmd_0"
-      ],
-      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "patch_id": "f70904664f905e8740734b8858daa43d88c4f290",
-      "patch_id_version": 2
-    },
-    "sprint_delivery": "stamped",
-    "sprint_delivery_sprint": "N62"
-  },
+  "checkpoint": null,
   "artefatos_gerados": [
     ".cursor/rules/10-general.mdc",
     ".cursor/rules/50-database.mdc",
@@ -354,7 +299,7 @@
     "last_validated_sha": "58f2d38",
     "stamped_at": "2026-11-01T20:10:00Z"
   },
-  "previous_sprint": "N61",
+  "previous_sprint": "N62",
   "sprint_nome": "Sprint N62",
   "autopilot": {
     "active": true,
@@ -645,7 +590,8 @@
         "decision": "activate N62 EXECUTE; sprint_atual=N62; previous_sprint=N61; plan_only cleared",
         "rationale": "Operator /pmo sprint iniciar N62; branch front/sinais-raw-path"
       }
-    ]
+    ],
+    "validator_available": true
   },
   "rock_auto": true,
   "rock_mandate": "full",
@@ -655,5 +601,5 @@
   "operator_notes": [
     "2026-11-17: brake UX renumbered N37→N38/ISS-015 because main took N37 for platform_health"
   ],
-  "sprint_atual": "N62"
+  "sprint_atual": null
 }

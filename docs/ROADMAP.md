@@ -86,7 +86,7 @@
 | N59 | N | Varredura Collective2 segue se ordens ativas falharem; LIVE false | concluida | 4 | observability | ISS-024 / F-022 isolamento snapshot | *(abaixo)* |
 | N60 | N | Histórico fechado parcial não derruba a Collective2; botão sai de «Atualizando…»; LIVE false | em_execucao | 5 | observability | ISS-024 / F-023 coleta em massa · plan_only | *(abaixo)* |
 | N61 | N | Versão do painel no ar e aviso da listagem Collective2 com número e hora; LIVE false | concluida | 6 | observability | ISS-024 / F-024 · main pós-#82 | *(abaixo)* |
-| N62 | N | Inbox Sinais: top 10 por retorno 15d; pérola sem pending/TV; P/L>0; LIVE false | em_execucao | 6 | observability | ISS-019/022/024 · Inbox pérola | *(abaixo)* |
+| N62 | N | Inbox Sinais: top 10 por retorno 15d; pérola sem pending/TV; P/L>0; LIVE false | concluida | 6 | observability | ISS-024 fechado · PR #84–#85 · homolog. 2026-11-27 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -7408,7 +7408,7 @@ P task. Files: `docs/OPERATOR-PANEL-MAP.md` (Sinais shows app version; refresh b
 
 ## Sprint N62 — Inbox Sinais: pérola = top 10 por retorno 15d
 > Categoria: N  
-> Status: em_execucao *(ativada `/pmo sprint iniciar N62` 2026-11-27 · ISS-019/022/024 · operador: só melhores sinais / melhor retorno)*  
+> Status: concluida *(VERIFY: PR #84/#85 · homolog. operador 2026-11-27 · ISS-024 fechado; F-026 REQUIREMENTS 0.7.8)*  
 > Gerado via: `/pmo plan` + `/pmo new N62` · fonte ISS-019, ISS-022, ISS-024 · N61 em `main` pós-#82  
 > titulo_humano: Inbox Sinais mostra só os dez melhores por retorno em quinze dias  
 > resumo_humano: A pérola da tela Sinais lista só provedores que passam Feature 4 com lucro somado positivo na janela, ordenados por retorno; some pending, TV fora da pérola; o botão Atualizar volta ao normal sem precisar recarregar a página. LIVE false.  
@@ -7445,18 +7445,20 @@ A tela Sinais vira um Inbox com até dez provedores que realmente lucraram na ja
 
 | Status | Tamanho | Tarefa | Skill/Command | Depende de |
 |--------|---------|--------|---------------|------------|
-| [ ] | P | N62.0 Inventário Git First Inbox pérola | `docs/.briefs/N62-GIT-FIRST-REUSE.md` | — |
-| [ ] | M | N62.1 Rank 15d: P/L>0 e ordenação por retorno | `src/prodigy_rank.py` | N62.0 |
-| [ ] | M | N62.2 Fila pré-aprovação: top 10 pérola | `src/panel_ops_data.py` | N62.1 |
-| [ ] | M | N62.3 UI Sinais: copy Inbox + sem pending na pérola | `src/panel_ops_html.py` | N62.2 |
-| [ ] | M | N62.4 Fix UX botão Atualizar (abort/cooldown/finally) | `src/panel_ops_html.py` | N62.0 |
-| [ ] | M | N62.5 Testes top10 + P/L + regressão N54–N61 | `tests/test_panel_ops.py`, `tests/test_prodigy_rank.py` | N62.1–N62.4 |
-| [ ] | P | N62.6 Docs ISS-019/022/024 + mapa operador | `docs/ISSUES.md`, `docs/REQUIREMENTS.md` | N62.5 |
+| [x] | P | N62.0 Inventário Git First Inbox pérola | `docs/.briefs/N62-GIT-FIRST-REUSE.md` | — |
+| [x] | M | N62.1 Rank 15d: P/L>0 e ordenação por retorno | `src/prodigy_rank.py` | N62.0 |
+| [x] | M | N62.2 Fila pré-aprovação: top 10 pérola | `src/panel_ops_data.py` | N62.1 |
+| [x] | M | N62.3 UI Sinais: copy Inbox + sem pending na pérola | `src/panel_ops_html.py` | N62.2 |
+| [x] | M | N62.4 Fix UX botão Atualizar (abort/cooldown/finally) | `src/panel_ops_html.py` | N62.0 |
+| [x] | M | N62.5 Testes top10 + P/L + regressão N54–N61 | `tests/test_panel_ops.py`, `tests/test_prodigy_rank.py` | N62.1–N62.4 |
+| [x] | P | N62.6 Docs ISS-019/022/024 + mapa operador | `docs/ISSUES.md`, `docs/REQUIREMENTS.md` | N62.5 |
 
 ### Quality Brief (Sprint N62)
 
 Maintain: `LIVE_TRADING_ENABLED=false`; `orders_sent=0`; N54–N61 refresh job unchanged in spirit; Feature 4 `WINDOW_DAYS=15`, `MIN_TRADES=5` unchanged; no TradingView search; no auto-approve; allowlist paper-copy unchanged.
 Avoid: inventing drawdown threshold if `max_drawdown_pct` absent in rank row; listing all SearchStrategies IDs in pérola; enabling LIVE; N45–N47.
+
+**Closeout 2026-11-27:** Entregue `main` #84 (pérola) + #85 (ISS-024) + PR F-026 (REQUIREMENTS 0.7.8). Homolog. EasyPanel: 1 linha pérola, refresh parcial OK, botão libera sem F5. Pendentes ISS-019/022 (UX larga), ISS-025 (TV search). Próximo programa: **N27** Onda 4.
 
 ### Fora de escopo
 

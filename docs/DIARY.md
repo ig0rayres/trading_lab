@@ -407,6 +407,20 @@ Fila autenticada em `/sinais` com métricas de pesquisa reutilizadas; `POST /api
 
 ---
 
+## Sprint N62 — Inbox pérola (top 10 retorno 15d)
+
+**Gate:** pérola ≤10, `reported_pnl_sum>0`, sem TV na tabela; refresh + botão Atualizar; pytest 133; homolog. operador; ISS-024 fechado.
+
+**Entregue:** `prodigy_rank` pérola; `build_preapproval_queue`; copy Inbox; fix reload UX; PR #84–#85; REQUIREMENTS Feature 9 0.7.8 (F-026).
+
+**Decisões:** TradingView fora da pérola (ISS-025); `platform=prodigy` na fila; ledger `pending` = falta Aprovar, não raw vazio.
+
+**Homologação (operador 2026-11-27):** rebuild pós-#84; pérola com métricas; refresh `time_budget` parcial esperado; botão volta sozinho.
+
+**Próximo:** `/pmo plan` ou sprint **N27** (MVP-FINAL Onda 4).
+
+---
+
 ## Sprint D2 — Ledger Postgres
 
 **Gate:** migration apply/rollback; 8 tabelas; testes CI com Postgres efêmero.

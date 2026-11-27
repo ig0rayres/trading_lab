@@ -27,7 +27,7 @@
 | ISS-021 | aberto | N51 | Pré-aprovação manual no painel + métricas de decisão (qualquer fonte) |
 | ISS-022 | aberto | N52 | Redesign UX Sinais + planejamento visual do painel operacional |
 | ISS-023 | aberto | N53/N54 | Botão refresh candidatos + redesign visual completo do painel |
-| ISS-024 | aberto | N62 após N61 (#81/#82 em main) | Critérios ao vivo + Inbox pérola (top 10 retorno 15d); homologação operador |
+| ISS-024 | fechado | N62 (#84 `1a32d0f`) + homolog. operador 2026-11-27 | Critérios ao vivo + Inbox pérola homologados; `time_budget`/ISS-025 como aviso parcial esperado |
 | ISS-025 | aberto | follow-up (fora de N58) | TradingView: varredura de estratégias exige contrato de busca — não existe no código recuperado |
 
 ## Release train MVP-OP (visão alvo operacional)
@@ -752,6 +752,8 @@
 **Nota planejamento N62 (2026-11-27):** `/pmo new N62` — Inbox pérola: só top 10 por `reported_pnl_sum` 15d após portões Feature 4 + P/L>0; remover pending/TV da fila principal; fix botão refresh preso; bloco `## Sprint N62` em `docs/ROADMAP.md`; briefs `N62.brief.md` + `N62-GIT-FIRST-REUSE.md`. `plan_only: true`. ISS-024 permanece aberto até homologação refresh **e** pérola no ar. ISS-025 inalterado. LIVE false.
 
 **Implementação N62 (frente `sinais-raw-path`):** `build_preapproval_queue` e UI Sinais passam a expor apenas o Inbox pérola (top 10 Prodígio com P/L>0); varredura C2/TV no refresh permanece para cache e `issues`, fora da fila principal.
+
+**Nota homologação operador (2026-11-27, EasyPanel pós-#84 `main` `1a32d0f`):** rebuild no ar. **Inbox pérola:** copy N62, sem linha `tradingview` na pré-aprovação; 1 candidato `prodigy`/`114146885` com métricas (ex.: P/L reportado **301,08**, `PRODIGY_CANDIDATE_RESEARCH`). **Refresh:** POST com `refreshed_at` **2026-11-27T17:12:32Z**; `sources_ok: collective2, prodigy, tradingview`; aviso parcial esperado — `collective2_closed_trades_partial_failed:time_budget`, `tradingview_scan_out:ISS-025`. **Botão Atualizar:** operador confirma que **voltou sozinho** (sem depender de F5 após o click). F5 citado só para abrir o painel após deploy. `APP_GIT_SHA` ainda `unknown` no painel (cosmético; rebuild com `--build-arg` opcional). **ISS-024 fechado** no escopo Feature 9 refresh + pérola. LIVE false. Aprovar ≠ fill.
 
 **Nota planejamento N61 (2026-11-25):** follow-up ISS-024 / F-024; bloco `## Sprint N61` em `docs/ROADMAP.md`; brief `docs/.briefs/N61.brief.md`; Git First `docs/.briefs/N61-GIT-FIRST-REUSE.md`. `plan_only: true` — **não** ativa `sprint_atual` (permanece N60 até o parent). Versão do painel (`APP_GIT_SHA`, distinta do pin do vendor) em Sinais, checagem de vida e status; aviso da listagem com código HTTP quando existir; `refreshed_at` no início da tentativa e aviso velho de listagem removido; uma nova tentativa só em HTTP 5xx/429, sem espera inventada; hora e fontes ao lado do banner; botão N60 só regressão. Chamado permanece **aberto** até merge `main` + rebuild EasyPanel + homologação operador. TradingView scan **OUT** (ISS-025 inalterado).
 

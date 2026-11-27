@@ -4297,6 +4297,35 @@ class N62InboxPearlTests(unittest.TestCase):
         self.assertIn('release()', _CANDIDATES_RELOAD_SCRIPT)
 
 
+class N63SinaisPearlHeroTests(unittest.TestCase):
+    """N63 — pérola hero + critérios visíveis + secundários recolhidos."""
+
+    def test_sinais_html_pearl_hero_before_secondary_sections(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_prodigy_pearl_fixture(root)
+            handler = make_handler(root, operator_session='panel-secret')
+            server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base = 'http://127.0.0.1:' + str(server.server_port)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                pearl = body.find('pearl-hero')
+                secondary = body.find('signals-secondary')
+                self.assertNotEqual(pearl, -1)
+                self.assertNotEqual(secondary, -1)
+                self.assertLess(pearl, secondary)
+                self.assertIn('Critérios (Feature 4 / Prodígio 15d)', body)
+                self.assertIn('Aprovar grava decisão; não envia ordem', body)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(3)
+
+
 class PanelOpsRunbookTest(unittest.TestCase):
     def test_daily_runbook_points_to_panel_not_exec(self):
         doc = Path(__file__).resolve().parents[1] / 'docs' / 'DASHBOARD-OPERATIONS.md'

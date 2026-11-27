@@ -55,6 +55,11 @@ _N51_PREAPPROVAL_SUBTITLE = (
     'Top 10 por retorno reportado na janela de 15 dias (pesquisa apenas). '
     'Não autoriza ordem; aprovar não é fill.'
 )
+_N63_PEARL_CRITERIA = (
+    'Critérios (Feature 4 / Prodígio 15d): janela de 15 dias; mínimo 5 operações em pelo menos 3 dias; '
+    'lucro somado positivo na pesquisa; até 10 melhores por retorno reportado; métricas rotuladas pesquisa — '
+    'não são fill na corretora. Aprovar grava decisão; não envia ordem. Atualizar recalcula no servidor.'
+)
 _N51_PREAPPROVAL_EMPTY = (
     'Nenhum candidato pérola na janela de 15 dias no momento. '
     'Use Atualizar candidatos para recalcular o ranking no servidor.'
@@ -160,6 +165,17 @@ font-size:var(--text-xs);font-weight:500}
 .badge-status--pending{background:var(--status-research-bg);color:var(--status-research-text)}
 .badge-status--approved{background:var(--status-active-bg);color:var(--status-active-text)}
 .badge-status--rejected{background:var(--status-warning-bg);color:var(--status-warning-text)}
+.pearl-hero{background:var(--bg-card);border:2px solid var(--color-primary);border-radius:var(--radius-lg);
+padding:var(--space-4) var(--space-5);margin:0 0 var(--space-4)}
+.pearl-hero h2{margin-top:0;font-size:var(--text-xl)}
+.pearl-criteria{margin:8px 0 12px;padding:10px 12px;border-radius:var(--radius-md);
+background:var(--status-research-bg);color:var(--status-research-text);font-size:var(--text-sm);line-height:1.45}
+details.signals-secondary{margin:10px 0;border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+padding:0;background:var(--bg-card)}
+details.signals-secondary>summary{cursor:pointer;font-weight:600;padding:12px 16px;list-style:none}
+details.signals-secondary>summary::-webkit-details-marker{display:none}
+details.signals-secondary[open]>summary{border-bottom:1px solid var(--border-subtle)}
+.signals-secondary__body{padding:12px 16px 16px}
 table{width:100%;border-collapse:collapse}td,th{border:1px solid var(--border-subtle);padding:12px 16px;
 text-align:left;font-size:var(--text-sm);font-variant-numeric:tabular-nums}
 .warn{background:var(--status-warning-bg);border:1px solid #e6c48a;padding:12px;border-radius:var(--radius-md);
@@ -883,6 +899,15 @@ def _candidates_refresh_warning_html(copy: dict[str, Any]) -> str:
     return f'{meta}{banner}'
 
 
+def _signals_collapsible_section(summary: str, inner_html: str) -> str:
+    return (
+        f'<details class="signals-secondary">'
+        f'<summary>{esc(summary)}</summary>'
+        f'<div class="signals-secondary__body">{inner_html}</div>'
+        f'</details>'
+    )
+
+
 def _preapproval_status_badge(status: Any) -> str:
     raw = str(status or 'pending').lower()
     if raw == 'approved':
@@ -943,11 +968,17 @@ def _signals_preapproval_section_html(
         f'<p class="muted panel-hint">{esc(_CANDIDATES_RELOAD_HINT)}</p>'
         '<div id="reload-feedback" class="inline-alert" aria-live="polite" role="status" hidden></div>'
     )
-    return (
-        f'<h2>{esc(_N51_PREAPPROVAL_SECTION)}</h2>'
+    inner = (
+        f'<h2 id="pearl-heading">{esc(_N51_PREAPPROVAL_SECTION)}</h2>'
+        f'<p class="pearl-criteria" role="note">{esc(_N63_PEARL_CRITERIA)}</p>'
         f'{partial_banner}'
         f'{refresh_controls}'
         f'{body}'
+    )
+    return (
+        f'<section class="pearl-hero" aria-labelledby="pearl-heading">'
+        f'{inner}'
+        f'</section>'
     )
 
 
@@ -991,12 +1022,12 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
     body = (
         f'{version_line}'
         f'{preapproval_body}'
-        f'{operating_body}'
-        f'{inventory_body}'
-        f'{c2_body}'
-        f'{pool_body}'
-        f'{adoption_body}'
-        f'{audit_body}'
+        f'{_signals_collapsible_section("Em operação (cópia paper)", operating_body)}'
+        f'{_signals_collapsible_section("Inventário de sinais", inventory_body)}'
+        f'{_signals_collapsible_section("Collective2 — política de cópia", c2_body)}'
+        f'{_signals_collapsible_section("Pool Prodígio (pesquisa)", pool_body)}'
+        f'{_signals_collapsible_section("Critérios de adoção (referência)", adoption_body)}'
+        f'{_signals_collapsible_section("Auditoria de ingresso", audit_body)}'
         f'{footer}'
     )
     research = (
@@ -1008,7 +1039,7 @@ def render_signals_page(bundle: dict[str, Any]) -> str:
         title='Sinais',
         active='sinais',
         page_title='Sinais',
-        subtitle='Cockpit de decisão — cópia de terceiros (pesquisa). Live desligado.',
+        subtitle='Comece pela Inbox pérola; demais seções são detalhe. Pesquisa — aprovar não é fill.',
         research_banner=research,
         body=body,
         scripts=scripts,

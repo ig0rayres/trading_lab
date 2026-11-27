@@ -87,6 +87,7 @@
 | N60 | N | Histórico fechado parcial não derruba a Collective2; botão sai de «Atualizando…»; LIVE false | em_execucao | 5 | observability | ISS-024 / F-023 coleta em massa · plan_only | *(abaixo)* |
 | N61 | N | Versão do painel no ar e aviso da listagem Collective2 com número e hora; LIVE false | concluida | 6 | observability | ISS-024 / F-024 · main pós-#82 | *(abaixo)* |
 | N62 | N | Inbox Sinais: top 10 por retorno 15d; pérola sem pending/TV; P/L>0; LIVE false | concluida | 6 | observability | ISS-024 fechado · PR #84–#85 · homolog. 2026-11-27 | *(abaixo)* |
+| N63 | N | Campanha SINAIS-3F frente 1: pérola = centro + critérios visíveis; LIVE false | planejada | 6 | observability | ISS-022 parcial · SINAIS-3F · pós-N62 #86 | *(abaixo)* |
 
 \* D5: código + CI + `docs/HOMOLOGATION.md`; fill real Alpaca permanece passo operador (Feature 5 `[ ]` único critério).
 
@@ -160,6 +161,7 @@
 | N60 | senior+qa | Isolar coleta de histórico fechado da fonte Collective2; botão não fica preso; LIVE false |
 | N61 | senior+qa | Versão do painel no ar; aviso da listagem com número e hora; uma nova tentativa só em erro temporário; LIVE false |
 | N62 | senior+qa | Inbox: só top 10 `reported_pnl_sum` 15d + portões Feature 4; fix botão refresh; LIVE false |
+| N63 | senior+qa | Pérola hero em Sinais; critérios Feature 4/9 visíveis; seções secundárias recolhidas; LIVE false |
 
 ---
 
@@ -7515,6 +7517,129 @@ P task (docs-only). Confirm `docs/.briefs/N62-GIT-FIRST-REUSE.md`. Cite `prodigy
 **Detalhe técnico**
 
 P task. Update ISS-024/019/022 notes linking N62; REQUIREMENTS Feature 9 inbox criterion; OPERATOR-PANEL-MAP §2 pérola; do not close ISS-025. Partial close ISS-024 only if operador homologa pérola + refresh após merge.
+
+---
+
+## Sprint N63 — Campanha SINAIS-3F frente 1: pérola = centro da plataforma
+> Categoria: N  
+> Status: planejada  
+> Gerado via: `/pmo new N63` 2026-11-27 · campanha **SINAIS-3F** · frente **1 de 3** · N62 concluída `main` pós-#86  
+> titulo_humano: Abrir Sinais e a pérola manda — com as regras escritas na tela  
+> resumo_humano: A Inbox pérola vira o centro visual de Sinais, com critérios Feature 4/9 visíveis e o restante da página em segundo plano. Não entrega adotar nem copiar ordens (N64/N65). LIVE false.  
+> Gate: pérola no hero; critérios legíveis; operações/inventário/C2/auditoria abaixo ou recolhidas; regressão N62 verde; pytest `N63SinaisPearlHeroTests`; homolog operador; `orders_sent=0`; ISS-025 inalterado; N27 fora  
+> review: senior+qa  
+> Brief: `docs/.briefs/N63.brief.md`  
+> Git First: `docs/.briefs/N63-GIT-FIRST-REUSE.md`  
+> bom_ref: BOM-3  
+> Depende de: N62 em `main` · Release: **Campanha SINAIS-3F** (frente 1)  
+> LIVE_TRADING_ENABLED: false  
+> previous_sprint: N62  
+> plan_only: true  
+> campaign: SINAIS-3F  
+> frente: 1  
+
+### Em uma frase
+
+Sinais abre na pérola: critérios de quem entra ficam na tela e o resto some para segundo plano até você precisar.
+
+### O que muda para você
+
+- **Inbox pérola** domina a primeira dobra — não compete com blocos de operação/C2/auditoria.
+- **Regras de adoção** (15 dias, top 10, lucro positivo, pesquisa ≠ ordem) aparecem **em português** na própria página.
+- Seções **secundárias** ficam recolhidas ou abaixo, com rótulo claro (operação, inventário, auditoria).
+- **Atualizar** e **Aprovar** continuam iguais em comportamento — só mudam de lugar visual.
+- **Não** fecha “adotar” nem “copiar ordens” — isso é N64/N65.
+
+| nº | Entrega | Como você confere |
+|----|---------|-------------------|
+| 1 | Pérola no topo | Abrir `/sinais`: pérola + Atualizar visíveis sem rolar |
+| 2 | Critérios na tela | Ler janela 15d, top 10, P/L+, aprovar ≠ fill sem abrir REQUIREMENTS |
+| 3 | Salada reduzida | Operação/C2/auditoria recolhidas ou abaixo da pérola |
+| 4 | Regressão N62 | Mesma fila ≤10; sem TV na pérola; pytest verde |
+| 5 | Homolog operador | Screenshot EasyPanel + “decido pela pérola” |
+
+| Status | Tamanho | Tarefa | Skill/Command | Depende de |
+|--------|---------|--------|---------------|------------|
+| [ ] | P | N63.0 Git First + layout pérola (wireframe) | `docs/.briefs/N63-GIT-FIRST-REUSE.md` | — |
+| [ ] | M | N63.1 Bloco critérios Feature 4/9 visível na pérola | `/dev` | N63.0 |
+| [ ] | M | N63.2 Hierarquia `render_signals_page`: hero pérola + secundários recolhidos | `/dev` | N63.0 |
+| [ ] | M | N63.3 Estilo pérola hero (CSS/landmarks; a11y) | `/dev` | N63.2 |
+| [ ] | M | N63.4 Testes hierarquia + regressão N62 | `/qa testes` | N63.1–N63.3 |
+| [ ] | P | N63.5 Docs ISS-022 parcial + mapa + homolog operador | operador | N63.4 |
+
+### Quality Brief (Sprint N63)
+
+Maintain: N62 queue logic (`build_preapproval_queue`, `is_pearl_candidate`); refresh POST unchanged; `WINDOW_DAYS`/`MIN_TRADES` unchanged; aprovar ≠ fill; LIVE false; ISS-025 TV scan out.  
+Avoid: mudar rank/filtro pérola; N64/N65 wiring; inventar critério numérico; top N configurável; redesign menu global (ISS-022 escopo total).
+
+### Fora de escopo
+
+- Frente 2 SINAIS-3F (adotar com efeito claro) = **N64**; frente 3 (copiar ordens) = **N65**.
+- ISS-025 varredura TV; N27 paper autônomo; multiseleção na pérola.
+
+### Task N63.0 — Inventário Git First + wireframe pérola
+
+**Entrega:** `docs/.briefs/N63-GIT-FIRST-REUSE.md` confirmado + wireframe `docs/design/N63-sinais-pearl-layout.md` (ordem visual, critérios, secundários recolhidos).  
+**Como conferir:** Arquivos existem; wireframe cita seções atuais de `render_signals_page`.  
+**Por quê:** ISS-022 exige desenho antes de UI ampla.
+
+**Detalhe técnico:** P task. `plan_only` until sprint iniciar.
+
+### Task N63.1 — Exibir critérios Feature 4/9 na pérola
+
+**Entrega:** Bloco HTML muted com texto resumido (15d, ≥5 trades/≥3 dias, top 10, `reported_pnl_sum > 0`, pesquisa, aprovar ≠ fill).  
+**Como conferir:** View-source ou pytest que stringo-chave aparece em `/sinais`.  
+**Por quê:** ISS-019 critérios visíveis.
+
+**Detalhe técnico / executor_prompt:**
+
+```yaml
+id: N63.1
+size: M
+bom_ref: BOM-3
+depends_on: ["N63.0"]
+files:
+  - src/panel_ops_html.py
+reuse_targets:
+  - component: docs/REQUIREMENTS.md
+    reuse_as: excerpt
+    convergence_check: Feature 4 Prodigy 15d + Feature 9 inbox pérola
+guardrail_contract:
+  - class: subagent-safety
+    id: n63-1-no-thresholds
+    target: src/panel_ops_html.py
+    check: rg "WINDOW_DAYS" src/prodigy_rank.py unchanged
+    pass_condition: no new numeric gates in HTML
+```
+
+### Task N63.2 — Hierarquia da página Sinais
+
+**Entrega:** `render_signals_page` envolve pérola em `<section class="pearl-hero">` primeiro; operações/inventário/C2/pool/auditoria em `<details>` ou bloco `secondary` abaixo.  
+**Como conferir:** pytest ordem DOM: hero antes de operating/audit; N62 queue unchanged.  
+**Por quê:** Operador: pérola = sessão mais importante.
+
+**Detalhe técnico:** Files `src/panel_ops_html.py`; reuse N62 section; não remover dados das APIs.
+
+### Task N63.3 — Estilo pérola hero
+
+**Entrega:** CSS coeso (contraste, espaçamento, foco no Atualizar + tabela pérola); landmarks ARIA.  
+**Como conferir:** pytest smoke HTML class `pearl-hero`; homolog visual operador.  
+**Por quê:** ISS-022 parcial.
+
+**Detalhe técnico:** Inline or shared panel CSS in `panel_ops_html.py`; no global menu redesign.
+
+### Task N63.4 — Testes
+
+**Entrega:** Suite `N63SinaisPearlHeroTests`: critérios visíveis; pearl-hero antes de secundários; regressão `N62InboxPearlTests`.  
+**Como conferir:** `pytest tests/test_panel_ops.py -k N63` verde.
+
+### Task N63.5 — Documentação e homologação
+
+**Entrega:** OPERATOR-PANEL-MAP §2 (pérola centro); ISS-022 nota “N63 parcial”; REQUIREMENTS aceite opcional `[ ]` N63; TEST-EVIDENCE screenshot.  
+**Como conferir:** Operador atesta EasyPanel; ISS-022 **permanece aberto** até redesign plataforma completo.  
+**Por quê:** Closeout frente 1 sem alegar SINAIS-3F 100%.
+
+**Detalhe técnico:** P task. Não fechar ISS-019 (proveniência = N64).
 
 ---
 

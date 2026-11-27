@@ -13,7 +13,14 @@ from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from gate_b_risk import evaluate_signed_signal
-from panel_ops_html import _CANDIDATES_RELOAD_SCRIPT, render_central_page, render_signals_page
+from panel_ops_html import (
+    _CANDIDATES_RELOAD_SCRIPT,
+    _N51_PREAPPROVAL_EMPTY,
+    _N51_PREAPPROVAL_SECTION,
+    render_central_page,
+    render_signals_page,
+)
+from prodigy_rank import is_pearl_candidate, pearl_sort_key
 from panel_ops_data import (
     PERFORMANCE_LABEL_GROSS,
     PREAPPROVAL_METRICS_LABEL,
@@ -1760,10 +1767,8 @@ class PanelKillSwitchCycleTests(unittest.TestCase):
         self.assertEqual(decision['reject_code'], 'KILL_SWITCH')
 
 
-N51_PREAPPROVAL_SECTION = 'Pré-aprovação de provedores'
-N51_PREAPPROVAL_EMPTY = (
-    'Nenhum provedor aguardando análise no momento. Novos candidatos aparecerão aqui.'
-)
+N51_PREAPPROVAL_SECTION = _N51_PREAPPROVAL_SECTION
+N51_PREAPPROVAL_EMPTY = _N51_PREAPPROVAL_EMPTY
 N52_PREAPPROVAL_METRIC_SNIPPETS = (
     'Percentual de acertos (pesquisa)',
     'Acertos encolhidos % (pesquisa)',
@@ -1798,10 +1803,11 @@ class PanelSinaisN51Tests(unittest.TestCase):
     def test_n51_preapproval_metrics_reused_not_zero(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root, provider_id='777', win_rate=61.2)
+            _write_prodigy_pearl_fixture(root, _n62_pearl_rank_row('777', win_rate_pct=61.2))
             queue = build_preapproval_queue(root, None, signals=[])
             item = queue['queue'][0]
             self.assertEqual(item['metrics']['win_rate_pct'], 61.2)
+            self.assertEqual(item['platform'], 'prodigy')
             self.assertEqual(item['metrics_label'], PREAPPROVAL_METRICS_LABEL)
             self.assertNotIn('eligible', item['metrics'])
 
@@ -1810,8 +1816,8 @@ class PanelSinaisN51Tests(unittest.TestCase):
             root = Path(d)
             signals = [{'origin': 'tradingview:alerts', 'source': 'tradingview', 'symbol': 'SPY'}]
             queue = build_preapproval_queue(root, None, signals=signals)
-            tv = [r for r in queue['queue'] if r['platform'] == 'tradingview'][0]
-            self.assertEqual(tv['metrics'], {})
+            tv = [r for r in queue['queue'] if r['platform'] == 'tradingview']
+            self.assertEqual(tv, [], msg='Inbox pérola must not list TradingView rows')
 
     def test_n51_reject_beats_seed(self):
         with tempfile.TemporaryDirectory() as d:
@@ -1868,7 +1874,7 @@ class PanelSinaisN51Tests(unittest.TestCase):
     def test_n51_html_preapproval_section(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root)
+            _write_prodigy_pearl_fixture(root)
             server, thread, base = self._server(root)
             try:
                 req = _get(base + '/sinais', session='panel-secret')
@@ -1931,7 +1937,7 @@ class PanelSinaisN51Tests(unittest.TestCase):
     def test_n51_api_signals_json_preapproval(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root)
+            _write_prodigy_pearl_fixture(root)
             server, thread, base = self._server(root)
             try:
                 req = _get(base + '/api/signals', session='panel-secret')
@@ -2003,21 +2009,16 @@ class PanelSinaisN52Tests(unittest.TestCase):
     def test_n52_preapproval_research_metrics_visible(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            intel = root / 'intelligence'
-            intel.mkdir(parents=True, exist_ok=True)
-            (intel / 'provider-research-top10-latest.json').write_text(
-                json.dumps(
-                    {
-                        'top_10_research': [
-                            {
-                                'provider_id': '132169',
-                                'win_rate_pct': 65.4,
-                                'profit_factor_reported': 1.82,
-                                'max_drawdown_pct': -12.4,
-                            }
-                        ]
-                    }
-                ),
+            pearl = _n62_pearl_rank_row(
+                '132169',
+                win_rate_pct=65.4,
+                profit_factor_reported=1.82,
+                reported_pnl_sum=420.0,
+            )
+            pearl['max_drawdown_pct'] = -12.4
+            _write_prodigy_pearl_fixture(root, pearl)
+            (root / 'intelligence' / 'provider-research-top10-latest.json').write_text(
+                json.dumps({'top_10_research': []}),
                 encoding='utf-8',
             )
             server, thread, base = self._server(root)
@@ -2038,7 +2039,10 @@ class PanelSinaisN52Tests(unittest.TestCase):
     def test_n52_missing_metric_shows_indisponivel_not_zero(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root, provider_id='304', win_rate=50.0)
+            _write_prodigy_pearl_fixture(
+                root,
+                _n62_pearl_rank_row('304', win_rate_pct=50.0),
+            )
             server, thread, base = self._server(root)
             try:
                 req = _get(base + '/sinais', session='panel-secret')
@@ -2058,7 +2062,7 @@ class PanelSinaisN52Tests(unittest.TestCase):
     def test_n52_html_section_hierarchy_decision_first(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root)
+            _write_prodigy_pearl_fixture(root)
             server, thread, base = self._server(root)
             try:
                 req = _get(base + '/sinais', session='panel-secret')
@@ -2149,7 +2153,7 @@ class N53PanelShellRefreshTests(unittest.TestCase):
     def test_n53_atualizar_candidatos_visible_on_sinais(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root)
+            _write_prodigy_pearl_fixture(root)
             _, server, thread, base = self._server(root)
             try:
                 req = _get(base + '/sinais', session='panel-secret')
@@ -2221,14 +2225,48 @@ def _post_candidates_refresh(url, body=None, *, session=None):
     return Request(url, data=data, headers=headers, method='POST')
 
 
+def _n62_pearl_rank_row(
+    provider_id: str = '9',
+    *,
+    reported_pnl_sum: float = 235.0,
+    prodigy_score: float = 0.55,
+    losses: int = 1,
+    profit_factor_reported: float = 1.5,
+    shrunk_win_rate_pct: float = 58.0,
+    win_rate_pct: float = 55.0,
+) -> dict:
+    return {
+        'provider_id': provider_id,
+        'status': 'PRODIGY_CANDIDATE_RESEARCH',
+        'prodigy_score': prodigy_score,
+        'reported_pnl_sum': reported_pnl_sum,
+        'losses': losses,
+        'profit_factor_reported': profit_factor_reported,
+        'shrunk_win_rate_pct': shrunk_win_rate_pct,
+        'win_rate_pct': win_rate_pct,
+    }
+
+
+def _write_prodigy_pearl_fixture(root: Path, *rows: dict) -> None:
+    intel = root / 'intelligence'
+    intel.mkdir(parents=True, exist_ok=True)
+    pearl_rows = list(rows) or [_n62_pearl_rank_row()]
+    payload = {
+        'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
+        'execution_authorized': False,
+        'orders_sent': 0,
+        'providers': pearl_rows,
+        'top_10_research': pearl_rows[:10],
+    }
+    (intel / 'prodigy-top10-latest.json').write_text(json.dumps(payload), encoding='utf-8')
+
+
 _N54_FAKE_RANK = {
     'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
     'execution_authorized': False,
     'orders_sent': 0,
-    'top_10_research': [
-        {'provider_id': '9', 'status': 'PRODIGY_CANDIDATE_RESEARCH', 'prodigy_score': 0.55},
-    ],
-    'providers': [],
+    'top_10_research': [_n62_pearl_rank_row()],
+    'providers': [_n62_pearl_rank_row()],
     'score_warning': 'Research rank only; does not authorize orders.',
 }
 
@@ -2379,7 +2417,7 @@ class N54LiveCriteriaRefreshHttpTests(unittest.TestCase):
     def test_n54_post_refresh_without_c2_key_partial_preserves_queue(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            _write_c2_research_fixture(root, provider_id='501', win_rate=58.0)
+            _write_prodigy_pearl_fixture(root, _n62_pearl_rank_row('501', win_rate_pct=58.0))
             _, server, thread, base = self._server(root)
             rank_mock = MagicMock(return_value=_N54_FAKE_RANK)
             env = {k: v for k, v in os.environ.items() if k != 'C2_API4_KEY'}
@@ -2579,17 +2617,13 @@ def _n55_live_criteria_patch_stack(*, rank_return=_N54_FAKE_RANK, c2_key='test-c
 def _n55_write_prodigy_rank_prior(root: Path, *, score: float = 0.71) -> tuple[dict, Path]:
     intel = root / 'intelligence'
     intel.mkdir(parents=True, exist_ok=True)
+    row = _n62_pearl_rank_row('9', prodigy_score=score, reported_pnl_sum=180.0)
     prior = {
         'mode': 'PRODIGY_RANK_RESEARCH_ONLY',
         'execution_authorized': False,
         'orders_sent': 0,
-        'top_10_research': [
-            {
-                'provider_id': '9',
-                'status': 'PRODIGY_CANDIDATE_RESEARCH',
-                'prodigy_score': score,
-            },
-        ],
+        'top_10_research': [row],
+        'providers': [row],
     }
     path = intel / 'prodigy-top10-latest.json'
     path.write_text(json.dumps(prior), encoding='utf-8')
@@ -2649,15 +2683,14 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
                 platforms = _n55_platforms_in_queue(queue)
                 self.assertEqual(
                     platforms,
-                    {'collective2', 'prodigy', 'tradingview'},
-                    msg='preapproval queue must union all eligible platforms after live refresh',
+                    {'prodigy'},
+                    msg='Inbox pérola must list prodigy pearls only after live refresh',
                 )
-                c2_rows = [r for r in queue if r.get('platform') == 'collective2']
                 prodigy_rows = [r for r in queue if r.get('platform') == 'prodigy']
-                self.assertTrue(c2_rows)
-                self.assertEqual(str(c2_rows[0].get('provider_id')), '44')
                 self.assertTrue(prodigy_rows)
                 self.assertEqual(prodigy_rows[0].get('provider_id'), '9')
+                self.assertFalse([r for r in queue if r.get('platform') == 'collective2'])
+                self.assertFalse([r for r in queue if r.get('platform') == 'tradingview'])
                 research_path = root / 'intelligence' / 'provider-research-top10-latest.json'
                 c2_research = json.loads(research_path.read_text(encoding='utf-8'))
                 top = (c2_research.get('top_10_research') or [{}])[0]
@@ -2691,7 +2724,8 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
                 self.assertIn('C2_API4_KEY_missing', issues)
                 platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
                 self.assertIn('prodigy', platforms)
-                self.assertIn('tradingview', platforms)
+                self.assertNotIn('tradingview', platforms)
+                self.assertNotIn('collective2', platforms)
                 self.assertEqual(c2_path.read_text(encoding='utf-8'), prior_c2_text)
             finally:
                 for p in reversed(patches):
@@ -2722,8 +2756,9 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
                 self.assertEqual(json.loads(prodigy_path.read_text(encoding='utf-8')), prior)
                 self.assertEqual(prodigy_path.read_text(encoding='utf-8'), prior_text)
                 platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
-                self.assertIn('collective2', platforms)
-                self.assertIn('tradingview', platforms)
+                self.assertIn('prodigy', platforms)
+                self.assertNotIn('collective2', platforms)
+                self.assertNotIn('tradingview', platforms)
             finally:
                 for p in reversed(patches):
                     p.stop()
@@ -2758,8 +2793,8 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
                     msg='F-018: TradingView failures must surface in issues',
                 )
                 platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
-                self.assertIn('collective2', platforms)
                 self.assertIn('prodigy', platforms)
+                self.assertNotIn('collective2', platforms)
             finally:
                 for p in reversed(patches):
                     p.stop()
@@ -2790,7 +2825,7 @@ class N55MultiPlatformLiveCriteriaTests(unittest.TestCase):
                 )
                 platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
                 self.assertIn('prodigy', platforms)
-                self.assertIn('tradingview', platforms)
+                self.assertNotIn('tradingview', platforms)
             finally:
                 for p in reversed(patches):
                     p.stop()
@@ -3229,9 +3264,10 @@ class N57Collective2RawQueueDiscoveryTests(unittest.TestCase):
             _write_c2_allowlist_fixture(root, [])
             _n57_write_operator_c2_raw_canonical(root)
             disk_queue = build_preapproval_queue(root, None, signals=[])
-            _n57_assert_collective2_pending_discovered(
-                self,
+            self.assertEqual(
                 _n57_pending_collective2_rows(disk_queue.get('queue') or []),
+                [],
+                msg='Inbox pérola must not list pending Collective2 rows without pearl rank',
             )
 
             _, server, thread, base = self._server(root)
@@ -3239,9 +3275,9 @@ class N57Collective2RawQueueDiscoveryTests(unittest.TestCase):
                 payload, _ = _n57_post_live_refresh(base, self._prodigy_calculate)
                 self.assertEqual(payload.get('orders_sent'), 0)
                 self.assertFalse(payload.get('execution_authorized', True))
-                _n57_assert_collective2_pending_discovered(
-                    self,
+                self.assertEqual(
                     _n57_pending_collective2_rows(_n55_preapproval_queue(payload)),
+                    [],
                 )
                 c2_copy = (payload.get('copy') or {}).get('collective2') or {}
                 self.assertEqual(c2_copy.get('approved_ids'), [])
@@ -3263,7 +3299,7 @@ class N57Collective2RawQueueDiscoveryTests(unittest.TestCase):
             self.assertEqual(c2.get('approved_ids'), [])
             queue = build_preapproval_queue(root, None, signals=[])
             c2_rows = _n57_pending_collective2_rows(queue.get('queue') or [])
-            _n57_assert_collective2_pending_discovered(self, c2_rows)
+            self.assertEqual(c2_rows, [], msg='paper-copy allowlist must not surface C2 in pérola inbox')
             for sid in _N57_OPERATOR_C2_IDS:
                 self.assertNotIn(sid, resolve_c2_paper_copy_approved_ids(root, None))
 
@@ -3511,22 +3547,12 @@ class N58Collective2SearchStrategiesScanTests(unittest.TestCase):
             try:
                 payload = self._post_refresh(base)
                 self.assertTrue(self._search_seen, msg='refresh must call GET SearchStrategies via fetch')
-                queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
-                ids = {str(r.get('provider_id')) for r in queue}
-                self.assertIn(
-                    _N58_SCAN_ELIGIBLE_ID,
-                    ids,
-                    msg='eligible scanned Collective2 id must appear without allowlist',
+                queue = _n55_preapproval_queue(payload)
+                self.assertEqual(
+                    _n58_collective2_queue_rows(queue),
+                    [],
+                    msg='Collective2 scan ids must not appear as collective2 rows in Inbox pérola',
                 )
-                self.assertNotIn(_N58_SCAN_INELIGIBLE_ID, ids)
-                for row in queue:
-                    if str(row.get('provider_id')) == _N58_SCAN_ELIGIBLE_ID:
-                        self.assertEqual(row.get('status'), 'pending')
-                        self.assertIn(
-                            row.get('source'),
-                            ('scanned', 'discovered'),
-                            msg='scanned Collective2 row source must be scanned or discovered',
-                        )
                 c2 = (payload.get('copy') or {}).get('collective2') or {}
                 self.assertFalse(c2.get('approved_for_paper_copy'))
             finally:
@@ -3577,7 +3603,7 @@ class N58Collective2SearchStrategiesScanTests(unittest.TestCase):
             try:
                 payload = self._post_refresh(base)
                 platforms = _n55_platforms_in_queue(_n55_preapproval_queue(payload))
-                self.assertIn('tradingview', platforms)
+                self.assertNotIn('tradingview', platforms)
                 issues_text = ' '.join(str(i) for i in (payload.get('issues') or [])).lower()
                 self.assertTrue(
                     'tradingview' in issues_text
@@ -3755,8 +3781,7 @@ class N59Collective2SnapshotIsolationTests(unittest.TestCase):
                 )
                 self.assertTrue(self._search_seen)
                 queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
-                ids = {str(r.get('provider_id')) for r in queue}
-                self.assertIn(_N58_SCAN_ELIGIBLE_ID, ids)
+                self.assertEqual(queue, [])
                 issues = [str(i) for i in (payload.get('issues') or [])]
                 self.assertFalse(any('collective2_refresh_failed' in i for i in issues))
                 self.assertFalse(snap_calls, msg='empty paper-copy allowlist must skip snapshot')
@@ -3786,8 +3811,7 @@ class N59Collective2SnapshotIsolationTests(unittest.TestCase):
                     approved_ids=[paper_id],
                 )
                 queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
-                ids = {str(r.get('provider_id')) for r in queue}
-                self.assertIn(_N58_SCAN_ELIGIBLE_ID, ids)
+                self.assertEqual(queue, [])
                 issues = [str(i) for i in (payload.get('issues') or [])]
                 self.assertTrue(
                     any('collective2_active_orders_snapshot_failed' in i for i in issues),
@@ -3911,10 +3935,14 @@ class N60PartialClosedTradesCollectTests(unittest.TestCase):
                 self.assertTrue(
                     any('collective2_closed_trades_partial_failed' in i for i in issues),
                 )
-                queue = _n58_collective2_queue_rows(_n55_preapproval_queue(payload))
-                ids = {str(r.get('provider_id')) for r in queue}
-                self.assertIn(_N58_SCAN_ELIGIBLE_ID, ids)
-                self.assertNotIn(fail_id, ids)
+                queue = _n55_preapproval_queue(payload)
+                pearl_ids = {
+                    str(r.get('provider_id'))
+                    for r in queue
+                    if r.get('platform') == 'prodigy'
+                }
+                self.assertIn(_N58_SCAN_ELIGIBLE_ID, pearl_ids)
+                self.assertNotIn(fail_id, pearl_ids)
             finally:
                 self._shutdown(server, thread)
 
@@ -4213,6 +4241,60 @@ class N61Collective2RefreshHonestyTests(unittest.TestCase):
         self.assertIn('A espera terminou antes da resposta do servidor', _CANDIDATES_RELOAD_SCRIPT)
         self.assertEqual(WINDOW_DAYS, 15)
         self.assertEqual(MIN_TRADES, 5)
+
+
+class N62InboxPearlTests(unittest.TestCase):
+    """N62 — Inbox pérola: top 10 by reported_pnl_sum, no TV/C2 salad."""
+
+    def test_build_preapproval_queue_pearl_only_sorted_and_capped(self):
+        rows = [
+            _n62_pearl_rank_row('1', reported_pnl_sum=50.0, prodigy_score=1.0),
+            _n62_pearl_rank_row('2', reported_pnl_sum=200.0, prodigy_score=2.0),
+            _n62_pearl_rank_row('3', reported_pnl_sum=-5.0, prodigy_score=9.0),
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_prodigy_pearl_fixture(root, *rows)
+            _write_c2_research_fixture(root, provider_id='44', win_rate=60.0)
+            _n55_write_tradingview_ingest_fixture(root)
+            queue = build_preapproval_queue(root, None, signals=[{'origin': 'tv-x'}])
+            items = queue['queue']
+            self.assertLessEqual(len(items), 10)
+            self.assertEqual({r['platform'] for r in items}, {'prodigy'})
+            self.assertEqual(items[0]['provider_id'], '2')
+            self.assertEqual(items[1]['provider_id'], '1')
+            self.assertFalse(any(r['provider_id'] == '3' for r in items))
+            self.assertFalse(any(r['provider_id'] == '44' for r in items))
+
+    def test_is_pearl_candidate_requires_positive_pnl(self):
+        bad = _n62_pearl_rank_row('x', reported_pnl_sum=-1.0)
+        good = _n62_pearl_rank_row('y', reported_pnl_sum=1.0)
+        self.assertFalse(is_pearl_candidate(bad))
+        self.assertTrue(is_pearl_candidate(good))
+
+    def test_sinais_html_inbox_pearl_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            _write_prodigy_pearl_fixture(root)
+            handler = make_handler(root, operator_session='panel-secret')
+            server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base = 'http://127.0.0.1:' + str(server.server_port)
+            try:
+                req = _get(base + '/sinais', session='panel-secret')
+                with urlopen(req, timeout=3) as resp:
+                    body = resp.read().decode('utf-8')
+                self.assertIn('Inbox pérola', body)
+                self.assertIn('15 dias', body)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(3)
+
+    def test_candidates_reload_script_settled_guard(self):
+        self.assertIn('settled', _CANDIDATES_RELOAD_SCRIPT)
+        self.assertIn('release()', _CANDIDATES_RELOAD_SCRIPT)
 
 
 class PanelOpsRunbookTest(unittest.TestCase):

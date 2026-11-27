@@ -50,12 +50,14 @@ _N50_POOL_SECTION = 'Candidatos Prodígio (pesquisa)'
 _N49_INVENTORY_EMPTY = 'Nenhum sinal neste inventário.'
 _N49_POOL_EMPTY = 'Nenhum candidato de pesquisa no pool.'
 _N49_POOL_SUBTITLE = 'Pesquisa — não autoriza ordem / não promove.'
-_N51_PREAPPROVAL_SECTION = 'Pré-aprovação de provedores'
+_N51_PREAPPROVAL_SECTION = 'Inbox pérola'
 _N51_PREAPPROVAL_SUBTITLE = (
-    'Pesquisa — não autoriza ordem. Aprovar não é fill. Métricas rotuladas pesquisa.'
+    'Top 10 por retorno reportado na janela de 15 dias (pesquisa apenas). '
+    'Não autoriza ordem; aprovar não é fill.'
 )
 _N51_PREAPPROVAL_EMPTY = (
-    'Nenhum provedor aguardando análise no momento. Novos candidatos aparecerão aqui.'
+    'Nenhum candidato pérola na janela de 15 dias no momento. '
+    'Use Atualizar candidatos para recalcular o ranking no servidor.'
 )
 _N48_COPY_EMPTY_HINT = 'Aprove um provedor acima para iniciar.'
 _PREAPPROVAL_METRIC_LABELS: dict[str, str] = {
@@ -303,8 +305,8 @@ document.querySelectorAll('[data-provider-action]').forEach(btn=>{
 '''
 
 _CANDIDATES_RELOAD_HINT = (
-    'Aplica critérios Feature 4 / Prodígio 15d no servidor '
-    '(C2 server-side; TV = origens já ingeridas). Não aprova nem envia ordem.'
+    'Recalcula o ranking Feature 4 / Prodígio 15d no servidor e atualiza o Inbox pérola. '
+    'Não aprova nem envia ordem.'
 )
 
 _CANDIDATES_RELOAD_SCRIPT = '''
@@ -324,12 +326,20 @@ _CANDIDATES_RELOAD_SCRIPT = '''
     }catch(_e){return'';}
   };
   btn.onclick=async()=>{
+    let timer=null;
+    let settled=false;
+    const release=()=>{
+      if(settled)return;
+      settled=true;
+      if(timer!==null){clearTimeout(timer);timer=null;}
+      btn.disabled=false;
+      btn.removeAttribute('aria-busy');
+    };
     btn.disabled=true;
     btn.setAttribute('aria-busy','true');
     box.hidden=false;
     box.className='inline-alert inline-alert--loading';
     box.textContent='Atualizando candidatos…';
-    let timer=null;
     try{
       const controller=new AbortController();
       timer=setTimeout(()=>controller.abort(),clientWaitMs);
@@ -337,8 +347,7 @@ _CANDIDATES_RELOAD_SCRIPT = '''
         method:'POST',headers:{'Content-Type':'application/json'},
         credentials:'same-origin',body:JSON.stringify({}),
         signal:controller.signal});
-      clearTimeout(timer);
-      if(res.status===401){clearTimeout(timer);location.href='/login';return;}
+      if(res.status===401){release();location.href='/login';return;}
       const data=await res.json().catch(()=>({}));
       if(res.status===429){
         box.className='inline-alert inline-alert--err';
@@ -361,9 +370,7 @@ _CANDIDATES_RELOAD_SCRIPT = '''
       const aborted=err&&(err.name==='AbortError'||err.name==='TimeoutError');
       box.textContent=aborted?waitEnded:failClosed;
     }finally{
-      try{clearTimeout(timer);}catch(_t){}
-      btn.disabled=false;
-      btn.removeAttribute('aria-busy');
+      release();
     }
   };
 })();

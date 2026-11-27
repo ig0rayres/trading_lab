@@ -12,6 +12,39 @@ from strategy_data_adapter import load, num, timestamp
 
 MIN_TRADES = 5
 WINDOW_DAYS = 15
+PEARL_TOP_N = 10
+
+
+def pearl_sort_key(row: dict) -> tuple[float, float, float, float]:
+  """Inbox pearl ordering: return, PF, shrunk win rate, prodigy score (all descending)."""
+  def _num(value: object, default: float = float('-inf')) -> float:
+    if value is None:
+      return default
+    try:
+      return float(value)
+    except (TypeError, ValueError):
+      return default
+
+  return (
+    -_num(row.get('reported_pnl_sum')),
+    -_num(row.get('profit_factor_reported'), 0.0),
+    -_num(row.get('shrunk_win_rate_pct')),
+    -_num(row.get('prodigy_score')),
+  )
+
+
+def is_pearl_candidate(item: dict) -> bool:
+  if item.get('status') != 'PRODIGY_CANDIDATE_RESEARCH':
+    return False
+  pnl = item.get('reported_pnl_sum')
+  if pnl is None or float(pnl) <= 0:
+    return False
+  losses = item.get('losses') or 0
+  if losses > 0:
+    pf = item.get('profit_factor_reported')
+    if pf is None or float(pf) < 1:
+      return False
+  return True
 
 
 def calculate(base, now=None):
@@ -64,17 +97,41 @@ def calculate(base, now=None):
                 # two active weeks to avoid single-session streaks.
                 score = (item['shrunk_win_rate_pct']-50)*0.7 + min(weeks,8)*2
                 item['prodigy_score']=round(score,2)
-                item['status']='PRODIGY_CANDIDATE_RESEARCH' if n>=MIN_TRADES and len({d.date() for d,_ in chosen})>=3 and item['shrunk_win_rate_pct']>55 and 'NO_RECENT_CLOSED_TRADE' not in item['issues'] else 'OBSERVATION'
+                meets_gates = (
+                    n >= MIN_TRADES
+                    and len({d.date() for d, _ in chosen}) >= 3
+                    and item['shrunk_win_rate_pct'] > 55
+                    and 'NO_RECENT_CLOSED_TRADE' not in item['issues']
+                    and item.get('reported_pnl_sum', 0) > 0
+                )
+                if meets_gates and losses > 0:
+                    pf = item.get('profit_factor_reported')
+                    meets_gates = pf is not None and pf >= 1
+                item['status'] = (
+                    'PRODIGY_CANDIDATE_RESEARCH' if meets_gates else 'OBSERVATION'
+                )
             else:
                 item['prodigy_score']=None
         except (ValueError,TypeError,KeyError,OSError,OverflowError) as exc:
             item['issues'].append('SOURCE_READ_FAILURE')
             item['error_type']=type(exc).__name__
         entries.append(item)
-    entries.sort(key=lambda x:(x['status']=='PRODIGY_CANDIDATE_RESEARCH',x.get('prodigy_score') if x.get('prodigy_score') is not None else float('-inf')),reverse=True)
+    pearl = [e for e in entries if is_pearl_candidate(e)]
+    pearl.sort(key=pearl_sort_key)
+    pearl_top = pearl[:PEARL_TOP_N]
+    entries.sort(
+        key=lambda x: (
+            x['status'] != 'PRODIGY_CANDIDATE_RESEARCH',
+            *(
+                pearl_sort_key(x)
+                if x['status'] == 'PRODIGY_CANDIDATE_RESEARCH'
+                else (0.0, 0.0, 0.0, 0.0)
+            ),
+        )
+    )
     return {'mode':'PRODIGY_RANK_RESEARCH_ONLY','as_of':now.isoformat(),'window_days':WINDOW_DAYS,
         'score_warning':'Heuristic win-rate screen, not statistical evidence of profit or tradability; costs and cash flows unverified.',
-        'providers':entries,'top_10_research':entries[:10], 'copy_approved':[],
+        'providers':entries,'top_10_research':pearl_top, 'copy_approved':[],
         'orders_sent':0,'execution_authorized':False}
 
 

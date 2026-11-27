@@ -49,12 +49,12 @@ JSON de monitoramento (Bearer, como antes): **`GET /api/status`** — inclui `co
 | **Superfície** | **Menu do dia a dia** — mesma rota `/sinais` (**N48–N53**); cockpit (**N52** / ISS-022) + shell visual (**N53** / ISS-023): **Pré-aprovação** (métricas de pesquisa completas + botão refresh) → **Em operação / assinados** → inventário → **Collective2** → pool Prodígio → critérios → **auditoria** por último. Desenho: `docs/design/mockups/sinais.md`. **Não** é página separada no Command Panel v1. |
 | **Selo** | **VISÍVEL** |
 
-### Pré-aprovação de provedores (**N51** / ISS-021)
+### Inbox pérola — pré-aprovação (**N51** / **N62** / ISS-021)
 
 | Campo | Detalhe |
 |-------|---------|
 | **Ação** | Logado: botões **Aprovar** / **Rejeitar** por linha. API: `POST /api/signals/providers` corpo `{platform, provider_id, action: approve\|reject}` — **401** sem sessão; **503** sem livro-razão / migration `003`. |
-| **Fila** | `copy.preapproval.queue[]`: Collective2, Prodígio, TradingView. Collective2 pendente pode vir de arquivo bruto canônico (`source: discovered`, **N57**) sem estar na lista nomeada. Bloco de métricas (**N52**): `win_rate_pct`, `shrunk_win_rate_pct`, `profit_factor_reported`, `reported_pnl_sum`, `net_return_pct`, `max_drawdown_pct`, `prodigy_score`/`score`, `status` — cada um rotulado pesquisa; ausente = **indisponível** (nunca zero inventado). |
+| **Fila** | `copy.preapproval.queue[]` (**N62**): até **10** linhas `platform: prodigy` — candidatos pérola com `reported_pnl_sum` > 0 na janela 15d; sem Collective2 pendente nem TradingView nesta fila. Bloco de métricas (**N52**): `win_rate_pct`, `shrunk_win_rate_pct`, `profit_factor_reported`, `reported_pnl_sum`, `net_return_pct`, `max_drawdown_pct`, `prodigy_score`/`score`, `status` — cada um rotulado pesquisa; ausente = **indisponível** (nunca zero inventado). |
 | **Persistência** | Tabela `signal_provider_approvals` (migration `003`). Rejeição no painel vence `config/c2_paper_copy_allowlist.json` / `C2_PAPER_COPY_APPROVED_IDS`. JSON/env são semente quando não há linha no livro-razão. |
 | **Não faz** | Não envia ordem; não chama Alpaca/C2; Live desligado. |
 
